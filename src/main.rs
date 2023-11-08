@@ -1,60 +1,50 @@
 use std::env;
-use std::fmt;
 use std::fs::{self,File};
-use std::io::{self,Read};
+use std::io::Read;
 use std::os::unix::fs as unix_fs;
 use std::path::{Path,PathBuf};
 use std::process::Command;
-
-struct PathError {
-    message: String,
-    path: PathBuf,
-}
-
-impl fmt::Display for PathError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}: {}", self.message, self.path.display())
-    }
-}
+use anyhow::{Context, Result};
 
 // Create a directory if it does not already exist
-fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> io::Result<()> {
+fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
     let path = dir_path.as_ref();
 
     if !path.exists() {
-        fs::create_dir_all(path)?;
-    };
+        fs::create_dir_all(path)
+            .with_context(|| format!("Failed to create directory at {:?}", path))?;
+    }
 
     Ok(())
 }
 
 // Create a file if it does not already exist
-fn ensure_file_exists<P: AsRef<Path>>(file_path: P) -> io::Result<()> {
-let path = file_path.as_ref();
+fn ensure_file_exists<P: AsRef<Path>>(file_path: P) -> Result<()> {
+    let path = file_path.as_ref();
 
     if !path.exists() {
-        File::create(path)?;
+        File::create(path)
+            .with_context(|| format!("Failed to create file at {:?}", path))?;
     };
 
     Ok(())
 }
 
 // Create config files if they don't already exist
-fn ensure_config_files_exist(base16_config_path: &Path, base16_shell_theme_name_path: &Path) -> Result<(), PathError> {
-    ensure_directory_exists(base16_config_path).map_err(|_| PathError {
-        message: "Failed to create directory. Check if parent directory exists.".to_string(),
-        path: base16_config_path.to_path_buf()
-    })?;
-    ensure_file_exists(base16_shell_theme_name_path).map_err(|_| PathError {
-        message: "Failed to create directory. Check if parent directory exists.".to_string(),
-        path: base16_shell_theme_name_path.to_path_buf()
-    })?;
+fn ensure_config_files_exist(
+    base16_config_path: &Path,
+    base16_shell_theme_name_path: &Path
+) -> Result<()> {
+    ensure_directory_exists(base16_config_path)
+        .with_context(|| format!("Failed to create config directory at {:?}", base16_config_path))?;
+    ensure_file_exists(base16_shell_theme_name_path)
+        .with_context(|| format!("Failed to create config file at {:?}", base16_shell_theme_name_path))?;
 
     Ok(())
 }
 
 // Convert file contents to string
-fn read_file_to_string(path: &Path) -> io::Result<String> {
+fn read_file_to_string(path: &Path) -> Result<String> {
     let mut file = File::open(path)?;
     let mut contents = String::new();
 
@@ -70,18 +60,12 @@ fn set_theme(
     theme_script_path: &Path,
     base16_shell_colorscheme_path: &Path,
     base16_shell_theme_name_path: &Path
-) -> std::io::Result<()> {
-    let current_theme_name = match read_file_to_string(base16_shell_theme_name_path) {
-        Ok(contents) => contents,
-        Err(e) => {
-            eprintln!("Failed to read from file: {}", e);
-            return Err(e);
-        }
-    };
+) -> Result<()> {
+    let current_theme_name = read_file_to_string(base16_shell_theme_name_path)
+        .context("Failed to read from file")?;
 
     if theme_name.to_string() == current_theme_name {
-        eprintln!("Theme \"{}\" is already set", theme_name);
-        std::process::exit(1);
+        anyhow::bail!("Theme \"{}\" is already set", theme_name)
     }
 
     // Remove symlink file and create colorscheme symlink
@@ -101,22 +85,20 @@ fn set_theme(
 
     // Source colorscheme script
     // Wait for script to fully execute before continuing
-    let mut child = Command::new("/bin/bash").arg(base16_shell_colorscheme_path).spawn()?;
-    let status = child.wait()?;
+    let mut child = Command::new("/bin/bash")
+        .arg(base16_shell_colorscheme_path)
+        .spawn()
+        .with_context(|| format!("Failed to execute script: {:?}", base16_shell_colorscheme_path))?;
+    let status = child.wait().context("Failed to wait on bash status")?;
     if !status.success() {
-        eprintln!("Command finished with a non-zero status.");
-        return Err(
-            std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Script execution failed"
-            )
-        );
+        anyhow::bail!("Command finished with a non-zero status: {}", status)
     }
 
     // Hooks
     // Set env variables for hooks and then execute .sh hooks
     // -----------------------------------------------------------------
-    let mut base16_shell_hooks_path = env::var("BASE16_SHELL_HOOKS_PATH").unwrap_or_default();
+    let mut base16_shell_hooks_path = env::var("BASE16_SHELL_HOOKS_PATH")
+        .unwrap_or_else(|_| "".to_string());
     if base16_shell_hooks_path.is_empty() || !Path::new(&base16_shell_hooks_path).is_dir() {
         base16_shell_hooks_path = format!("{}/hooks", base16_shell_path.display());
 
@@ -134,7 +116,10 @@ fn set_theme(
 
             // Check if the file name ends with .sh
             if path.extension().and_then(|ext| ext.to_str()) == Some("sh") {
-                Command::new("/bin/bash").arg(path).status()?;
+                Command::new("/bin/bash")
+                    .arg(&path)
+                    .status()
+                    .with_context(|| format!("Failed to execute shell hook script: {:?}", path))?;
             }
         }
     }
@@ -142,21 +127,21 @@ fn set_theme(
     Ok(())
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        eprintln!("You didn't provide a theme name argument.");
-        std::process::exit(1);
+        anyhow::bail!("You didn't provide a theme name argument.")
     }
 
     let config_path: PathBuf = env::var("XDG_CONFIG_HOME")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            let home = env::var("HOME").expect("HOME is not set");
-
-            PathBuf::from(home).join(".config")
-        });
+        .or_else(|_| {
+            env::var("HOME")
+                .map_err(anyhow::Error::new)
+                .and_then(|home| Ok(PathBuf::from(home).join(".config")))
+                .context("HOME environment variable not set")
+        })?;
     let config_path_something = config_path.as_path();
     let base16_config_path = config_path_something.join("tinted-theming");
     let base16_shell_path: PathBuf = env::current_dir().expect("Failed to get current directory");
@@ -166,28 +151,21 @@ fn main() {
     let theme_script_path = base16_shell_path.join(format!("scripts/base16-{}.sh", theme_name));
 
     if !theme_script_path.exists() {
-        eprintln!("Theme \"{}\" does not exist, try a different theme", theme_name);
-        std::process::exit(1);
+        anyhow::bail!("Theme \"{}\" does not exist, try a different theme", theme_name)
     }
 
-    if let Err(e) = ensure_config_files_exist(base16_config_path.as_path(), base16_shell_theme_name_path.as_path()) {
-        eprintln!("Error: {}", e);
-    }
-
-    match set_theme(
+    ensure_config_files_exist(base16_config_path.as_path(), base16_shell_theme_name_path.as_path())
+        .context("Error creating config files")?;
+    set_theme(
         &theme_name, 
         base16_config_path.as_path(),
         base16_shell_path.as_path(),
         theme_script_path.as_path(),
         base16_shell_colorscheme_path.as_path(),
         base16_shell_theme_name_path.as_path()
-    ) {
-        Ok(()) => {
-            eprintln!("Theme set to: {}", theme_name);
-        },
-        Err(e) => {
-            eprintln!("Failed to set theme \"{}\": {}", theme_name, e);
-            std::process::exit(1);
-        }
-    }
+    )
+        .with_context(|| format!("Failed to set theme \"{:?}\"", theme_name,))?;
+
+    println!("Theme set to: {}", theme_name);
+    Ok(())
 }
