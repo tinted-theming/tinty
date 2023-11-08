@@ -22,7 +22,7 @@ end
 
 # If base16-tmux path directory doesn't exist, stop hook
 if not test -d $BASE16_TMUX_PLUGIN_PATH
-  return 2
+  exit 2
 end
 
 # ----------------------------------------------------------------------
