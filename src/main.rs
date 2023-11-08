@@ -17,30 +17,35 @@ impl fmt::Display for PathError {
     }
 }
 
-// Creates a file if it does not exist
-fn ensure_file_exists<P: AsRef<Path>>(file_path: P, is_directory: Option<bool>) -> io::Result<()> {
-    let path = file_path.as_ref();
+// Create a directory if it does not already exist
+fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> io::Result<()> {
+    let path = dir_path.as_ref();
 
-    if is_directory == Some(true) {
-        if !path.exists() {
-            fs::create_dir_all(path)?;
-        };
-    } else {
-        if !path.exists() {
-            File::create(path)?;
-        };
-    }
+    if !path.exists() {
+        fs::create_dir_all(path)?;
+    };
 
     Ok(())
 }
 
-// Create config files if they don't exist
+// Create a file if it does not already exist
+fn ensure_file_exists<P: AsRef<Path>>(file_path: P) -> io::Result<()> {
+let path = file_path.as_ref();
+
+    if !path.exists() {
+        File::create(path)?;
+    };
+
+    Ok(())
+}
+
+// Create config files if they don't already exist
 fn ensure_config_files_exist(base16_config_path: &Path, base16_shell_theme_name_path: &Path) -> Result<(), PathError> {
-    ensure_file_exists(base16_config_path, Some(true)).map_err(|_| PathError {
+    ensure_directory_exists(base16_config_path).map_err(|_| PathError {
         message: "Failed to create directory. Check if parent directory exists.".to_string(),
         path: base16_config_path.to_path_buf()
     })?;
-    ensure_file_exists(base16_shell_theme_name_path, Some(false)).map_err(|_| PathError {
+    ensure_file_exists(base16_shell_theme_name_path).map_err(|_| PathError {
         message: "Failed to create directory. Check if parent directory exists.".to_string(),
         path: base16_shell_theme_name_path.to_path_buf()
     })?;
