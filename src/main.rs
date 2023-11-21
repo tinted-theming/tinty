@@ -1,23 +1,11 @@
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::{Arg as ClapArg, Command as ClapCommand};
 use std::env;
 use std::fs::{self, File};
 use std::io::Read;
 use std::os::unix::fs as unix_fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-
-#[derive(Debug, Subcommand)]
-enum Commands {
-    List,
-    Set { theme_name: String },
-}
-
-#[derive(Parser)]
-struct Cli {
-    #[clap(subcommand)]
-    commands: Commands,
-}
 
 // Create a directory if it does not already exist
 fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
@@ -186,7 +174,22 @@ fn set_command(
 }
 
 fn main() -> Result<()> {
-    let cli = Cli::parse();
+    let matches = ClapCommand::new("base16_shell")
+        .version("1.0.0")
+        .author("Tinted Theming")
+        .about("A tool to switch base16 colorschemes")
+        .subcommand(ClapCommand::new("list").about("Lists available base16 colorschemes"))
+        .subcommand(
+            ClapCommand::new("set")
+                .about("Sets a base16 colorscheme")
+                .arg(
+                    ClapArg::new("theme_name")
+                        .help("The base16 colorscheme you want to set")
+                        .required(true),
+                ),
+        )
+        .get_matches();
+
     let config_path: PathBuf = env::var("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .or_else(|_| {
@@ -207,20 +210,8 @@ fn main() -> Result<()> {
     )
     .context("Error creating config files")?;
 
-    match cli.commands {
-        Commands::Set { theme_name } => {
-            set_command(
-                &theme_name,
-                base16_config_path.as_path(),
-                base16_shell_path.as_path(),
-                base16_shell_colorscheme_path.as_path(),
-                base16_shell_theme_name_path.as_path(),
-            )
-            .with_context(|| format!("Failed to set theme \"{:?}\"", theme_name,))?;
-
-            println!("Theme set to: {}", theme_name);
-        }
-        Commands::List => {
+    match matches.subcommand() {
+        Some(("list", _)) => {
             let scripts_path = base16_shell_path.join("scripts");
 
             if !scripts_path.is_dir() {
@@ -256,6 +247,23 @@ fn main() -> Result<()> {
                 }
             }
         }
+        Some(("set", sub_matches)) => {
+            if let Some(theme_name) = sub_matches.get_one::<String>("theme_name") {
+                set_command(
+                    &theme_name,
+                    base16_config_path.as_path(),
+                    base16_shell_path.as_path(),
+                    base16_shell_colorscheme_path.as_path(),
+                    base16_shell_theme_name_path.as_path(),
+                )
+                .with_context(|| format!("Failed to set theme \"{:?}\"", theme_name,))?;
+
+                println!("Theme set to: {}", theme_name);
+            } else {
+                anyhow::bail!("theme_name is required for set command",);
+            }
+        }
+        _ => unreachable!(),
     }
 
     Ok(())

@@ -1,10 +1,16 @@
 [package]
-name = "shell"
-version = "0.1.0"
+name = "base16-shell"
+description = "A tool to switch base16 colorschemes"
+version = "1.0.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+readme = "README.md"
+authors = ["Jamy Golden <code@jamygolden.com>"]
+homepage = "https://github.com/tinted-theming/base16-shell"
+repository = "https://github.com/tinted-theming/base16-shell"
+keywords = ["cli", "base16", "shell"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.75"
-clap = { version = "4.4.6", features = ["derive"] }
+clap = { version = "4.4.8", features = ["derive"] }
