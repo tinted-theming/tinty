@@ -198,9 +198,17 @@ fn main() -> Result<()> {
                 .and_then(|home| Ok(PathBuf::from(home).join(".config")))
                 .context("HOME environment variable not set")
         })?;
-    let config_path_something = config_path.as_path();
-    let base16_config_path = config_path_something.join("tinted-theming");
-    let base16_shell_path: PathBuf = env::current_dir().expect("Failed to get current directory");
+    let base16_config_path = config_path.join("tinted-theming");
+    let base16_shell_path: PathBuf = env::var("BASE16_SHELL_PATH")
+        .or_else(|_| Ok(String::from("~/.config/tinted-theming")))
+        .map(PathBuf::from)
+        .and_then(|path| {
+            if path.exists() {
+                Ok(path)
+            } else {
+                anyhow::bail!(format!("The config path does not exist: {}", path.display()))
+            }
+        }).context("Path to tinted-theming/base16-shell not found. Either set $BASE16_SHELL_PATH or clone tinted-theming/base16-shell to ~/.config/tinted-theming/shell")?;
     let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
     let base16_shell_theme_name_path = base16_config_path.join("theme_name");
 
