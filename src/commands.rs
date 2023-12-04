@@ -7,7 +7,7 @@ use std::env;
 use std::fs::{self, File};
 use std::io::Read;
 use std::os::unix::fs as unix_fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 // Create a directory if it does not already exist
@@ -121,16 +121,33 @@ fn run_hooks(
     base16_shell_path: &Path,
     base16_shell_theme_name_path: &Path,
 ) -> Result<()> {
-    let mut base16_shell_hooks_path =
-        env::var(BASE16_SHELL_HOOKS_PATH_ENV_VAR_NAME).unwrap_or_else(|_| "".to_string());
-    if base16_shell_hooks_path.is_empty() || !Path::new(&base16_shell_hooks_path).is_dir() {
-        base16_shell_hooks_path = format!("{}/hooks", base16_shell_path.display());
+    let base16_shell_hooks_path: PathBuf = env::var(BASE16_SHELL_HOOKS_PATH_ENV_VAR_NAME)
+        .map(PathBuf::from)
+        .map_err(anyhow::Error::new)
+        .and_then(|path_text| {
+            let path = PathBuf::from(path_text);
 
-        env::set_var(
-            BASE16_SHELL_HOOKS_PATH_ENV_VAR_NAME,
-            &base16_shell_hooks_path,
-        );
-    }
+            if path.is_dir() {
+                Ok(path)
+            } else {
+                Err(anyhow::anyhow!("Path is not a directory"))
+            }
+        })
+        .or_else(|_| {
+            let path: PathBuf = base16_shell_path.join("hooks");
+
+            if path.is_dir() {
+                env::set_var(BASE16_SHELL_HOOKS_PATH_ENV_VAR_NAME, &path);
+
+                Ok(path)
+            } else {
+                return Err(anyhow::anyhow!(format!(
+                    "Hooks path is not a directory: {}",
+                    path.display()
+                )));
+            }
+        })
+        .context("Failed to resolve $BASE16_SHELL_HOOKS_PATH")?;
 
     env::set_var(
         BASE16_SHELL_THEME_NAME_PATH_ENV_VAR_NAME,
@@ -138,19 +155,16 @@ fn run_hooks(
     );
     env::set_var(BASE16_SHELL_CONFIG_PATH_ENV_VAR_NAME, base16_config_path);
 
-    let base16_shell_hooks_path = base16_shell_path.join("hooks");
-    if base16_shell_hooks_path.is_dir() {
-        for entry in fs::read_dir(base16_shell_hooks_path)? {
-            let entry = entry?;
-            let path = entry.path();
+    for entry in fs::read_dir(base16_shell_hooks_path)? {
+        let entry = entry?;
+        let path = entry.path();
 
-            // Check if the file name ends with .sh
-            if path.extension().and_then(|ext| ext.to_str()) == Some("sh") {
-                Command::new("/bin/bash")
-                    .arg(&path)
-                    .status()
-                    .with_context(|| format!("Failed to execute shell hook script: {:?}", path))?;
-            }
+        // Check if the file name ends with .sh
+        if path.extension().and_then(|ext| ext.to_str()) == Some("sh") {
+            Command::new("/bin/bash")
+                .arg(&path)
+                .status()
+                .with_context(|| format!("Failed to execute shell hook script: {:?}", path))?;
         }
     }
 
@@ -171,6 +185,8 @@ pub fn set_command(
         base16_shell_theme_name_path,
     )
     .with_context(|| format!("Failed to set colorscheme \"{:?}\"", theme_name))?;
+
+    env::set_var(BASE16_SHELL_THEME_NAME_PATH_ENV_VAR_NAME, &theme_name);
 
     run_hooks(
         base16_config_path,
