@@ -153,6 +153,7 @@ fn run_hooks(
         base16_shell_theme_name_path,
     );
     env::set_var(BASE16_SHELL_CONFIG_PATH_ENV, base16_config_path);
+    env::set_var(BASE16_THEME_ENV, theme_name);
 
     for entry in fs::read_dir(base16_shell_hooks_path)? {
         let entry = entry?;
