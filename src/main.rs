@@ -5,26 +5,23 @@ mod config;
 use crate::cli::build_cli;
 use crate::commands::{ensure_config_files_exist, set_command};
 use anyhow::{Context, Result};
-use config::{
-    BASE16_SHELL_PATH_ENV_VAR_NAME, DEFAULT_BASE16_SHELL_PATH, HOME_ENV_VAR,
-    XDG_CONFIG_HOME_ENV_VAR,
-};
+use config::{BASE16_SHELL_PATH_ENV, DEFAULT_BASE16_SHELL_PATH, HOME_ENV, XDG_CONFIG_HOME_ENV};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 
 fn main() -> Result<()> {
     let matches = build_cli().get_matches();
-    let config_path: PathBuf = env::var(XDG_CONFIG_HOME_ENV_VAR)
+    let config_path: PathBuf = env::var(XDG_CONFIG_HOME_ENV)
         .map(PathBuf::from)
         .or_else(|_| {
-            env::var(HOME_ENV_VAR)
+            env::var(HOME_ENV)
                 .map_err(anyhow::Error::new)
                 .and_then(|home| Ok(PathBuf::from(home).join(".config")))
                 .context("HOME environment variable not set")
         })?;
     let base16_config_path = config_path.join("tinted-theming");
-    let base16_shell_path: PathBuf = env::var(BASE16_SHELL_PATH_ENV_VAR_NAME)
+    let base16_shell_path: PathBuf = env::var(BASE16_SHELL_PATH_ENV)
         .or_else(|_| Ok(String::from(DEFAULT_BASE16_SHELL_PATH)))
         .map(PathBuf::from)
         .and_then(|path| {

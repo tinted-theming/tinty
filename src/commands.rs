@@ -1,6 +1,5 @@
 use crate::config::{
-    BASE16_SHELL_CONFIG_PATH_ENV_VAR_NAME, BASE16_SHELL_HOOKS_PATH_ENV_VAR_NAME,
-    BASE16_SHELL_THEME_NAME_PATH_ENV_VAR_NAME,
+    BASE16_SHELL_CONFIG_PATH_ENV, BASE16_SHELL_HOOKS_PATH_ENV, BASE16_SHELL_THEME_NAME_PATH_ENV,
 };
 use anyhow::{Context, Result};
 use std::env;
@@ -150,10 +149,10 @@ fn run_hooks(
         .context("Failed to resolve $BASE16_SHELL_HOOKS_PATH")?;
 
     env::set_var(
-        BASE16_SHELL_THEME_NAME_PATH_ENV_VAR_NAME,
+        BASE16_SHELL_THEME_NAME_PATH_ENV,
         base16_shell_theme_name_path,
     );
-    env::set_var(BASE16_SHELL_CONFIG_PATH_ENV_VAR_NAME, base16_config_path);
+    env::set_var(BASE16_SHELL_CONFIG_PATH_ENV, base16_config_path);
 
     for entry in fs::read_dir(base16_shell_hooks_path)? {
         let entry = entry?;
@@ -186,7 +185,7 @@ pub fn set_command(
     )
     .with_context(|| format!("Failed to set colorscheme \"{:?}\"", theme_name))?;
 
-    env::set_var(BASE16_SHELL_THEME_NAME_PATH_ENV_VAR_NAME, &theme_name);
+    env::set_var(BASE16_SHELL_THEME_NAME_PATH_ENV, &theme_name);
 
     run_hooks(
         base16_config_path,
