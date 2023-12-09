@@ -33,6 +33,9 @@ fi
 if [[ -d "$BASE16_TMUX_PLUGIN_PATH" && "$(command -v 'tmux')" ]]; then
   # Set current theme name
   read current_theme_name < "$BASE16_SHELL_THEME_NAME_PATH"
+  
+  tmux set-environment -g BASE16_THEME "$current_theme_name"
+  # tmux list-panes -a -F '#{pane_id}' | xargs -I {} tmux send-keys -t {} 'export BASE16_THEME="$current_theme_name"' C-m
 
   echo -e "set -g \0100colors-base16 '$current_theme_name'" >| \
     "$BASE16_SHELL_TMUXCONF_PATH"

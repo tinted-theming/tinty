@@ -5,7 +5,9 @@ mod config;
 use crate::cli::build_cli;
 use crate::commands::{ensure_config_files_exist, set_command};
 use anyhow::{Context, Result};
-use config::{BASE16_SHELL_PATH_ENV, DEFAULT_BASE16_SHELL_PATH, HOME_ENV, XDG_CONFIG_HOME_ENV};
+use config::{
+    BASE16_SHELL_PATH_ENV, DEFAULT_BASE16_SHELL_PATH, HOME_ENV, REPO_URL, XDG_CONFIG_HOME_ENV,
+};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -33,6 +35,23 @@ fn main() -> Result<()> {
         }).context("Path to tinted-theming/base16-shell not found. Either set $BASE16_SHELL_PATH or clone tinted-theming/base16-shell to ~/.config/tinted-theming/shell")?;
     let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
     let base16_shell_theme_name_path = base16_config_path.join("theme_name");
+
+    let base16_shell_repo_path_option: Option<PathBuf> = matches
+        .get_one::<String>("repo-dir")
+        .map(|p| PathBuf::from(p));
+
+    if let Some(base16_shell_repo_path) = &base16_shell_repo_path_option {
+        if !base16_shell_repo_path.exists()
+            || !base16_shell_repo_path.join("hooks").exists()
+            || !base16_shell_repo_path.join("scripts").exists()
+        {
+            anyhow::bail!(
+                "The config path does not exist or does not contain the correct directory structure. Make sure \"{}\" is cloned from: {}",
+                base16_shell_repo_path.display(),
+                REPO_URL
+            );
+        }
+    }
 
     ensure_config_files_exist(
         base16_config_path.as_path(),
@@ -81,10 +100,10 @@ fn main() -> Result<()> {
             if let Some(theme_name) = sub_matches.get_one::<String>("theme_name") {
                 set_command(
                     &theme_name,
-                    base16_config_path.as_path(),
-                    base16_shell_path.as_path(),
-                    base16_shell_colorscheme_path.as_path(),
-                    base16_shell_theme_name_path.as_path(),
+                    &base16_config_path,
+                    base16_shell_repo_path_option,
+                    &base16_shell_colorscheme_path,
+                    &base16_shell_theme_name_path,
                 )
                 .with_context(|| format!("Failed to set theme \"{:?}\"", theme_name,))?;
 
