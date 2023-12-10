@@ -1,13 +1,15 @@
 mod cli;
 mod commands;
 mod config;
+mod utils;
 
 use crate::cli::build_cli;
-use crate::commands::{ensure_config_files_exist, list_command, set_command};
+use crate::commands::{list_command, set_command};
 use anyhow::{Context, Result};
 use config::{HOME_ENV, REPO_URL, XDG_CONFIG_HOME_ENV};
 use std::env;
 use std::path::PathBuf;
+use utils::ensure_config_files_exist;
 
 /// Entry point of the application.
 fn main() -> Result<()> {
