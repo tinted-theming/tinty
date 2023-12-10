@@ -9,8 +9,12 @@ use config::{HOME_ENV, REPO_URL, XDG_CONFIG_HOME_ENV};
 use std::env;
 use std::path::PathBuf;
 
+/// Entry point of the application.
 fn main() -> Result<()> {
+    // Parse the command line arguments
     let matches = build_cli().get_matches();
+
+    // Determine the configuration path, falling back to the home directory if necessary
     let config_path: PathBuf = env::var(XDG_CONFIG_HOME_ENV)
         .map(PathBuf::from)
         .or_else(|_| {
@@ -19,6 +23,7 @@ fn main() -> Result<()> {
                 .and_then(|home| Ok(PathBuf::from(home).join(".config")))
                 .context("HOME environment variable not set")
         })?;
+    // Other configuration paths
     let base16_config_path = config_path.join("tinted-theming");
     let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
     let base16_shell_theme_name_path = base16_config_path.join("theme_name");
@@ -46,10 +51,13 @@ fn main() -> Result<()> {
     )
     .context("Error creating config files")?;
 
+    // Handle the subcommands passed to the CLI
     match matches.subcommand() {
+        // Handle the 'list' subcommand
         Some(("list", _)) => {
             list_command(base16_shell_repo_path_option)?;
         }
+        // Handle the 'set' subcommand
         Some(("set", sub_matches)) => {
             if let Some(theme_name) = sub_matches.get_one::<String>("theme_name") {
                 set_command(
@@ -66,6 +74,7 @@ fn main() -> Result<()> {
                 anyhow::bail!("theme_name is required for set command",);
             }
         }
+        // Unreachable pattern for robustness
         _ => unreachable!(),
     }
 

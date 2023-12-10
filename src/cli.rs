@@ -1,10 +1,12 @@
 use clap::{Arg, ArgAction, Command};
 
+/// Builds the command-line interface for the application.
 pub fn build_cli() -> Command {
     Command::new("base16_shell")
         .version("1.0.0")
         .author("Tinted Theming")
         .about("A tool to switch base16 colorschemes")
+        // Define a global argument for specifying the repository directory
         .arg(
             Arg::new("repo-dir")
                 .short('d')
@@ -14,6 +16,7 @@ pub fn build_cli() -> Command {
                 .global(true)
                 .action(ArgAction::Set)
         )
+        // Define subcommands
         .subcommand(Command::new("list").about("Lists available base16 colorschemes"))
         .subcommand(
             Command::new("set").about("Sets a base16 colorscheme").arg(
