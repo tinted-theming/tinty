@@ -10,6 +10,7 @@ use std::io::Write;
 use std::os::unix::fs as unix_fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::str::from_utf8;
 use tempfile::NamedTempFile;
 
 // Create a directory if it does not already exist
@@ -66,33 +67,104 @@ fn read_file_to_string(path: &Path) -> Result<String> {
     Ok(contents)
 }
 
-fn run_hooks_embedded(
-    embedded_dir: &'static Dir<'static>,
-    env_vars_to_set: Vec<(&str, &str)>,
+fn write_to_file(path: &Path, contents: &str) -> Result<()> {
+    if path.exists() {
+        fs::remove_file(&path)?;
+    }
+
+    let mut file = File::create(&path)?;
+    file.write_all(contents.as_bytes())?;
+
+    Ok(())
+}
+
+fn set_colorscheme_provided(
+    theme_name: &String,
+    base16_shell_repo_path: &PathBuf,
+    base16_shell_colorscheme_path: &Path,
+    base16_shell_theme_name_path: &Path,
 ) -> Result<()> {
-    for dir_entry in embedded_dir.find("*.sh").unwrap() {
-        let file = dir_entry.as_file().unwrap();
-        let contents = file.contents_utf8().unwrap();
-        let mut temp_file = NamedTempFile::new()?;
-        let entry = dir_entry;
-        let path = entry.path();
+    let theme_script_path =
+        base16_shell_repo_path.join(format!("scripts/base16-{}.sh", theme_name));
+    if !theme_script_path.exists() {
+        anyhow::bail!(
+            "Theme \"{}\" does not exist at \"{}\", try a different theme",
+            theme_name,
+            theme_script_path.display()
+        )
+    }
 
-        write!(temp_file, "{}", contents)
-            .map_err(anyhow::Error::new)
-            .context("Unable to write to temporary colorscheme file")?;
+    // Remove symlink file and create colorscheme symlink
+    if base16_shell_colorscheme_path.exists() {
+        fs::remove_file(base16_shell_colorscheme_path)?;
+    }
 
-        let mut command = Command::new("/bin/bash");
+    let theme_script_path =
+        base16_shell_repo_path.join(format!("scripts/base16-{}.sh", theme_name));
+    unix_fs::symlink(theme_script_path, base16_shell_colorscheme_path)?;
 
-        command.arg(temp_file.path());
+    // Write theme name to file
+    fs::write(base16_shell_theme_name_path, theme_name)?;
 
-        // Set each environment variable for the script
-        for (key, value) in &env_vars_to_set {
-            command.env(key, value);
-        }
+    let mut child = Command::new("/bin/bash")
+        .arg(base16_shell_colorscheme_path)
+        .spawn()
+        .with_context(|| {
+            format!(
+                "Failed to execute script: {:?}",
+                base16_shell_colorscheme_path
+            )
+        })?;
+    let status = child.wait().context("Failed to wait on bash status")?;
+    if !status.success() {
+        anyhow::bail!("Command finished with a non-zero status: {}", status)
+    }
 
-        command
-            .status()
-            .with_context(|| format!("Failed to execute shell hook script: {:?}", path))?;
+    Ok(())
+}
+
+fn set_colorscheme_embedded(
+    theme_name: &String,
+    base16_shell_colorscheme_path: &Path,
+    base16_shell_theme_name_path: &Path,
+) -> Result<()> {
+    let embedded_colorscheme_dir = get_embedded_colorscheme_dir();
+
+    let theme_script_file = embedded_colorscheme_dir
+        .get_file(format!("base16-{}.sh", theme_name))
+        .unwrap();
+    let theme_script_contents = theme_script_file.contents();
+
+    write_to_file(
+        base16_shell_colorscheme_path,
+        from_utf8(theme_script_contents)?,
+    )
+    .with_context(|| {
+        format!(
+            "Unable to write to file: {}",
+            base16_shell_colorscheme_path.display()
+        )
+    })?;
+
+    write_to_file(base16_shell_theme_name_path, theme_name).with_context(|| {
+        format!(
+            "Unable to write to file: {}",
+            base16_shell_colorscheme_path.display()
+        )
+    })?;
+
+    let mut child = Command::new("/bin/bash")
+        .arg(base16_shell_colorscheme_path)
+        .spawn()
+        .with_context(|| {
+            format!(
+                "Failed to execute script: {:?}",
+                base16_shell_colorscheme_path
+            )
+        })?;
+    let status = child.wait().context("Failed to wait on bash status")?;
+    if !status.success() {
+        anyhow::bail!("Command finished with a non-zero status: {}", status)
     }
 
     Ok(())
@@ -113,77 +185,20 @@ fn set_colorscheme(
     }
 
     if let Some(base16_shell_repo_path) = base16_shell_repo_path_option {
-        let theme_script_path =
-            base16_shell_repo_path.join(format!("scripts/base16-{}.sh", theme_name));
-        if !theme_script_path.exists() {
-            anyhow::bail!(
-                "Theme \"{}\" does not exist at \"{}\", try a different theme",
-                theme_name,
-                theme_script_path.display()
-            )
-        }
-
-        // Remove symlink file and create colorscheme symlink
-        if base16_shell_colorscheme_path.exists() {
-            fs::remove_file(base16_shell_colorscheme_path)?;
-        }
-
-        let theme_script_path =
-            base16_shell_repo_path.join(format!("scripts/base16-{}.sh", theme_name));
-        unix_fs::symlink(theme_script_path, base16_shell_colorscheme_path)?;
-
-        // Write theme name to file
-        fs::write(base16_shell_theme_name_path, theme_name)?;
-
-        // Source colorscheme script
-        // Wait for script to fully execute before continuing
-        let mut child = Command::new("/bin/bash")
-            .arg(base16_shell_colorscheme_path)
-            .spawn()
-            .with_context(|| {
-                format!(
-                    "Failed to execute script: {:?}",
-                    base16_shell_colorscheme_path
-                )
-            })?;
-        let status = child.wait().context("Failed to wait on bash status")?;
-        if !status.success() {
-            anyhow::bail!("Command finished with a non-zero status: {}", status)
-        }
+        set_colorscheme_provided(
+            &theme_name,
+            &base16_shell_repo_path,
+            &base16_shell_colorscheme_path,
+            &base16_shell_theme_name_path,
+        )
+        .context("Failed to set user provided colorscheme")?;
     } else {
-        let embedded_colorscheme_dir = get_embedded_colorscheme_dir();
-
-        let theme_script_file = embedded_colorscheme_dir
-            .get_file(format!("base16-{}.sh", theme_name))
-            .unwrap();
-        let theme_script_contents = theme_script_file.contents();
-
-        // Remove old colorscheme script file
-        if base16_shell_colorscheme_path.exists() {
-            fs::remove_file(base16_shell_colorscheme_path)?;
-        }
-
-        // Create new colorscheme script file
-        fs::write(base16_shell_colorscheme_path, theme_script_contents)?;
-
-        // Write theme name to file
-        fs::write(base16_shell_theme_name_path, theme_name)?;
-
-        // Source colorscheme script
-        // Wait for script to fully execute before continuing
-        let mut child = Command::new("/bin/bash")
-            .arg(base16_shell_colorscheme_path)
-            .spawn()
-            .with_context(|| {
-                format!(
-                    "Failed to execute script: {:?}",
-                    base16_shell_colorscheme_path
-                )
-            })?;
-        let status = child.wait().context("Failed to wait on bash status")?;
-        if !status.success() {
-            anyhow::bail!("Command finished with a non-zero status: {}", status)
-        }
+        set_colorscheme_embedded(
+            &theme_name,
+            &base16_shell_colorscheme_path,
+            &base16_shell_theme_name_path,
+        )
+        .context("Failed to set embedded colorscheme")?;
     }
 
     Ok(())
@@ -222,6 +237,37 @@ fn run_hooks_provided(
                 .status()
                 .with_context(|| format!("Failed to execute shell hook script: {:?}", path))?;
         }
+    }
+
+    Ok(())
+}
+
+fn run_hooks_embedded(
+    embedded_dir: &'static Dir<'static>,
+    env_vars_to_set: Vec<(&str, &str)>,
+) -> Result<()> {
+    for dir_entry in embedded_dir.find("*.sh").unwrap() {
+        let file = dir_entry.as_file().unwrap();
+        let contents = file.contents_utf8().unwrap();
+        let mut temp_file = NamedTempFile::new()?;
+        let entry = dir_entry;
+        let path = entry.path();
+
+        write!(temp_file, "{}", contents)
+            .map_err(anyhow::Error::new)
+            .context("Unable to write to temporary colorscheme file")?;
+
+        let mut command = Command::new("/bin/bash");
+
+        command.arg(temp_file.path());
+
+        for (key, value) in &env_vars_to_set {
+            command.env(key, value);
+        }
+
+        command
+            .status()
+            .with_context(|| format!("Failed to execute shell hook script: {:?}", path))?;
     }
 
     Ok(())
@@ -285,6 +331,68 @@ pub fn set_command(
         base16_shell_theme_name_path,
     )
     .context("Failed to run hooks")?;
+
+    Ok(())
+}
+
+pub fn list_command(base16_shell_repo_path_option: Option<PathBuf>) -> Result<()> {
+    if let Some(base16_shell_repo_path) = base16_shell_repo_path_option {
+        let scripts_path = base16_shell_repo_path.join("scripts");
+
+        if !scripts_path.is_dir() {
+            anyhow::bail!(
+                "Scripts directory does not exist or is not a directory: {:?}",
+                scripts_path
+            );
+        }
+
+        let colorschemes: Vec<String> = fs::read_dir(&scripts_path)
+            .with_context(|| format!("Failed to read directory: {:?}", &scripts_path))?
+            .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+
+                if path.is_file() {
+                    return path
+                        .file_stem()
+                        .and_then(|name| name.to_str())
+                        .and_then(|name| name.strip_prefix("base16-"))
+                        .map(|name| name.to_string());
+                }
+
+                None
+            })
+            .collect();
+
+        if colorschemes.is_empty() {
+            println!("No themes found in the scripts directory.");
+        } else {
+            for colorscheme in colorschemes {
+                println!("{}", colorscheme);
+            }
+        }
+    } else {
+        let colorschemes_dir = get_embedded_colorscheme_dir();
+
+        for file in colorschemes_dir.files() {
+            let filepath_name = file.path().file_name().and_then(|os_str| os_str.to_str());
+
+            match filepath_name {
+                Some(colorscheme_filename) => {
+                    let without_prefix = if colorscheme_filename.starts_with("base16-") {
+                        &colorscheme_filename["base16-".len()..]
+                    } else {
+                        colorscheme_filename
+                    };
+
+                    let colorscheme = without_prefix.split('.').next().unwrap_or("");
+
+                    println!("{}", colorscheme);
+                }
+                None => println!("File path does not have a valid UTF-8 file name"),
+            }
+        }
+    }
 
     Ok(())
 }
