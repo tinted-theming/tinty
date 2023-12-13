@@ -73,11 +73,13 @@ fn main() -> Result<()> {
 
                 println!("Theme set to: {}", theme_name);
             } else {
-                anyhow::bail!("theme_name is required for set command",);
+                anyhow::bail!("theme_name is required for set command");
             }
         }
-        // Unreachable pattern for robustness
-        _ => unreachable!(),
+        _ => {
+            println!("Basic usage: base16-shell set <SCHEME_NAME>");
+            println!("For more information try --help");
+        }
     }
 
     Ok(())

@@ -1,5 +1,5 @@
 [package]
-name = "base16-shell"
+name = "base16_shell"
 description = "A tool to switch base16 colorschemes"
 version = "1.0.0"
 edition = "2021"
