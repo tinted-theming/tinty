@@ -117,7 +117,16 @@ fn test_cli_set_command() {
     // Assert
     // ------
 
-    assert!(stdout.contains(&expected_output), "stdout does not contain the expected output");
-    assert!(colorscheme_content.contains(scheme_name), "Colorscheme file content is incorrect");
-    assert!(theme_name_content.contains(scheme_name), "Theme name file content is incorrect");
+    assert!(
+        stdout.contains(&expected_output),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        colorscheme_content.contains(scheme_name),
+        "Colorscheme file content is incorrect"
+    );
+    assert!(
+        theme_name_content.contains(scheme_name),
+        "Theme name file content is incorrect"
+    );
 }

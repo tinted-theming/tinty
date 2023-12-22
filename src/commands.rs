@@ -15,7 +15,7 @@ use tempfile::NamedTempFile;
 
 fn set_colorscheme_provided(
     theme_name: &String,
-    base16_shell_repo_path: &PathBuf,
+    base16_shell_repo_path: &Path,
     base16_shell_colorscheme_path: &Path,
     base16_shell_theme_name_path: &Path,
 ) -> Result<()> {
@@ -127,17 +127,17 @@ fn set_colorscheme(
 
     if let Some(base16_shell_repo_path) = base16_shell_repo_path_option {
         set_colorscheme_provided(
-            &theme_name,
-            &base16_shell_repo_path,
-            &base16_shell_colorscheme_path,
-            &base16_shell_theme_name_path,
+            theme_name,
+            base16_shell_repo_path,
+            base16_shell_colorscheme_path,
+            base16_shell_theme_name_path,
         )
         .context("Failed to set user provided colorscheme")?;
     } else {
         set_colorscheme_embedded(
-            &theme_name,
-            &base16_shell_colorscheme_path,
-            &base16_shell_theme_name_path,
+            theme_name,
+            base16_shell_colorscheme_path,
+            base16_shell_theme_name_path,
         )
         .context("Failed to set embedded colorscheme")?;
     }
@@ -146,7 +146,7 @@ fn set_colorscheme(
 }
 
 fn run_hooks_provided(
-    base16_shell_repo_path: &PathBuf,
+    base16_shell_repo_path: &Path,
     env_vars_to_set: Vec<(&str, &str)>,
 ) -> Result<()> {
     let base16_shell_hooks_path = base16_shell_repo_path.join("hooks");
@@ -298,10 +298,10 @@ fn run_hooks(
 /// ```
 pub fn set_command(
     theme_name: &String,
-    base16_config_path: &PathBuf,
+    base16_config_path: &Path,
     base16_shell_repo_path_option: Option<PathBuf>,
-    base16_shell_colorscheme_path: &PathBuf,
-    base16_shell_theme_name_path: &PathBuf,
+    base16_shell_colorscheme_path: &Path,
+    base16_shell_theme_name_path: &Path,
 ) -> Result<()> {
     set_colorscheme(
         theme_name,
@@ -395,11 +395,12 @@ pub fn list_command(base16_shell_repo_path_option: Option<PathBuf>) -> Result<()
             match filepath_name {
                 Some(colorscheme_filename) => {
                     // Strip the "base16-" prefix and print the color scheme name
-                    let without_prefix = if colorscheme_filename.starts_with("base16-") {
-                        &colorscheme_filename["base16-".len()..]
-                    } else {
-                        colorscheme_filename
-                    };
+                    let without_prefix =
+                        if let Some(stripped) = colorscheme_filename.strip_prefix("base16-") {
+                            stripped
+                        } else {
+                            colorscheme_filename
+                        };
 
                     // Extract and print the color scheme name
                     let colorscheme = without_prefix.split('.').next().unwrap_or("");

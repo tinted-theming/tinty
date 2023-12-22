@@ -59,10 +59,10 @@ pub fn read_file_to_string(path: &Path) -> Result<String> {
 
 pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     if path.exists() {
-        fs::remove_file(&path)?;
+        fs::remove_file(path)?;
     }
 
-    let mut file = File::create(&path)?;
+    let mut file = File::create(path)?;
     file.write_all(contents.as_bytes())?;
 
     Ok(())

@@ -22,7 +22,7 @@ fn main() -> Result<()> {
         .or_else(|_| {
             env::var(HOME_ENV)
                 .map_err(anyhow::Error::new)
-                .and_then(|home| Ok(PathBuf::from(home).join(".config")))
+                .map(|home| PathBuf::from(home).join(".config"))
                 .context("HOME environment variable not set")
         })?;
     // Other configuration paths
@@ -30,9 +30,8 @@ fn main() -> Result<()> {
     let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
     let base16_shell_theme_name_path = base16_config_path.join("theme_name");
 
-    let base16_shell_repo_path_option: Option<PathBuf> = matches
-        .get_one::<String>("repo-dir")
-        .map(|p| PathBuf::from(p));
+    let base16_shell_repo_path_option: Option<PathBuf> =
+        matches.get_one::<String>("repo-dir").map(PathBuf::from);
 
     if let Some(base16_shell_repo_path) = &base16_shell_repo_path_option {
         if !base16_shell_repo_path.exists()
@@ -63,7 +62,7 @@ fn main() -> Result<()> {
         Some(("set", sub_matches)) => {
             if let Some(theme_name) = sub_matches.get_one::<String>("theme_name") {
                 set_command(
-                    &theme_name,
+                    theme_name,
                     &base16_config_path,
                     base16_shell_repo_path_option,
                     &base16_shell_colorscheme_path,
