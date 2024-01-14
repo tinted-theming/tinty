@@ -14,7 +14,7 @@ fi
 
 # If BASE16_FZF_PATH doesn't exist, stop hook
 if [ ! -d "$BASE16_FZF_PATH" ]; then
-  return 2
+  exit 2
 fi
 
 # ----------------------------------------------------------------------

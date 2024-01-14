@@ -22,7 +22,7 @@ fi
 
 # If base16-tmux path directory doesn't exist, stop hook
 if [ ! -d $BASE16_TMUX_PLUGIN_PATH ]; then
-  return 2
+  exit 2
 fi
 
 # ----------------------------------------------------------------------

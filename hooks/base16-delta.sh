@@ -16,7 +16,7 @@ fi
 
 if [[ -z "$BASE16_COLOR_00_HEX" || -z "$(command -v 'bc')" ]]; then
   # BASE16_SHELL_ENABLE_VARS not set or `bc` command does not exist.
-  return 1
+  exit 1
 fi
 
 read -r current_theme_name < "$BASE16_SHELL_THEME_NAME_PATH"
