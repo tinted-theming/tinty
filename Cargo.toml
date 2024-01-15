@@ -14,5 +14,4 @@ categories = ["command-line-utilities"]
 [dependencies]
 anyhow = "1.0.75"
 clap = { version = "4.4.8", features = ["derive"] }
-include_dir = { version = "0.7.3", features = ["glob"] }
-tempfile = "3.8.1"
+git2 = "0.18.1"

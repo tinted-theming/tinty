@@ -17,6 +17,9 @@ pub fn build_cli() -> Command {
                 .action(ArgAction::Set)
         )
         // Define subcommands
+        .subcommand(
+            Command::new("init").about("Initializes base16 with the exising config. Used to Initialize exising theme for when your shell starts up.")
+        )
         .subcommand(Command::new("list").about("Lists available base16 colorschemes"))
         .subcommand(
             Command::new("set").about("Sets a base16 colorscheme").arg(
