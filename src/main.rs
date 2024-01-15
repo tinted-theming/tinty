@@ -37,7 +37,11 @@ fn main() -> Result<()> {
     // Other configuration paths
     let base16_shell_theme_default_name =
         env::var(BASE16_SHELL_THEME_DEFAULT_ENV).unwrap_or_default();
-    let base16_config_path = config_path.join("tinted-theming");
+    let base16_config_path: PathBuf = if let Some(config) = matches.get_one::<String>("config") {
+        PathBuf::from(config)
+    } else {
+        config_path.join("tinted-theming")
+    };
     let tintedtheming_data_path = data_path.join("tinted-theming");
     let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
     let base16_shell_theme_name_path = base16_config_path.join("theme_name");

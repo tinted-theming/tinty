@@ -1,12 +1,11 @@
 use anyhow::Result;
-use std::env;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 use std::str;
 
-pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
+fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     if path.exists() {
         fs::remove_file(path)?;
     }
@@ -17,9 +16,21 @@ pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     Ok(())
 }
 
+fn remove_dir(path: &Path) -> Result<()> {
+    if path.exists() {
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    Ok(())
+}
+
 #[test]
 fn test_cli_no_arguments() {
+    let config_path = Path::new("base16_shell_test_cli_no_arguments");
+    remove_dir(&config_path).unwrap();
+
     let output = Command::new("./target/debug/base16_shell")
+        .arg(format!("--config={}", config_path.display()))
         .output()
         .expect("Failed to execute command");
     let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
@@ -27,6 +38,9 @@ fn test_cli_no_arguments() {
     assert!(output.status.success());
     assert!(stdout.contains("Basic usage: base16-shell set <SCHEME_NAME>"));
     assert!(stdout.contains("For more information try --help"));
+
+    // Cleanup
+    remove_dir(&config_path).unwrap();
 }
 
 #[test]
@@ -35,24 +49,11 @@ fn test_cli_init_command_existing_config() {
     // Arrange
     // -------
 
+    let config_path = Path::new("base16_shell_test_cli_init_command_existing_config");
+    remove_dir(&config_path).unwrap();
     let expected_output = "some random text";
-    let config_path: PathBuf = env::var("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .or_else(|_| env::var("HOME").and_then(|home| Ok(PathBuf::from(home).join(".config"))))
-        .unwrap();
-    let base16_config_path = config_path.join("tinted-theming");
-    let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
-    let base16_shell_theme_name_path = base16_config_path.join("theme_name");
-    if base16_shell_colorscheme_path.exists() {
-        if let Err(e) = fs::remove_file(&base16_shell_colorscheme_path) {
-            println!("Error removing file: {}", e);
-        }
-    }
-    if base16_shell_theme_name_path.exists() {
-        if let Err(e) = fs::remove_file(&base16_shell_theme_name_path) {
-            println!("Error removing file: {}", e);
-        }
-    }
+    let base16_shell_colorscheme_path = config_path.join("base16_shell_theme");
+    let base16_shell_theme_name_path = config_path.join("theme_name");
 
     // Make sure the files don't exist so we can ensure the cli tool has created them
     assert!(
@@ -64,6 +65,7 @@ fn test_cli_init_command_existing_config() {
         "Theme name file should not exist before test"
     );
 
+    fs::create_dir_all(config_path).unwrap();
     write_to_file(
         &base16_shell_colorscheme_path,
         format!("echo '{}'", expected_output).as_str(),
@@ -76,7 +78,10 @@ fn test_cli_init_command_existing_config() {
     // ---
 
     let output = Command::new("./target/debug/base16_shell")
-        .arg("init")
+        .args([
+            "init",
+            format!("--config={}", config_path.display()).as_str(),
+        ])
         .output()
         .expect("Failed to execute command");
     let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
@@ -89,6 +94,9 @@ fn test_cli_init_command_existing_config() {
         stdout.contains(expected_output),
         "stdout does not contain the expected output"
     );
+
+    // Cleanup
+    remove_dir(&config_path).unwrap();
 }
 
 #[test]
@@ -97,25 +105,12 @@ fn test_cli_init_command_empty_config() {
     // Arrange
     // -------
 
-    let config_path: PathBuf = env::var("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .or_else(|_| env::var("HOME").and_then(|home| Ok(PathBuf::from(home).join(".config"))))
-        .unwrap();
-    let base16_config_path = config_path.join("tinted-theming");
-    let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
-    let base16_shell_theme_name_path = base16_config_path.join("theme_name");
+    let config_path = Path::new("base16_shell_test_cli_init_command_empty_config");
+    remove_dir(&config_path).unwrap();
+    let base16_shell_colorscheme_path = config_path.join("base16_shell_theme");
+    let base16_shell_theme_name_path = config_path.join("theme_name");
     let expected_output =
         "Config files don't exist, run `base16_shell set <THEME_NAME>` to create them";
-    if base16_shell_colorscheme_path.exists() {
-        if let Err(e) = fs::remove_file(&base16_shell_colorscheme_path) {
-            println!("Error removing file: {}", e);
-        }
-    }
-    if base16_shell_theme_name_path.exists() {
-        if let Err(e) = fs::remove_file(&base16_shell_theme_name_path) {
-            println!("Error removing file: {}", e);
-        }
-    }
 
     // Make sure the files don't exist so we can ensure the cli tool has created them
     assert!(
@@ -132,12 +127,13 @@ fn test_cli_init_command_empty_config() {
     // ---
 
     let output = Command::new("./target/debug/base16_shell")
-        .arg("init")
+        .args([
+            "init",
+            format!("--config={}", config_path.display()).as_str(),
+        ])
         .output()
         .expect("Failed to execute command");
     let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
-
-    println!("from test {}, claiming its not: {}", stdout, &expected_output);
 
     // ------
     // Assert
@@ -147,6 +143,9 @@ fn test_cli_init_command_empty_config() {
         stdout.contains(&expected_output),
         "stdout does not contain the expected output"
     );
+
+    // Cleanup
+    remove_dir(config_path).unwrap();
 }
 
 #[test]
@@ -155,7 +154,9 @@ fn test_cli_list_subcommand() {
     // Arrange
     // -------
 
-    let colorschemes_dir = Path::new("./scripts");
+    let config_path = Path::new("base16_shell_test_cli_list_subcommand");
+    remove_dir(&config_path).unwrap();
+    let colorschemes_dir = Path::new("./themes");
     let mut expected_colorschemes = fs::read_dir(colorschemes_dir)
         .expect("Failed to read colorschemes directory")
         .filter_map(|entry| {
@@ -175,7 +176,10 @@ fn test_cli_list_subcommand() {
     // ---
 
     let output = Command::new("./target/debug/base16_shell")
-        .arg("list")
+        .args([
+            "list",
+            format!("--config={}", config_path.display()).as_str(),
+        ])
         .output()
         .expect("Failed to execute command");
     assert!(output.status.success());
@@ -191,6 +195,9 @@ fn test_cli_list_subcommand() {
     // ------
 
     assert_eq!(expected_colorschemes, actual_colorschemes);
+
+    // Cleanup
+    remove_dir(&config_path).unwrap();
 }
 
 #[test]
@@ -199,28 +206,12 @@ fn test_cli_set_command() {
     // Arrange
     // -------
 
+    let config_path = Path::new("base16_shell_test_cli_set_command");
+    remove_dir(&config_path).unwrap();
     let scheme_name = "ocean";
-    let config_path: PathBuf = env::var("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .or_else(|_| env::var("HOME").and_then(|home| Ok(PathBuf::from(home).join(".config"))))
-        .unwrap();
-    let base16_config_path = config_path.join("tinted-theming");
-    let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
-    let base16_shell_theme_name_path = base16_config_path.join("theme_name");
+    let base16_shell_colorscheme_path = config_path.join("base16_shell_theme");
+    let base16_shell_theme_name_path = config_path.join("theme_name");
     let expected_output = format!("Theme set to: {}", scheme_name);
-
-    if base16_shell_colorscheme_path.exists() {
-        match fs::remove_file(&base16_shell_colorscheme_path) {
-            Ok(_) => {}
-            Err(e) => println!("Error removing file: {}", e),
-        }
-    }
-    if base16_shell_theme_name_path.exists() {
-        match fs::remove_file(&base16_shell_theme_name_path) {
-            Ok(_) => {}
-            Err(e) => println!("Error removing file: {}", e),
-        }
-    }
 
     // Make sure the files don't exist so we can ensure the cli tool has created them
     assert!(
@@ -237,7 +228,11 @@ fn test_cli_set_command() {
     // ---
 
     let output = Command::new("./target/debug/base16_shell")
-        .args(&["set", scheme_name])
+        .args(&[
+            "set",
+            scheme_name,
+            format!("--config={}", config_path.display()).as_str(),
+        ])
         .output()
         .expect("Failed to execute command");
     let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
@@ -262,4 +257,7 @@ fn test_cli_set_command() {
         theme_name_content.contains(scheme_name),
         "Theme name file content is incorrect"
     );
+
+    // Cleanup
+    remove_dir(&config_path).unwrap();
 }

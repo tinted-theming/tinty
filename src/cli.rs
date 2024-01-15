@@ -16,6 +16,16 @@ pub fn build_cli() -> Command {
                 .global(true)
                 .action(ArgAction::Set)
         )
+        // Define a global argument for specifying the repository directory
+        .arg(
+            Arg::new("config")
+                .short('c')
+                .help("Optional path to the base16-shell config directory.")
+                .value_name("CONFIG")
+                .long("config")
+                .global(true)
+                .action(ArgAction::Set)
+        )
         // Define subcommands
         .subcommand(
             Command::new("init").about("Initializes base16 with the exising config. Used to Initialize exising theme for when your shell starts up.")
