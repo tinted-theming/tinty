@@ -4,7 +4,8 @@ mod config;
 mod utils;
 
 use crate::cli::build_cli;
-use crate::commands::{list_command, set_command};
+use crate::commands::{init_command, list_command, set_command};
+use crate::config::BASE16_SHELL_THEME_DEFAULT_ENV;
 use anyhow::{Context, Result};
 use config::{HOME_ENV, REPO_URL, XDG_CONFIG_HOME_ENV, XDG_DATA_HOME_ENV};
 use std::env;
@@ -34,6 +35,8 @@ fn main() -> Result<()> {
                 .context("HOME environment variable not set")
         })?;
     // Other configuration paths
+    let base16_shell_theme_default_name =
+        env::var(BASE16_SHELL_THEME_DEFAULT_ENV).unwrap_or_default();
     let base16_config_path = config_path.join("tinted-theming");
     let tintedtheming_data_path = data_path.join("tinted-theming");
     let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
@@ -56,6 +59,19 @@ fn main() -> Result<()> {
 
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
+        Some(("init", _)) => {
+            init_command(
+                &base16_shell_theme_default_name,
+                &base16_shell_colorscheme_path,
+                &base16_shell_theme_name_path,
+            )
+            .with_context(|| {
+                format!(
+                    "Failed to initialize base16-shell, config files are missing. Try setting a theme first.\"{:?}\"",
+                    base16_shell_theme_default_name,
+                )
+            })?;
+        }
         Some(("list", _)) => {
             list_command(&base16_shell_repo_path)?;
         }

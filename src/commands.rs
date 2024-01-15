@@ -77,7 +77,7 @@ fn set_colorscheme(
     Ok(())
 }
 
-// Set env variables for hooks and then execute .sh hooks
+// Set env variables for hooks and then executes .sh hook scripts
 fn run_hooks(
     theme_name: &str,
     base16_config_path: &Path,
@@ -130,51 +130,126 @@ fn run_hooks(
     Ok(())
 }
 
-/// Sets the selected colorscheme and runs associated hook scripts.
+/// Initializes the base16 colorscheme and runs the associated colorscheme script.
 ///
-/// This function orchestrates the process of setting a colorscheme based on the provided theme name.
-/// It first sets the colorscheme using the `set_colorscheme` function and then runs the associated
-/// hook scripts using the `run_hooks` function. These hook scripts apply the colorscheme to the current
-/// environment.
+/// This function sets up the base16 colorscheme by executing a shell script specified by
+/// `base16_shell_colorscheme_path`. It also checks if the necessary configuration files exist
+/// and if not, it attempts to read the theme name from `base16_shell_theme_name_path`.
 ///
 /// # Arguments
 ///
-/// * `theme_name` - A reference to a string containing the name of the theme to set.
-/// * `base16_config_path` - A reference to a `Path` pointing to the base16 configuration directory.
-/// * `base16_shell_repo_path` - A reference to a `Path` pointing to the base16-shell repository directory.
-/// * `base16_shell_colorscheme_path` - A reference to a `Path` pointing to the file where the colorscheme script
-///   should be written or linked.
-/// * `base16_shell_theme_name_path` - A reference to a `Path` pointing to the file where the theme name should
-///   be stored.
+/// * `base16_shell_theme_default_name` - The default base16 theme name to use.
+/// * `base16_shell_colorscheme_path` - The path to the colorscheme script.
+/// * `base16_shell_theme_name_path` - The path to the file containing the theme name.
 ///
 /// # Errors
 ///
-/// Returns an error if the colorscheme cannot be set, which could occur if the theme script does not exist
-/// in the specified path, or if there's an issue executing the hook scripts.
+/// This function returns an error if any of the following conditions are met:
+/// - The configuration files do not exist.
+/// - The colorscheme script fails to execute.
+/// - The colorscheme script exits with a non-zero status.
 ///
 /// # Examples
 ///
 /// ```
 /// # use std::path::Path;
 /// # fn run_example() -> anyhow::Result<()> {
-/// let theme_name = "default".to_string();
+/// let theme_name = "default";
+/// let colorscheme_path = Path::new("/path/to/colorscheme/script");
+/// let theme_name_path = Path::new("/path/to/theme/name");
+///
+/// init_command(
+///     theme_name,
+///     colorscheme_path,
+///     theme_name_path,
+/// )?;
+///
+/// # Ok(())
+/// # }
+/// ```
+///
+/// # Note
+///
+/// This function assumes that the necessary configuration files and scripts exist in the specified paths.
+///
+pub fn init_command(
+    base16_shell_theme_default_name: &str,
+    base16_shell_colorscheme_path: &Path,
+    base16_shell_theme_name_path: &Path,
+) -> Result<()> {
+    let mut init_theme_name: String = base16_shell_theme_default_name.to_string();
+
+    if base16_shell_theme_default_name.is_empty() {
+        init_theme_name = read_file_to_string(&base16_shell_theme_name_path)?;
+    }
+
+    if !base16_shell_colorscheme_path.exists() || init_theme_name.is_empty() {
+        println!("Config files don't exist, run `base16_shell set <THEME_NAME>` to create them");
+        return Ok(());
+    }
+
+    let mut child = Command::new("/bin/sh")
+        .arg(base16_shell_colorscheme_path)
+        .spawn()
+        .with_context(|| {
+            format!(
+                "Failed to execute script: {:?}",
+                base16_shell_colorscheme_path
+            )
+        })?;
+    let status = child.wait().context("Failed to wait on bash status")?;
+    if !status.success() {
+        anyhow::bail!("Command finished with a non-zero status: {}", status)
+    }
+
+    Ok(())
+}
+
+/// Sets the selected colorscheme and runs associated hook scripts.
+///
+/// This function sets the desired colorscheme based on the provided theme name.
+/// It determines whether to use the provided repository path or embedded resources
+/// to locate the colorscheme script. After setting the colorscheme, it runs the hook
+/// scripts to apply the colorscheme to the current environment.
+///
+/// # Arguments
+///
+/// * `theme_name` - The name of the theme to set.
+/// * `base16_config_path` - The path to the base16 configuration directory.
+/// * `base16_shell_repo_path` - The path to the base16-shell repository.
+/// * `base16_shell_colorscheme_path` - The path to the colorscheme script file.
+/// * `base16_shell_theme_name_path` - The path to the file where the theme name should be stored.
+///
+/// # Errors
+///
+/// This function returns an error if any of the following conditions are met:
+/// - The colorscheme script fails to execute.
+/// - The colorscheme script exits with a non-zero status.
+/// - The hook scripts fail to run.
+///
+/// # Examples
+///
+/// ```
+/// # use std::path::Path;
+/// # fn run_example() -> anyhow::Result<()> {
+/// let theme_name = "default";
 /// let base16_config_path = Path::new("/path/to/base16/config");
 /// let base16_shell_repo_path = Path::new("/path/to/base16-shell/repo");
 /// let base16_shell_colorscheme_path = Path::new("/path/to/base16/colorscheme/script");
 /// let base16_shell_theme_name_path = Path::new("/path/to/base16/theme/name");
 ///
-/// commands::set_command(
-///     &theme_name,
-///     &base16_config_path,
-///     &base16_shell_repo_path,
-///     &base16_shell_colorscheme_path,
-///     &base16_shell_theme_name_path,
+/// set_command(
+///     theme_name,
+///     base16_config_path,
+///     base16_shell_repo_path,
+///     base16_shell_colorscheme_path,
+///     base16_shell_theme_name_path,
 /// )?;
+///
 /// # Ok(())
 /// # }
 /// ```
 ///
-/// The example demonstrates how to use this function to set a colorscheme and run associated hooks.
 pub fn set_command(
     theme_name: &str,
     base16_config_path: &Path,
