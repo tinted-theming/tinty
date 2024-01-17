@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # ----------------------------------------------------------------------
 # Setup config variables and env
@@ -24,23 +24,21 @@ fi
 
 # If HEXCHAT_COLORS_CONF_PATH has been configured, but the file doesn't
 # exist
-if [ -n "$HEXCHAT_COLORS_CONF_PATH" ] \
-  && [ ! -f "$HEXCHAT_COLORS_CONF_PATH" ]; then
+if [ -n "$HEXCHAT_COLORS_CONF_PATH" ] && [ ! -f "$HEXCHAT_COLORS_CONF_PATH" ]; then
   echo "\$HEXCHAT_COLORS_CONF_PATH is not a file."
   exit 2
 fi
-
 # Set current theme name
-read current_theme_name < "$BASE16_SHELL_THEME_NAME_PATH"
+current_theme_name=$(cat "$BASE16_SHELL_THEME_NAME_PATH")
 
 hexchat_theme_path="$BASE16_HEXCHAT_PATH/colors/base16-$current_theme_name.conf"
 
 if [ ! -f "$hexchat_theme_path" ]; then
   output="'$current_theme_name' theme doesn't exist in base16-hex. Make sure "
-  output+="the local repository is using the latest commit. \`cd\` to "
-  output+="the directory and try doing a \`git pull\`."
+  output="${output}the local repository is using the latest commit. 'cd' to "
+  output="${output}the directory and try doing a 'git pull'."
 
-  echo $output
+  echo "$output"
 
   exit 2
 fi
