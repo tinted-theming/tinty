@@ -1,8 +1,9 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
+use std::env;
 use std::error::Error;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str;
 
@@ -85,6 +86,101 @@ fn test_cli_no_arguments() {
 
     // Cleanup
     remove_dir(&config_path).unwrap();
+}
+
+#[test]
+fn test_cli_setup_command_existing_repo() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+
+    let config_path = Path::new("base16_shell_test_cli_setup_command_existing_config");
+    remove_dir(&config_path).unwrap();
+    let data_path: PathBuf = env::var("XDG_DATA_HOME")
+        .map(PathBuf::from)
+        .or_else(|_| {
+            env::var("HOME")
+                .map_err(anyhow::Error::new)
+                .map(|home| PathBuf::from(home).join(".local/share"))
+                .context("HOME environment variable not set")
+        })?;
+    let repo_path = data_path.join("tinted-theming/base16-shell-manager");
+    let expected_output = format!("{} already exists. If you want to update try running the `update` subcommand or `--help` for more information.", repo_path.display());
+    let mut is_test_repo_dir = false;
+
+    if !repo_path.exists() {
+        is_test_repo_dir = true;
+        fs::create_dir_all(&repo_path)?;
+    }
+
+    assert!(
+        repo_path.exists(),
+        "Repo path should exist"
+    );
+
+    // ---
+    // Act
+    // ---
+
+    let subcommand = "setup";
+    let config_flag = format!("--config={}", config_path.display());
+    let args: &[&str] = &[subcommand, &config_flag];
+    let stdout = run_target_command(args).unwrap();
+
+    println!("1: {}", stdout);
+    println!("2: {}", &expected_output);
+
+    // ------
+    // Assert
+    // ------
+
+    assert!(
+        stdout.contains(&expected_output),
+        "stdout does not contain the expected output"
+    );
+
+    // Cleanup
+    if is_test_repo_dir {
+        remove_dir(&repo_path)?;
+    }
+    remove_dir(&config_path)?;
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_setup_command_with_repo_dir_flag() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+
+    let name = "base16_shell_test_cli_setup_command_with_repo_dir_flag";
+    let config_path = Path::new(&name);
+    let repo_path = Path::new(&name);
+    remove_dir(&config_path).unwrap();
+    let expected_output = format!("The setup command will not work since you have provided your own `--repo-dir` at {}. Visit https://github.com/tinted-theming/base16-shell-manager to see instructions on manually updating.", name);
+
+    // ---
+    // Act
+    // ---
+
+    let subcommand = "setup";
+    let repo_dir_flag = format!("--repo-dir={}", repo_path.display()); 
+    let config_flag = format!("--config={}", config_path.display());
+    let args: &[&str] = &[subcommand, &config_flag, &repo_dir_flag];
+    let stdout = run_target_command(args).unwrap();
+
+    // ------
+    // Assert
+    // ------
+
+    assert!(
+        stdout.contains(&expected_output),
+        "stdout does not contain the expected output"
+    );
+
+    remove_dir(&config_path)?;
+    Ok(())
 }
 
 #[test]
