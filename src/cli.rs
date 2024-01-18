@@ -1,5 +1,7 @@
 use clap::{Arg, ArgAction, Command};
 
+use crate::config::REPO_NAME;
+
 /// Builds the command-line interface for the application.
 pub fn build_cli() -> Command {
     Command::new("base16_shell")
@@ -10,7 +12,7 @@ pub fn build_cli() -> Command {
         .arg(
             Arg::new("repo-dir")
                 .short('d')
-                .help("Optional path to the base16-shell repository. This is used to run the colorschemes and hooks if you don't want to use the compiled versions.")
+                .help(format!("Optional path to the {} repository. This is used to run the colorschemes and hooks if you don't want to use the compiled versions.", REPO_NAME))
                 .value_name("DIR")
                 .long("repo-dir")
                 .global(true)
@@ -20,7 +22,7 @@ pub fn build_cli() -> Command {
         .arg(
             Arg::new("config")
                 .short('c')
-                .help("Optional path to the base16-shell config directory.")
+                .help(format!("Optional path to the {} config directory.", REPO_NAME))
                 .value_name("CONFIG")
                 .long("config")
                 .global(true)

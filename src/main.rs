@@ -7,10 +7,11 @@ use crate::cli::build_cli;
 use crate::commands::{init_command, list_command, set_command};
 use crate::config::BASE16_SHELL_THEME_DEFAULT_ENV;
 use anyhow::{Context, Result};
-use config::{HOME_ENV, REPO_URL, XDG_CONFIG_HOME_ENV, XDG_DATA_HOME_ENV};
+use commands::{setup_command, update_command};
+use config::{HOME_ENV, REPO_NAME, REPO_URL, XDG_CONFIG_HOME_ENV, XDG_DATA_HOME_ENV};
 use std::env;
 use std::path::PathBuf;
-use utils::{ensure_config_files_exist, get_and_setup_repo_path};
+use utils::ensure_config_files_exist;
 
 /// Entry point of the application.
 fn main() -> Result<()> {
@@ -45,8 +46,13 @@ fn main() -> Result<()> {
     let tintedtheming_data_path = data_path.join("tinted-theming");
     let base16_shell_colorscheme_path = base16_config_path.join("base16_shell_theme");
     let base16_shell_theme_name_path = base16_config_path.join("theme_name");
-    let base16_shell_repo_path_option: Option<PathBuf> =
+    let repo_path_option: Option<PathBuf> =
         matches.get_one::<String>("repo-dir").map(PathBuf::from);
+
+    let repo_path: PathBuf = repo_path_option
+        .as_ref()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| tintedtheming_data_path.join(REPO_NAME));
 
     ensure_config_files_exist(
         base16_config_path.as_path(),
@@ -65,19 +71,21 @@ fn main() -> Result<()> {
     match matches.subcommand() {
         Some(("init", _)) => {
             init_command(
+                &repo_path,
                 &base16_shell_theme_default_name,
                 &base16_shell_colorscheme_path,
                 &base16_shell_theme_name_path,
             )
             .with_context(|| {
                 format!(
-                    "Failed to initialize base16-shell, config files are missing. Try setting a theme first.\"{:?}\"",
+                    "Failed to initialize {}, config files are missing. Try setting a theme first.\"{:?}\"",
+                    REPO_NAME,
                     base16_shell_theme_default_name,
                 )
             })?;
         }
         Some(("list", _)) => {
-            list_command(&base16_shell_repo_path)?;
+            list_command(&repo_path)?;
         }
         Some(("set", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("theme_name") {
@@ -85,7 +93,7 @@ fn main() -> Result<()> {
                 set_command(
                     theme_name,
                     &base16_config_path,
-                    &base16_shell_repo_path,
+                    &repo_path,
                     &base16_shell_colorscheme_path,
                     &base16_shell_theme_name_path,
                 )
@@ -95,7 +103,7 @@ fn main() -> Result<()> {
             }
         }
         _ => {
-            println!("Basic usage: base16-shell set <SCHEME_NAME>");
+            println!("Basic usage: {} set <SCHEME_NAME>", REPO_NAME);
             println!("For more information try --help");
         }
     }

@@ -4,7 +4,7 @@
 # Setup variables and env
 # ----------------------------------------------------------------------
 
-# Allow users to optionally configure where their base16-shell config is
+# Allow users to optionally configure where their base16-shell-manager config is
 # stored by specifying BASE16_CONFIG_PATH before loading this script
 if test -z "$BASE16_CONFIG_PATH"
   if test -n "$XDG_CONFIG_HOME"
@@ -20,7 +20,7 @@ set BASE16_SHELL_COLORSCHEME_PATH \
 # using session managers such as TMUX
 set BASE16_SHELL_THEME_NAME_PATH "$BASE16_CONFIG_PATH/theme_name" 
 
-# Allow users to optionally configure their base16-shell path and set
+# Allow users to optionally configure their base16-shell-manager path and set
 # the value if one doesn't exist
 if test -z "$BASE16_SHELL_PATH"
   set -g BASE16_SHELL_PATH (realpath (dirname (status -f)))

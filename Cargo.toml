@@ -6,8 +6,8 @@ edition = "2021"
 license = "MIT"
 readme = "README.md"
 authors = ["Jamy Golden <code@jamygolden.com>"]
-homepage = "https://github.com/tinted-theming/base16-shell"
-repository = "https://github.com/tinted-theming/base16-shell"
+homepage = "https://github.com/tinted-theming/base16-shell-manager"
+repository = "https://github.com/tinted-theming/base16-shell-manager"
 keywords = ["cli", "base16", "shell"]
 categories = ["command-line-utilities"]
 

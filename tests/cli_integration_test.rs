@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::error::Error;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
@@ -24,6 +25,49 @@ fn remove_dir(path: &Path) -> Result<()> {
     Ok(())
 }
 
+fn run_setup_command(config_path: &Path) -> Result<()> {
+    // Execute the first command
+    let output_setup = Command::new("./target/debug/base16_shell")
+        .args([
+            "setup",
+            format!("--config={}", config_path.display()).as_str(),
+        ])
+        .output()
+        .expect("Failed to execute setup command");
+
+    assert!(
+        output_setup.status.success(),
+        "Setup command failed with status: {}",
+        output_setup.status
+    );
+    if !output_setup.stderr.is_empty() {
+        anyhow::bail!(
+            "Setup command stderr: {}",
+            String::from_utf8_lossy(&output_setup.stderr)
+        );
+    }
+
+    Ok(())
+}
+
+fn run_target_command(args: &[&str]) -> Result<String, Box<dyn Error>> {
+    let output = Command::new("./target/debug/base16_shell")
+        .args(args)
+        .output()
+        .expect("Failed to execute command");
+
+    if !output.stderr.is_empty() {
+        println!(
+            "Init command stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    let stdout = String::from_utf8(output.stdout).expect("Not valid UTF-8");
+
+    Ok(stdout)
+}
+
 #[test]
 fn test_cli_no_arguments() {
     let config_path = Path::new("base16_shell_test_cli_no_arguments");
@@ -36,7 +80,7 @@ fn test_cli_no_arguments() {
     let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
 
     assert!(output.status.success());
-    assert!(stdout.contains("Basic usage: base16-shell set <SCHEME_NAME>"));
+    assert!(stdout.contains("Basic usage: base16-shell-manager set <SCHEME_NAME>"));
     assert!(stdout.contains("For more information try --help"));
 
     // Cleanup
@@ -77,14 +121,11 @@ fn test_cli_init_command_existing_config() {
     // Act
     // ---
 
-    let output = Command::new("./target/debug/base16_shell")
-        .args([
-            "init",
-            format!("--config={}", config_path.display()).as_str(),
-        ])
-        .output()
-        .expect("Failed to execute command");
-    let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
+    let subcommand = "init";
+    let config_flag = format!("--config={}", config_path.display());
+    let args: &[&str] = &[subcommand, &config_flag];
+    run_setup_command(config_path).unwrap();
+    let stdout = run_target_command(args).unwrap();
 
     // ------
     // Assert
@@ -125,15 +166,10 @@ fn test_cli_init_command_empty_config() {
     // ---
     // Act
     // ---
-
-    let output = Command::new("./target/debug/base16_shell")
-        .args([
-            "init",
-            format!("--config={}", config_path.display()).as_str(),
-        ])
-        .output()
-        .expect("Failed to execute command");
-    let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
+    let subcommand = "init";
+    let config_flag = format!("--config={}", config_path.display());
+    let args: &[&str] = &[subcommand, &config_flag];
+    let stdout = run_target_command(args).unwrap();
 
     // ------
     // Assert
@@ -174,16 +210,11 @@ fn test_cli_list_subcommand() {
     // ---
     // Act
     // ---
-
-    let output = Command::new("./target/debug/base16_shell")
-        .args([
-            "list",
-            format!("--config={}", config_path.display()).as_str(),
-        ])
-        .output()
-        .expect("Failed to execute command");
-    assert!(output.status.success());
-    let stdout = str::from_utf8(&output.stdout).expect("Output not valid UTF-8");
+    let subcommand = "list";
+    let config_flag = format!("--config={}", config_path.display());
+    let args: &[&str] = &[subcommand, &config_flag];
+    run_setup_command(config_path).unwrap();
+    let stdout = run_target_command(args).unwrap();
     let mut actual_colorschemes = stdout
         .lines()
         .map(|s| s.to_string())
@@ -226,16 +257,11 @@ fn test_cli_set_command() {
     // ---
     // Act
     // ---
-
-    let output = Command::new("./target/debug/base16_shell")
-        .args(&[
-            "set",
-            scheme_name,
-            format!("--config={}", config_path.display()).as_str(),
-        ])
-        .output()
-        .expect("Failed to execute command");
-    let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
+    let subcommand = "set";
+    let config_flag = format!("--config={}", config_path.display());
+    let args: &[&str] = &[subcommand, scheme_name, &config_flag];
+    run_setup_command(config_path).unwrap();
+    let stdout = run_target_command(args).unwrap();
     let theme_name_content =
         fs::read_to_string(base16_shell_theme_name_path).expect("Failed to read theme name file");
     let colorscheme_content =
