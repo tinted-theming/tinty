@@ -1,8 +1,7 @@
 use anyhow::{Context, Result};
-use git2::Repository;
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Ensures that a directory exists, creating it if it does not.
 fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
@@ -70,41 +69,4 @@ pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     file.write_all(contents.as_bytes())?;
 
     Ok(())
-}
-
-pub fn get_and_setup_repo_path(
-    tintedtheming_data_path: &Path,
-    base16_shell_repo_path_option: Option<PathBuf>,
-    repo_url: &str,
-) -> Result<PathBuf> {
-    fn check_repo_path_exists(repo_path: &PathBuf) -> bool {
-        if !repo_path.exists()
-            || !repo_path.join("hooks").exists()
-            || !repo_path.join("scripts").exists()
-        {
-            return false;
-        }
-
-        true
-    }
-
-    let repo_path: PathBuf = base16_shell_repo_path_option
-        .as_ref()
-        .map(PathBuf::from)
-        .unwrap_or_else(|| tintedtheming_data_path.join("base16-shell"));
-
-    if base16_shell_repo_path_option.is_none() && !check_repo_path_exists(&repo_path) {
-        if let Err(e) = Repository::clone(repo_url, repo_path.clone()) {
-            anyhow::bail!("Error cloning repo: {}", e);
-        }
-    }
-
-    if !check_repo_path_exists(&repo_path) {
-        anyhow::bail!(
-            "Error with base16-shell repository at path: {}",
-            repo_path.display()
-        );
-    }
-
-    Ok(repo_path)
 }

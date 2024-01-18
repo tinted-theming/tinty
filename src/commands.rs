@@ -1,9 +1,10 @@
 use crate::config::{
     BASE16_SHELL_CONFIG_PATH_ENV, BASE16_SHELL_THEME_NAME_PATH_ENV, BASE16_THEME_ENV, HOOKS_DIR,
-    REPO_NAME, THEMES_DIR,
+    REPO_NAME, REPO_URL, SETUP_SCRIPT_PATH, THEMES_DIR,
 };
 use crate::utils::{read_file_to_string, write_to_file};
 use anyhow::{Context, Result};
+use git2::Repository;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -120,6 +121,66 @@ fn run_hooks(
             let mut child = command.spawn()?;
             child.wait()?;
         }
+    }
+
+    Ok(())
+}
+
+fn remove_repo(repo_path: &Path) -> Result<()> {
+    if !repo_path.exists() {
+        return Ok(());
+    }
+
+    match fs::metadata(repo_path) {
+        Ok(metadata) => {
+            if metadata.is_dir() {
+                fs::remove_dir_all(repo_path)?;
+            } else {
+                fs::remove_file(repo_path)?;
+            }
+        }
+        Err(e) => anyhow::bail!("Error getting metadata for {}: {}", repo_path.display(), e),
+    }
+
+    Ok(())
+}
+
+fn clone_and_setup_repo(repo_path: &Path) -> Result<()> {
+    match Repository::clone(REPO_URL, repo_path) {
+        Ok(_) => {
+            let mut child = Command::new("/bin/sh")
+                .arg(repo_path.join(SETUP_SCRIPT_PATH))
+                .spawn()
+                .context("Failed to execute setup script: {:?}")?;
+            let status = child.wait().context("Failed to wait on bash status")?;
+
+            if !status.success() {
+                anyhow::bail!("Command finished with a non-zero status: {}", status)
+            }
+        }
+
+        Err(e) => {
+            anyhow::bail!("Error cloning repo: {}", e);
+        }
+    }
+
+    let mut child = Command::new("/bin/sh")
+        .arg(repo_path.join(SETUP_SCRIPT_PATH))
+        .spawn()
+        .context("Failed to execute setup script: {:?}")?;
+    let status = child.wait().context("Failed to wait on bash status")?;
+    if !status.success() {
+        anyhow::bail!("Command finished with a non-zero status: {}", status)
+    }
+    if !repo_path.exists()
+        || !repo_path.join(HOOKS_DIR).exists()
+        || !repo_path.join(THEMES_DIR).exists()
+    {
+        anyhow::bail!(
+            "Error with {} repository at path: {}",
+            REPO_NAME,
+            repo_path.display()
+        );
     }
 
     Ok(())
@@ -375,6 +436,83 @@ pub fn list_command(repo_path: &Path) -> Result<()> {
             println!("{}", colorscheme);
         }
     }
+
+    Ok(())
+}
+
+/// Sets up the base16-shell-manager repository at the specified path.
+///
+/// This function checks if the repository path already exists. If it does, it prints a message indicating
+/// that the repository is already set up and suggests using the `update` subcommand for updates. If the
+/// repository path does not exist, it proceeds to clone and set up the base16-shell-manager repository at the given path.
+///
+/// # Arguments
+///
+/// * `repo_path` - A reference to a `Path` pointing to the desired location for the base16-shell-manager repository.
+///
+/// # Errors
+///
+/// Returns an error if there's an issue cloning or setting up the repository at the specified path.
+///
+/// # Examples
+///
+/// ```
+/// # use std::path::Path;
+/// # fn run_example() -> anyhow::Result<()> {
+/// let repo_path = Path::new("/desired/path/for/base16-shell-manager");
+///
+/// commands::setup_command(&repo_path)?;
+/// # Ok(())
+/// # }
+/// ```
+///
+pub fn setup_command(repo_path: &Path) -> Result<()> {
+    if repo_path.exists() {
+        println!("{} already exists. If you want to update try running the `update` subcommand or `--help` for more information.", repo_path.display());
+
+        return Ok(());
+    }
+
+    clone_and_setup_repo(repo_path)?;
+
+    Ok(())
+}
+
+/// Sets up the base16-shell-manager repository at the specified path.
+///
+/// This function checks if the repository path already exists. If it does, it prints a message indicating
+/// that the repository is already set up and suggests using the `update` subcommand for updates. If the
+/// repository path does not exist, it proceeds to clone and set up the base16-shell-manager repository at the given path.
+///
+/// # Arguments
+///
+/// * `repo_path` - A reference to a `Path` pointing to the desired location for the base16-shell-manager repository.
+///
+/// # Errors
+///
+/// Returns an error if there's an issue cloning or setting up the repository at the specified path.
+///
+/// # Examples
+///
+/// ```
+/// # use std::path::Path;
+/// # fn run_example() -> anyhow::Result<()> {
+/// let repo_path = Path::new("/desired/path/for/base16-shell-manager");
+///
+/// commands::setup_command(&repo_path)?;
+/// # Ok(())
+/// # }
+/// ```
+///
+pub fn update_command(repo_path: &Path) -> Result<()> {
+    let is_setup_correct = check_requirements(repo_path);
+    if !is_setup_correct {
+        return Ok(());
+    }
+
+    remove_repo(repo_path)?;
+
+    clone_and_setup_repo(repo_path)?;
 
     Ok(())
 }

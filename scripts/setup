@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 
-# base16_shell_dir="./base16-shell"
 script_path=$(realpath "$0")
 script_dir=$(dirname "$script_path")
 project_dir=$(dirname "$script_dir")
