@@ -7,11 +7,10 @@ use crate::cli::build_cli;
 use crate::commands::{init_command, list_command, set_command};
 use crate::config::BASE16_SHELL_THEME_DEFAULT_ENV;
 use anyhow::{Context, Result};
-use commands::{setup_command, update_command};
 use config::{HOME_ENV, REPO_NAME, REPO_URL, XDG_CONFIG_HOME_ENV, XDG_DATA_HOME_ENV};
 use std::env;
 use std::path::PathBuf;
-use utils::ensure_config_files_exist;
+use utils::{ensure_config_files_exist, get_and_setup_repo_path};
 
 /// Entry point of the application.
 fn main() -> Result<()> {
@@ -49,11 +48,6 @@ fn main() -> Result<()> {
     let repo_path_option: Option<PathBuf> =
         matches.get_one::<String>("repo-dir").map(PathBuf::from);
 
-    let repo_path: PathBuf = repo_path_option
-        .as_ref()
-        .map(PathBuf::from)
-        .unwrap_or_else(|| tintedtheming_data_path.join(REPO_NAME));
-
     ensure_config_files_exist(
         base16_config_path.as_path(),
         data_path.as_path(),
@@ -61,11 +55,7 @@ fn main() -> Result<()> {
     )
     .context("Error creating config files")?;
 
-    let base16_shell_repo_path = get_and_setup_repo_path(
-        &tintedtheming_data_path,
-        base16_shell_repo_path_option,
-        REPO_URL,
-    )?;
+    let repo_path = get_and_setup_repo_path(&tintedtheming_data_path, repo_path_option, REPO_URL)?;
 
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
