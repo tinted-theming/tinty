@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+
+# base16_shell_dir="./base16-shell"
+script_path=$(realpath "$0")
+script_dir=$(dirname "$script_path")
+project_dir=$(dirname "$script_dir")
+themes_dir="$project_dir/themes"
+base16_shell_dir="$project_dir/base16-shell"
+base16_shell_themes_dir="$base16_shell_dir/scripts"
+
+if [ -d "$base16_shell_dir" ]; then
+  rm -rf "$base16_shell_dir"
+fi
+
+if [ -d "$themes_dir" ]; then
+  rm -rf "$themes_dir"
+fi
+
+git clone git@github.com:tinted-theming/base16-shell.git "$base16_shell_dir"
+mv "$base16_shell_themes_dir" "$themes_dir"
+rm -rf "$base16_shell_dir"
