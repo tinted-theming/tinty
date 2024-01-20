@@ -20,7 +20,7 @@ fn write_to_file(path: &Path, contents: &str) -> Result<()> {
 
 fn remove_dir(path: &Path) -> Result<()> {
     if path.exists() {
-        fs::remove_dir_all(path).unwrap();
+        fs::remove_dir_all(path)?;
     }
 
     Ok(())
@@ -70,9 +70,9 @@ fn run_target_command(args: &[&str]) -> Result<String, Box<dyn Error>> {
 }
 
 #[test]
-fn test_cli_no_arguments() {
+fn test_cli_no_arguments() -> Result<()> {
     let config_path = Path::new("base16_shell_test_cli_no_arguments");
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
 
     let output = Command::new("./target/debug/base16_shell")
         .arg(format!("--config={}", config_path.display()))
@@ -85,7 +85,9 @@ fn test_cli_no_arguments() {
     assert!(stdout.contains("For more information try --help"));
 
     // Cleanup
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
+
+    Ok(())
 }
 
 #[test]
@@ -95,7 +97,7 @@ fn test_cli_setup_command_existing_repo() -> Result<()> {
     // -------
 
     let config_path = Path::new("base16_shell_test_cli_setup_command_existing_config");
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
     let data_path: PathBuf = env::var("XDG_DATA_HOME")
         .map(PathBuf::from)
         .or_else(|_| {
@@ -157,7 +159,7 @@ fn test_cli_setup_command_with_repo_dir_flag() -> Result<()> {
     let name = "base16_shell_test_cli_setup_command_with_repo_dir_flag";
     let config_path = Path::new(&name);
     let repo_path = Path::new(&name);
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
     let expected_output = format!("The setup command will not work since you have provided your own `--repo-dir` at {}. Visit https://github.com/tinted-theming/base16-shell-manager to see instructions on manually updating.", name);
 
     // ---
@@ -184,13 +186,13 @@ fn test_cli_setup_command_with_repo_dir_flag() -> Result<()> {
 }
 
 #[test]
-fn test_cli_init_command_existing_config() {
+fn test_cli_init_command_existing_config() -> Result<()>  {
     // -------
     // Arrange
     // -------
 
     let config_path = Path::new("base16_shell_test_cli_init_command_existing_config");
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
     let expected_output = "some random text";
     let base16_shell_colorscheme_path = config_path.join("base16_shell_theme");
     let base16_shell_theme_name_path = config_path.join("theme_name");
@@ -205,13 +207,12 @@ fn test_cli_init_command_existing_config() {
         "Theme name file should not exist before test"
     );
 
-    fs::create_dir_all(config_path).unwrap();
+    fs::create_dir_all(config_path)?;
     write_to_file(
         &base16_shell_colorscheme_path,
         format!("echo '{}'", expected_output).as_str(),
-    )
-    .unwrap();
-    write_to_file(&base16_shell_theme_name_path, "mocha").unwrap();
+    )?;
+    write_to_file(&base16_shell_theme_name_path, "mocha")?;
 
     // ---
     // Act
@@ -233,17 +234,19 @@ fn test_cli_init_command_existing_config() {
     );
 
     // Cleanup
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
+
+    Ok(())
 }
 
 #[test]
-fn test_cli_init_command_empty_config() {
+fn test_cli_init_command_empty_config() -> Result<()>  {
     // -------
     // Arrange
     // -------
 
     let config_path = Path::new("base16_shell_test_cli_init_command_empty_config");
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
     let base16_shell_colorscheme_path = config_path.join("base16_shell_theme");
     let base16_shell_theme_name_path = config_path.join("theme_name");
     let expected_output =
@@ -277,17 +280,19 @@ fn test_cli_init_command_empty_config() {
     );
 
     // Cleanup
-    remove_dir(config_path).unwrap();
+    remove_dir(config_path)?;
+
+    Ok(())
 }
 
 #[test]
-fn test_cli_list_subcommand() {
+fn test_cli_list_subcommand() -> Result<()>  {
     // -------
     // Arrange
     // -------
 
     let config_path = Path::new("base16_shell_test_cli_list_subcommand");
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
     let colorschemes_dir = Path::new("./themes");
     let mut expected_colorschemes = fs::read_dir(colorschemes_dir)
         .expect("Failed to read colorschemes directory")
@@ -309,7 +314,7 @@ fn test_cli_list_subcommand() {
     let subcommand = "list";
     let config_flag = format!("--config={}", config_path.display());
     let args: &[&str] = &[subcommand, &config_flag];
-    run_setup_command(config_path).unwrap();
+    run_setup_command(config_path)?;
     let stdout = run_target_command(args).unwrap();
     let mut actual_colorschemes = stdout
         .lines()
@@ -324,17 +329,19 @@ fn test_cli_list_subcommand() {
     assert_eq!(expected_colorschemes, actual_colorschemes);
 
     // Cleanup
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
+
+    Ok(())
 }
 
 #[test]
-fn test_cli_set_command() {
+fn test_cli_set_command() -> Result<()>  {
     // -------
     // Arrange
     // -------
 
     let config_path = Path::new("base16_shell_test_cli_set_command");
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
     let scheme_name = "ocean";
     let base16_shell_colorscheme_path = config_path.join("base16_shell_theme");
     let base16_shell_theme_name_path = config_path.join("theme_name");
@@ -356,7 +363,7 @@ fn test_cli_set_command() {
     let subcommand = "set";
     let config_flag = format!("--config={}", config_path.display());
     let args: &[&str] = &[subcommand, scheme_name, &config_flag];
-    run_setup_command(config_path).unwrap();
+    run_setup_command(config_path)?;
     let stdout = run_target_command(args).unwrap();
     let theme_name_content =
         fs::read_to_string(base16_shell_theme_name_path).expect("Failed to read theme name file");
@@ -381,5 +388,7 @@ fn test_cli_set_command() {
     );
 
     // Cleanup
-    remove_dir(&config_path).unwrap();
+    remove_dir(&config_path)?;
+
+    Ok(())
 }
