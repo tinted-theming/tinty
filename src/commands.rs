@@ -2,7 +2,7 @@ use crate::config::{
     BASE16_SHELL_CONFIG_PATH_ENV, BASE16_SHELL_THEME_NAME_PATH_ENV, BASE16_THEME_ENV, HOOKS_DIR,
     REPO_NAME, REPO_URL,
 };
-use crate::hooks::{self, base16_shell, base16_shell_manager};
+use crate::hooks::{self, base16_shell, base16_shell_manager, base16_tmux};
 use crate::utils::{read_file_to_string, write_to_file};
 use anyhow::{Context, Result};
 use std::fs;
@@ -64,11 +64,23 @@ fn run_shell_hooks(
 /// `theme_path`. It also checks if the necessary configuration files exist
 /// and if not, it attempts to read the theme name from `theme_name_path`.
 pub fn init_command(
-    app_data_path: &Path,
+    app_config_path: &Path,
     theme_name_path: &Path,
     default_theme_name: &str,
 ) -> Result<()> {
-    hooks::base16_shell::init_theme(app_data_path, theme_name_path, default_theme_name)?;
+    let (base16_shell_init_theme_response, is_base16_shell_init_theme_success) =
+        hooks::base16_shell::init_theme(app_config_path, theme_name_path, default_theme_name)?;
+
+    let hooks = [(
+        base16_shell_init_theme_response,
+        is_base16_shell_init_theme_success,
+    )];
+
+    for (init_theme_response, is_init_theme_success) in hooks {
+        if !is_init_theme_success && !init_theme_response.is_empty() {
+            println!("{}", init_theme_response);
+        }
+    }
 
     Ok(())
 }
@@ -94,11 +106,12 @@ pub fn set_command(
         return Ok(());
     }
 
-    let base16_shell_manager_has_theme =
-        base16_shell_manager::has_theme(theme_name, app_data_path)?;
-    let base16_shell_has_theme = base16_shell::has_theme(theme_name, app_data_path)?;
-    let apps = [base16_shell_manager_has_theme, base16_shell_has_theme];
-    let is_theme_available = apps.iter().all(|has_theme| *has_theme);
+    let hooks = [
+        base16_shell_manager::has_theme(theme_name, app_data_path)?,
+        base16_shell::has_theme(theme_name, app_data_path)?,
+        base16_tmux::has_theme(theme_name, app_data_path)?,
+    ];
+    let is_theme_available = hooks.iter().all(|has_theme| *has_theme);
 
     if !is_theme_available {
         println!("The theme isn't available for all hooks. Please run `{} update` to make sure they're all up to date and then `{} set {}` again.", REPO_NAME, REPO_NAME, theme_name);
@@ -109,7 +122,9 @@ pub fn set_command(
     // Write theme name to file
     write_to_file(theme_name_path, theme_name)?;
 
-    base16_shell::set_theme(theme_name, app_data_path)
+    base16_shell::set_theme(theme_name, app_config_path, app_data_path)
+        .with_context(|| format!("Failed to set colorscheme \"{:?}\"", theme_name))?;
+    base16_tmux::set_theme(theme_name, app_config_path)
         .with_context(|| format!("Failed to set colorscheme \"{:?}\"", theme_name))?;
 
     run_shell_hooks(theme_name, app_config_path, repo_path, theme_name_path)
@@ -151,20 +166,10 @@ pub fn list_command(schemes_list_path: &Path) -> Result<()> {
 /// that the repository is already set up and suggests using the `update` subcommand for updates. If the
 /// repository path does not exist, it proceeds to clone and set up the base16-shell-manager repository at the given path.
 pub fn setup_command(app_data_path: &Path) -> Result<()> {
-    let (base16_shell_manager_name, is_base16_shell_manager_setup_success) =
-        base16_shell_manager::setup_hook(app_data_path)?;
-    let (base16_shell_template_name, is_base16_shell_setup_success) =
-        base16_shell::setup_hook(app_data_path)?;
-
     let hooks = [
-        (
-            base16_shell_manager_name,
-            is_base16_shell_manager_setup_success,
-        ),
-        (
-            base16_shell_template_name,
-            is_base16_shell_setup_success,
-        ),
+        base16_shell_manager::setup_hook(app_data_path)?,
+        base16_shell::setup_hook(app_data_path)?,
+        base16_tmux::setup_hook(app_data_path)?,
     ];
 
     for (name, is_success) in hooks {
@@ -195,9 +200,10 @@ pub fn setup_command(app_data_path: &Path) -> Result<()> {
 pub fn update_command(app_data_path: &Path) -> Result<()> {
     let mut is_update_successful = true;
 
-    let apps: [(&str, bool); 2] = [
+    let apps: [(&str, bool); 3] = [
         base16_shell_manager::update_hook(app_data_path)?,
         base16_shell::update_hook(app_data_path)?,
+        base16_tmux::update_hook(app_data_path)?,
     ];
 
     for (name, is_update_success) in apps {
