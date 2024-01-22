@@ -1,20 +1,33 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
+
+# Generate schemes.txt based on latest schemes/base16 schemes
 
 script_path=$(realpath "$0")
 script_dir=$(dirname "$script_path")
 project_dir=$(dirname "$script_dir")
-themes_dir="$project_dir/themes"
-base16_shell_dir="$project_dir/base16-shell"
-base16_shell_themes_dir="$base16_shell_dir/scripts"
+base16_schemes_repo_dir="$project_dir/schemes"
+schemes_dir="$base16_schemes_repo_dir/base16"
+schemes_file_path="$project_dir/schemes.txt"
 
-if [ -d "$base16_shell_dir" ]; then
-  rm -rf "$base16_shell_dir"
+if [ -d "$base16_schemes_repo_dir" ]; then
+  rm -rf "$base16_schemes_repo_dir"
 fi
 
-if [ -d "$themes_dir" ]; then
-  rm -rf "$themes_dir"
+if [ -f "$schemes_file_path" ]; then
+  rm "$schemes_file_path"
 fi
 
-git clone git@github.com:tinted-theming/base16-shell.git "$base16_shell_dir"
-mv "$base16_shell_themes_dir" "$themes_dir"
-rm -rf "$base16_shell_dir"
+git clone git@github.com:tinted-theming/schemes.git "$base16_schemes_repo_dir"
+
+for path in "$schemes_dir"/*; do
+  filename=$(basename -- "$path")
+
+  # Only extract yaml files
+  if [[ $filename == *.yaml ]]; then
+    # Remove '.yaml' suffix
+    theme_name="$filename"
+    theme_name="${theme_name%.yaml}"
+
+    echo "$theme_name" >> "$schemes_file_path"
+  fi
+done
