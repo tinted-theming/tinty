@@ -1,7 +1,8 @@
 use anyhow::{Context, Result};
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::{self, BufRead, Read, Write};
 use std::path::Path;
+use std::str;
 
 /// Ensures that a directory exists, creating it if it does not.
 fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
@@ -27,25 +28,11 @@ fn ensure_file_exists<P: AsRef<Path>>(file_path: P) -> Result<()> {
 }
 
 /// Ensures the existence of configuration files required by the application.
-pub fn ensure_config_files_exist(
-    base16_config_path: &Path,
-    data_path: &Path,
-    base16_shell_theme_name_path: &Path,
-) -> Result<()> {
-    ensure_directory_exists(base16_config_path).with_context(|| {
-        format!(
-            "Failed to create config directory at {:?}",
-            base16_config_path
-        )
-    })?;
-    ensure_directory_exists(data_path)
-        .with_context(|| format!("Failed to create config directory at {:?}", data_path))?;
-    ensure_file_exists(base16_shell_theme_name_path).with_context(|| {
-        format!(
-            "Failed to create config file at {:?}",
-            base16_shell_theme_name_path
-        )
-    })?;
+pub fn ensure_config_files_exist(app_config_path: &Path, theme_name_path: &Path) -> Result<()> {
+    ensure_directory_exists(app_config_path)
+        .with_context(|| format!("Failed to create config directory at {:?}", app_config_path))?;
+    ensure_file_exists(theme_name_path)
+        .with_context(|| format!("Failed to create config file at {:?}", theme_name_path))?;
 
     Ok(())
 }
@@ -69,4 +56,17 @@ pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     file.write_all(contents.as_bytes())?;
 
     Ok(())
+}
+
+pub fn read_lines_to_vec(file_path: &Path) -> io::Result<Vec<String>> {
+    let file = File::open(file_path)?;
+    let reader = io::BufReader::new(file);
+
+    let mut lines = Vec::new();
+    for line in reader.lines() {
+        let line = line?;
+        lines.push(line);
+    }
+
+    Ok(lines)
 }

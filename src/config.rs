@@ -8,5 +8,4 @@ pub const HOME_ENV: &str = "HOME";
 pub const REPO_URL: &str = "https://github.com/tinted-theming/base16-shell-manager";
 pub const REPO_NAME: &str = "base16-shell-manager";
 pub const HOOKS_DIR: &str = "hooks";
-pub const THEMES_DIR: &str = "themes";
-pub const SETUP_SCRIPT_PATH: &str = "scripts/setup";
+pub const SCHEMES_LIST_FILENAME: &str = "schemes.txt";

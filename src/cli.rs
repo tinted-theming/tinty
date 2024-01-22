@@ -10,16 +10,6 @@ pub fn build_cli() -> Command {
         .about("A tool to switch base16 colorschemes")
         // Define a global argument for specifying the repository directory
         .arg(
-            Arg::new("repo-dir")
-                .short('d')
-                .help(format!("Optional path to the {} repository. This is used to run the colorschemes and hooks if you don't want to use the compiled versions.", REPO_NAME))
-                .value_name("DIR")
-                .long("repo-dir")
-                .global(true)
-                .action(ArgAction::Set)
-        )
-        // Define a global argument for specifying the repository directory
-        .arg(
             Arg::new("config")
                 .short('c')
                 .help(format!("Optional path to the {} config directory.", REPO_NAME))
