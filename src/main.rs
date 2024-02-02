@@ -4,12 +4,11 @@ mod hooks;
 mod operations;
 mod utils;
 
+extern crate dirs;
+
 use crate::cli::build_cli;
-use anyhow::{Context, Result};
-use config::{
-    BASE16_SHELL_THEME_DEFAULT_ENV, HOME_ENV, REPO_NAME, SCHEMES_LIST_FILENAME,
-    XDG_CONFIG_HOME_ENV, XDG_DATA_HOME_ENV,
-};
+use anyhow::{anyhow, Context, Result};
+use config::{BASE16_SHELL_THEME_DEFAULT_ENV, REPO_NAME, SCHEMES_LIST_FILENAME};
 use std::env;
 use std::path::PathBuf;
 use utils::ensure_config_files_exist;
@@ -20,22 +19,11 @@ fn main() -> Result<()> {
     let matches = build_cli().get_matches();
 
     // Determine the configuration path, falling back to the home directory if necessary
-    let config_path: PathBuf = env::var(XDG_CONFIG_HOME_ENV)
-        .map(PathBuf::from)
-        .or_else(|_| {
-            env::var(HOME_ENV)
-                .map_err(anyhow::Error::new)
-                .map(|home| PathBuf::from(home).join(".config"))
-                .context("HOME environment variable not set")
-        })?;
-    let data_path: PathBuf = env::var(XDG_DATA_HOME_ENV)
-        .map(PathBuf::from)
-        .or_else(|_| {
-            env::var(HOME_ENV)
-                .map_err(anyhow::Error::new)
-                .map(|home| PathBuf::from(home).join(".local/share"))
-                .context("HOME environment variable not set")
-        })?;
+    let config_path: PathBuf =
+        dirs::config_dir().ok_or_else(|| anyhow!("Error getting config directory"))?;
+    let data_path: PathBuf =
+        dirs::data_dir().ok_or_else(|| anyhow!("Error getting data directory"))?;
+
     // Other configuration paths
     let default_theme_name = env::var(BASE16_SHELL_THEME_DEFAULT_ENV).unwrap_or_default();
     let app_config_path: PathBuf = if let Some(config) = matches.get_one::<String>("config") {
