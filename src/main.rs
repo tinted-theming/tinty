@@ -1,15 +1,15 @@
 mod cli;
-mod commands;
 mod config;
 mod hooks;
+mod operations;
 mod utils;
 
 use crate::cli::build_cli;
-use crate::commands::{init_command, list_command, set_command};
-use crate::config::BASE16_SHELL_THEME_DEFAULT_ENV;
 use anyhow::{Context, Result};
-use commands::{setup_command, update_command};
-use config::{HOME_ENV, REPO_NAME, SCHEMES_LIST_FILENAME, XDG_CONFIG_HOME_ENV, XDG_DATA_HOME_ENV};
+use config::{
+    BASE16_SHELL_THEME_DEFAULT_ENV, HOME_ENV, REPO_NAME, SCHEMES_LIST_FILENAME,
+    XDG_CONFIG_HOME_ENV, XDG_DATA_HOME_ENV,
+};
 use std::env;
 use std::path::PathBuf;
 use utils::ensure_config_files_exist;
@@ -54,7 +54,7 @@ fn main() -> Result<()> {
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
         Some(("init", _)) => {
-            init_command(
+            operations::init::init(
                 &app_data_path,
                 &theme_name_path,
                 &default_theme_name,
@@ -68,12 +68,12 @@ fn main() -> Result<()> {
             })?;
         }
         Some(("list", _)) => {
-            list_command(&schemes_list_path)?;
+            operations::list::list(&schemes_list_path)?;
         }
         Some(("set", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("theme_name") {
                 let theme_name = theme.as_str();
-                set_command(
+                operations::set::set(
                     theme_name,
                     &app_config_path,
                     &repo_path,
@@ -86,10 +86,10 @@ fn main() -> Result<()> {
             }
         }
         Some(("setup", _)) => {
-            setup_command(&app_data_path)?;
+            operations::setup::setup(&app_data_path)?;
         }
         Some(("update", _)) => {
-            update_command(&repo_path)?;
+            operations::update::update(&repo_path)?;
         }
         _ => {
             println!("Basic usage: {} set <SCHEME_NAME>", REPO_NAME);
