@@ -1,5 +1,7 @@
-use crate::config::{REPO_NAME, REPO_URL};
-use crate::hooks::base16_shell_manager;
+use crate::{
+    constants::{REPO_NAME, REPO_URL},
+    utils::read_lines_to_vec,
+};
 use anyhow::Result;
 use std::path::Path;
 
@@ -14,15 +16,12 @@ pub fn list(schemes_list_path: &Path) -> Result<()> {
         return Ok(());
     }
 
-    match base16_shell_manager::get_themes(schemes_list_path) {
-        Some(schemes_list) => {
-            for scheme in &schemes_list {
-                println!("{}", scheme);
-            }
-        }
-        None => {
-            println!("Unable to retrieve the schemes list. Please run `{} setup` again. If this error persists, please file an issue at {}/issues", REPO_NAME, REPO_URL);
-        }
+    let schemes_list: Vec<String> = read_lines_to_vec(schemes_list_path)
+        .map_err(anyhow::Error::new)
+        .unwrap();
+
+    for scheme in &schemes_list {
+        println!("{}", scheme);
     }
 
     Ok(())

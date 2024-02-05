@@ -1,6 +1,6 @@
 mod cli;
 mod config;
-mod hooks;
+mod constants;
 mod operations;
 mod utils;
 
@@ -8,10 +8,9 @@ extern crate dirs;
 
 use crate::cli::build_cli;
 use anyhow::{anyhow, Context, Result};
-use config::{BASE16_SHELL_THEME_DEFAULT_ENV, REPO_NAME, SCHEMES_LIST_FILENAME};
-use std::env;
+use constants::{REPO_NAME, SCHEMES_LIST_FILENAME};
 use std::path::PathBuf;
-use utils::ensure_config_files_exist;
+use utils::ensure_directory_exists;
 
 /// Entry point of the application.
 fn main() -> Result<()> {
@@ -19,41 +18,29 @@ fn main() -> Result<()> {
     let matches = build_cli().get_matches();
 
     // Determine the configuration path, falling back to the home directory if necessary
-    let config_path: PathBuf =
-        dirs::config_dir().ok_or_else(|| anyhow!("Error getting config directory"))?;
     let data_path: PathBuf =
         dirs::data_dir().ok_or_else(|| anyhow!("Error getting data directory"))?;
 
     // Other configuration paths
-    let default_theme_name = env::var(BASE16_SHELL_THEME_DEFAULT_ENV).unwrap_or_default();
-    let app_config_path: PathBuf = if let Some(config) = matches.get_one::<String>("config") {
+    let config_path: PathBuf = if let Some(config) = matches.get_one::<String>("config") {
         PathBuf::from(config)
     } else {
-        config_path.join("tinted-theming")
+        dirs::config_dir()
+            .ok_or_else(|| anyhow!("Error getting config directory"))?
+            .join("tinted-theming")
     };
-    let app_data_path = data_path.join("tinted-theming");
-    let theme_name_path = app_config_path.join("theme_name");
-    let repo_path = app_data_path.join(REPO_NAME);
+    let data_path = data_path.join("tinted-theming");
+    let repo_path = data_path.join(REPO_NAME);
     let schemes_list_path = repo_path.join(SCHEMES_LIST_FILENAME);
 
-    ensure_config_files_exist(app_config_path.as_path(), theme_name_path.as_path())
-        .context("Error creating config files")?;
+    // Ensure config dirs exist
+    ensure_directory_exists(&config_path)
+        .with_context(|| format!("Failed to create config directory at {:?}", config_path))?;
 
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
         Some(("init", _)) => {
-            operations::init::init(
-                &app_data_path,
-                &theme_name_path,
-                &default_theme_name,
-            )
-            .with_context(|| {
-                format!(
-                    "Failed to initialize {}, config files are missing. Try setting a theme first.\"{:?}\"",
-                    REPO_NAME,
-                    default_theme_name,
-                )
-            })?;
+            operations::init::init(&config_path, &data_path)?;
         }
         Some(("list", _)) => {
             operations::list::list(&schemes_list_path)?;
@@ -61,23 +48,17 @@ fn main() -> Result<()> {
         Some(("set", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("theme_name") {
                 let theme_name = theme.as_str();
-                operations::set::set(
-                    theme_name,
-                    &app_config_path,
-                    &repo_path,
-                    &app_data_path,
-                    &theme_name_path,
-                )
-                .with_context(|| format!("Failed to set theme \"{:?}\"", theme_name,))?;
+                operations::set::set(&config_path, &data_path, theme_name)
+                    .with_context(|| format!("Failed to set theme \"{:?}\"", theme_name,))?;
             } else {
                 anyhow::bail!("theme_name is required for set command");
             }
         }
         Some(("setup", _)) => {
-            operations::setup::setup(&app_data_path)?;
+            operations::setup::setup(&config_path, &data_path)?;
         }
         Some(("update", _)) => {
-            operations::update::update(&repo_path)?;
+            operations::update::update(&config_path, &data_path)?;
         }
         _ => {
             println!("Basic usage: {} set <SCHEME_NAME>", REPO_NAME);

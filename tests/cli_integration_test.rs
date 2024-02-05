@@ -98,14 +98,12 @@ fn test_cli_setup_command_existing_repo() -> Result<()> {
 
     let config_path = Path::new("base16_shell_test_cli_setup_command_existing_config");
     remove_dir(&config_path)?;
-    let data_path: PathBuf = env::var("XDG_DATA_HOME")
-        .map(PathBuf::from)
-        .or_else(|_| {
-            env::var("HOME")
-                .map_err(anyhow::Error::new)
-                .map(|home| PathBuf::from(home).join(".local/share"))
-                .context("HOME environment variable not set")
-        })?;
+    let data_path: PathBuf = env::var("XDG_DATA_HOME").map(PathBuf::from).or_else(|_| {
+        env::var("HOME")
+            .map_err(anyhow::Error::new)
+            .map(|home| PathBuf::from(home).join(".local/share"))
+            .context("HOME environment variable not set")
+    })?;
     let repo_path = data_path.join("tinted-theming/base16-shell-manager");
     let expected_output = format!("{} already exists. If you want to update try running the `update` subcommand or `--help` for more information.", repo_path.display());
     let mut is_test_repo_dir = false;
@@ -115,10 +113,7 @@ fn test_cli_setup_command_existing_repo() -> Result<()> {
         fs::create_dir_all(&repo_path)?;
     }
 
-    assert!(
-        repo_path.exists(),
-        "Repo path should exist"
-    );
+    assert!(repo_path.exists(), "Repo path should exist");
 
     // ---
     // Act
@@ -167,7 +162,7 @@ fn test_cli_setup_command_with_repo_dir_flag() -> Result<()> {
     // ---
 
     let subcommand = "setup";
-    let repo_dir_flag = format!("--repo-dir={}", repo_path.display()); 
+    let repo_dir_flag = format!("--repo-dir={}", repo_path.display());
     let config_flag = format!("--config={}", config_path.display());
     let args: &[&str] = &[subcommand, &config_flag, &repo_dir_flag];
     let stdout = run_target_command(args).unwrap();
@@ -186,7 +181,7 @@ fn test_cli_setup_command_with_repo_dir_flag() -> Result<()> {
 }
 
 #[test]
-fn test_cli_init_command_existing_config() -> Result<()>  {
+fn test_cli_init_command_existing_config() -> Result<()> {
     // -------
     // Arrange
     // -------
@@ -240,7 +235,7 @@ fn test_cli_init_command_existing_config() -> Result<()>  {
 }
 
 #[test]
-fn test_cli_init_command_empty_config() -> Result<()>  {
+fn test_cli_init_command_empty_config() -> Result<()> {
     // -------
     // Arrange
     // -------
@@ -286,7 +281,7 @@ fn test_cli_init_command_empty_config() -> Result<()>  {
 }
 
 #[test]
-fn test_cli_list_subcommand() -> Result<()>  {
+fn test_cli_list_subcommand() -> Result<()> {
     // -------
     // Arrange
     // -------
@@ -335,7 +330,7 @@ fn test_cli_list_subcommand() -> Result<()>  {
 }
 
 #[test]
-fn test_cli_set_command() -> Result<()>  {
+fn test_cli_set_command() -> Result<()> {
     // -------
     // Arrange
     // -------

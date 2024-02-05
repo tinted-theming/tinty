@@ -1,10 +1,10 @@
 use clap::{Arg, ArgAction, Command};
 
-use crate::config::REPO_NAME;
+use crate::constants::REPO_NAME;
 
 /// Builds the command-line interface for the application.
 pub fn build_cli() -> Command {
-    Command::new("base16_shell")
+    Command::new(REPO_NAME)
         .version("1.0.0")
         .author("Tinted Theming")
         .about("A tool to switch base16 colorschemes")

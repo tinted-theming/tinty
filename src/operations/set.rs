@@ -1,109 +1,69 @@
-use crate::config::{
-    BASE16_SHELL_CONFIG_PATH_ENV, BASE16_SHELL_THEME_NAME_PATH_ENV, BASE16_THEME_ENV, HOOKS_DIR,
-    REPO_NAME,
-};
-use crate::hooks::{base16_shell, base16_shell_manager, base16_tmux};
-use crate::utils::{read_file_to_string, write_to_file};
+use crate::config::Config;
+use crate::constants::{CURRENT_SCHEME_FILE_NAME, REPO_DIR, REPO_NAME, REPO_URL};
+use crate::utils::{get_shell_command_from_string, read_file_to_string, write_to_file};
 use anyhow::{Context, Result};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-// Set env variables for hooks and then executes .sh hook scripts
-fn run_shell_hooks(
-    theme_name: &str,
-    app_config_path: &Path,
-    repo_path: &Path,
-    theme_name_path: &Path,
-) -> Result<()> {
-    let env_vars_to_set: Vec<(&str, &str)> = vec![
-        (
-            BASE16_SHELL_THEME_NAME_PATH_ENV,
-            theme_name_path.to_str().unwrap(),
-        ),
-        (
-            BASE16_SHELL_CONFIG_PATH_ENV,
-            app_config_path.to_str().unwrap(),
-        ),
-        (BASE16_THEME_ENV, theme_name),
-    ];
+pub fn set(config_path: &Path, data_path: &Path, theme_name: &str) -> Result<()> {
+    let config = Config::read(config_path)?;
+    let items = config.items.unwrap_or_default();
 
-    let base16_shell_hooks_path = repo_path.join(HOOKS_DIR);
+    write_to_file(&data_path.join(CURRENT_SCHEME_FILE_NAME), theme_name)?;
 
-    if !base16_shell_hooks_path.exists() {
-        anyhow::bail!(
-            "Provided hooks path does not exist: \"{}\"",
-            base16_shell_hooks_path.display()
-        )
-    }
+    // Run through provided items in config.toml
+    for item in items {
+        let repo_path = data_path.join(REPO_DIR).join(&item.name);
+        let themes_path = repo_path.join(&item.themes_dir);
+        let target_theme = format!("base16-{}", theme_name);
+        // Find the corresponding theme file for the provided item
+        let theme_option = fs::read_dir(&themes_path)
+            .expect("Failed to read colorschemes directory")
+            .filter_map(Result::ok)
+            .find(|entry| {
+                let path = entry.path();
+                let filename = path.file_stem().and_then(|name| name.to_str());
 
-    for entry in fs::read_dir(base16_shell_hooks_path)? {
-        let entry = entry?;
-        let path = entry.path();
+                target_theme == filename.unwrap_or_default()
+            });
 
-        if path.extension().and_then(|ext| ext.to_str()) == Some("sh") {
-            let mut command = Command::new("sh");
-            // Set each environment variable for the script
-            for (key, value) in &env_vars_to_set {
-                command.env(key, value);
+        // Copy that theme to the data_path or log a message that it isn't found
+        match theme_option {
+            Some(theme_file) => {
+                let theme_file_path = &theme_file.path();
+                let extension = theme_file_path
+                    .extension()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default();
+                let filename = format!(
+                    "{}-{}-file.{}",
+                    item.name.clone(),
+                    item.themes_dir.clone(),
+                    extension,
+                );
+                let data_theme_path = data_path.join(filename);
+                let theme_content = read_file_to_string(theme_file.path().as_ref())?;
+
+                write_to_file(&data_theme_path, theme_content.as_str())?;
+
+                // Run hook for item if provided
+                if let Some(hook_text) = item.hook {
+                    let hook_script =
+                        hook_text.replace("%f", format!("{}", theme_file_path.display()).as_str());
+                    let command_vec = get_shell_command_from_string(config_path, hook_script.as_str())?;
+                    Command::new(&command_vec[0])
+                        .args(&command_vec[1..])
+                        .spawn()
+                        .with_context(|| {
+                            format!("Failed to execute {} hook: {:?}", item.name, hook_text)
+                        })?;
+                }
             }
-            command.arg("-c");
-            command.arg(&path);
-
-            let mut child = command.spawn()?;
-            child.wait()?;
+            None => println!("Theme file {} does not exists for {}. Try running `{} update` or submit an issue on {}", theme_name, item.name, REPO_NAME, REPO_URL),
         }
     }
-
-    Ok(())
-}
-
-/// Sets the selected colorscheme and runs associated hook scripts.
-///
-/// This function sets the desired colorscheme based on the provided theme name.
-/// It determines whether to use the provided repository path or embedded resources
-/// to locate the colorscheme script. After setting the colorscheme, it runs the hook
-/// scripts to apply the colorscheme to the current environment.
-pub fn set(
-    theme_name: &str,
-    app_config_path: &Path,
-    repo_path: &Path,
-    app_data_path: &Path,
-    theme_name_path: &Path,
-) -> Result<()> {
-    let current_theme_name =
-        read_file_to_string(theme_name_path).context("Failed to read from file")?;
-
-    if theme_name == current_theme_name {
-        println!("Theme \"{}\" is already set", theme_name);
-        return Ok(());
-    }
-
-    let hooks = [
-        base16_shell_manager::has_theme(theme_name, app_data_path)?,
-        base16_shell::has_theme(theme_name, app_data_path)?,
-        base16_tmux::has_theme(theme_name, app_data_path)?,
-    ];
-    let is_theme_available = hooks.iter().all(|has_theme| *has_theme);
-
-    if !is_theme_available {
-        println!("The theme isn't available for all hooks. Please run `{} update` to make sure they're all up to date and then `{} set {}` again.", REPO_NAME, REPO_NAME, theme_name);
-
-        return Ok(());
-    }
-
-    // Write theme name to file
-    write_to_file(theme_name_path, theme_name)?;
-
-    base16_shell::set_theme(theme_name, app_config_path, app_data_path)
-        .with_context(|| format!("Failed to set colorscheme \"{:?}\"", theme_name))?;
-    base16_tmux::set_theme(theme_name, app_config_path)
-        .with_context(|| format!("Failed to set colorscheme \"{:?}\"", theme_name))?;
-
-    run_shell_hooks(theme_name, app_config_path, repo_path, theme_name_path)
-        .context("Failed to run hooks")?;
-
-    println!("Theme set to: {}", theme_name);
 
     Ok(())
 }
