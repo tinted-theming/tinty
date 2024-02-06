@@ -1,6 +1,9 @@
 use crate::config::Config;
 use crate::constants::{CURRENT_SCHEME_FILE_NAME, REPO_DIR, REPO_NAME, REPO_URL};
-use crate::utils::{get_shell_command_from_string, read_file_to_string, write_to_file};
+use crate::utils::{
+    create_theme_filename_without_extension, get_shell_command_from_string, read_file_to_string,
+    write_to_file,
+};
 use anyhow::{anyhow, Context, Result};
 use std::fs;
 use std::path::Path;
@@ -46,9 +49,8 @@ pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()
                     .to_str()
                     .unwrap_or_default();
                 let filename = format!(
-                    "{}-{}-file.{}",
-                    item.name.clone(),
-                    item.themes_dir.clone(),
+                    "{}.{}",
+                    create_theme_filename_without_extension(&item)?,
                     extension,
                 );
                 let data_theme_path = data_path.join(filename);
@@ -60,12 +62,13 @@ pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()
                 if let Some(hook_text) = item.hook {
                     let hook_script =
                         hook_text.replace("%f", format!("{}", theme_file_path.display()).as_str());
-                    let command_vec = get_shell_command_from_string(config_path, hook_script.as_str())?;
+                    let command_vec =
+                        get_shell_command_from_string(config_path, hook_script.as_str())?;
                     Command::new(&command_vec[0])
                         .args(&command_vec[1..])
                         .spawn()
                         .with_context(|| {
-                            format!("Failed to execute {} hook: {:?}", item.name, hook_text)
+                            format!("Failed to execute {} hook: {}", item.name, hook_text)
                         })?;
                 }
             }

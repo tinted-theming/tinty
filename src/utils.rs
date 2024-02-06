@@ -1,9 +1,9 @@
 extern crate shell_words;
 
-use crate::config::{Config, DEFAULT_CONFIG_SHELL};
+use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
 use anyhow::{anyhow, Context, Result};
 use std::fs::{self, File};
-use std::io::{self, BufRead, Read, Write};
+use std::io::{Read, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::str;
@@ -39,19 +39,6 @@ pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     file.write_all(contents.as_bytes())?;
 
     Ok(())
-}
-
-pub fn read_lines_to_vec(file_path: &Path) -> io::Result<Vec<String>> {
-    let file = File::open(file_path)?;
-    let reader = io::BufReader::new(file);
-
-    let mut lines = Vec::new();
-    for line in reader.lines() {
-        let line = line?;
-        lines.push(line);
-    }
-
-    Ok(lines)
 }
 
 pub fn get_shell_command_from_string(config_path: &Path, command: &str) -> Result<Vec<String>> {
@@ -125,4 +112,12 @@ pub fn git_diff(target_dir: &Path) -> Result<bool> {
     } else {
         Ok(true)
     }
+}
+
+pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<String> {
+    Ok(format!(
+        "{}-{}-file",
+        item.name.clone(),
+        item.themes_dir.clone(),
+    ))
 }
