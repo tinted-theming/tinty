@@ -16,6 +16,7 @@ anyhow = "1.0.75"
 clap = { version = "4.4.8", features = ["derive"] }
 dirs = "5.0.1"
 git2 = "0.18.1"
+rust-embed = "8.2.0"
 serde = { version = "1.0.196", features = ["derive"] }
 shell-words = "1.1.0"
 toml = "0.8.9"

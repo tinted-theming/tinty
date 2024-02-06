@@ -18,9 +18,8 @@ pub fn init(config_path: &Path, data_path: &Path) -> Result<()> {
     operations::set::set(config_path, data_path, active_scheme_name.as_str())
             .with_context(|| {
                 format!(
-                    "Failed to initialize {}, config files are missing. Try setting a theme first with `{} set <SCHEME_NAME>`.\"{:?}\"",
+                    "Failed to initialize {}, config files are missing. Try setting a theme first with `{} set <SCHEME_NAME>`.",
                     REPO_NAME,
-                    active_scheme_name,
                     REPO_NAME,
                 )
             })

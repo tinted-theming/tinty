@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::constants::{CURRENT_SCHEME_FILE_NAME, REPO_DIR, REPO_NAME, REPO_URL};
 use crate::utils::{get_shell_command_from_string, read_file_to_string, write_to_file};
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -17,9 +17,17 @@ pub fn set(config_path: &Path, data_path: &Path, theme_name: &str) -> Result<()>
         let repo_path = data_path.join(REPO_DIR).join(&item.name);
         let themes_path = repo_path.join(&item.themes_dir);
         let target_theme = format!("base16-{}", theme_name);
+
+        if !themes_path.exists() {
+            return Err(anyhow!(format!(
+                "Themes files are missing, try running `{} setup` or `{} update` and try again.",
+                REPO_NAME, REPO_NAME
+            )));
+        }
+
         // Find the corresponding theme file for the provided item
-        let theme_option = fs::read_dir(&themes_path)
-            .expect("Failed to read colorschemes directory")
+        let theme_option = fs::read_dir(&themes_path).map_err(anyhow::Error::new)
+            .expect(format!("Themes are missing from {}, try running `{} setup` or `{} update` and try again.", item.name, REPO_NAME, REPO_NAME).as_str())
             .filter_map(Result::ok)
             .find(|entry| {
                 let path = entry.path();
@@ -61,7 +69,10 @@ pub fn set(config_path: &Path, data_path: &Path, theme_name: &str) -> Result<()>
                         })?;
                 }
             }
-            None => println!("Theme file {} does not exists for {}. Try running `{} update` or submit an issue on {}", theme_name, item.name, REPO_NAME, REPO_URL),
+            None => println!(
+                "Theme does not exists for {}. Try running `{} update` or submit an issue on {}",
+                item.name, REPO_NAME, REPO_URL
+            ),
         }
     }
 

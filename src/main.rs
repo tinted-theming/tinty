@@ -8,7 +8,7 @@ extern crate dirs;
 
 use crate::cli::build_cli;
 use anyhow::{anyhow, Context, Result};
-use constants::{REPO_NAME, SCHEMES_LIST_FILENAME};
+use constants::REPO_NAME;
 use std::path::PathBuf;
 use utils::ensure_directory_exists;
 
@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     let matches = build_cli().get_matches();
 
     // Determine the configuration path, falling back to the home directory if necessary
-    let data_path: PathBuf =
+    let system_data_path: PathBuf =
         dirs::data_dir().ok_or_else(|| anyhow!("Error getting data directory"))?;
 
     // Other configuration paths
@@ -27,13 +27,13 @@ fn main() -> Result<()> {
     } else {
         dirs::config_dir()
             .ok_or_else(|| anyhow!("Error getting config directory"))?
-            .join("tinted-theming")
+            .join(format!("tinted-theming/{}", REPO_NAME))
     };
-    let data_path = data_path.join("tinted-theming");
-    let repo_path = data_path.join(REPO_NAME);
-    let schemes_list_path = repo_path.join(SCHEMES_LIST_FILENAME);
+    let data_path = system_data_path.join(format!("tinted-theming/{}", REPO_NAME));
 
     // Ensure config dirs exist
+    ensure_directory_exists(&data_path)
+        .with_context(|| format!("Failed to create data directory at {:?}", data_path))?;
     ensure_directory_exists(&config_path)
         .with_context(|| format!("Failed to create config directory at {:?}", config_path))?;
 
@@ -43,7 +43,7 @@ fn main() -> Result<()> {
             operations::init::init(&config_path, &data_path)?;
         }
         Some(("list", _)) => {
-            operations::list::list(&schemes_list_path)?;
+            operations::list::list()?;
         }
         Some(("set", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("theme_name") {

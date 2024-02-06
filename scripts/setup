@@ -7,7 +7,7 @@ script_dir=$(dirname "$script_path")
 project_dir=$(dirname "$script_dir")
 base16_schemes_repo_dir="$project_dir/schemes"
 schemes_dir="$base16_schemes_repo_dir/base16"
-schemes_file_path="$project_dir/schemes.txt"
+schemes_file_path="$project_dir/public/schemes.txt"
 
 if [ -d "$base16_schemes_repo_dir" ]; then
   rm -rf "$base16_schemes_repo_dir"
