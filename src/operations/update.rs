@@ -4,11 +4,9 @@ use crate::{config::Config, constants::REPO_NAME};
 use anyhow::{Context, Result};
 use std::path::Path;
 
-/// Sets up the base16-shell-manager repository at the specified path.
+/// Updates local files
 ///
-/// This function checks if the repository path already exists. If it does, it prints a message indicating
-/// that the repository is already set up and suggests using the `update` subcommand for updates. If the
-/// repository path does not exist, it proceeds to clone and set up the base16-shell-manager repository at the given path.
+/// Updates the provided repositories in config file by doing a git pull
 pub fn update(config_path: &Path, data_path: &Path) -> Result<()> {
     let config = Config::read(config_path)?;
     let items = config.items.unwrap_or_default();

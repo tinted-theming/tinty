@@ -6,11 +6,10 @@ use rust_embed::RustEmbed;
 #[prefix = "public/"]
 struct Asset;
 
-/// Lists available color schemes in the base16-shell-manager repository.
+/// Lists available color schemes
 ///
-/// This function checks the provided base16-shell-manager repository path to determine if it contains
-/// color scheme scripts. It validates that the provided path is a directory, collects the names
-/// of available color schemes by inspecting the scripts in the directory, and prints them.
+/// Lists colorschemes file which is updated via scripts/setup by getting a list of schemes
+/// available in https://github.com/tinted-theming/schemes/base16
 pub fn list() -> Result<()> {
     let asset = Asset::get("public/schemes.txt").unwrap();
 

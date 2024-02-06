@@ -9,6 +9,10 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+/// Set theme
+///
+/// For each of the provided config items, copy the theme to the data_dir based on the provided
+/// scheme_name
 pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()> {
     let config = Config::read(config_path)?;
     let items = config.items.unwrap_or_default();

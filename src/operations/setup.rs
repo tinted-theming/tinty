@@ -4,11 +4,10 @@ use crate::utils::git_clone;
 use anyhow::Result;
 use std::path::Path;
 
-/// Sets up the base16-shell-manager repository at the specified path.
+/// Setup cli tool
 ///
-/// This function checks if the repository path already exists. If it does, it prints a message indicating
-/// that the repository is already set up and suggests using the `update` subcommand for updates. If the
-/// repository path does not exist, it proceeds to clone and set up the base16-shell-manager repository at the given path.
+/// Clones the provided config repositories and ensures everything is ready for when the user runs
+/// any other command
 pub fn setup(config_path: &Path, data_path: &Path) -> Result<()> {
     let config = Config::read(config_path)?;
     let items = config.items.unwrap_or_default();

@@ -5,11 +5,10 @@ use crate::utils::read_file_to_string;
 use anyhow::{Context, Result};
 use std::path::Path;
 
-/// Initializes the base16 colorscheme and runs the associated colorscheme script.
+/// Initialize based on existing data_path files
 ///
-/// This function sets up the base16 colorscheme by executing a shell script specified by
-/// `theme_path`. It also checks if the necessary configuration files exist
-/// and if not, it attempts to read the theme name from `theme_name_path`.
+/// This is used to set the theme when your shell is opened. It is based on your previously set
+/// theme or your default theme set in config.
 pub fn init(config_path: &Path, data_path: &Path) -> Result<()> {
     let config = Config::read(config_path)?;
     let active_scheme_name = read_file_to_string(&data_path.join(CURRENT_SCHEME_FILE_NAME))
