@@ -1,21 +1,20 @@
 [package]
-name = "base16-shell"
-description = "A tool to switch base16 colorschemes"
-version = "1.0.0"
+name = "tinty"
+description = "Change the theme of your terminal, text editor and anything else with one command!"
+version = "0.1.0"
 edition = "2021"
 license = "MIT"
 readme = "README.md"
-authors = ["Jamy Golden <code@jamygolden.com>"]
-homepage = "https://github.com/tinted-theming/base16-shell-manager"
-repository = "https://github.com/tinted-theming/base16-shell-manager"
-keywords = ["cli", "base16", "shell"]
+authors = ["Jamy Golden <code@jamygolden.com>", "Tinted Theming <tintedtheming@proton.me>"]
+homepage = "https://github.com/tinted-theming/tinty"
+repository = "https://github.com/tinted-theming/tinty"
+keywords = ["cli", "base16", "shell", "tinted-theming", "theme"]
 categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.75"
 clap = { version = "4.4.8", features = ["derive"] }
 dirs = "5.0.1"
-git2 = "0.18.1"
 rust-embed = "8.2.0"
 serde = { version = "1.0.196", features = ["derive"] }
 shell-words = "1.1.0"
