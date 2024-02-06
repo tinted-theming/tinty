@@ -25,7 +25,7 @@ pub fn build_cli() -> Command {
         .subcommand(Command::new("list").about("Lists available base16 colorschemes"))
         .subcommand(
             Command::new("set").about("Sets a base16 colorscheme").arg(
-                Arg::new("theme_name")
+                Arg::new("scheme_name")
                     .help("The base16 colorscheme you want to set")
                     .required(true),
             ),

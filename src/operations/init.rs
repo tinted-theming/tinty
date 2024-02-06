@@ -13,7 +13,7 @@ use std::path::Path;
 pub fn init(config_path: &Path, data_path: &Path) -> Result<()> {
     let config = Config::read(config_path)?;
     let active_scheme_name = read_file_to_string(&data_path.join(CURRENT_SCHEME_FILE_NAME))
-        .unwrap_or(config.default_theme.unwrap_or_default());
+        .unwrap_or(config.default_scheme.unwrap_or_default());
 
     operations::set::set(config_path, data_path, active_scheme_name.as_str())
             .with_context(|| {

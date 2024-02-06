@@ -40,7 +40,7 @@ impl fmt::Display for ConfigItem {
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub shell: Option<String>,
-    pub default_theme: Option<String>,
+    pub default_scheme: Option<String>,
     pub items: Option<Vec<ConfigItem>>,
 }
 

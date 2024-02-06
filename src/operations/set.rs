@@ -6,17 +6,17 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-pub fn set(config_path: &Path, data_path: &Path, theme_name: &str) -> Result<()> {
+pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()> {
     let config = Config::read(config_path)?;
     let items = config.items.unwrap_or_default();
 
-    write_to_file(&data_path.join(CURRENT_SCHEME_FILE_NAME), theme_name)?;
+    write_to_file(&data_path.join(CURRENT_SCHEME_FILE_NAME), scheme_name)?;
 
     // Run through provided items in config.toml
     for item in items {
         let repo_path = data_path.join(REPO_DIR).join(&item.name);
         let themes_path = repo_path.join(&item.themes_dir);
-        let target_theme = format!("base16-{}", theme_name);
+        let target_theme = format!("base16-{}", scheme_name);
 
         if !themes_path.exists() {
             return Err(anyhow!(format!(

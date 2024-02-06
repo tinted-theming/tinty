@@ -46,12 +46,12 @@ fn main() -> Result<()> {
             operations::list::list()?;
         }
         Some(("set", sub_matches)) => {
-            if let Some(theme) = sub_matches.get_one::<String>("theme_name") {
-                let theme_name = theme.as_str();
-                operations::set::set(&config_path, &data_path, theme_name)
-                    .with_context(|| format!("Failed to set theme \"{:?}\"", theme_name,))?;
+            if let Some(theme) = sub_matches.get_one::<String>("scheme_name") {
+                let scheme_name = theme.as_str();
+                operations::set::set(&config_path, &data_path, scheme_name)
+                    .with_context(|| format!("Failed to set theme \"{:?}\"", scheme_name,))?;
             } else {
-                anyhow::bail!("theme_name is required for set command");
+                anyhow::bail!("scheme_name is required for set command");
             }
         }
         Some(("setup", _)) => {
