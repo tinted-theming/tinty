@@ -10,6 +10,24 @@ To learn more about [Tinted Theming] and the base16 specification, have
 a look at our [home repository] and preview the themes supported by
 Tinty have a look at our [Base16 Gallery].
 
+- [Installation](#installation)
+- [Usage](#usage)
+  - [CLI structure](#cli-structure)
+    - [setup](#setup)
+    - [list](#list)
+    - [set](#set)
+    - [update](#update)
+    - [init](#init)
+    - [Flags](#flags)
+  - [Configuration](#configuration)
+    - [config.toml](#config.toml)
+  - [Usage examples](#usage-examples)
+    - [Set theme](#set-theme)
+    - [Select theme using fzf](#select-theme-using-fzf)
+    - [Use a different command name](#use-a-different-command-name)
+    - [Use a custom config directory](#use-a-custom-config-directory)
+    - [`config.toml` with various templates](#config.toml-with-various-templates)
+
 ## Installation
 
 ### Cargo
@@ -29,7 +47,7 @@ cp target/release/tinty path/to/bin/dir
 
 ## Usage
 
-### CLI Commands
+### CLI structure
 
 You can use `tinty --help` to get an overview too.
 
@@ -66,7 +84,9 @@ value set in your `config.toml` file.
 This command is useful when added to your shell `.*rc` file to make sure
 your shell and other themes are set correctly.
 
-#### `--config` or `-c`
+#### Flags
+
+**`--config` or `-c`**
 
 Path to config directory which contains your `config.toml` file. This
 value defaults to `$XDG_CONFIG_HOME` otherwise
@@ -106,7 +126,7 @@ your config looks like the following:
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-shell"
 name = "base16-shell"
-hook = "source %f"
+hook = ". %f"
 themes_dir = "scripts"
 
 [[items]]
@@ -118,7 +138,7 @@ themes_dir = "colors"
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-fzf"
 name = "base16-fzf"
-hook = "source %f"
+hook = ". %f"
 themes_dir = "bash"
 ```
 
@@ -128,19 +148,21 @@ Once `tinty set ocean` is run, the following two files will be generated:
 - `~/.local/share/tinted-theming/tinty/base16-tmux-scripts-file.conf` with `tmux source-file ~/.local/share/tinted-theming/tinty/base16-tmux-scripts-file.conf` executed afterwards.
 - `~/.local/share/tinted-theming/tinty/base16-fzf-scripts-file.config` with `. ~/.local/share/tinted-theming/tinty/base16-fzf-scripts-file.config` executed afterwards.
 
-### Usage example
+### Usage examples
 
 Without any `config.toml` file, `tinty` will set your shell theme using
 [base16-shell].
 
-#### Set the `ocean` theme
+#### Set theme
+
+To set the `ocean` theme:
 
 ```shell
 tinty setup # Required once or when your config file is updated
 tinty set ocean
 ```
 
-#### Select a scheme using fzf
+#### Select theme using fzf
 
 Requires [fzf]:
 
@@ -171,7 +193,7 @@ automatically by adding an alias to your `.*rc` shell file:
 alias tinty="$(tinty --config='path/to/config')"
 ```
 
-### `config.toml` with various templates
+### config.toml with various templates
 
 ```shell
 shell = "zsh -c '{}'"
@@ -180,13 +202,13 @@ default_scheme = "ocean"
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-shell"
 name = "base16-shell"
-hook = "source %f"
+hook = ". %f"
 themes_dir = "scripts"
 
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-fzf"
 name = "base16-fzf"
-hook = "source %f"
+hook = ". %f"
 themes_dir = "bash"
 
 [[items]]
@@ -200,12 +222,6 @@ git_url = "https://github.com/tinted-theming/base16-vim"
 name = "base16-vim"
 themes_dir = "colors"
 ```
-
-## Todo
-
-Add items.path
-Change themes_dir to be array
-Add ability to preview schemes
 
 [Tinted Theming]: https://github.com/tinted-theming/home
 [Base16 builder specification]: https://github.com/tinted-theming/home/blob/main/builder.md
