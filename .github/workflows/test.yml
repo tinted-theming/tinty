@@ -1,0 +1,21 @@
+name: Run tests
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout repo
+      - name: Fetch the repository code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build . -t tinty
+
+      - name: Run Docker container
+        run: docker run tinty
