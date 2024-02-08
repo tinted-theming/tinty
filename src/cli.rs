@@ -6,8 +6,8 @@ use crate::constants::REPO_NAME;
 pub fn build_cli() -> Command {
     Command::new(REPO_NAME)
         .version(env!("CARGO_PKG_VERSION"))
-        .author("Tinted Theming")
-        .about("A tool to switch base16 colorschemes")
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
         // Define a global argument for specifying the repository directory
         .arg(
             Arg::new("config")

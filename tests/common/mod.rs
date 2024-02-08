@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str;
 
-pub const REPO_NAME: &str = "tinty";
+pub const REPO_NAME: &str = env!("CARGO_PKG_NAME");
 pub const COMMAND_NAME: &str = "./target/release/tinty";
 
 pub fn run_command(command_vec: Vec<String>) -> Result<(String, String), Box<dyn Error>> {

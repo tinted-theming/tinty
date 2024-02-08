@@ -48,7 +48,7 @@ fn test_cli_set_subcommand_without_setup() -> Result<()> {
     // Arrange
     // -------
     let config_path = Path::new("test_cli_set_subcommand");
-    let scheme_name = "oceanicnext";
+    let scheme_name = "base16-oceanicnext";
     let command = format!(
         "{} --config=\"{}\" set {}",
         COMMAND_NAME,
