@@ -5,7 +5,7 @@ use crate::constants::REPO_NAME;
 /// Builds the command-line interface for the application.
 pub fn build_cli() -> Command {
     Command::new(REPO_NAME)
-        .version("1.0.0")
+        .version(env!("CARGO_PKG_VERSION"))
         .author("Tinted Theming")
         .about("A tool to switch base16 colorschemes")
         // Define a global argument for specifying the repository directory
