@@ -7,11 +7,11 @@ use anyhow::Result;
 use std::path::Path;
 
 #[test]
-fn test_cli_update_subcommand_no_setup() -> Result<()> {
+fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_update_subcommand_existing_config");
+    let config_path = Path::new("test_cli_update_subcommand_without_setup");
     let expected_output = format!("base16-shell not installed (run `{} setup`)", REPO_NAME);
     let command = format!(
         "{} update --config=\"{}\"",
@@ -39,11 +39,11 @@ fn test_cli_update_subcommand_no_setup() -> Result<()> {
 }
 
 #[test]
-fn test_cli_update_subcommand_existing_setup() -> Result<()> {
+fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_update_subcommand_existing_config");
+    let config_path = Path::new("test_cli_update_subcommand_with_setup");
     let expected_output = "base16-shell up to date";
     let command = format!(
         "{} update --config=\"{}\"",

@@ -1,3 +1,5 @@
+extern crate strip_ansi_escapes;
+
 use anyhow::{anyhow, Result};
 use std::error::Error;
 use std::fs;
@@ -21,10 +23,10 @@ pub fn run_command(command_vec: Vec<String>) -> Result<(String, String), Box<dyn
         );
     }
 
-    let stdout = String::from_utf8(output.stdout).expect("Not valid UTF-8");
-    let stderr = String::from_utf8(output.stderr).expect("Not valid UTF-8");
+    let stdout = strip_ansi_escapes::strip(String::from_utf8(output.stdout)?);
+    let stderr = strip_ansi_escapes::strip(String::from_utf8(output.stderr)?);
 
-    Ok((stdout, stderr))
+    Ok((String::from_utf8(stdout)?, String::from_utf8(stderr)?))
 }
 
 pub fn run_setup_command(config_path: &Path) -> Result<()> {

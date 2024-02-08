@@ -7,11 +7,11 @@ use anyhow::Result;
 use std::path::Path;
 
 #[test]
-fn test_cli_init_subcommand_no_setup() -> Result<()> {
+fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_init_subcommand_existing_config");
+    let config_path = Path::new("test_cli_init_subcommand_without_setup");
     let expected_output = format!(
         "Themes files are missing, try running `{} setup` or `{} update` and try again.",
         REPO_NAME, REPO_NAME,
@@ -42,11 +42,11 @@ fn test_cli_init_subcommand_no_setup() -> Result<()> {
 }
 
 #[test]
-fn test_cli_init_subcommand_existing_setup() -> Result<()> {
+fn test_cli_init_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_init_subcommand_existing_config");
+    let config_path = Path::new("test_cli_init_subcommand_with_setup");
     let command = format!(
         "{} init --config=\"{}\"",
         COMMAND_NAME,
@@ -57,13 +57,11 @@ fn test_cli_init_subcommand_existing_setup() -> Result<()> {
     // // ---
     // // Act
     // // ---
-    common::run_command(command_vec.clone()).unwrap();
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------
     // // Assert
     // // ------
-
     assert!(
         stdout.is_empty(),
         "stdout does not contain the expected output"

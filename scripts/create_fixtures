@@ -1,0 +1,46 @@
+#!/usr/bin/env sh
+
+# Create fixtures for testing
+
+main() {
+  command -v realpath >/dev/null 2>&1 || {
+    realpath() {
+      [ "$1" != "" ] && echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+    }
+  }
+
+  local script_path=$(realpath "$0")
+  local script_dir=$(dirname "$script_path")
+  local project_dir=$(dirname "$script_dir")
+  local schemes_repo_dir="$project_dir/schemes"
+  local base16_schemes_repo_dir="$schemes_repo_dir/base16"
+  local fixtures_path="$project_dir/fixtures"
+  local schemes_file_path="$fixtures_path/schemes.txt"
+
+  if [ -d "$schemes_repo_dir" ]; then
+    rm -rf "$schemes_repo_dir"
+  fi
+
+  if [ -d "$fixtures_path" ]; then
+    rm -r "$fixtures_path"
+  fi
+
+  mkdir "$fixtures_path"
+
+  git clone https://github.com/tinted-theming/schemes.git "$schemes_repo_dir"
+
+  for base16_path in "$base16_schemes_repo_dir"/*; do
+    filename=$(basename -- "$base16_path")
+
+    case "$filename" in
+      *.yaml)
+        theme_name="${filename%.yaml}"
+        echo "base16-$theme_name" >> "$schemes_file_path"
+        ;;
+    esac
+  done
+
+  rm -rf "$schemes_repo_dir"
+}
+
+main "$@"

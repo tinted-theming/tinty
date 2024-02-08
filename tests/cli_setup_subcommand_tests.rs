@@ -7,11 +7,11 @@ use anyhow::Result;
 use std::path::Path;
 
 #[test]
-fn test_cli_setup_subcommand_no_setup() -> Result<()> {
+fn test_cli_setup_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_setup_subcommand_existing_config");
+    let config_path = Path::new("test_cli_setup_subcommand_without_setup");
     let expected_output = "base16-shell installed";
     let command = format!(
         "{} setup --config=\"{}\"",
@@ -39,11 +39,11 @@ fn test_cli_setup_subcommand_no_setup() -> Result<()> {
 }
 
 #[test]
-fn test_cli_setup_subcommand_existing_setup() -> Result<()> {
+fn test_cli_setup_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_setup_subcommand_existing_config");
+    let config_path = Path::new("test_cli_setup_subcommand_with_setup");
     let expected_output = "base16-shell already installed";
     let command = format!(
         "{} setup --config=\"{}\"",

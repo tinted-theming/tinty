@@ -23,7 +23,6 @@ pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()
     for item in items {
         let repo_path = data_path.join(REPO_DIR).join(&item.name);
         let themes_path = repo_path.join(&item.themes_dir);
-        let target_theme = format!("base16-{}", scheme_name);
 
         if !themes_path.exists() {
             return Err(anyhow!(format!(
@@ -40,7 +39,7 @@ pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()
                 let path = entry.path();
                 let filename = path.file_stem().and_then(|name| name.to_str());
 
-                target_theme == filename.unwrap_or_default()
+                scheme_name == filename.unwrap_or_default()
             });
 
         // Copy that theme to the data_path or log a message that it isn't found

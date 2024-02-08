@@ -43,7 +43,7 @@ fn main() -> Result<()> {
             operations::init::init(&config_path, &data_path)?;
         }
         Some(("list", _)) => {
-            operations::list::list()?;
+            operations::list::list(&data_path)?;
         }
         Some(("set", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("scheme_name") {
