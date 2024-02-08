@@ -20,13 +20,13 @@ Tinty have a look at our [Base16 Gallery].
     - [init](#init)
     - [Flags](#flags)
   - [Configuration](#configuration)
-    - [config.toml](#config.toml)
+    - [config.toml](#configtoml)
   - [Usage examples](#usage-examples)
     - [Set theme](#set-theme)
     - [Select theme using fzf](#select-theme-using-fzf)
     - [Use a different command name](#use-a-different-command-name)
     - [Use a custom config directory](#use-a-custom-config-directory)
-    - [`config.toml` with various templates](#config.toml-with-various-templates)
+    - [`config.toml` with various templates](#configtoml-with-various-templates)
 
 ## Installation
 
