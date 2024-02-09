@@ -1,5 +1,3 @@
-extern crate strip_ansi_escapes;
-
 use anyhow::{anyhow, Result};
 use std::error::Error;
 use std::fs;

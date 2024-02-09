@@ -1,7 +1,5 @@
 mod common;
 
-extern crate dirs;
-
 use crate::common::{cleanup, COMMAND_NAME, REPO_NAME};
 use anyhow::Result;
 use std::path::Path;

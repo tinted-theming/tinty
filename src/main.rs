@@ -4,8 +4,6 @@ mod constants;
 mod operations;
 mod utils;
 
-extern crate dirs;
-
 use crate::cli::build_cli;
 use anyhow::{anyhow, Context, Result};
 use constants::REPO_NAME;

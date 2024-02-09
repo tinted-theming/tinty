@@ -1,5 +1,3 @@
-extern crate shell_words;
-
 use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
 use anyhow::{anyhow, Context, Result};
 use std::fs::{self, File};
