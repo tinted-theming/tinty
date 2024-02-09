@@ -1,10 +1,10 @@
 use crate::constants::REPO_NAME;
+use crate::utils::read_file_to_string;
 use anyhow::{anyhow, Context, Result};
+use serde::de::{self, Deserializer, Unexpected, Visitor};
 use serde::Deserialize;
 use std::fmt;
 use std::path::Path;
-
-use crate::utils::read_file_to_string;
 
 pub const DEFAULT_CONFIG_SHELL: &str = "sh -c '{}'";
 pub const CONFIG_FILE_NAME: &str = "config.toml";
@@ -13,6 +13,60 @@ pub const BASE16_SHELL_REPO_NAME: &str = "base16-shell";
 pub const BASE16_SHELL_THEMES_DIR: &str = "scripts";
 pub const BASE16_SHELL_HOOK: &str = ". %f";
 
+#[derive(Debug, Default)]
+pub enum SupportedSchemeSystems {
+    #[default]
+    Base16,
+    Base24,
+}
+
+impl<'de> Deserialize<'de> for SupportedSchemeSystems {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct SupportedSystemVisitor;
+
+        impl<'de> Visitor<'de> for SupportedSystemVisitor {
+            type Value = SupportedSchemeSystems;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("`base16` or `base24`")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<SupportedSchemeSystems, E>
+            where
+                E: de::Error,
+            {
+                match value {
+                    "base16" => Ok(SupportedSchemeSystems::Base16),
+                    "base24" => Ok(SupportedSchemeSystems::Base24),
+                    _ => Err(E::invalid_value(Unexpected::Str(value), &self)),
+                }
+            }
+        }
+
+        deserializer.deserialize_str(SupportedSystemVisitor)
+    }
+}
+
+impl SupportedSchemeSystems {
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            SupportedSchemeSystems::Base16 => "base16",
+            SupportedSchemeSystems::Base24 => "base24",
+        }
+    }
+
+    pub fn variants() -> &'static [SupportedSchemeSystems] {
+        static VARIANTS: &[SupportedSchemeSystems] = &[
+            SupportedSchemeSystems::Base16,
+            SupportedSchemeSystems::Base24,
+        ];
+        VARIANTS
+    }
+}
+
 /// Structure for configuration apply items
 #[derive(Deserialize, Debug)]
 pub struct ConfigItem {
@@ -20,6 +74,7 @@ pub struct ConfigItem {
     pub git_url: String,
     pub hook: Option<String>,
     pub themes_dir: String,
+    pub system: Option<SupportedSchemeSystems>,
 }
 
 impl fmt::Display for ConfigItem {
@@ -32,7 +87,8 @@ impl fmt::Display for ConfigItem {
         if !hook.is_empty() {
             writeln!(f, "    - hook: {}", hook)?;
         }
-        writeln!(f, "    - themes_dir: {}", self.themes_dir)
+        writeln!(f, "    - themes_dir: {}", self.themes_dir)?;
+        writeln!(f, "    - system: {}", self.git_url)
     }
 }
 
@@ -55,7 +111,7 @@ impl Config {
             )
         })?;
 
-        // Add default values
+        // Create default `item`
         let shell = config
             .shell
             .clone()
@@ -65,10 +121,21 @@ impl Config {
             name: BASE16_SHELL_REPO_NAME.to_string(),
             themes_dir: BASE16_SHELL_THEMES_DIR.to_string(),
             hook: Some(BASE16_SHELL_HOOK.to_string()),
+            system: Some(SupportedSchemeSystems::Base16), // DEFAULT_SCHEME_SYSTEM
         };
 
+        // Add default `item` if no items exist
         if config.items.is_none() {
             config.items = Some(vec![base16_shell_config_item]);
+        }
+
+        // Set default `system` property for missing systems
+        if let Some(ref mut items) = config.items {
+            for item in items.iter_mut() {
+                if item.system.is_none() {
+                    item.system = Some(SupportedSchemeSystems::default());
+                }
+            }
         }
 
         if !shell.contains("{}") {

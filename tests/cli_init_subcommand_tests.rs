@@ -11,8 +11,8 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // -------
     let config_path = Path::new("test_cli_init_subcommand_without_setup");
     let expected_output = format!(
-        "Themes files are missing, try running `{} setup` or `{} update` and try again.",
-        REPO_NAME, REPO_NAME,
+        "Failed to initialize, config files seem to be missing. Try setting a theme first with `{} set <SCHEME_NAME>`.",
+        REPO_NAME
     );
     let command = format!(
         "{} init --config=\"{}\"",

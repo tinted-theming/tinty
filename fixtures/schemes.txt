@@ -255,3 +255,14 @@ base16-woodland
 base16-xcode-dusk
 base16-zenbones
 base16-zenburn
+base24-brogrammer
+base24-chalk
+base24-dracula
+base24-espresso
+base24-flat
+base24-framer
+base24-github
+base24-hardcore
+base24-one-black
+base24-one-dark
+base24-one-light

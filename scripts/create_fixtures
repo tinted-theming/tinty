@@ -13,7 +13,7 @@ main() {
   local script_dir=$(dirname "$script_path")
   local project_dir=$(dirname "$script_dir")
   local schemes_repo_dir="$project_dir/schemes"
-  local base16_schemes_repo_dir="$schemes_repo_dir/base16"
+  local supported_schemes_systems="base16 base24"
   local fixtures_path="$project_dir/fixtures"
   local schemes_file_path="$fixtures_path/schemes.txt"
 
@@ -29,15 +29,24 @@ main() {
 
   git clone https://github.com/tinted-theming/schemes.git "$schemes_repo_dir"
 
-  for base16_path in "$base16_schemes_repo_dir"/*; do
-    filename=$(basename -- "$base16_path")
+  for scheme_system in $supported_schemes_systems; do
+    local scheme_system_repo_path="$schemes_repo_dir/$scheme_system"
 
-    case "$filename" in
-      *.yaml)
-        theme_name="${filename%.yaml}"
-        echo "base16-$theme_name" >> "$schemes_file_path"
-        ;;
-    esac
+    if [ ! -d "$scheme_system_repo_path" ]; then
+      echo "$scheme_system doesn't exist";
+      continue
+    fi
+
+    for scheme_system_path in "$scheme_system_repo_path"/*; do
+      filename=$(basename -- "$scheme_system_path")
+
+      case "$filename" in
+        *.yaml)
+          theme_name="${filename%.yaml}"
+          echo "$scheme_system-$theme_name" >> "$schemes_file_path"
+          ;;
+      esac
+    done
   done
 
   rm -rf "$schemes_repo_dir"

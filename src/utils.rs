@@ -1,4 +1,5 @@
-use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
+use crate::config::{Config, ConfigItem, SupportedSchemeSystems, DEFAULT_CONFIG_SHELL};
+use crate::constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME, SCHEME_EXTENSION};
 use anyhow::{anyhow, Context, Result};
 use std::fs::{self, File};
 use std::io::{Read, Write};
@@ -20,6 +21,10 @@ pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
 
 /// Reads the contents of a file and returns it as a string.
 pub fn read_file_to_string(path: &Path) -> Result<String> {
+    if !path.exists() {
+        return Err(anyhow!("File does not exist: {}", path.display()));
+    }
+
     let mut file = File::open(path)?;
     let mut contents = String::new();
 
@@ -30,10 +35,15 @@ pub fn read_file_to_string(path: &Path) -> Result<String> {
 
 pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     if path.exists() {
-        fs::remove_file(path)?;
+        fs::remove_file(path)
+            .map_err(anyhow::Error::new)
+            .with_context(|| format!("Unable to remove file: {}", path.display()))?;
     }
 
-    let mut file = File::create(path)?;
+    let mut file = File::create(path)
+        .map_err(anyhow::Error::new)
+        .with_context(|| format!("Unable to create file: {}", path.display()))?;
+
     file.write_all(contents.as_bytes())?;
 
     Ok(())
@@ -114,8 +124,57 @@ pub fn git_diff(target_dir: &Path) -> Result<bool> {
 
 pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<String> {
     Ok(format!(
-        "{}-{}-file",
+        "{}-{}-{}-file",
+        item.system
+            .as_ref()
+            .unwrap_or(&SupportedSchemeSystems::default())
+            .to_str(),
         item.name.clone(),
-        item.themes_dir.clone(),
+        item.themes_dir.clone().replace('/', "-"), // Flatten path/to/dir to path-to-dir
     ))
+}
+
+pub fn get_all_scheme_names(data_path: &Path) -> Result<Vec<String>> {
+    let schemes_repo_path = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
+    if !schemes_repo_path.exists() {
+        return Err(anyhow!(
+            "Schemes do not exist, run setup and try again: `{} setup`",
+            REPO_NAME
+        ));
+    }
+
+    // For each supported scheme system, add schemes to vec
+    let mut scheme_vec: Vec<String> = Vec::new();
+    for scheme_system in SupportedSchemeSystems::variants() {
+        let scheme_system_dir = schemes_repo_path.join(scheme_system.to_str());
+        if !scheme_system_dir.exists() {
+            continue;
+        }
+
+        for file in fs::read_dir(&scheme_system_dir)? {
+            let file_path = file.as_ref().unwrap().path();
+            let extension = file_path
+                .extension()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or_default();
+
+            if extension == SCHEME_EXTENSION {
+                scheme_vec.push(format!(
+                    "{}-{}",
+                    scheme_system.to_str(),
+                    file.unwrap()
+                        .path()
+                        .file_stem()
+                        .unwrap_or_default()
+                        .to_str()
+                        .unwrap_or_default()
+                ));
+            }
+        }
+    }
+
+    scheme_vec.sort();
+
+    Ok(scheme_vec)
 }

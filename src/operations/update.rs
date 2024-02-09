@@ -2,14 +2,14 @@ use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_URL};
 use crate::utils::{git_diff, git_pull};
 use crate::{config::Config, constants::REPO_NAME};
 use anyhow::{Context, Result};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-fn update_item(item_name: &str, item_url: &str, item_path: &PathBuf) -> Result<()> {
+fn update_item(item_name: &str, item_url: &str, item_path: &Path) -> Result<()> {
     if item_path.is_dir() {
-        let is_diff = git_diff(&item_path)?;
+        let is_diff = git_diff(item_path)?;
 
         if !is_diff {
-            git_pull(&item_path)
+            git_pull(item_path)
                 .with_context(|| format!("Error pulling {} from {}", item_name, item_url))?;
 
             println!("{} up to date", item_name);

@@ -1,7 +1,7 @@
 # Tinty - A Tinted Theming CLI tool written in Rust 🦀
 
 Change the theme of your terminal, text editor and anything else with
-one command. Immediately switch from over 250 themes!
+one command. Immediately switch between over 250 themes!
 
 Tinty is a theming manager for all [Tinted Theming] projects including any
 template repository that follows the [Base16 builder specification].
@@ -9,6 +9,8 @@ template repository that follows the [Base16 builder specification].
 To learn more about [Tinted Theming] and the base16 specification, have
 a look at our [home repository] and preview the themes supported by
 Tinty have a look at our [Base16 Gallery].
+
+Tinty supports [Base16] and [Base24] scheming systems. 
 
 - [Installation](#installation)
 - [Usage](#usage)
@@ -114,32 +116,37 @@ required directories for data and configuration exist.
     for the location of the theme file. `hook = ". %f"` will source the
     theme file after the theme has been set
 
-Base16 templates are added to the `config.toml` file and Tinty will
-clone those repositories and the theme file when you run `tinty set
-<SCHEME_NAME>`. The theme files are set in
+[Base16] and/or [Base24] templates are added to the `config.toml` file
+and Tinty will clone those repositories and the theme file when you run
+`tinty set <SCHEME_SYSTEM>-<SCHEME_NAME>`. The theme files are set in
 `$XDG_DATA_HOME/tinted-theming/tinty` or
 `~/.local/share/tinted-theming/tinty`. The name of the themes are as
-follows: `<item.name>-<item.themes_dir>-file.<FILE_EXTENSION>`. The
+follows:
+<item.system>-`<item.name>-<item.themes_dir>-file.<FILE_EXTENSION> -
+this could look like `base16-tmux-colors-file.conf`. The
 `<FILE_EXTENSION>` matches the extension of the original theme. So if
 your config looks like the following:
 ```shell
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-shell"
-name = "base16-shell"
+name = "shell"
 hook = ". %f"
 themes_dir = "scripts"
+system = "base16"
 
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-tmux"
-name = "base16-tmux"
+name = "tmux"
 hook = "tmux source-file %f"
 themes_dir = "colors"
+system = "base16"
 
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-fzf"
-name = "base16-fzf"
+name = "fzf"
 hook = ". %f"
 themes_dir = "bash"
+system = "base16"
 ```
 
 Once `tinty set ocean` is run, the following two files will be generated:
@@ -201,26 +208,30 @@ default_scheme = "ocean"
 
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-shell"
-name = "base16-shell"
+name = "shell"
 hook = ". %f"
 themes_dir = "scripts"
+system = "base16"
 
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-fzf"
-name = "base16-fzf"
+name = "fzf"
 hook = ". %f"
 themes_dir = "bash"
+system = "base16"
 
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-tmux"
-name = "base16-tmux"
+name = "tmux"
 hook = "tmux source-file %f"
 themes_dir = "colors"
+system = "base16"
 
 [[items]]
 git_url = "https://github.com/tinted-theming/base16-vim"
-name = "base16-vim"
+name = "vim"
 themes_dir = "colors"
+system = "base16"
 ```
 
 [Tinted Theming]: https://github.com/tinted-theming/home
@@ -230,3 +241,5 @@ themes_dir = "colors"
 [base16-shell]: https://github.com/tinted-theming/base16-shell
 [schemes]: https://github.com/tinted-theming/schemes
 [fzf]: https://github.com/junegunn/fzf
+[Base16]: https://github.com/tinted-theming/home/blob/main/styling.md
+[Base24]: https://github.com/tinted-theming/base24/blob/master/styling.md

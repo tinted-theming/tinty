@@ -1,26 +1,71 @@
-use crate::config::Config;
-use crate::constants::{CURRENT_SCHEME_FILE_NAME, REPO_DIR, REPO_NAME, REPO_URL};
+use crate::config::{Config, SupportedSchemeSystems};
+use crate::constants::{
+    CURRENT_SCHEME_FILE_NAME, DEFAULT_SCHEME_SYSTEM, REPO_DIR, REPO_NAME, REPO_URL,
+};
 use crate::utils::{
-    create_theme_filename_without_extension, get_shell_command_from_string, read_file_to_string,
-    write_to_file,
+    create_theme_filename_without_extension, get_all_scheme_names, get_shell_command_from_string,
+    read_file_to_string, write_to_file,
 };
 use anyhow::{anyhow, Context, Result};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+fn str_matches_scheme_system(value: &str) -> bool {
+    match value {
+        _ if value == SupportedSchemeSystems::Base16.to_str() => true,
+        _ if value == SupportedSchemeSystems::Base24.to_str() => true,
+        _ => false,
+    }
+}
+
 /// Set theme
 ///
 /// For each of the provided config items, copy the theme to the data_dir based on the provided
 /// scheme_name
-pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()> {
+pub fn set(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Result<()> {
+    let scheme_name_arr = full_scheme_name.split('-');
+    let scheme_system_option = scheme_name_arr.clone().next();
+
+    // Check provided scheme exists
+    if scheme_name_arr.count() < 2 {
+        return Err(anyhow!(
+            "Invalid scheme name. Make sure the scheme system is prefixed <SCHEME_SYSTEM>-<SCHEME_NAME>, eg: `{}-ayu-dark`",
+            DEFAULT_SCHEME_SYSTEM,
+        ));
+    }
+
+    // Check provided scheme is valid
+    if !str_matches_scheme_system(scheme_system_option.unwrap_or_default()) {
+        return Err(anyhow!(
+            "Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"{}\" or \"{}\"), eg: {}-{}",
+            SupportedSchemeSystems::Base16.to_str(),
+            SupportedSchemeSystems::Base24.to_str(),
+            DEFAULT_SCHEME_SYSTEM,
+            full_scheme_name
+        ));
+    }
+
+    // Check theme
+    let scheme_system = scheme_system_option.unwrap_or("");
     let config = Config::read(config_path)?;
     let items = config.items.unwrap_or_default();
+    let schemes_vec = get_all_scheme_names(data_path)?;
 
-    write_to_file(&data_path.join(CURRENT_SCHEME_FILE_NAME), scheme_name)?;
+    if !schemes_vec.contains(&full_scheme_name.to_string()) {
+        return Err(anyhow!("Scheme does not exist: {}", full_scheme_name));
+    }
+
+    write_to_file(&data_path.join(CURRENT_SCHEME_FILE_NAME), full_scheme_name)?;
+
+    // Collect config items that match the provided system
+    let system_items = items.iter().filter(|item| match &item.system {
+        Some(system) => system.to_str() == scheme_system,
+        None => false,
+    });
 
     // Run through provided items in config.toml
-    for item in items {
+    for item in system_items {
         let repo_path = data_path.join(REPO_DIR).join(&item.name);
         let themes_path = repo_path.join(&item.themes_dir);
 
@@ -32,15 +77,15 @@ pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()
         }
 
         // Find the corresponding theme file for the provided item
-        let theme_option = fs::read_dir(&themes_path).map_err(anyhow::Error::new)
-            .expect(format!("Themes are missing from {}, try running `{} setup` or `{} update` and try again.", item.name, REPO_NAME, REPO_NAME).as_str())
-            .filter_map(Result::ok)
-            .find(|entry| {
-                let path = entry.path();
-                let filename = path.file_stem().and_then(|name| name.to_str());
+        let theme_dir = fs::read_dir(&themes_path)
+            .map_err(anyhow::Error::new)
+            .with_context(|| format!("Themes are missing from {}, try running `{} setup` or `{} update` and try again.", item.name, REPO_NAME, REPO_NAME))?;
+        let theme_option = &theme_dir.filter_map(Result::ok).find(|entry| {
+            let path = entry.path();
+            let filename = path.file_stem().and_then(|name| name.to_str());
 
-                scheme_name == filename.unwrap_or_default()
-            });
+            full_scheme_name == filename.unwrap_or_default()
+        });
 
         // Copy that theme to the data_path or log a message that it isn't found
         match theme_option {
@@ -53,7 +98,7 @@ pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()
                     .unwrap_or_default();
                 let filename = format!(
                     "{}.{}",
-                    create_theme_filename_without_extension(&item)?,
+                    create_theme_filename_without_extension(item)?,
                     extension,
                 );
                 let data_theme_path = data_path.join(filename);
@@ -62,7 +107,7 @@ pub fn set(config_path: &Path, data_path: &Path, scheme_name: &str) -> Result<()
                 write_to_file(&data_theme_path, theme_content.as_str())?;
 
                 // Run hook for item if provided
-                if let Some(hook_text) = item.hook {
+                if let Some(hook_text) = &item.hook {
                     let hook_script =
                         hook_text.replace("%f", format!("{}", theme_file_path.display()).as_str());
                     let command_vec =

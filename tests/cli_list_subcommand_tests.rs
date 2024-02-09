@@ -49,7 +49,7 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // -------
     let config_path = Path::new("test_cli_list_subcommand");
     let expected_output = format!(
-        "Error: Scheme files are missing. Run `{} setup` and try again.",
+        "Schemes are missing, run setup and then try again: `{} setup`",
         REPO_NAME
     );
     let command = format!(
