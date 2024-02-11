@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 (2024-02-11)
+
+- Enforces config.toml `[[items]]` `name` property is a unique value to
+  prevent dirname conflicts
+- Removes config.toml `[[items]]` `git_url` property
+- Adds config.toml `[[items]]` `path` property which supports git URLs
+  as well as path to local repo dir
+
 ## 0.3.0 (2024-02-10)
 
 - Add support for base24 templates
