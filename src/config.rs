@@ -5,6 +5,7 @@ use serde::de::{self, Deserializer, Unexpected, Visitor};
 use serde::Deserialize;
 use std::fmt;
 use std::path::Path;
+use url::Url;
 
 pub const DEFAULT_CONFIG_SHELL: &str = "sh -c '{}'";
 pub const CONFIG_FILE_NAME: &str = "config.toml";
@@ -13,7 +14,7 @@ pub const BASE16_SHELL_REPO_NAME: &str = "base16-shell";
 pub const BASE16_SHELL_THEMES_DIR: &str = "scripts";
 pub const BASE16_SHELL_HOOK: &str = ". %f";
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub enum SupportedSchemeSystems {
     #[default]
     Base16,
@@ -71,7 +72,7 @@ impl SupportedSchemeSystems {
 #[derive(Deserialize, Debug)]
 pub struct ConfigItem {
     pub name: String,
-    pub git_url: String,
+    pub path: String,
     pub hook: Option<String>,
     pub themes_dir: String,
     pub system: Option<SupportedSchemeSystems>,
@@ -80,15 +81,17 @@ pub struct ConfigItem {
 impl fmt::Display for ConfigItem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let hook = self.hook.clone().unwrap_or_default();
+        let system = self.system.clone().unwrap_or_default();
+
         // You can format the output however you like
         writeln!(f, "  - Item")?;
         writeln!(f, "    - name: {}", self.name)?;
-        writeln!(f, "    - git_url: {}", self.git_url)?;
+        writeln!(f, "    - path: {}", self.path)?;
         if !hook.is_empty() {
             writeln!(f, "    - hook: {}", hook)?;
         }
-        writeln!(f, "    - themes_dir: {}", self.themes_dir)?;
-        writeln!(f, "    - system: {}", self.git_url)
+        writeln!(f, "    - system: {}", system.to_str())?;
+        writeln!(f, "    - themes_dir: {}", self.themes_dir)
     }
 }
 
@@ -117,7 +120,7 @@ impl Config {
             .clone()
             .unwrap_or_else(|| DEFAULT_CONFIG_SHELL.into());
         let base16_shell_config_item = ConfigItem {
-            git_url: BASE16_SHELL_REPO_URL.to_string(),
+            path: BASE16_SHELL_REPO_URL.to_string(),
             name: BASE16_SHELL_REPO_NAME.to_string(),
             themes_dir: BASE16_SHELL_THEMES_DIR.to_string(),
             hook: Some(BASE16_SHELL_HOOK.to_string()),
@@ -135,11 +138,34 @@ impl Config {
                 if item.system.is_none() {
                     item.system = Some(SupportedSchemeSystems::default());
                 }
+
+                // Replace `~/` with absolute home path
+                let trimmed_path = item.path.trim();
+                if trimmed_path.starts_with("~/") {
+                    match dirs::home_dir() {
+                        Some(home_dir) => {
+                            item.path = trimmed_path.replacen(
+                                "~/",
+                                format!("{}/", home_dir.display()).as_str(),
+                                1,
+                            );
+                        }
+                        None => {
+                            return Err(anyhow!("Unable to determine a home directory for \"{}\", please use an absolute path instead", item.path));
+                        }
+                    }
+                }
+
+                // Return Err if path is not a valid url or an existing directory path
+                if Url::parse(item.path.as_str()).is_err()
+                    && !Path::new(item.path.as_str()).is_dir()
+                {
+                    return Err(anyhow!("One of your config.toml items has an invalid `path` value. \"{}\" is not a valid url and is not a path to an existing local directory", item.path));
+                }
             }
         }
 
         if !shell.contains("{}") {
-            // Hide {} in this error message from the formatting machinery in anyhow macro
             let msg = "The configured shell does not contain the required command placeholder '{}'. Check the default file or github for config examples.";
             return Err(anyhow!(msg));
         }
@@ -152,7 +178,6 @@ impl Config {
 
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // You can format the output however you like
         writeln!(f, "Config")?;
         writeln!(
             f,

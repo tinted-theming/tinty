@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::error::Error;
-use std::fs;
+use std::fs::{self, File};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str;
@@ -61,6 +62,18 @@ pub fn cleanup(config_path: &Path) -> Result<()> {
     if config_path.is_dir() {
         fs::remove_dir_all(config_path)?;
     }
+
+    Ok(())
+}
+
+pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
+    if path.exists() {
+        fs::remove_file(path)?;
+    }
+
+    let mut file = File::create(path)?;
+
+    file.write_all(contents.as_bytes())?;
 
     Ok(())
 }

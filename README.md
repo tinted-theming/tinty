@@ -108,13 +108,17 @@ required directories for data and configuration exist.
 - `default_scheme` - defaults to `default-dark`
 - `items` - A toml array of tables. Each item represents a template
   - `name` (Required) - A unique value indicating the name of the item
-  - `url` (Required) - A url to the git repository
+  - `path` (Required) - A url to the git repository or a path to a local
+    copy of the repository. It can start with `~/` which will map to
+    your home directory, otherwise it must be an absolute path.
   - `themes_dir` (Required) - The template directory name that contains
     the theme files
   - `hook` - A script that is executed after `tinty set <SCHEME_NAME>`
     has been run. `%f` can be used in the hook which is a variable name
     for the location of the theme file. `hook = ". %f"` will source the
     theme file after the theme has been set
+  - system - The scheme system of the template. Defaults to `base16`.
+    Currently supports `base16` and `base24` templates.
 
 [Base16] and/or [Base24] templates are added to the `config.toml` file
 and Tinty will clone those repositories and the theme file when you run
@@ -128,21 +132,21 @@ this could look like `base16-tmux-colors-file.conf`. The
 your config looks like the following:
 ```shell
 [[items]]
-git_url = "https://github.com/tinted-theming/base16-shell"
+path = "https://github.com/tinted-theming/base16-shell"
 name = "shell"
 hook = ". %f"
 themes_dir = "scripts"
 system = "base16"
 
 [[items]]
-git_url = "https://github.com/tinted-theming/base16-tmux"
+path = "~/projects/base16-tmux"
 name = "tmux"
 hook = "tmux source-file %f"
 themes_dir = "colors"
 system = "base16"
 
 [[items]]
-git_url = "https://github.com/tinted-theming/base16-fzf"
+path = "/home/user/projects/base16-fzf"
 name = "fzf"
 hook = ". %f"
 themes_dir = "bash"
@@ -207,28 +211,28 @@ shell = "zsh -c '{}'"
 default_scheme = "ocean"
 
 [[items]]
-git_url = "https://github.com/tinted-theming/base16-shell"
+path = "https://github.com/tinted-theming/base16-shell"
 name = "shell"
 hook = ". %f"
 themes_dir = "scripts"
 system = "base16"
 
 [[items]]
-git_url = "https://github.com/tinted-theming/base16-fzf"
+path = "https://github.com/tinted-theming/base16-fzf"
 name = "fzf"
 hook = ". %f"
 themes_dir = "bash"
 system = "base16"
 
 [[items]]
-git_url = "https://github.com/tinted-theming/base16-tmux"
+path = "https://github.com/tinted-theming/base16-tmux"
 name = "tmux"
 hook = "tmux source-file %f"
 themes_dir = "colors"
 system = "base16"
 
 [[items]]
-git_url = "https://github.com/tinted-theming/base16-vim"
+path = "https://github.com/tinted-theming/base16-vim"
 name = "vim"
 themes_dir = "colors"
 system = "base16"

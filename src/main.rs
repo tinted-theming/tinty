@@ -6,7 +6,7 @@ mod utils;
 
 use crate::cli::build_cli;
 use anyhow::{anyhow, Context, Result};
-use constants::REPO_NAME;
+use constants::{REPO_DIR, REPO_NAME};
 use std::path::PathBuf;
 use utils::ensure_directory_exists;
 
@@ -28,12 +28,23 @@ fn main() -> Result<()> {
             .join(format!("tinted-theming/{}", REPO_NAME))
     };
     let data_path = system_data_path.join(format!("tinted-theming/{}", REPO_NAME));
+    let data_repo_path = data_path.join(REPO_DIR);
 
     // Ensure config dirs exist
     ensure_directory_exists(&data_path)
-        .with_context(|| format!("Failed to create data directory at {:?}", data_path))?;
-    ensure_directory_exists(&config_path)
-        .with_context(|| format!("Failed to create config directory at {:?}", config_path))?;
+        .with_context(|| format!("Failed to create data directory at {}", data_path.display()))?;
+    ensure_directory_exists(&data_repo_path).with_context(|| {
+        format!(
+            "Failed to create config directory at {}",
+            data_repo_path.display()
+        )
+    })?;
+    ensure_directory_exists(&config_path).with_context(|| {
+        format!(
+            "Failed to create config directory at {}",
+            config_path.display()
+        )
+    })?;
 
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {

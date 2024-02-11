@@ -34,7 +34,7 @@ pub fn update(config_path: &Path, data_path: &Path) -> Result<()> {
     for item in items {
         let item_path = hooks_path.join(&item.name);
 
-        update_item(item.name.as_str(), item.git_url.as_str(), &item_path)?;
+        update_item(item.name.as_str(), item.path.as_str(), &item_path)?;
     }
 
     // Schemes
