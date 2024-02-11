@@ -1,0 +1,52 @@
+targets = [
+    { triple = "x86_64-unknown-linux-gnu" },
+    { triple = "aarch64-unknown-linux-gnu" },
+    { triple = "x86_64-unknown-linux-musl" },
+    { triple = "aarch64-apple-darwin" },
+    { triple = "x86_64-apple-darwin" },
+]
+all-features = false
+no-default-features = false
+feature-depth = 1
+
+[advisories]
+vulnerability = "deny"
+unmaintained = "deny"
+notice = "deny"
+unsound = "deny"
+
+[licenses]
+unlicensed = "deny"
+allow-osi-fsf-free = "neither"
+copyleft = "deny"
+# We want really high confidence when inferring licenses from text
+confidence-threshold = 0.93
+allow = [
+    "Apache-2.0",
+    "MIT",
+]
+exceptions = [
+    { allow = [
+        "Unicode-DFS-2016",
+    ], name = "unicode-ident" },
+    { allow = [
+        "MPL-2.0",
+    ], name = "option-ext" },
+]
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+deny = [
+    { name = "openssl" },
+    { name = "openssl-sys" },
+    { name = "libssh2-sys" },
+
+    # No reason to use these
+    { name = "cmake" },
+    { name = "windows" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

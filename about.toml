@@ -1,0 +1,19 @@
+accepted = [
+    "Apache-2.0",
+    "MIT",
+]
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "x86_64-unknown-linux-musl",
+    "x86_64-apple-darwin",
+]
+ignore-build-dependencies = false
+ignore-dev-dependencies = false
+ignore-transitive-dependencies = false
+filter-noassertion = true
+
+[option-ext]
+accepted = ["MPL-2.0"]
+
+[unicode-ident]
+accepted = ["Unicode-DFS-2016"]
