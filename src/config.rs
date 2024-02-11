@@ -3,6 +3,7 @@ use crate::utils::read_file_to_string;
 use anyhow::{anyhow, Context, Result};
 use serde::de::{self, Deserializer, Unexpected, Visitor};
 use serde::Deserialize;
+use std::collections::HashSet;
 use std::fmt;
 use std::path::Path;
 use url::Url;
@@ -103,6 +104,18 @@ pub struct Config {
     pub items: Option<Vec<ConfigItem>>,
 }
 
+fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
+    let mut names = HashSet::new();
+
+    for item in items.iter() {
+        if !names.insert(&item.name) {
+            return Err(anyhow!("config.toml item.name should be unique values, but \"{}\" is used for more than 1 item.name. Please change this to a unique value.", item.name));
+        }
+    }
+
+    Ok(())
+}
+
 impl Config {
     pub fn read(path: &Path) -> Result<Config> {
         let contents =
@@ -128,8 +141,13 @@ impl Config {
         };
 
         // Add default `item` if no items exist
-        if config.items.is_none() {
-            config.items = Some(vec![base16_shell_config_item]);
+        match config.items.as_ref() {
+            Some(items) => {
+                ensure_item_name_is_unique(items)?;
+            }
+            None => {
+                config.items = Some(vec![base16_shell_config_item]);
+            }
         }
 
         // Set default `system` property for missing systems

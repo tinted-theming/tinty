@@ -5,6 +5,51 @@ use anyhow::Result;
 use std::{fs, path::Path};
 
 #[test]
+fn test_cli_setup_subcommand_non_unique_config_item_name() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let config_path = Path::new("test_cli_setup_subcommand_invalid_config_item_path");
+    let config_file_path = config_path.join("config.toml");
+    let command = format!(
+        "{} setup --config=\"{}\"",
+        COMMAND_NAME,
+        config_path.display()
+    );
+    let config_content = r##"[[items]]
+path = "https://github.com/tinted-theming/tinted-shell"
+name = "non-unique-name"
+themes_dir = "some-dir"
+
+[[items]]
+path = "https://github.com/tinted-theming/tinted-shell"
+name = "non-unique-name"
+themes_dir = "some-dir"
+"##;
+    let expected_output = "config.toml item.name should be unique values, but \"non-unique-name\" is used for more than 1 item.name. Please change this to a unique value.";
+    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    cleanup(config_path)?;
+    fs::create_dir(config_path)?;
+    write_to_file(&config_file_path, config_content)?;
+
+    // // ---
+    // // Act
+    // // ---
+    let (_, stderr) = common::run_command(command_vec).unwrap();
+
+    // // ------
+    // // Assert
+    // // ------
+    cleanup(config_path)?;
+    assert!(
+        stderr.contains(&expected_output),
+        "stdout does not contain the expected output"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_cli_setup_subcommand_invalid_config_item_path() -> Result<()> {
     // -------
     // Arrange
