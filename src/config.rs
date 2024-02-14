@@ -15,7 +15,7 @@ pub const BASE16_SHELL_REPO_NAME: &str = "base16-shell";
 pub const BASE16_SHELL_THEMES_DIR: &str = "scripts";
 pub const BASE16_SHELL_HOOK: &str = ". %f";
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub enum SupportedSchemeSystems {
     #[default]
     Base16,
@@ -60,6 +60,14 @@ impl SupportedSchemeSystems {
         }
     }
 
+    pub fn from_str(system_string: &str) -> SupportedSchemeSystems {
+        match system_string {
+            "base16" => SupportedSchemeSystems::Base16,
+            "base24" => SupportedSchemeSystems::Base24,
+            _ => SupportedSchemeSystems::Base16,
+        }
+    }
+
     pub fn variants() -> &'static [SupportedSchemeSystems] {
         static VARIANTS: &[SupportedSchemeSystems] = &[
             SupportedSchemeSystems::Base16,
@@ -76,13 +84,21 @@ pub struct ConfigItem {
     pub path: String,
     pub hook: Option<String>,
     pub themes_dir: String,
-    pub system: Option<SupportedSchemeSystems>,
+    pub supported_systems: Option<Vec<SupportedSchemeSystems>>,
 }
 
 impl fmt::Display for ConfigItem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let hook = self.hook.clone().unwrap_or_default();
-        let system = self.system.clone().unwrap_or_default();
+        let mut system_text = String::new();
+
+        for system in self
+            .supported_systems
+            .as_ref()
+            .unwrap_or(&vec![SupportedSchemeSystems::default()])
+        {
+            system_text += system.to_str();
+        }
 
         // You can format the output however you like
         writeln!(f, "  - Item")?;
@@ -91,7 +107,7 @@ impl fmt::Display for ConfigItem {
         if !hook.is_empty() {
             writeln!(f, "    - hook: {}", hook)?;
         }
-        writeln!(f, "    - system: {}", system.to_str())?;
+        writeln!(f, "    - system: {}", system_text)?;
         writeln!(f, "    - themes_dir: {}", self.themes_dir)
     }
 }
@@ -137,7 +153,7 @@ impl Config {
             name: BASE16_SHELL_REPO_NAME.to_string(),
             themes_dir: BASE16_SHELL_THEMES_DIR.to_string(),
             hook: Some(BASE16_SHELL_HOOK.to_string()),
-            system: Some(SupportedSchemeSystems::Base16), // DEFAULT_SCHEME_SYSTEM
+            supported_systems: Some(vec![SupportedSchemeSystems::Base16]), // DEFAULT_SCHEME_SYSTEM
         };
 
         // Add default `item` if no items exist
@@ -153,8 +169,8 @@ impl Config {
         // Set default `system` property for missing systems
         if let Some(ref mut items) = config.items {
             for item in items.iter_mut() {
-                if item.system.is_none() {
-                    item.system = Some(SupportedSchemeSystems::default());
+                if item.supported_systems.is_none() {
+                    item.supported_systems = Some(vec![SupportedSchemeSystems::default()]);
                 }
 
                 // Replace `~/` with absolute home path

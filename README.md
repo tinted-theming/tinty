@@ -102,23 +102,23 @@ required directories for data and configuration exist.
 
 #### `config.toml`
 
-- `shell` - Add a shell command which will be used by tinty to execute
+- `shell` \[String\] - Add a shell command which will be used by tinty to execute
   commands. This defaults to `sh -c '{}'`. If you want to use bash or zsh
   the format is similar `bash -c '{}'` and `zsh -c '{}'`
-- `default_scheme` - defaults to `default-dark`
-- `items` - A toml array of tables. Each item represents a template
-  - `name` (Required) - A unique value indicating the name of the item
-  - `path` (Required) - A url to the git repository or a path to a local
+- `default_scheme` \[String\] - defaults to `default-dark`
+- `items` \[Array&lt;Item&gt;\]- A toml array of tables. Each item represents a template
+  - `name` \[String\] (Required) - A unique value indicating the name of the item
+  - `path` \[String\] (Required) - A url to the git repository or a path to a local
     copy of the repository. It can start with `~/` which will map to
     your home directory, otherwise it must be an absolute path.
-  - `themes_dir` (Required) - The template directory name that contains
+  - `themes_dir` \[String\] (Required) - The template directory name that contains
     the theme files
-  - `hook` - A script that is executed after `tinty set <SCHEME_NAME>`
+  - `hook` \[String\]- A script that is executed after `tinty set <SCHEME_NAME>`
     has been run. `%f` can be used in the hook which is a variable name
     for the location of the theme file. `hook = ". %f"` will source the
     theme file after the theme has been set
-  - system - The scheme system of the template. Defaults to `base16`.
-    Currently supports `base16` and `base24` templates.
+  - `supported_systems` \[Array&lt;String&gt;\] - The scheme system of the template. Defaults to `\["base16"\]`.
+    Currently supports `"base16"` and `"base24"` templates.
 
 [Base16] and/or [Base24] templates are added to the `config.toml` file
 and Tinty will clone those repositories and the theme file when you run
@@ -136,21 +136,21 @@ path = "https://github.com/tinted-theming/base16-shell"
 name = "shell"
 hook = ". %f"
 themes_dir = "scripts"
-system = "base16"
+supported_systems = ["base16"]
 
 [[items]]
 path = "~/projects/base16-tmux"
 name = "tmux"
 hook = "tmux source-file %f"
 themes_dir = "colors"
-system = "base16"
+supported_systems = ["base16"]
 
 [[items]]
 path = "/home/user/projects/base16-fzf"
 name = "fzf"
 hook = ". %f"
 themes_dir = "bash"
-system = "base16"
+supported_systems = ["base16"]
 ```
 
 Once `tinty set ocean` is run, the following two files will be generated:

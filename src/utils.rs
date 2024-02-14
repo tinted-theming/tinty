@@ -124,11 +124,7 @@ pub fn git_diff(target_dir: &Path) -> Result<bool> {
 
 pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<String> {
     Ok(format!(
-        "{}-{}-{}-file",
-        item.system
-            .as_ref()
-            .unwrap_or(&SupportedSchemeSystems::default())
-            .to_str(),
+        "{}-{}-file",
         item.name.clone(),
         item.themes_dir.clone().replace('/', "-"), // Flatten path/to/dir to path-to-dir
     ))

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 (2024-02-14)
+
+- Change `config.toml` `items.system` to `items.supported_systems` which
+  now accepts an array of strings instead of a string. This allows for
+  using a single template repo for setting both base16 and base24
+  themes.
+
 ## 0.4.0 (2024-02-11)
 
 - Enforces config.toml `[[items]]` `name` property is a unique value to

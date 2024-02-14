@@ -1,9 +1,9 @@
 mod common;
 
 use crate::common::{cleanup, COMMAND_NAME, REPO_NAME};
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[test]
 fn test_cli_set_subcommand_with_setup() -> Result<()> {
@@ -19,6 +19,10 @@ fn test_cli_set_subcommand_with_setup() -> Result<()> {
         &scheme_name,
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    let system_data_path: PathBuf =
+        dirs::data_dir().ok_or_else(|| anyhow!("Error getting data directory"))?;
+    let data_dir = system_data_path.join(format!("tinted-theming/{}", REPO_NAME));
+    let shell_theme_filename = "base16-shell-scripts-file.sh";
     cleanup(config_path)?;
     fs::create_dir(config_path)?;
 
@@ -34,6 +38,10 @@ fn test_cli_set_subcommand_with_setup() -> Result<()> {
     assert!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
+    );
+    assert!(
+        data_dir.join(shell_theme_filename).exists(),
+        "Path does not exist"
     );
 
     cleanup(config_path)?;

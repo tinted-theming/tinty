@@ -59,8 +59,8 @@ pub fn set(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Resu
     write_to_file(&data_path.join(CURRENT_SCHEME_FILE_NAME), full_scheme_name)?;
 
     // Collect config items that match the provided system
-    let system_items = items.iter().filter(|item| match &item.system {
-        Some(system) => system.to_str() == scheme_system,
+    let system_items = items.iter().filter(|item| match &item.supported_systems {
+        Some(supported_systems) => supported_systems.contains(&SupportedSchemeSystems::from_str(scheme_system)),
         None => false,
     });
 
@@ -71,8 +71,10 @@ pub fn set(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Resu
 
         if !themes_path.exists() {
             return Err(anyhow!(format!(
-                "Themes files are missing, try running `{} setup` or `{} update` and try again.",
-                REPO_NAME, REPO_NAME
+                "Provided theme path for {} does not exist: {}\nTry running `{} setup` or `{} update` or check your config.toml file and try again.",
+                item.name,
+                themes_path.display(),
+                REPO_NAME, REPO_NAME,
             )));
         }
 
@@ -121,8 +123,8 @@ pub fn set(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Resu
                 }
             }
             None => println!(
-                "Theme does not exists for {}. Try running `{} update` or submit an issue on {}",
-                item.name, REPO_NAME, REPO_URL
+                "Theme does not exists for {} in {}. Try running `{} update` or submit an issue on {}",
+                item.name, themes_path.display(), REPO_NAME, REPO_URL
             ),
         }
     }
