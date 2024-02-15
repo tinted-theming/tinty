@@ -80,7 +80,7 @@ template and the latest [schemes].
 #### `init`
 
 `tinty init` checks to see if you have previously set a theme. If you
-have it applies that theme again, otherwise it uses `default_scheme`
+have it applies that theme again, otherwise it uses `default-scheme`
 value set in your `config.toml` file.
 
 This command is useful when added to your shell `.*rc` file to make sure
@@ -105,19 +105,19 @@ required directories for data and configuration exist.
 - `shell` \[String\] - Add a shell command which will be used by tinty to execute
   commands. This defaults to `sh -c '{}'`. If you want to use bash or zsh
   the format is similar `bash -c '{}'` and `zsh -c '{}'`
-- `default_scheme` \[String\] - defaults to `default-dark`
+- `default-scheme` \[String\] - defaults to `default-dark`
 - `items` \[Array&lt;Item&gt;\]- A toml array of tables. Each item represents a template
   - `name` \[String\] (Required) - A unique value indicating the name of the item
   - `path` \[String\] (Required) - A url to the git repository or a path to a local
     copy of the repository. It can start with `~/` which will map to
     your home directory, otherwise it must be an absolute path.
-  - `themes_dir` \[String\] (Required) - The template directory name that contains
+  - `themes-dir` \[String\] (Required) - The template directory name that contains
     the theme files
   - `hook` \[String\]- A script that is executed after `tinty set <SCHEME_NAME>`
     has been run. `%f` can be used in the hook which is a variable name
     for the location of the theme file. `hook = ". %f"` will source the
     theme file after the theme has been set
-  - `supported_systems` \[Array&lt;String&gt;\] - The scheme system of the template. Defaults to `\["base16"\]`.
+  - `supported-systems` \[Array&lt;String&gt;\] - The scheme system of the template. Defaults to `\["base16"\]`.
     Currently supports `"base16"` and `"base24"` templates.
 
 [Base16] and/or [Base24] templates are added to the `config.toml` file
@@ -125,32 +125,31 @@ and Tinty will clone those repositories and the theme file when you run
 `tinty set <SCHEME_SYSTEM>-<SCHEME_NAME>`. The theme files are set in
 `$XDG_DATA_HOME/tinted-theming/tinty` or
 `~/.local/share/tinted-theming/tinty`. The name of the themes are as
-follows:
-<item.system>-`<item.name>-<item.themes_dir>-file.<FILE_EXTENSION> -
-this could look like `base16-tmux-colors-file.conf`. The
-`<FILE_EXTENSION>` matches the extension of the original theme. So if
-your config looks like the following:
+follows: `<item.name>-<item.themes-dir>-file.<FILE_EXTENSION>` - this
+could look like `base16-tmux-colors-file.conf`. The `<FILE_EXTENSION>`
+matches the extension of the original theme file. So if your config
+looks like the following:
 ```shell
 [[items]]
 path = "https://github.com/tinted-theming/base16-shell"
 name = "shell"
 hook = ". %f"
-themes_dir = "scripts"
-supported_systems = ["base16"]
+themes-dir = "scripts"
+supported-systems = ["base16"]
 
 [[items]]
 path = "~/projects/base16-tmux"
 name = "tmux"
 hook = "tmux source-file %f"
-themes_dir = "colors"
-supported_systems = ["base16"]
+themes-dir = "colors"
+supported-systems = ["base16"]
 
 [[items]]
 path = "/home/user/projects/base16-fzf"
 name = "fzf"
 hook = ". %f"
-themes_dir = "bash"
-supported_systems = ["base16"]
+themes-dir = "bash"
+supported-systems = ["base16"]
 ```
 
 Once `tinty set ocean` is run, the following two files will be generated:
@@ -208,33 +207,33 @@ alias tinty="$(tinty --config='path/to/config')"
 
 ```shell
 shell = "zsh -c '{}'"
-default_scheme = "ocean"
+default-scheme = "ocean"
 
 [[items]]
 path = "https://github.com/tinted-theming/base16-shell"
 name = "shell"
 hook = ". %f"
-themes_dir = "scripts"
+themes-dir = "scripts"
 system = "base16"
 
 [[items]]
 path = "https://github.com/tinted-theming/base16-fzf"
 name = "fzf"
 hook = ". %f"
-themes_dir = "bash"
+themes-dir = "bash"
 system = "base16"
 
 [[items]]
 path = "https://github.com/tinted-theming/base16-tmux"
 name = "tmux"
 hook = "tmux source-file %f"
-themes_dir = "colors"
+themes-dir = "colors"
 system = "base16"
 
 [[items]]
 path = "https://github.com/tinted-theming/base16-vim"
 name = "vim"
-themes_dir = "colors"
+themes-dir = "colors"
 system = "base16"
 ```
 

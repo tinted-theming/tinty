@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 (2024-02-15)
+
+- Change config.toml properties to use dashes instead of underscores.
+  Properties changes are:
+  - `default_theme` => `default_theme`
+  - `themes_dir` => `themes-dir`
+  - `supported_systems` => `supported-systems`
+
 ## 0.5.0 (2024-02-14)
 
 - Change `config.toml` `items.system` to `items.supported_systems` which

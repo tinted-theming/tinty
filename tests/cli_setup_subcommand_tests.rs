@@ -19,12 +19,12 @@ fn test_cli_setup_subcommand_non_unique_config_item_name() -> Result<()> {
     let config_content = r##"[[items]]
 path = "https://github.com/tinted-theming/tinted-shell"
 name = "non-unique-name"
-themes_dir = "some-dir"
+themes-dir = "some-dir"
 
 [[items]]
 path = "https://github.com/tinted-theming/tinted-shell"
 name = "non-unique-name"
-themes_dir = "some-dir"
+themes-dir = "some-dir"
 "##;
     let expected_output = "config.toml item.name should be unique values, but \"non-unique-name\" is used for more than 1 item.name. Please change this to a unique value.";
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
@@ -64,7 +64,7 @@ fn test_cli_setup_subcommand_invalid_config_item_path() -> Result<()> {
     let config_content = r##"[[items]]
 path = "/path/to/non-existant/directory"
 name = "some-name"
-themes_dir = "some-dir""##;
+themes-dir = "some-dir""##;
     let expected_output = "One of your config.toml items has an invalid `path` value. \"/path/to/non-existant/directory\" is not a valid url and is not a path to an existing local directory";
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     cleanup(config_path)?;

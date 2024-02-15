@@ -77,28 +77,36 @@ impl SupportedSchemeSystems {
     }
 }
 
+impl fmt::Display for SupportedSchemeSystems {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_str())
+    }
+}
+
 /// Structure for configuration apply items
 #[derive(Deserialize, Debug)]
 pub struct ConfigItem {
     pub name: String,
     pub path: String,
     pub hook: Option<String>,
+    #[serde(rename = "themes-dir")]
     pub themes_dir: String,
+    #[serde(rename = "supported-systems")]
     pub supported_systems: Option<Vec<SupportedSchemeSystems>>,
 }
 
 impl fmt::Display for ConfigItem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let hook = self.hook.clone().unwrap_or_default();
-        let mut system_text = String::new();
-
-        for system in self
+        let default_supported_systems = vec![SupportedSchemeSystems::default()];
+        let system_text = self
             .supported_systems
-            .as_ref()
-            .unwrap_or(&vec![SupportedSchemeSystems::default()])
-        {
-            system_text += system.to_str();
-        }
+            .clone()
+            .unwrap_or(default_supported_systems)
+            .into_iter()
+            .map(|system| system.to_str())
+            .collect::<Vec<&str>>()
+            .join(", ");
 
         // You can format the output however you like
         writeln!(f, "  - Item")?;
@@ -107,8 +115,8 @@ impl fmt::Display for ConfigItem {
         if !hook.is_empty() {
             writeln!(f, "    - hook: {}", hook)?;
         }
-        writeln!(f, "    - system: {}", system_text)?;
-        writeln!(f, "    - themes_dir: {}", self.themes_dir)
+        writeln!(f, "    - systems: [{}]", system_text)?;
+        writeln!(f, "    - themes-dir: {}", self.themes_dir)
     }
 }
 
@@ -116,6 +124,7 @@ impl fmt::Display for ConfigItem {
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub shell: Option<String>,
+    #[serde(rename = "default-scheme")]
     pub default_scheme: Option<String>,
     pub items: Option<Vec<ConfigItem>>,
 }
@@ -215,14 +224,21 @@ impl fmt::Display for Config {
         writeln!(f, "Config")?;
         writeln!(
             f,
-            "- Shell: {}",
+            "- shell: {}",
             self.shell.as_ref().unwrap_or(&"None".to_string())
+        )?;
+        writeln!(
+            f,
+            "- default-scheme: {}",
+            self.default_scheme.as_ref().unwrap_or(&"".to_string())
         )?;
 
         match &self.items {
             Some(items) => {
+                writeln!(f, "- Items")?;
+
                 for item in items {
-                    writeln!(f, "- Items\n{}", item)?;
+                    writeln!(f, "{}", item)?;
                 }
             }
             None => {}
