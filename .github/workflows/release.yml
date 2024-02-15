@@ -1,0 +1,217 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      tag_version:
+        description: 'Tag Version for Manual Release'
+        required: true
+  # push:
+  #   tags:
+  #     - "v*.*.*"
+env:
+  CARGO_INCREMENTAL: 0
+permissions:
+  contents: write
+
+jobs:
+  publish_dryrun:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag_version || github.ref }}
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache Cargo binaries
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin
+          key: ${{ runner.os }}-cargo-bin-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-deny and cargo-about
+        run: |
+          cargo install --locked cargo-deny || true
+          cargo install --locked cargo-about || true
+
+      - name: Attempt a publish dryrun
+        run: |
+          make publish_dry
+
+  release:
+    needs: publish_dryrun
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - prefix: x86_64-linux
+            target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            cross: false
+            deb: false
+          - prefix: i686-linux
+            target: i686-unknown-linux-gnu
+            os: ubuntu-latest
+            cross: true
+            deb: true
+          - prefix: aarch64-linux
+            target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            cross: true
+            deb: true
+          - os: macos-11
+            target: x86_64-apple-darwin
+            cross: true
+            deb: false
+          - os: macos-11
+            target: aarch64-apple-darwin
+            cross: true
+            deb: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag_version || github.ref }}
+
+      - name: Get version
+        id: get_version
+        uses: SebRollen/toml-action@v1.2.0
+        with:
+          file: Cargo.toml
+          field: package.version
+
+      - name: Abort if there is a version/tag mismatch
+        run: |
+          if [[ "v${{ steps.get_version.outputs.value }}" != "${{ github.event.inputs.tag_version || github.ref }}" ]]; then
+            echo "There is a Cargo.toml package.version and git tag mismatch." && exit 1;
+          fi
+
+      # Main branch to get required assets that may not be available in
+      # previous releases
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-branch
+      # Fetch notes from CHANGELOG.md based on cargo.toml version
+      - name: Extract release notes
+        id: extract_notes
+        run: |
+          VERSION="${{ steps.get_version.outputs.value }}"
+          CHANGELOG_TEXT=$(sed -n "/## \[$VERSION\] /,/^## /p" "main-branch/CHANGELOG.md" | sed '1d;$d')
+          if [[ -n "$CHANGELOG_TEXT" ]]; then
+            echo "CHANGELOG_TEXT<<EOF" >> $GITHUB_ENV
+            echo "$CHANGELOG_TEXT" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          fi
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Setup cache
+        uses: Swatinem/rust-cache@v2.7.3
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build binary
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: ${{ matrix.cross }}
+          command: build
+          args: --release --locked --target=${{ matrix.target }} --color=always --verbose
+
+      - name: Install cargo-deb
+        if: ${{ matrix.deb == true }}
+        uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-deb
+
+      - name: Build deb
+        if: ${{ matrix.deb == true }}
+        uses: actions-rs/cargo@v1
+        with:
+          command: deb
+          args: --no-build --no-strip --output=. --target=${{ matrix.target }}
+
+      - name: Package
+        shell: bash
+        run: |
+          files="example.toml license.html LICENSE README.md"
+          files_to_include=""
+          release_dir="$GITHUB_WORKSPACE/target/${{ matrix.target }}/release"
+
+          for file in $files; do
+            if [ ! -e "$file" ]; then
+              continue
+            fi
+
+            if [[ "$file" == "example.toml" ]]; then
+              cp "example.toml" "$release_dir/config.toml"
+              files_to_include+="config.toml "
+              continue
+            fi
+              
+            cp "$file" "$release_dir/$file"
+            files_to_include+="$file "
+          done
+
+          build_dir="$GITHUB_WORKSPACE/build"
+          mkdir "$build_dir"
+          tar -cv -C "$release_dir" tinty $files_to_include | gzip --best > \
+            "$build_dir/tinty-${{ steps.get_version.outputs.value }}-${{ matrix.target }}.tar.gz"
+          shasum -a 256 "$build_dir/tinty-${{ steps.get_version.outputs.value }}-${{ matrix.target }}.tar.gz" > \
+            "$build_dir/tinty-${{ steps.get_version.outputs.value }}-${{ matrix.target }}.sha256"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            *.deb
+            *.tar.gz
+            *.sha256
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/*.deb
+            build/*.tar.gz
+            build/*.sha256
+          tag_name: v${{ steps.get_version.outputs.value }}
+          name: Release ${{ steps.get_version.outputs.value }}
+          draft: true
+          body: ${{ steps.extract-release-notes.outputs.release_notes || env.CHANGELOG_TEXT }}
+
+#       - name: Cleanup
+#         run: rm -r build/
+
+#       - name: Publish to crates.io
+#         env:
+#           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+#         run: cargo publish
