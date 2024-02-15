@@ -1,6 +1,6 @@
 mod common;
 
-use crate::common::{cleanup, COMMAND_NAME, REPO_NAME};
+use crate::common::{cleanup, read_file_to_string, COMMAND_NAME, REPO_NAME};
 use anyhow::{anyhow, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -23,6 +23,7 @@ fn test_cli_set_subcommand_with_setup() -> Result<()> {
         dirs::data_dir().ok_or_else(|| anyhow!("Error getting data directory"))?;
     let data_dir = system_data_path.join(format!("tinted-theming/{}", REPO_NAME));
     let shell_theme_filename = "base16-shell-scripts-file.sh";
+    let current_scheme_path = data_dir.join("current_scheme");
     cleanup(config_path)?;
     fs::create_dir(config_path)?;
 
@@ -43,6 +44,7 @@ fn test_cli_set_subcommand_with_setup() -> Result<()> {
         data_dir.join(shell_theme_filename).exists(),
         "Path does not exist"
     );
+    assert_eq!(read_file_to_string(&current_scheme_path)?, scheme_name);
 
     cleanup(config_path)?;
     Ok(())

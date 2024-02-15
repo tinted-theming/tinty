@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::error::Error;
 use std::fs::{self, File};
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str;
@@ -76,4 +76,17 @@ pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     file.write_all(contents.as_bytes())?;
 
     Ok(())
+}
+
+pub fn read_file_to_string(path: &Path) -> Result<String> {
+    if !path.exists() {
+        return Err(anyhow!("File does not exist: {}", path.display()));
+    }
+
+    let mut file = File::open(path)?;
+    let mut contents = String::new();
+
+    file.read_to_string(&mut contents)?;
+
+    Ok(contents)
 }
