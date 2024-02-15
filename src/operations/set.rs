@@ -60,7 +60,9 @@ pub fn set(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Resu
 
     // Collect config items that match the provided system
     let system_items = items.iter().filter(|item| match &item.supported_systems {
-        Some(supported_systems) => supported_systems.contains(&SupportedSchemeSystems::from_str(scheme_system)),
+        Some(supported_systems) => {
+            supported_systems.contains(&SupportedSchemeSystems::from_str(scheme_system))
+        }
         None => false,
     });
 

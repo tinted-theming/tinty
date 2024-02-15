@@ -1,7 +1,7 @@
 mod common;
 
 use crate::common::{cleanup, COMMAND_NAME, REPO_NAME};
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 

@@ -20,7 +20,9 @@ test_docker: setup_tests
 	@echo "-------------------"
 	@echo "Running test_docker"
 	@echo "-------------------"
-	docker build -t tinty . && docker run tinty
+	docker build --target clippy -t tinty-clippy .
+	docker build --target fmt -t tinty-fmt .
+	docker build --target test -t tinty-test .
 
 test: setup_tests
 	@echo "------------"
