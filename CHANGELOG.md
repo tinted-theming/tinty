@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0 (2024-02-16)
+
+- Add `current` subcommand to print the last scheme name set.
+
 ## 0.6.0 (2024-02-15)
 
 - Change config.toml properties to use dashes instead of underscores.

@@ -20,6 +20,7 @@ Tinty supports [Base16] and [Base24] scheming systems.
     - [set](#set)
     - [update](#update)
     - [init](#init)
+    - [current](#current)
     - [Flags](#flags)
   - [Configuration](#configuration)
     - [config.toml](#configtoml)
@@ -85,6 +86,10 @@ value set in your `config.toml` file.
 
 This command is useful when added to your shell `.*rc` file to make sure
 your shell and other themes are set correctly.
+
+#### `current`
+
+This prints the last scheme name that was set.
 
 #### Flags
 

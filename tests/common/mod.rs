@@ -71,6 +71,10 @@ pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
         fs::remove_file(path)?;
     }
 
+    if path.parent().is_some() && !path.parent().unwrap().exists() {
+        fs::create_dir_all(path.parent().unwrap())?;
+    }
+
     let mut file = File::create(path)?;
 
     file.write_all(contents.as_bytes())?;

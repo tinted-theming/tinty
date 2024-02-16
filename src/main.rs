@@ -48,6 +48,9 @@ fn main() -> Result<()> {
 
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
+        Some(("current", _)) => {
+            operations::current::current(&data_path)?;
+        }
         Some(("init", _)) => {
             operations::init::init(&config_path, &data_path)?;
         }

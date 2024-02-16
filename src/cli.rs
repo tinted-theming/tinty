@@ -20,6 +20,9 @@ pub fn build_cli() -> Command {
         )
         // Define subcommands
         .subcommand(
+            Command::new("current").about("Prints the last scheme name set")
+        )
+        .subcommand(
             Command::new("init").about("Initializes base16 with the exising config. Used to Initialize exising theme for when your shell starts up.")
         )
         .subcommand(Command::new("list").about("Lists available base16 colorschemes"))
