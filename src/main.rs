@@ -51,6 +51,11 @@ fn main() -> Result<()> {
         Some(("current", _)) => {
             operations::current::current(&data_path)?;
         }
+        Some(("info", sub_matches)) => {
+            let scheme_name_option = sub_matches.get_one::<String>("scheme_name");
+
+            operations::info::info(&data_path, scheme_name_option)?;
+        }
         Some(("init", _)) => {
             operations::init::init(&config_path, &data_path)?;
         }

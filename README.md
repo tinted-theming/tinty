@@ -21,6 +21,7 @@ Tinty supports [Base16] and [Base24] scheming systems.
     - [update](#update)
     - [init](#init)
     - [current](#current)
+    - [info](#info)
     - [Flags](#flags)
   - [Configuration](#configuration)
     - [config.toml](#configtoml)
@@ -90,6 +91,16 @@ your shell and other themes are set correctly.
 #### `current`
 
 This prints the last scheme name that was set.
+
+#### `info`
+
+This prints information about a specific or all the different schemes
+available, including metadata as well as colors.
+
+- `tinty info` for a list of all schemes
+- `tinty info <scheme_system>-<scheme_name>` for a list about the
+  specific scheme. Eg: `tinty info base16-mocha` or `tinty info
+  base24-chalk`
 
 #### Flags
 
