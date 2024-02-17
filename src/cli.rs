@@ -23,13 +23,13 @@ pub fn build_cli() -> Command {
             Command::new("current").about("Prints the last scheme name set")
         )
         .subcommand(
-            Command::new("init").about("Initializes base16 with the exising config. Used to Initialize exising theme for when your shell starts up.")
+            Command::new("init").about("Initializes with the exising config. Used to Initialize exising theme for when your shell starts up.")
         )
-        .subcommand(Command::new("list").about("Lists available base16 colorschemes"))
+        .subcommand(Command::new("list").about("Lists available schemes"))
         .subcommand(
-            Command::new("set").about("Sets a base16 colorscheme").arg(
+            Command::new("set").about("Sets a theme based on the chosen scheme").arg(
                 Arg::new("scheme_name")
-                    .help("The base16 colorscheme you want to set")
+                    .help("The scheme you want to set")
                     .required(true),
             ),
         )
