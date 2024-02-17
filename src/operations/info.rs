@@ -181,6 +181,8 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
         println!();
     }
 
+    println!();
+
     Ok(())
 }
 
