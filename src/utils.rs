@@ -134,7 +134,7 @@ pub fn get_all_scheme_names(data_path: &Path) -> Result<Vec<String>> {
     let schemes_repo_path = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
     if !schemes_repo_path.exists() {
         return Err(anyhow!(
-            "Schemes do not exist, run setup and try again: `{} setup`",
+            "Schemes do not exist, run install and try again: `{} install`",
             REPO_NAME
         ));
     }

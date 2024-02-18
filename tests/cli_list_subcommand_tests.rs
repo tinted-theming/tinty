@@ -22,7 +22,7 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
     // // ---
     // // Act
     // // ---
-    common::run_setup_command(config_path)?;
+    common::run_install_command(config_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------
@@ -49,7 +49,7 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // -------
     let config_path = Path::new("test_cli_list_subcommand");
     let expected_output = format!(
-        "Schemes are missing, run setup and then try again: `{} setup`",
+        "Schemes are missing, run install and then try again: `{} install`",
         REPO_NAME
     );
     let command = format!(

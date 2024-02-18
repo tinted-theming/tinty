@@ -248,7 +248,7 @@ pub fn info(data_path: &Path, scheme_name_option: Option<&String>) -> Result<()>
         .exists()
     {
         return Err(anyhow!(
-            "Scheme repo path does not exist: {}\nRun `{} setup` and try again",
+            "Scheme repo path does not exist: {}\nRun `{} install` and try again",
             schemes_repo_path.display(),
             REPO_NAME
         ));

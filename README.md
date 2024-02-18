@@ -15,7 +15,7 @@ Tinty supports [Base16] and [Base24] scheming systems.
 - [Installation](#installation)
 - [Usage](#usage)
   - [CLI structure](#cli-structure)
-    - [setup](#setup)
+    - [install](#install)
     - [list](#list)
     - [set](#set)
     - [update](#update)
@@ -55,9 +55,9 @@ cp target/release/tinty path/to/bin/dir
 
 You can use `tinty --help` to get an overview too.
 
-#### `setup`
+#### `install`
 
-`tinty setup` performs setup requirements for your config and this is
+`tinty install` installs requirements for your config and this is
 required to run at least once and whenever a new template is added to
 your config file.
 
@@ -184,7 +184,7 @@ Without any `config.toml` file, `tinty` will set your shell theme using
 To set the `ocean` theme:
 
 ```shell
-tinty setup # Required once or when your config file is updated
+tinty install # Required once or when your config file is updated
 tinty set ocean
 ```
 

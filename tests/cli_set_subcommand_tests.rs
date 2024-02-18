@@ -30,7 +30,7 @@ fn test_cli_set_subcommand_with_setup() -> Result<()> {
     // // ---
     // // Act
     // // ---
-    common::run_setup_command(config_path)?;
+    common::run_install_command(config_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------
@@ -65,7 +65,7 @@ fn test_cli_set_subcommand_without_setup() -> Result<()> {
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     let expected_output = format!(
-        "Schemes do not exist, run setup and try again: `{} setup`",
+        "Schemes do not exist, run install and try again: `{} install`",
         REPO_NAME
     );
     fs::create_dir(config_path)?;
@@ -107,7 +107,7 @@ fn test_cli_set_subcommand_invalid_scheme_name() -> Result<()> {
     // // ---
     // // Act
     // // ---
-    common::run_setup_command(config_path)?;
+    common::run_install_command(config_path)?;
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
     // // ------

@@ -24,7 +24,7 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // // ---
     // // Act
     // // ---
-    common::run_setup_command(config_path)?;
+    common::run_install_command(config_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------
@@ -63,7 +63,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // // ---
     // // Act
     // // ---
-    common::run_setup_command(config_path)?;
+    common::run_install_command(config_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------
@@ -109,7 +109,7 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
         "stderr does not contain the expected output"
     );
     assert!(
-        stderr.contains("Run `tinty setup` and try again"),
+        stderr.contains("Run `tinty install` and try again"),
         "stderr does not contain the expected output"
     );
 
@@ -137,7 +137,7 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // // ---
     // // Act
     // // ---
-    common::run_setup_command(config_path)?;
+    common::run_install_command(config_path)?;
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
     // // ------

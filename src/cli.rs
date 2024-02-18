@@ -41,7 +41,7 @@ pub fn build_cli() -> Command {
             ),
         )
         .subcommand(
-            Command::new("setup").about(format!("Setup the environment needed for {}.", REPO_NAME))
+            Command::new("install").about(format!("Install the environment needed for {}.", REPO_NAME))
         )
         .subcommand(
             Command::new("update").about("Update to the latest themes.")

@@ -28,19 +28,19 @@ pub fn run_command(command_vec: Vec<String>) -> Result<(String, String), Box<dyn
     Ok((String::from_utf8(stdout)?, String::from_utf8(stderr)?))
 }
 
-pub fn run_setup_command(config_path: &Path) -> Result<()> {
-    let output_setup = Command::new(COMMAND_NAME)
+pub fn run_install_command(config_path: &Path) -> Result<()> {
+    let output_install = Command::new(COMMAND_NAME)
         .args([
-            "setup",
+            "install",
             format!("--config={}", config_path.display()).as_str(),
         ])
         .status()
-        .expect("Failed to execute setup command");
+        .expect("Failed to execute install command");
 
-    if output_setup.success() {
+    if output_install.success() {
         Ok(())
     } else {
-        anyhow::bail!("Setup command stderr: {}", output_setup);
+        Err(anyhow!("Install command stderr: {}", output_install))
     }
 }
 

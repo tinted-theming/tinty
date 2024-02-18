@@ -97,7 +97,7 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     // // ---
     // // Act
     // // ---
-    common::run_setup_command(config_path)?;
+    common::run_install_command(config_path)?;
     let (stdout, stderr) = common::run_command(command_vec).unwrap();
 
     // // ------

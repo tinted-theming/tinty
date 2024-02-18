@@ -10,7 +10,7 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // Arrange
     // -------
     let config_path = Path::new("test_cli_update_subcommand_without_setup");
-    let expected_output = format!("base16-shell not installed (run `{} setup`)", REPO_NAME);
+    let expected_output = format!("base16-shell not installed (run `{} install`)", REPO_NAME);
     let command = format!(
         "{} update --config=\"{}\"",
         COMMAND_NAME,
@@ -53,7 +53,7 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // // ---
     // // Act
     // // ---
-    common::run_setup_command(config_path)?;
+    common::run_install_command(config_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------

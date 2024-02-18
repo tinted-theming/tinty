@@ -71,8 +71,8 @@ fn main() -> Result<()> {
                 anyhow::bail!("scheme_name is required for set command");
             }
         }
-        Some(("setup", _)) => {
-            operations::setup::setup(&config_path, &data_path)?;
+        Some(("install", _)) => {
+            operations::install::install(&config_path, &data_path)?;
         }
         Some(("update", _)) => {
             operations::update::update(&config_path, &data_path)?;

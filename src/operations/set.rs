@@ -73,7 +73,7 @@ pub fn set(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Resu
 
         if !themes_path.exists() {
             return Err(anyhow!(format!(
-                "Provided theme path for {} does not exist: {}\nTry running `{} setup` or `{} update` or check your config.toml file and try again.",
+                "Provided theme path for {} does not exist: {}\nTry running `{} install` or `{} update` or check your config.toml file and try again.",
                 item.name,
                 themes_path.display(),
                 REPO_NAME, REPO_NAME,
@@ -83,7 +83,7 @@ pub fn set(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Resu
         // Find the corresponding theme file for the provided item
         let theme_dir = fs::read_dir(&themes_path)
             .map_err(anyhow::Error::new)
-            .with_context(|| format!("Themes are missing from {}, try running `{} setup` or `{} update` and try again.", item.name, REPO_NAME, REPO_NAME))?;
+            .with_context(|| format!("Themes are missing from {}, try running `{} install` or `{} update` and try again.", item.name, REPO_NAME, REPO_NAME))?;
         let theme_option = &theme_dir.filter_map(Result::ok).find(|entry| {
             let path = entry.path();
             let filename = path.file_stem().and_then(|name| name.to_str());

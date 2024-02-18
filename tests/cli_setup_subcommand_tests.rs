@@ -5,14 +5,14 @@ use anyhow::Result;
 use std::{fs, path::Path};
 
 #[test]
-fn test_cli_setup_subcommand_non_unique_config_item_name() -> Result<()> {
+fn test_cli_install_subcommand_non_unique_config_item_name() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_setup_subcommand_invalid_config_item_path");
+    let config_path = Path::new("test_cli_install_subcommand_invalid_config_item_path");
     let config_file_path = config_path.join("config.toml");
     let command = format!(
-        "{} setup --config=\"{}\"",
+        "{} install --config=\"{}\"",
         COMMAND_NAME,
         config_path.display()
     );
@@ -50,14 +50,14 @@ themes-dir = "some-dir"
 }
 
 #[test]
-fn test_cli_setup_subcommand_invalid_config_item_path() -> Result<()> {
+fn test_cli_install_subcommand_invalid_config_item_path() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_setup_subcommand_invalid_config_item_path");
+    let config_path = Path::new("test_cli_install_subcommand_invalid_config_item_path");
     let config_file_path = config_path.join("config.toml");
     let command = format!(
-        "{} setup --config=\"{}\"",
+        "{} install --config=\"{}\"",
         COMMAND_NAME,
         config_path.display()
     );
@@ -89,14 +89,14 @@ themes-dir = "some-dir""##;
 }
 
 #[test]
-fn test_cli_setup_subcommand_without_setup() -> Result<()> {
+fn test_cli_install_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_setup_subcommand_without_setup");
+    let config_path = Path::new("test_cli_install_subcommand_without_setup");
     let expected_output = "base16-shell installed";
     let command = format!(
-        "{} setup --config=\"{}\"",
+        "{} install --config=\"{}\"",
         COMMAND_NAME,
         config_path.display()
     );
@@ -121,14 +121,14 @@ fn test_cli_setup_subcommand_without_setup() -> Result<()> {
 }
 
 #[test]
-fn test_cli_setup_subcommand_with_setup() -> Result<()> {
+fn test_cli_install_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_setup_subcommand_with_setup");
+    let config_path = Path::new("test_cli_install_subcommand_with_setup");
     let expected_output = "base16-shell already installed";
     let command = format!(
-        "{} setup --config=\"{}\"",
+        "{} install --config=\"{}\"",
         COMMAND_NAME,
         config_path.display()
     );

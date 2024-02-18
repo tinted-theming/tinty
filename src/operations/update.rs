@@ -17,7 +17,7 @@ fn update_item(item_name: &str, item_url: &str, item_path: &Path) -> Result<()> 
             println!("{} contains uncommitted changes, please commit or remove and then run `{} update` again.", item_name, REPO_NAME);
         }
     } else {
-        println!("{} not installed (run `{} setup`)", item_name, REPO_NAME);
+        println!("{} not installed (run `{} install`)", item_name, REPO_NAME);
     }
 
     Ok(())

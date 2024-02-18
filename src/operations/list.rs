@@ -7,14 +7,14 @@ use std::path::Path;
 
 /// Lists available color schemes
 ///
-/// Lists colorschemes file which is updated via scripts/setup by getting a list of schemes
+/// Lists colorschemes file which is updated via scripts/install by getting a list of schemes
 /// available in https://github.com/tinted-theming/schemes/base16
 pub fn list(data_path: &Path) -> Result<()> {
     let schemes_repo_path = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
 
     if !schemes_repo_path.exists() {
         return Err(anyhow!(
-            "Schemes are missing, run setup and then try again: `{} setup`",
+            "Schemes are missing, run install and then try again: `{} install`",
             REPO_NAME
         ));
     }
