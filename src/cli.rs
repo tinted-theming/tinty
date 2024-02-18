@@ -20,7 +20,7 @@ pub fn build_cli() -> Command {
         )
         // Define subcommands
         .subcommand(
-            Command::new("current").about("Prints the last scheme name set")
+            Command::new("current").about("Prints the last scheme name applied")
         )
         .subcommand(
             Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {} info base16-mocha).", REPO_NAME)).arg(
@@ -34,9 +34,9 @@ pub fn build_cli() -> Command {
         )
         .subcommand(Command::new("list").about("Lists available schemes"))
         .subcommand(
-            Command::new("set").about("Sets a theme based on the chosen scheme").arg(
+            Command::new("apply").about("Applies a theme based on the chosen scheme").arg(
                 Arg::new("scheme_name")
-                    .help("The scheme you want to set")
+                    .help("The scheme you want to apply")
                     .required(true),
             ),
         )

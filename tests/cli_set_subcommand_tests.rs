@@ -6,14 +6,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 #[test]
-fn test_cli_set_subcommand_with_setup() -> Result<()> {
+fn test_cli_apply_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_set_subcommand");
+    let config_path = Path::new("test_cli_apply_subcommand_with_setup");
     let scheme_name = "base16-oceanicnext";
     let command = format!(
-        "{} --config=\"{}\" set {}",
+        "{} --config=\"{}\" apply {}",
         COMMAND_NAME,
         config_path.display(),
         &scheme_name,
@@ -51,14 +51,14 @@ fn test_cli_set_subcommand_with_setup() -> Result<()> {
 }
 
 #[test]
-fn test_cli_set_subcommand_without_setup() -> Result<()> {
+fn test_cli_apply_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_set_subcommand");
+    let config_path = Path::new("test_cli_apply_subcommand_without_setup");
     let scheme_name = "base16-oceanicnext";
     let command = format!(
-        "{} --config=\"{}\" set {}",
+        "{} --config=\"{}\" apply {}",
         COMMAND_NAME,
         config_path.display(),
         &scheme_name,
@@ -88,14 +88,14 @@ fn test_cli_set_subcommand_without_setup() -> Result<()> {
 }
 
 #[test]
-fn test_cli_set_subcommand_invalid_scheme_name() -> Result<()> {
+fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_set_subcommand_invalid_scheme_name");
+    let config_path = Path::new("test_cli_apply_subcommand_invalid_scheme_name");
     let scheme_name = "base16-invalid-scheme";
     let command = format!(
-        "{} --config=\"{}\" set {}",
+        "{} --config=\"{}\" apply {}",
         COMMAND_NAME,
         config_path.display(),
         &scheme_name,
@@ -123,14 +123,14 @@ fn test_cli_set_subcommand_invalid_scheme_name() -> Result<()> {
 }
 
 #[test]
-fn test_cli_set_subcommand_invalid_scheme_system() -> Result<()> {
+fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_set_subcommand_invalid_scheme_system");
+    let config_path = Path::new("test_cli_apply_subcommand_invalid_scheme_system");
     let scheme_name = "some-invalid-scheme";
     let command = format!(
-        "{} --config=\"{}\" set {}",
+        "{} --config=\"{}\" apply {}",
         COMMAND_NAME,
         config_path.display(),
         &scheme_name,
@@ -157,14 +157,14 @@ fn test_cli_set_subcommand_invalid_scheme_system() -> Result<()> {
 }
 
 #[test]
-fn test_cli_set_subcommand_no_scheme_system() -> Result<()> {
+fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_set_subcommand_no_scheme_system");
+    let config_path = Path::new("test_cli_apply_subcommand_no_scheme_system");
     let scheme_name = "ocean";
     let command = format!(
-        "{} --config=\"{}\" set {}",
+        "{} --config=\"{}\" apply {}",
         COMMAND_NAME,
         config_path.display(),
         &scheme_name,

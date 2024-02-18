@@ -62,13 +62,13 @@ fn main() -> Result<()> {
         Some(("list", _)) => {
             operations::list::list(&data_path)?;
         }
-        Some(("set", sub_matches)) => {
+        Some(("apply", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("scheme_name") {
                 let scheme_name = theme.as_str();
-                operations::set::set(&config_path, &data_path, scheme_name)
-                    .with_context(|| format!("Failed to set theme \"{:?}\"", scheme_name,))?;
+                operations::apply::apply(&config_path, &data_path, scheme_name)
+                    .with_context(|| format!("Failed to apply theme \"{:?}\"", scheme_name,))?;
             } else {
-                anyhow::bail!("scheme_name is required for set command");
+                return Err(anyhow!("scheme_name is required for apply command"));
             }
         }
         Some(("install", _)) => {
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
             operations::update::update(&config_path, &data_path)?;
         }
         _ => {
-            println!("Basic usage: {} set <SCHEME_NAME>", REPO_NAME);
+            println!("Basic usage: {} apply <SCHEME_NAME>", REPO_NAME);
             println!("For more information try --help");
         }
     }

@@ -21,7 +21,7 @@ fn test_cli_no_arguments() -> Result<()> {
     // // ------
     // // Assert
     // // ------
-    assert!(stdout.contains(format!("Basic usage: {} set <SCHEME_NAME>", REPO_NAME).as_str()));
+    assert!(stdout.contains(format!("Basic usage: {} apply <SCHEME_NAME>", REPO_NAME).as_str()));
     assert!(stdout.contains("For more information try --help"));
 
     cleanup(config_path)?;

@@ -17,7 +17,7 @@ Tinty supports [Base16] and [Base24] scheming systems.
   - [CLI structure](#cli-structure)
     - [install](#install)
     - [list](#list)
-    - [set](#set)
+    - [apply](#apply)
     - [update](#update)
     - [init](#init)
     - [current](#current)
@@ -26,7 +26,7 @@ Tinty supports [Base16] and [Base24] scheming systems.
   - [Configuration](#configuration)
     - [config.toml](#configtoml)
   - [Usage examples](#usage-examples)
-    - [Set theme](#set-theme)
+    - [Apply theme](#apply-theme)
     - [Select theme using fzf](#select-theme-using-fzf)
     - [Use a different command name](#use-a-different-command-name)
     - [Use a custom config directory](#use-a-custom-config-directory)
@@ -65,32 +65,32 @@ your config file.
 
 Lists all available schemes.
 
-#### `set`
+#### `apply`
 
-Sets a specific theme. Requires the name of the theme (or scheme) as an
+Applies a specific theme. Requires the name of the theme (or scheme) as an
 argument.
 
-Replace `<SCHEME_NAME>` with the name of the theme you wish to set.
+Replace `<SCHEME_NAME>` with the name of the theme you wish to apply.
 
-`tinty set <SCHEME_NAME>`
+`tinty apply <SCHEME_NAME>`
 
 #### `update`
 
-This updates the templates set in the `config.toml` file with the latest
-template and the latest [schemes].
+This updates the templates item set in the `config.toml` file with the
+latest template and the latest [schemes].
 
 #### `init`
 
-`tinty init` checks to see if you have previously set a theme. If you
+`tinty init` checks to see if you have previously applied a theme. If you
 have it applies that theme again, otherwise it uses `default-scheme`
 value set in your `config.toml` file.
 
 This command is useful when added to your shell `.*rc` file to make sure
-your shell and other themes are set correctly.
+your shell and other themes are applied correctly.
 
 #### `current`
 
-This prints the last scheme name that was set.
+This prints the last scheme name that was applied.
 
 #### `info`
 
@@ -129,17 +129,17 @@ required directories for data and configuration exist.
     your home directory, otherwise it must be an absolute path.
   - `themes-dir` \[String\] (Required) - The template directory name that contains
     the theme files
-  - `hook` \[String\]- A script that is executed after `tinty set <SCHEME_NAME>`
+  - `hook` \[String\]- A script that is executed after `tinty apply <SCHEME_NAME>`
     has been run. `%f` can be used in the hook which is a variable name
     for the location of the theme file. `hook = ". %f"` will source the
-    theme file after the theme has been set
+    theme file after the theme has been applied
   - `supported-systems` \[Array&lt;String&gt;\] - The scheme system of the template. Defaults to `\["base16"\]`.
     Currently supports `"base16"` and `"base24"` templates.
 
 [Base16] and/or [Base24] templates are added to the `config.toml` file
 and Tinty will clone those repositories and the theme file when you run
-`tinty set <SCHEME_SYSTEM>-<SCHEME_NAME>`. The theme files are set in
-`$XDG_DATA_HOME/tinted-theming/tinty` or
+`tinty apply <SCHEME_SYSTEM>-<SCHEME_NAME>`. The theme files are created
+in `$XDG_DATA_HOME/tinted-theming/tinty` or
 `~/.local/share/tinted-theming/tinty`. The name of the themes are as
 follows: `<item.name>-<item.themes-dir>-file.<FILE_EXTENSION>` - this
 could look like `base16-tmux-colors-file.conf`. The `<FILE_EXTENSION>`
@@ -168,7 +168,7 @@ themes-dir = "bash"
 supported-systems = ["base16"]
 ```
 
-Once `tinty set ocean` is run, the following two files will be generated:
+Once `tinty apply base16-ocean` is run, the following two files will be generated:
 
 - `~/.local/share/tinted-theming/tinty/base16-shell-scripts-file.sh` with `. ~/.local/share/tinted-theming/tinty/base16-shell-scripts-file.sh` executed afterwards.
 - `~/.local/share/tinted-theming/tinty/base16-tmux-scripts-file.conf` with `tmux source-file ~/.local/share/tinted-theming/tinty/base16-tmux-scripts-file.conf` executed afterwards.
@@ -176,16 +176,16 @@ Once `tinty set ocean` is run, the following two files will be generated:
 
 ### Usage examples
 
-Without any `config.toml` file, `tinty` will set your shell theme using
+Without any `config.toml` file, `tinty` will apply your shell theme using
 [base16-shell].
 
-#### Set theme
+#### Apply theme
 
-To set the `ocean` theme:
+To apply the `ocean` theme:
 
 ```shell
 tinty install # Required once or when your config file is updated
-tinty set ocean
+tinty apply base16-ocean
 ```
 
 #### Select theme using fzf
@@ -193,7 +193,7 @@ tinty set ocean
 Requires [fzf]:
 
 ```shell
-tinty set $(tinty list | fzf)
+tinty apply $(tinty list | fzf)
 ```
 
 ### Use a different command name
@@ -207,7 +207,7 @@ alias fancyname=tinty
 Then use that to alias:
 
 ```shell
-fancyname set <SCHEME_NAME>
+fancyname apply <SCHEME_NAME>
 ```
 
 ### Use a custom config directory

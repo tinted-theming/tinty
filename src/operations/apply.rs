@@ -19,11 +19,11 @@ fn str_matches_scheme_system(value: &str) -> bool {
     }
 }
 
-/// Set theme
+/// Apply theme
 ///
 /// For each of the provided config items, copy the theme to the data_dir based on the provided
 /// scheme_name
-pub fn set(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Result<()> {
+pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Result<()> {
     let scheme_name_arr = full_scheme_name.split('-');
     let scheme_system_option = scheme_name_arr.clone().next();
 

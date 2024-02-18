@@ -6,7 +6,7 @@ use std::path::Path;
 
 /// Initialize based on existing data_path files
 ///
-/// This is used to set the theme when your shell is opened. It is based on your previously set
+/// This is used to apply the theme when your shell is opened. It is based on your previously applied
 /// theme or your default theme set in config.
 pub fn init(config_path: &Path, data_path: &Path) -> Result<()> {
     let config = Config::read(config_path)?;
@@ -14,13 +14,13 @@ pub fn init(config_path: &Path, data_path: &Path) -> Result<()> {
         .unwrap_or(config.default_scheme.unwrap_or_default());
 
     if active_scheme_name.is_empty() {
-        return Err(anyhow!("Failed to initialize, config files seem to be missing. Try setting a theme first with `{} set <SCHEME_NAME>`.", REPO_NAME));
+        return Err(anyhow!("Failed to initialize, config files seem to be missing. Try applying a theme first with `{} apply <SCHEME_NAME>`.", REPO_NAME));
     }
 
-    operations::set::set(config_path, data_path, active_scheme_name.as_str())
+    operations::apply::apply(config_path, data_path, active_scheme_name.as_str())
             .with_context(|| {
                 format!(
-                    "Failed to initialize {}, config files are missing. Try setting a theme first with `{} set <SCHEME_NAME>`.",
+                    "Failed to initialize {}, config files are missing. Try applying a theme first with `{} apply <SCHEME_NAME>`.",
                     REPO_NAME,
                     REPO_NAME,
                 )

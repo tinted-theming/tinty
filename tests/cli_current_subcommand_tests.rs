@@ -75,7 +75,7 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     cleanup(config_path)?;
     assert!(
         stderr
-            .contains("Failed to read last scheme from file. Try setting a scheme and try again."),
+            .contains("Failed to read last scheme from file. Try applying a scheme and try again."),
         "stderr does not contain the expected output"
     );
 
