@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.0 (2024-02-18)
+
+- **Breaking**: `set` subcommand renamed to `apply`
+- **Breaking**: `setup` subcommand renamed to `install`
+
+## 0.8.1 (2024-02-17)
+
+- Fix visual `tinty info` spacing bug
+
+## 0.8.0 (2024-02-17)
+
+- Add `info` subcommand to list scheme metadata as well as scheme colors
+
 ## 0.7.0 (2024-02-16)
 
 - Add `current` subcommand to print the last scheme name set.
