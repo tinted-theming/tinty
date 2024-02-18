@@ -59,8 +59,8 @@ pub fn cleanup(config_path: &Path) -> Result<()> {
         fs::remove_dir_all(&data_path)?;
     }
 
-    if config_path.is_dir() {
-        fs::remove_dir_all(config_path)?;
+    if config_path.is_file() {
+        fs::remove_file(config_path)?;
     }
 
     Ok(())

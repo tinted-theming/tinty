@@ -2,7 +2,6 @@ mod common;
 
 use crate::common::{cleanup, write_to_file, COMMAND_NAME, REPO_NAME};
 use anyhow::{anyhow, Result};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 #[test]
@@ -10,7 +9,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_current_subcommand_with_setup");
+    let config_path = Path::new("test_cli_current_subcommand_with_setup.toml");
     let scheme_name = "base16-oceanicnext";
     let command = format!(
         "{} --config=\"{}\" current",
@@ -23,9 +22,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     let data_dir = system_data_path.join(format!("tinted-theming/{}", REPO_NAME));
     let current_scheme_path = data_dir.join("current_scheme");
     cleanup(config_path)?;
-    if !config_path.exists() {
-        fs::create_dir(config_path)?;
-    }
+    write_to_file(config_path, "")?;
     write_to_file(&current_scheme_path, scheme_name)?;
 
     // // ---
@@ -54,7 +51,7 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_current_subcommand_without_setup");
+    let config_path = Path::new("test_cli_current_subcommand_without_setup.toml");
     let command = format!(
         "{} --config=\"{}\" current",
         COMMAND_NAME,
@@ -62,7 +59,7 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     cleanup(config_path)?;
-    fs::create_dir(config_path)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act

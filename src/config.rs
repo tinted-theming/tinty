@@ -143,8 +143,14 @@ fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
 
 impl Config {
     pub fn read(path: &Path) -> Result<Config> {
-        let contents =
-            read_file_to_string(&path.join(CONFIG_FILE_NAME)).unwrap_or(String::from(""));
+        if !path.is_file() {
+            return Err(anyhow!(
+                "The provided config path is a directory and not a file: {}",
+                path.display()
+            ));
+        }
+
+        let contents = read_file_to_string(path).unwrap_or(String::from(""));
         let mut config: Config = toml::from_str(contents.as_str()).with_context(|| {
             format!(
                 "Couldn't parse {} configuration file ({:?}). Check if it's syntactically correct",

@@ -8,17 +8,15 @@ pub fn build_cli() -> Command {
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
-        // Define a global argument for specifying the repository directory
         .arg(
             Arg::new("config")
                 .short('c')
-                .help(format!("Optional path to the {} config directory.", REPO_NAME))
-                .value_name("CONFIG")
+                .help(format!("Optional path to the {} config.toml file.", REPO_NAME))
+                .value_name("FILE")
                 .long("config")
                 .global(true)
                 .action(ArgAction::Set)
         )
-        // Define subcommands
         .subcommand(
             Command::new("current").about("Prints the last scheme name applied")
         )

@@ -6,6 +6,7 @@ mod utils;
 
 use crate::cli::build_cli;
 use anyhow::{anyhow, Context, Result};
+use config::CONFIG_FILE_NAME;
 use constants::{REPO_DIR, REPO_NAME};
 use std::path::PathBuf;
 use utils::ensure_directory_exists;
@@ -25,7 +26,7 @@ fn main() -> Result<()> {
     } else {
         dirs::config_dir()
             .ok_or_else(|| anyhow!("Error getting config directory"))?
-            .join(format!("tinted-theming/{}", REPO_NAME))
+            .join(format!("tinted-theming/{}/{}", REPO_NAME, CONFIG_FILE_NAME))
     };
     let data_path = system_data_path.join(format!("tinted-theming/{}", REPO_NAME));
     let data_repo_path = data_path.join(REPO_DIR);

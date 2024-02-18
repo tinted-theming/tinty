@@ -1,6 +1,6 @@
 mod common;
 
-use crate::common::{cleanup, COMMAND_NAME, REPO_NAME};
+use crate::common::{cleanup, write_to_file, COMMAND_NAME, REPO_NAME};
 use anyhow::Result;
 use std::path::Path;
 
@@ -9,7 +9,7 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_update_subcommand_without_setup");
+    let config_path = Path::new("test_cli_update_subcommand_without_setup.toml");
     let expected_output = format!("base16-shell not installed (run `{} install`)", REPO_NAME);
     let command = format!(
         "{} update --config=\"{}\"",
@@ -18,6 +18,7 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     cleanup(config_path)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
@@ -41,7 +42,7 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_update_subcommand_with_setup");
+    let config_path = Path::new("test_cli_update_subcommand_with_setup.toml");
     let expected_output = "base16-shell up to date";
     let command = format!(
         "{} update --config=\"{}\"",
@@ -49,6 +50,7 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
         config_path.display()
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act

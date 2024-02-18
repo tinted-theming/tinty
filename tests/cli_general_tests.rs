@@ -1,6 +1,6 @@
 mod common;
 
-use crate::common::{cleanup, COMMAND_NAME, REPO_NAME};
+use crate::common::{cleanup, write_to_file, COMMAND_NAME, REPO_NAME};
 use anyhow::Result;
 use std::path::Path;
 
@@ -9,9 +9,10 @@ fn test_cli_no_arguments() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_no_arguments");
+    let config_path = Path::new("test_cli_no_arguments.toml");
     let command = format!("{} --config=\"{}\"", COMMAND_NAME, config_path.display());
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act

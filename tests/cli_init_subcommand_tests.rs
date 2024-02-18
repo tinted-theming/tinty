@@ -2,17 +2,14 @@ mod common;
 
 use crate::common::{cleanup, read_file_to_string, write_to_file, COMMAND_NAME, REPO_NAME};
 use anyhow::{anyhow, Result};
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 #[test]
 fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_init_subcommand_without_setup");
+    let config_path = Path::new("test_cli_init_subcommand_without_setup.toml");
     let expected_output = format!(
         "Failed to initialize, config files seem to be missing. Try applying a theme first with `{} apply <SCHEME_NAME>`.",
         REPO_NAME
@@ -24,6 +21,7 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     cleanup(config_path)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
@@ -47,13 +45,14 @@ fn test_cli_init_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_init_subcommand_with_setup");
+    let config_path = Path::new("test_cli_init_subcommand_with_setup.toml");
     let command = format!(
         "{} init --config=\"{}\"",
         COMMAND_NAME,
         config_path.display()
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
@@ -77,11 +76,10 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_init_subcommand_with_config_default_scheme");
+    let config_path = Path::new("test_cli_init_subcommand_with_config_default_scheme.toml");
     let system_data_path: PathBuf =
         dirs::data_dir().ok_or_else(|| anyhow!("Error getting data directory"))?;
     let data_dir = system_data_path.join(format!("tinted-theming/{}", REPO_NAME));
-    let config_file_path = config_path.join("config.toml");
     let scheme_name = "base16-mocha";
     let command = format!(
         "{} init --config=\"{}\"",
@@ -91,8 +89,7 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     let config_content = format!("default-scheme = \"{}\"", scheme_name);
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     cleanup(config_path)?;
-    fs::create_dir(config_path)?;
-    write_to_file(&config_file_path, config_content.as_str())?;
+    write_to_file(config_path, config_content.as_str())?;
 
     // // ---
     // // Act

@@ -106,9 +106,8 @@ available, including metadata as well as colors.
 
 **`--config` or `-c`**
 
-Path to config directory which contains your `config.toml` file. This
-value defaults to `$XDG_CONFIG_HOME` otherwise
-`$HOME/.config/tinted-theming/tinty`.
+Path to `config.toml` file. This value defaults to `$XDG_CONFIG_HOME`
+otherwise `$HOME/.config/tinted-theming/tinty`.
 
 ### Configuration
 

@@ -1,8 +1,7 @@
 mod common;
 
-use crate::common::{cleanup, COMMAND_NAME, REPO_NAME};
+use crate::common::{cleanup, write_to_file, COMMAND_NAME, REPO_NAME};
 use anyhow::Result;
-use std::fs;
 use std::path::Path;
 
 #[test]
@@ -10,7 +9,7 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_info_subcommand_with_setup");
+    let config_path = Path::new("test_cli_info_subcommand_with_setup.toml");
     let command = format!(
         "{} --config=\"{}\" info",
         COMMAND_NAME,
@@ -19,7 +18,7 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     let scheme_count = 250;
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     cleanup(config_path)?;
-    fs::create_dir(config_path)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
@@ -48,7 +47,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_info_subcommand_with_setup");
+    let config_path = Path::new("test_cli_info_subcommand_with_setup.toml");
     let scheme_name = "base16-oceanicnext";
     let command = format!(
         "{} --config=\"{}\" info {}",
@@ -58,7 +57,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     cleanup(config_path)?;
-    fs::create_dir(config_path)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
@@ -87,14 +86,14 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_info_subcommand_without_setup");
+    let config_path = Path::new("test_cli_info_subcommand_without_setup.toml");
     let command = format!(
         "{} --config=\"{}\" info",
         COMMAND_NAME,
         config_path.display(),
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    fs::create_dir(config_path)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
@@ -122,7 +121,7 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_info_subcommand_with_setup_invalid_scheme_name");
+    let config_path = Path::new("test_cli_info_subcommand_with_setup_invalid_scheme_name.toml");
     let scheme_name = "mocha";
     let command = format!(
         "{} --config=\"{}\" info {}",
@@ -132,7 +131,7 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     cleanup(config_path)?;
-    fs::create_dir(config_path)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act

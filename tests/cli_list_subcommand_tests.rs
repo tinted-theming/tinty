@@ -1,6 +1,6 @@
 mod common;
 
-use crate::common::{cleanup, COMMAND_NAME, REPO_NAME};
+use crate::common::{cleanup, write_to_file, COMMAND_NAME, REPO_NAME};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -10,7 +10,7 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_list_subcommand");
+    let config_path = Path::new("test_cli_list_subcommand.toml");
     let expected_output = fs::read_to_string(Path::new("fixtures/schemes.txt"))?;
     let command = format!(
         "{} list --config=\"{}\"",
@@ -18,6 +18,7 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
         config_path.display()
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
@@ -47,7 +48,7 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_list_subcommand");
+    let config_path = Path::new("test_cli_list_subcommand.toml");
     let expected_output = format!(
         "Schemes are missing, run install and then try again: `{} install`",
         REPO_NAME
@@ -59,6 +60,7 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     cleanup(config_path)?;
+    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
