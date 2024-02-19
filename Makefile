@@ -4,7 +4,7 @@ publish: publish_dry
 	@echo "---------------"
 	cargo publish
 
-publish_dry: setup_tests
+publish_dry: test_docker
 	@echo "-------------------"
 	@echo "Running publish_dry"
 	@echo "-------------------"
@@ -20,15 +20,13 @@ test_docker: setup_tests
 	@echo "-------------------"
 	@echo "Running test_docker"
 	@echo "-------------------"
-	docker build --target clippy -t tinty-clippy .
-	docker build --target fmt -t tinty-fmt .
-	docker build --target test -t tinty-test .
+	docker build --target tests -t tinty-clippy .
 
 test: setup_tests
 	@echo "------------"
 	@echo "Running test"
 	@echo "------------"
-	RUST_TEST_THREADS=1 cargo test
+	RUST_TEST_THREADS=1 cargo test --release
 
 setup_tests: build
 	@echo "-----------------"

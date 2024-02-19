@@ -9,7 +9,7 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // Arrange
     // -------
     let (config_path, data_path, command_vec, cleanup) =
-        setup("test_cli_info_subcommand_with_setup", "info")?;
+        setup("test_cli_info_subcommand_all_with_setup", "info")?;
     let scheme_count = 250;
 
     // // ---

@@ -16,11 +16,5 @@ jobs:
       - name: Deny banned crates and licenses
         uses: EmbarkStudios/cargo-deny-action@v1
 
-      - name: Build clippy Stage
-        run: docker build --target clippy -t tinty-clippy .
-
-      - name: Build fmt stage
-        run: docker build --target fmt -t tinty-fmt .
-
-      - name: Build Test Stage
-        run: docker build --target test -t tinty-test .
+      - name: Run linting and tests
+        run: docker build --target tests -t tinty-clippy .

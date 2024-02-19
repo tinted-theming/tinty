@@ -4,17 +4,9 @@ WORKDIR /usr/src/tinty
 COPY . .
 RUN cargo build --release
 
-# Stage 2: Run cargo clippy
-FROM base AS clippy
-RUN rustup component add clippy && \
-    cargo clippy -- -D warnings
-
-# Stage 3: Run cargo fmt
-FROM base as fmt
-RUN rustup component add rustfmt && \
-    cargo fmt --all -- --check
-
-# Stage 4: Run tests
-FROM base as test
-ENV RUST_TEST_THREADS=1
+# Stage 2: Run lint and tests
+FROM base AS tests
+RUN rustup component add clippy rustfmt
+RUN cargo clippy -- -D warnings
+RUN cargo fmt --all -- --check
 RUN cargo test --release

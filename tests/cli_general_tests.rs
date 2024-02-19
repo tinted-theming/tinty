@@ -102,22 +102,31 @@ fn test_cli_default_data_path() -> Result<()> {
         config_path.display(),
         &scheme_name,
     );
+    let current_scheme_file_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
     let apply_command_vec =
         shell_words::split(apply_command.as_str()).map_err(anyhow::Error::new)?;
     write_to_file(
         &config_path,
         format!("default-scheme = \"{}\"", init_scheme_name).as_str(),
     )?;
+    if current_scheme_file_path.exists() {
+        fs::remove_file(&current_scheme_file_path)?;
+    }
 
     // // ---
     // // Act
     // // ---
     common::run_install_command(&config_path, &data_path)?;
-    common::run_command(init_command_vec).unwrap();
+    common::run_command(init_command_vec.clone()).unwrap();
+
+    // This test is important to determine the config.toml is being read correctly
     assert_eq!(
-        read_file_to_string(&data_path.join(CURRENT_SCHEME_FILE_NAME))?,
-        scheme_name
+        read_file_to_string(&current_scheme_file_path)?,
+        init_scheme_name
     );
+
+    common::run_command(apply_command_vec.clone()).unwrap();
+    common::run_command(init_command_vec).unwrap();
     let (stdout, stderr) = common::run_command(apply_command_vec).unwrap();
 
     // // ------

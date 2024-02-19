@@ -87,12 +87,6 @@ pub fn read_file_to_string(path: &Path) -> Result<String> {
     Ok(contents)
 }
 
-fn cleanup_func(config_path: &Path, data_path: &Path) -> Result<()> {
-    cleanup(config_path, data_path)?;
-
-    Ok(())
-}
-
 pub fn setup(
     name: &str,
     command: &str,
