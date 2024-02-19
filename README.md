@@ -1,5 +1,8 @@
 # Tinty - A Tinted Theming CLI tool written in Rust 🦀
 
+[![Crates.io](https://img.shields.io/crates/v/tinty.svg)](https://crates.io/crates/tinty)
+[![Tests](https://github.com/tinted-theming/tinty/actions/workflows/test.yml/badge.svg)](https://github.com/tinted-theming/tinty/actions/workflows/test.yml)
+
 Change the theme of your terminal, text editor and anything else with
 one command. Immediately switch between over 250 themes!
 
