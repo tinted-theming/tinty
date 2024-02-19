@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.0 (2024-02-19)
+
+- **Breaking**: Change `--config` flag to accept a path to config file
+  and not a directory containing a `config.toml`
+- Add `--data-dir` flag to allow for manually setting data directory
+
 ## 0.9.0 (2024-02-18)
 
 - **Breaking**: `set` subcommand renamed to `apply`
