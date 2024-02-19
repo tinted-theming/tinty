@@ -1,24 +1,18 @@
 mod common;
 
-use crate::common::{cleanup, write_to_file, COMMAND_NAME, REPO_NAME};
+use crate::common::{setup, REPO_NAME};
 use anyhow::Result;
-use std::path::Path;
 
 #[test]
 fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_update_subcommand_without_setup.toml");
+    let (_, _, command_vec, cleanup) = setup(
+        "test_cli_install_subcommand_non_unique_config_item_name",
+        "update",
+    )?;
     let expected_output = format!("base16-shell not installed (run `{} install`)", REPO_NAME);
-    let command = format!(
-        "{} update --config=\"{}\"",
-        COMMAND_NAME,
-        config_path.display()
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    cleanup(config_path)?;
-    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
@@ -28,12 +22,12 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // // ------
     // // Assert
     // // ------
+    cleanup()?;
     assert!(
         stdout.contains(&expected_output),
         "stdout does not contain the expected output"
     );
 
-    cleanup(config_path)?;
     Ok(())
 }
 
@@ -42,31 +36,24 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_update_subcommand_with_setup.toml");
+    let (config_path, data_path, command_vec, cleanup) =
+        setup("test_cli_update_subcommand_with_setup", "update")?;
     let expected_output = "base16-shell up to date";
-    let command = format!(
-        "{} update --config=\"{}\"",
-        COMMAND_NAME,
-        config_path.display()
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
     // // ---
-    common::run_install_command(config_path)?;
+    common::run_install_command(&config_path, &data_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------
     // // Assert
     // // ------
-
+    cleanup()?;
     assert!(
         stdout.contains(&expected_output),
         "stdout does not contain the expected output"
     );
 
-    cleanup(config_path)?;
     Ok(())
 }

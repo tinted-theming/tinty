@@ -17,6 +17,15 @@ pub fn build_cli() -> Command {
                 .global(true)
                 .action(ArgAction::Set)
         )
+        .arg(
+            Arg::new("data-dir")
+                .short('d')
+                .help(format!("Optional path to the {} data directory", REPO_NAME))
+                .value_name("DIRECTORY")
+                .long("data-dir")
+                .global(true)
+                .action(ArgAction::Set)
+        )
         .subcommand(
             Command::new("current").about("Prints the last scheme name applied")
         )

@@ -11,7 +11,7 @@ use std::path::Path;
 pub fn init(config_path: &Path, data_path: &Path) -> Result<()> {
     let config = Config::read(config_path)?;
     let active_scheme_name = read_file_to_string(&data_path.join(CURRENT_SCHEME_FILE_NAME))
-        .unwrap_or(config.default_scheme.unwrap_or_default());
+        .unwrap_or(config.default_scheme.clone().unwrap_or_default());
 
     if active_scheme_name.is_empty() {
         return Err(anyhow!("Failed to initialize, config files seem to be missing. Try applying a theme first with `{} apply <SCHEME_NAME>`.", REPO_NAME));

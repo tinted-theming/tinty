@@ -1,28 +1,17 @@
 mod common;
 
-use crate::common::{cleanup, write_to_file, COMMAND_NAME, REPO_NAME};
-use anyhow::{anyhow, Result};
-use std::path::{Path, PathBuf};
+use crate::common::{setup, write_to_file, CURRENT_SCHEME_FILE_NAME};
+use anyhow::Result;
 
 #[test]
 fn test_cli_current_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_current_subcommand_with_setup.toml");
+    let (_, data_path, command_vec, cleanup) =
+        setup("test_cli_current_subcommand_with_setup", "current")?;
     let scheme_name = "base16-oceanicnext";
-    let command = format!(
-        "{} --config=\"{}\" current",
-        COMMAND_NAME,
-        config_path.display(),
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    let system_data_path: PathBuf =
-        dirs::data_dir().ok_or_else(|| anyhow!("Error getting data directory"))?;
-    let data_dir = system_data_path.join(format!("tinted-theming/{}", REPO_NAME));
-    let current_scheme_path = data_dir.join("current_scheme");
-    cleanup(config_path)?;
-    write_to_file(config_path, "")?;
+    let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
     write_to_file(&current_scheme_path, scheme_name)?;
 
     // // ---
@@ -42,7 +31,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
         "stderr does not contain the expected output"
     );
 
-    cleanup(config_path)?;
+    cleanup()?;
     Ok(())
 }
 
@@ -51,15 +40,8 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_current_subcommand_without_setup.toml");
-    let command = format!(
-        "{} --config=\"{}\" current",
-        COMMAND_NAME,
-        config_path.display(),
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    cleanup(config_path)?;
-    write_to_file(config_path, "")?;
+    let (_, _, command_vec, cleanup) =
+        setup("test_cli_current_subcommand_without_setup", "current")?;
 
     // // ---
     // // Act
@@ -69,7 +51,7 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     // // ------
     // // Assert
     // // ------
-    cleanup(config_path)?;
+    cleanup()?;
     assert!(
         stderr
             .contains("Failed to read last scheme from file. Try applying a scheme and try again."),

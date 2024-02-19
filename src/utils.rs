@@ -3,7 +3,7 @@ use crate::constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME, SCHEME_EXTENSION}
 use anyhow::{anyhow, Context, Result};
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str;
 
@@ -13,7 +13,7 @@ pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
 
     if !path.exists() {
         fs::create_dir_all(path)
-            .with_context(|| format!("Failed to create directory at {:?}", path))?;
+            .with_context(|| format!("Failed to create directory at {}", path.display()))?;
     }
 
     Ok(())
@@ -173,4 +173,19 @@ pub fn get_all_scheme_names(data_path: &Path) -> Result<Vec<String>> {
     scheme_vec.sort();
 
     Ok(scheme_vec)
+}
+pub fn replace_tilde_slash_with_home(path_str: &str) -> Result<PathBuf> {
+    let trimmed_path_str = path_str.trim();
+    if trimmed_path_str.starts_with("~/") {
+        match dirs::home_dir() {
+                Some(home_dir) => Ok(PathBuf::from(trimmed_path_str.replacen(
+                        "~/",
+                        format!("{}/", home_dir.display()).as_str(),
+                        1,
+                    ))),
+                None => Err(anyhow!("Unable to determine a home directory for \"{}\", please use an absolute path instead", trimmed_path_str))
+            }
+    } else {
+        Ok(PathBuf::from(trimmed_path_str))
+    }
 }

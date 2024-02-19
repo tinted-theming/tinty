@@ -1,29 +1,21 @@
 mod common;
 
-use crate::common::{cleanup, write_to_file, COMMAND_NAME, REPO_NAME};
+use crate::common::{setup, write_to_file, REPO_NAME};
 use anyhow::Result;
-use std::path::Path;
 
 #[test]
 fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_info_subcommand_with_setup.toml");
-    let command = format!(
-        "{} --config=\"{}\" info",
-        COMMAND_NAME,
-        config_path.display(),
-    );
+    let (config_path, data_path, command_vec, cleanup) =
+        setup("test_cli_info_subcommand_with_setup", "info")?;
     let scheme_count = 250;
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    cleanup(config_path)?;
-    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
     // // ---
-    common::run_install_command(config_path)?;
+    common::run_install_command(&config_path, &data_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------
@@ -38,7 +30,7 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
         "stdout does not contain the expected output"
     );
 
-    cleanup(config_path)?;
+    cleanup()?;
     Ok(())
 }
 
@@ -47,22 +39,16 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_info_subcommand_with_setup.toml");
     let scheme_name = "base16-oceanicnext";
-    let command = format!(
-        "{} --config=\"{}\" info {}",
-        COMMAND_NAME,
-        config_path.display(),
-        &scheme_name,
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    cleanup(config_path)?;
-    write_to_file(config_path, "")?;
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_info_subcommand_with_setup",
+        format!("info {}", scheme_name).as_str(),
+    )?;
 
     // // ---
     // // Act
     // // ---
-    common::run_install_command(config_path)?;
+    common::run_install_command(&config_path, &data_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------
@@ -77,7 +63,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
         "stdout does not contain the expected output"
     );
 
-    cleanup(config_path)?;
+    cleanup()?;
     Ok(())
 }
 
@@ -86,14 +72,9 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_info_subcommand_without_setup.toml");
-    let command = format!(
-        "{} --config=\"{}\" info",
-        COMMAND_NAME,
-        config_path.display(),
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    write_to_file(config_path, "")?;
+    let (config_path, _, command_vec, cleanup) =
+        setup("test_cli_info_subcommand_without_setup", "info")?;
+    write_to_file(&config_path, "")?;
 
     // // ---
     // // Act
@@ -112,7 +93,7 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
         "stderr does not contain the expected output"
     );
 
-    cleanup(config_path)?;
+    cleanup()?;
     Ok(())
 }
 
@@ -121,22 +102,16 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_info_subcommand_with_setup_invalid_scheme_name.toml");
     let scheme_name = "mocha";
-    let command = format!(
-        "{} --config=\"{}\" info {}",
-        COMMAND_NAME,
-        config_path.display(),
-        &scheme_name,
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    cleanup(config_path)?;
-    write_to_file(config_path, "")?;
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_info_subcommand_with_setup_invalid_scheme_name",
+        format!("info {}", scheme_name).as_str(),
+    )?;
 
     // // ---
     // // Act
     // // ---
-    common::run_install_command(config_path)?;
+    common::run_install_command(&config_path, &data_path)?;
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
     // // ------
@@ -155,6 +130,6 @@ Run `{} list` to get a list of scheme names"##,
         "stderr does not contain the expected output"
     );
 
-    cleanup(config_path)?;
+    cleanup()?;
     Ok(())
 }

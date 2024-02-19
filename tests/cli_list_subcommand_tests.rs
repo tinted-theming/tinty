@@ -1,7 +1,8 @@
 mod common;
 
-use crate::common::{cleanup, write_to_file, COMMAND_NAME, REPO_NAME};
+use crate::common::REPO_NAME;
 use anyhow::Result;
+use common::setup;
 use std::fs;
 use std::path::Path;
 
@@ -10,20 +11,14 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_list_subcommand.toml");
+    let (config_path, data_path, command_vec, cleanup) =
+        setup("test_cli_list_subcommand_with_setup", "list")?;
     let expected_output = fs::read_to_string(Path::new("fixtures/schemes.txt"))?;
-    let command = format!(
-        "{} list --config=\"{}\"",
-        COMMAND_NAME,
-        config_path.display()
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
     // // ---
-    common::run_install_command(config_path)?;
+    common::run_install_command(&config_path, &data_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
     // // ------
@@ -39,7 +34,7 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
         );
     }
 
-    cleanup(config_path)?;
+    cleanup()?;
     Ok(())
 }
 
@@ -48,19 +43,11 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = Path::new("test_cli_list_subcommand.toml");
+    let (_, _, command_vec, cleanup) = setup("test_cli_list_subcommand_without_setup", "list")?;
     let expected_output = format!(
         "Schemes are missing, run install and then try again: `{} install`",
         REPO_NAME
     );
-    let command = format!(
-        "{} list --config=\"{}\"",
-        COMMAND_NAME,
-        config_path.display()
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
-    cleanup(config_path)?;
-    write_to_file(config_path, "")?;
 
     // // ---
     // // Act
@@ -75,6 +62,6 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
         "stdout does not contain the expected output"
     );
 
-    cleanup(config_path)?;
+    cleanup()?;
     Ok(())
 }

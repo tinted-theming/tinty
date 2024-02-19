@@ -9,26 +9,33 @@ use anyhow::{anyhow, Context, Result};
 use config::CONFIG_FILE_NAME;
 use constants::{REPO_DIR, REPO_NAME};
 use std::path::PathBuf;
-use utils::ensure_directory_exists;
+use utils::{ensure_directory_exists, replace_tilde_slash_with_home};
 
 /// Entry point of the application.
 fn main() -> Result<()> {
     // Parse the command line arguments
     let matches = build_cli().get_matches();
 
-    // Determine the configuration path, falling back to the home directory if necessary
-    let system_data_path: PathBuf =
-        dirs::data_dir().ok_or_else(|| anyhow!("Error getting data directory"))?;
-
     // Other configuration paths
-    let config_path: PathBuf = if let Some(config) = matches.get_one::<String>("config") {
-        PathBuf::from(config)
-    } else {
-        dirs::config_dir()
-            .ok_or_else(|| anyhow!("Error getting config directory"))?
-            .join(format!("tinted-theming/{}/{}", REPO_NAME, CONFIG_FILE_NAME))
-    };
-    let data_path = system_data_path.join(format!("tinted-theming/{}", REPO_NAME));
+    let config_path_result: Result<PathBuf> =
+        if let Some(config_file_path) = matches.get_one::<String>("config") {
+            replace_tilde_slash_with_home(config_file_path)
+        } else {
+            Ok(dirs::config_dir()
+                .ok_or_else(|| anyhow!("Error getting config directory"))?
+                .join(format!("tinted-theming/{}/{}", REPO_NAME, CONFIG_FILE_NAME)))
+        };
+    let config_path = config_path_result?;
+    // Determine the data-dir path
+    let data_path_result: Result<PathBuf> =
+        if let Some(data_file_path) = matches.get_one::<String>("data-dir") {
+            replace_tilde_slash_with_home(data_file_path)
+        } else {
+            Ok(dirs::data_dir()
+                .ok_or_else(|| anyhow!("Error getting data directory"))?
+                .join(format!("tinted-theming/{}", REPO_NAME)))
+        };
+    let data_path = data_path_result?;
     let data_repo_path = data_path.join(REPO_DIR);
 
     // Ensure config dirs exist
@@ -40,12 +47,13 @@ fn main() -> Result<()> {
             data_repo_path.display()
         )
     })?;
-    ensure_directory_exists(&config_path).with_context(|| {
-        format!(
-            "Failed to create config directory at {}",
+
+    if !config_path.exists() {
+        return Err(anyhow!(
+            "Config path does not exist: {}",
             config_path.display()
-        )
-    })?;
+        ));
+    }
 
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
