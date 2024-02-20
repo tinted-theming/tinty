@@ -48,13 +48,6 @@ fn main() -> Result<()> {
         )
     })?;
 
-    if !config_path.exists() {
-        return Err(anyhow!(
-            "Config path does not exist: {}",
-            config_path.display()
-        ));
-    }
-
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
         Some(("current", _)) => {

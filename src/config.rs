@@ -143,7 +143,7 @@ fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
 
 impl Config {
     pub fn read(path: &Path) -> Result<Config> {
-        if !path.is_file() {
+        if path.exists() && !path.is_file() {
             return Err(anyhow!(
                 "The provided config path is a directory and not a file: {}",
                 path.display()

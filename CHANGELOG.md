@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.1 (2024-02-20)
+
+- Fix bug where spaces in config or data directory paths would cause
+  `install` and `update` to fail
+- Fix bug so now tinty works without a `config.toml` file being provided
+
 ## 0.10.0 (2024-02-19)
 
 - **Breaking**: Change `--config` flag to accept a path to config file

@@ -68,7 +68,7 @@ pub fn git_clone(repo_url: &str, target_dir: &Path) -> Result<()> {
         ));
     }
 
-    let command = format!("git clone {} {}", repo_url, target_dir.display());
+    let command = format!("git clone \"{}\" \"{}\"", repo_url, target_dir.display());
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
 
     Command::new(&command_vec[0])
