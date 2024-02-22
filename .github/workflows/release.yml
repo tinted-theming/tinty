@@ -1,13 +1,8 @@
 name: Release
 on:
-  workflow_dispatch:
-    inputs:
-      tag_version:
-        description: 'Tag Version for Manual Release'
-        required: true
-  # push:
-  #   tags:
-  #     - "v*.*.*"
+  push:
+    tags:
+      - "v*.*.*"
 env:
   CARGO_INCREMENTAL: 0
 permissions:
@@ -23,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          ref: ${{ github.event.inputs.tag_version || github.ref }}
+          ref: ${{ github.ref }}
 
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -76,7 +71,7 @@ jobs:
 
       - name: Abort if there is a Cargo.toml and git tag mismatch
         run: |
-          if [[ "v${{ steps.cargo_version.outputs.value }}" != "${{ github.event.inputs.tag_version || github.ref_name }}" ]]; then
+          if [[ "v${{ steps.cargo_version.outputs.value }}" != "${{ github.ref_name }}" ]]; then
             echo "There is a Cargo.toml version and git tag mismatch." && exit 1;
           fi
 
@@ -121,7 +116,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          ref: ${{ github.event.inputs.tag_version || github.ref_name }}
+          ref: ${{ github.ref }}
 
       # Fetch notes from CHANGELOG.md based on cargo.toml version
       - name: Extract release notes
@@ -197,7 +192,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ steps.cargo_version.outputs.value }}
           draft: true
-          body: ${{ steps.extract-release-notes.outputs.release_notes || env.CHANGELOG_TEXT }}
+          body: ${{ env.CHANGELOG_TEXT }}
 
       - name: Cleanup
         run: rm -r build/
