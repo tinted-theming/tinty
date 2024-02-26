@@ -7,6 +7,12 @@
 - Add config.toml root-level property "hooks" (`Array<String>`) which
   executes the provided strings after a scheme is applied
 
+### Fixed
+
+- Fix bug where item `hook` template variable `%f` returns a path to
+  theme file in the repository template instead of the copied version
+  under `~/.local/share/tinted-theming/tinty`
+
 ## [0.10.1] - 2024-02-20
 
 - Fix bug where spaces in config or data directory paths would cause
