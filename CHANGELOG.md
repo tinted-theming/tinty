@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Add config.toml root-level property "hooks" (`Array<String>`) which
+  executes the provided strings after a scheme is applied
+
 ## [0.10.1] - 2024-02-20
 
 - Fix bug where spaces in config or data directory paths would cause

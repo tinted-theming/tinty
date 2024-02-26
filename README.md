@@ -171,6 +171,7 @@ to your preferences and environment.
 |-------------------|--------------------|----------|----------------------------------------------------------------------------------------|---------|---------|
 | `shell`           | `string`           | Optional | Specifies the shell command used to execute hooks. | `"sh -c '{}'"` | `shell = "bash -c '{}'"` |
 | `default_scheme`  | `string`           | Optional | Defines the default theme scheme to be applied if no specific scheme is set. | None | `default_scheme = "base16-mocha"` |
+| `hooks`           | `array<string>`    | Optional | A list of strings which are executed after every `tinty apply` | None | `hooks = ["echo \"The current scheme is: $(tinty current)\""]` |
 | `[[items]]`       | `array<items>`     | Required | An array of `items` configurations. Each item represents a themable component. Detailed structure provided in the next section. | - | - |
 
 ### Items table `config.toml` Schema

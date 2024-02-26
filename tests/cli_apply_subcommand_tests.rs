@@ -1,6 +1,8 @@
 mod common;
 
-use crate::common::{read_file_to_string, setup, CURRENT_SCHEME_FILE_NAME, REPO_NAME};
+use crate::common::{
+    read_file_to_string, setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME,
+};
 use anyhow::Result;
 
 #[test]
@@ -156,5 +158,43 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
         "stderr does not contain the expected output"
     );
 
+    Ok(())
+}
+
+#[test]
+fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_with_setup",
+        format!("apply {}", &scheme_name).as_str(),
+    )?;
+    let expected_output = "This\nis\nexpected\noutput.";
+    let config_content = r##"
+hooks = ["echo 'This '", "echo 'is '", "echo 'expected '", "echo 'output.'"]
+"##;
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    common::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = common::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert!(
+        stdout.contains(expected_output),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
+    );
+
+    cleanup()?;
     Ok(())
 }

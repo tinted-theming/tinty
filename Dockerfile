@@ -9,4 +9,5 @@ FROM base AS tests
 RUN rustup component add clippy rustfmt
 RUN cargo clippy -- -D warnings
 RUN cargo fmt --all -- --check
+ENV RUST_TEST_THREADS=1
 RUN cargo test --release
