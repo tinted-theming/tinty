@@ -198,3 +198,45 @@ hooks = ["echo 'This '", "echo 'is '", "echo 'expected '", "echo 'output.'"]
     cleanup()?;
     Ok(())
 }
+
+#[test]
+fn test_cli_apply_subcommand_hook_with_setup() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_with_setup",
+        format!("apply {}", &scheme_name).as_str(),
+    )?;
+    let config_content = r##"
+[[items]]
+path = "https://github.com/tinted-theming/base16-vim"
+name = "tinted-vim"
+themes-dir = "colors"
+hook = "echo \"path: %f\""
+"##;
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    common::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = common::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert!(
+        stdout
+            .contains(format!("path: {}/tinted-vim-colors-file.vim", data_path.display()).as_str()),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
+    );
+
+    cleanup()?;
+    Ok(())
+}
