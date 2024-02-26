@@ -131,5 +131,16 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
         }
     }
 
+    // Run global hooks
+    if let Some(hooks_vec) = config.hooks.clone() {
+        for hook in hooks_vec.iter() {
+            let hook_command_vec = get_shell_command_from_string(config_path, hook.as_str())?;
+            Command::new(&hook_command_vec[0])
+                .args(&hook_command_vec[1..])
+                .spawn()
+                .with_context(|| format!("Failed to execute global hook: {}", hook))?;
+        }
+    }
+
     Ok(())
 }

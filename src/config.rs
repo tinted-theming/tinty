@@ -127,6 +127,7 @@ pub struct Config {
     #[serde(rename = "default-scheme")]
     pub default_scheme: Option<String>,
     pub items: Option<Vec<ConfigItem>>,
+    pub hooks: Option<Vec<String>>,
 }
 
 fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
