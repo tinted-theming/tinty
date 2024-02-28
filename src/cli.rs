@@ -1,9 +1,9 @@
-use clap::{Arg, ArgAction, Command};
+use clap::{builder::styling, Arg, ArgAction, ArgMatches, Command};
 
 use crate::constants::REPO_NAME;
 
 /// Builds the command-line interface for the application.
-pub fn build_cli() -> Command {
+fn build_cli() -> Command {
     Command::new(REPO_NAME)
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -53,4 +53,15 @@ pub fn build_cli() -> Command {
         .subcommand(
             Command::new("update").about("Update to the latest themes")
         )
+}
+
+// Parse the command line arguments with styling
+pub fn get_matches() -> ArgMatches {
+    let styles = styling::Styles::styled()
+        .header(styling::AnsiColor::Green.on_default() | styling::Effects::BOLD)
+        .usage(styling::AnsiColor::Green.on_default() | styling::Effects::BOLD)
+        .literal(styling::AnsiColor::Blue.on_default() | styling::Effects::BOLD)
+        .placeholder(styling::AnsiColor::Cyan.on_default());
+
+    build_cli().styles(styles).get_matches()
 }

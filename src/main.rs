@@ -4,7 +4,7 @@ mod constants;
 mod operations;
 mod utils;
 
-use crate::cli::build_cli;
+use crate::cli::get_matches;
 use anyhow::{anyhow, Context, Result};
 use config::CONFIG_FILE_NAME;
 use constants::{REPO_DIR, REPO_NAME};
@@ -14,7 +14,7 @@ use utils::{ensure_directory_exists, replace_tilde_slash_with_home};
 /// Entry point of the application.
 fn main() -> Result<()> {
     // Parse the command line arguments
-    let matches = build_cli().get_matches();
+    let matches = get_matches();
 
     // Other configuration paths
     let config_path_result: Result<PathBuf> =
