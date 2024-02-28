@@ -6,6 +6,7 @@
 
 - Add config.toml root-level property "hooks" (`Array<String>`) which
   executes the provided strings after a scheme is applied
+- Add colour styling to `--help` text
 
 ### Fixed
 
