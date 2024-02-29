@@ -197,7 +197,7 @@ themes across different applications seamlessly.
 | `path`                | `string`   | Required | The file system path or URL to the theme template repository. Paths beginning with `~/` map to home dir. | - | `path = "https://github.com/base16-vim"`   |
 | `themes_dir`          | `string`   | Required | The directory within the repository where theme files are located. | - | `themes_dir = "colors"`                    |
 | `hook`                | `string`   | Optional | A command to be executed after the theme is applied. Useful for reloading configurations. `%f` template variable maps to the path of the applied theme file. | None    | `hook = "source ~/.vimrc"`                 |
-| `supported_systems`   | `array<"base16" | "base24">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported_systems = ["base16", "base24"]` |
+| `supported_systems`   | `array<"base16" or "base24">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported_systems = ["base16", "base24"]` |
 
 #### Note on `supported_systems`
 
