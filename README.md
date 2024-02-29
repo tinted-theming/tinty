@@ -97,6 +97,13 @@ workflow, making your experience more enjoyable and productive.
 cargo install tinty
 ```
 
+### Homebrew
+
+```shell
+brew tap tinted-theming/tinted
+brew install tinty
+```
+
 ### Manual
 
 ```shell
