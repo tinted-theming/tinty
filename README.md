@@ -140,6 +140,8 @@ Without any `config.toml` file, `tinty` will apply your shell theme using
 
 ## Usage
 
+For advanced usage and setup, have a look at the [USAGE.md] document.
+
 ### CLI
 
 The following is a table of the available subcommands for the CLI tool (Tinty), including the descriptions and any notable arguments.
@@ -366,3 +368,4 @@ license. Have a look at the [LICENSE] document for more information.
 [repository releases]: https://github.com/tinted-theming/tinty/releases/latest
 [CONTRIBUTING.md]: CONTRIBUTING.md
 [LICENSE]: LICENSE
+[USAGE.md]: USAGE.md
