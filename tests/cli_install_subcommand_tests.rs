@@ -25,14 +25,14 @@ themes-dir = "some-dir"
     let expected_output = "config.toml item.name should be unique values, but \"non-unique-name\" is used for more than 1 item.name. Please change this to a unique value.";
     write_to_file(&config_path, config_content)?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     cleanup()?;
     assert!(
         stderr.contains(&expected_output),
@@ -58,14 +58,14 @@ themes-dir = "some-dir""##;
     let expected_output = "One of your config.toml items has an invalid `path` value. \"/path/to/non-existant/directory\" is not a valid url and is not a path to an existing local directory";
     write_to_file(&config_path, config_content)?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     cleanup()?;
     assert!(
         stderr.contains(&expected_output),
@@ -84,14 +84,14 @@ fn test_cli_install_subcommand_without_setup() -> Result<()> {
         setup("test_cli_install_subcommand_without_setup", "install")?;
     let expected_output = "base16-shell installed";
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stdout.contains(&expected_output),
         "stdout does not contain the expected output"
@@ -109,15 +109,15 @@ fn test_cli_install_subcommand_with_setup() -> Result<()> {
     let (_, _, command_vec, cleanup) = setup("test_cli_install_subcommand_with_setup", "install")?;
     let expected_output = "base16-shell already installed";
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_command(command_vec.clone()).unwrap();
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
 
     assert!(
         stdout.contains(&expected_output),

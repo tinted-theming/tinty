@@ -104,13 +104,18 @@ brew tap tinted-theming/tinted
 brew install tinty
 ```
 
+### Binaries
+
+Download the relevant binary from the [repository releases] page.
+
 ### Manual
 
 ```shell
 git clone https://github.com/tinted-theming/tinty path/to/tinty
 cd path/to/tinty
-cargo build --release
-cp target/release/tinty path/to/bin/dir
+make install
+make build
+cp target/release/tinty /path/to/bin/dir
 ```
 
 ## Basic usage
@@ -337,7 +342,15 @@ hook = "cp -f %f ~/.config/sway/config && swaymsg reload"
   So the hook does a copy of the selected theme and replaces
   `~/.config/alacritty/colors.toml`.
 
+## Contributing
 
+Contributions are welcome. Have a look at [CONTRIBUTING.md] for more
+information.
+
+## License
+
+Like most other [Tinted Theming] projects, Tinty falls under the MIT
+license. Have a look at the [LICENSE] document for more information.
 
 [Tinted Theming]: https://github.com/tinted-theming/home
 [Base16 builder specification]: https://github.com/tinted-theming/home/blob/main/builder.md
@@ -350,3 +363,6 @@ hook = "cp -f %f ~/.config/sway/config && swaymsg reload"
 [Base24]: https://github.com/tinted-theming/base24/blob/master/styling.md
 [Flavours]: https://github.com/Misterio77/flavours
 [builder-go]: https://github.com/tinted-theming/base16-builder-go
+[repository releases]: https://github.com/tinted-theming/tinty/releases/latest
+[CONTRIBUTING.md]: CONTRIBUTING.md
+[LICENSE]: LICENSE

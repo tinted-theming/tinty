@@ -12,15 +12,15 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
         setup("test_cli_info_subcommand_all_with_setup", "info")?;
     let scheme_count = 250;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stdout.contains("OceanicNext (base16-oceanicnext)"),
         "stdout does not contain the expected output"
@@ -45,15 +45,15 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
         format!("info {}", scheme_name).as_str(),
     )?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stdout.contains("OceanicNext (base16-oceanicnext)"),
         "stdout does not contain the expected output"
@@ -76,14 +76,14 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
         setup("test_cli_info_subcommand_without_setup", "info")?;
     write_to_file(&config_path, "")?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stderr.contains("Scheme repo path does not exist:"),
         "stderr does not contain the expected output"
@@ -108,15 +108,15 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
         format!("info {}", scheme_name).as_str(),
     )?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stderr.contains(
             format!(

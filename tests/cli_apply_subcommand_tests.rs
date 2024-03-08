@@ -18,15 +18,15 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
     let shell_theme_filename = "base16-shell-scripts-file.sh";
     let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
@@ -56,14 +56,14 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
         REPO_NAME
     );
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stderr.contains(&expected_output),
         "stderr does not contain the expected output"
@@ -85,15 +85,15 @@ fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
     )?;
     let expected_output = format!("Scheme does not exist: {}", scheme_name);
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stderr.contains(&expected_output),
         "stderr does not contain the expected output"
@@ -115,14 +115,14 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
     )?;
     let expected_output = format!("Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"base16\" or \"base24\"), eg: base16-{}", scheme_name);
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     cleanup()?;
     assert!(
         stderr.contains(&expected_output),
@@ -144,14 +144,14 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     )?;
     let expected_output = "Invalid scheme name. Make sure the scheme system is prefixed <SCHEME_SYSTEM>-<SCHEME_NAME>, eg: `base16-ayu-dark`";
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     cleanup()?;
     assert!(
         stderr.contains(&expected_output),

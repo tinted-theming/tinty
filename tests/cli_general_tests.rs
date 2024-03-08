@@ -14,14 +14,14 @@ fn test_cli_no_arguments() -> Result<()> {
     // -------
     let (_, _, command_vec, cleanup_setup) = setup("test_cli_no_arguments", "")?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(stdout.contains(format!("Basic usage: {} apply <SCHEME_NAME>", REPO_NAME).as_str()));
     assert!(stdout.contains("For more information try --help"));
 
@@ -57,15 +57,15 @@ hook = "echo 'test_cli_config_path_tilde_as_home_config_output'"
 "##;
     write_to_file(&config_path, config_content)?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     let (stdout, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stdout.contains(expected_stdout),
         "stdout does not contain the expected output"
@@ -113,9 +113,9 @@ fn test_cli_default_data_path() -> Result<()> {
         fs::remove_file(&current_scheme_file_path)?;
     }
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     common::run_command(init_command_vec.clone()).unwrap();
 
@@ -129,9 +129,9 @@ fn test_cli_default_data_path() -> Result<()> {
     common::run_command(init_command_vec).unwrap();
     let (stdout, stderr) = common::run_command(apply_command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     fs::remove_file(&config_path)?; // cleanup
     assert!(
         data_path.join("repos/base16-shell").exists(),
@@ -172,15 +172,15 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     write_to_file(&config_path, "")?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     let (stdout, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         data_path.join("repos/base16-shell").exists(),
         "stdout does not contain the expected output"

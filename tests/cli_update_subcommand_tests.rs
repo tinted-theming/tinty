@@ -14,14 +14,14 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     )?;
     let expected_output = format!("base16-shell not installed (run `{} install`)", REPO_NAME);
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     cleanup()?;
     assert!(
         stdout.contains(&expected_output),
@@ -40,15 +40,15 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
         setup("test_cli_update_subcommand_with_setup", "update")?;
     let expected_output = "base16-shell up to date";
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     cleanup()?;
     assert!(
         stdout.contains(&expected_output),

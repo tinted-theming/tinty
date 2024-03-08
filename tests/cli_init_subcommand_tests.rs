@@ -16,16 +16,14 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
         REPO_NAME
     );
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (_, stderr) = common::run_command(command_vec).unwrap();
-    println!("stderr: {}", stderr);
-    println!("exptectedc: {}", expected_output);
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stderr.contains(&expected_output),
         "stdout does not contain the expected output"
@@ -42,14 +40,14 @@ fn test_cli_init_subcommand_with_setup() -> Result<()> {
     // -------
     let (_, _, command_vec, cleanup) = setup("test_cli_init_subcommand_with_setup", "init")?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (stdout, _) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
@@ -72,15 +70,15 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     let config_content = format!("default-scheme = \"{}\"", scheme_name);
     write_to_file(&config_path, config_content.as_str())?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     common::run_install_command(&config_path, &data_path)?;
     let (stdout, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     let expected_scheme_name = read_file_to_string(&data_path.join(CURRENT_SCHEME_FILE_NAME))?;
     assert!(
         stdout.is_empty(),

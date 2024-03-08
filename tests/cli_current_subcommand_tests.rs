@@ -14,14 +14,14 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
     write_to_file(&current_scheme_path, scheme_name)?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (stdout, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     assert!(
         stdout.contains(scheme_name),
         "stdout does not contain the expected output"
@@ -43,14 +43,14 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     let (_, _, command_vec, cleanup) =
         setup("test_cli_current_subcommand_without_setup", "current")?;
 
-    // // ---
-    // // Act
-    // // ---
+    // ---
+    // Act
+    // ---
     let (_, stderr) = common::run_command(command_vec).unwrap();
 
-    // // ------
-    // // Assert
-    // // ------
+    // ------
+    // Assert
+    // ------
     cleanup()?;
     assert!(
         stderr
