@@ -3,6 +3,12 @@
 [![Crates.io](https://img.shields.io/crates/v/tinty.svg)](https://crates.io/crates/tinty)
 [![Tests](https://github.com/tinted-theming/tinty/actions/workflows/test.yml/badge.svg)](https://github.com/tinted-theming/tinty/actions/workflows/test.yml)
 
+<p align="center">
+  <img
+    src="https://raw.githubusercontent.com/tinted-theming/tinty/main/mascot.png"
+    alt="Tinty mascot" height="200" width="200" />
+</p>
+
 Change the theme of your terminal, text editor and anything else with
 one command. Immediately switch between over 250 themes!
 
