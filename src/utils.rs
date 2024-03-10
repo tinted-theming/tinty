@@ -20,12 +20,6 @@ pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
 }
 
 pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
-    if path.exists() {
-        fs::remove_file(path)
-            .map_err(anyhow::Error::new)
-            .with_context(|| format!("Unable to remove file: {}", path.display()))?;
-    }
-
     let mut file = File::create(path)
         .map_err(anyhow::Error::new)
         .with_context(|| format!("Unable to create file: {}", path.display()))?;
