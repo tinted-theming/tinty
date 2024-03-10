@@ -197,7 +197,9 @@ jobs:
       - name: Cleanup
         run: rm -r build/
 
-      # Only publish latest version
+  publish:
+    needs: release
+    steps:
       - name: Publish to crates.io
         if: github.ref == 'refs/heads/main'
         env:
