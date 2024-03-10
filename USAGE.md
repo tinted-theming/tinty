@@ -33,6 +33,12 @@ applied through Tinty, this file is updated.
    used in the hook, eg: `hook = "cp -f %f
    ~/.config/alacritty/colors.yml`.
 
+`tinty apply` can also be used without a theme template. The
+`config.hooks` property will execute the array of hooks regardless of
+template. This can be useful for when an application is using base16 (or
+another supported system) and you just want to write `tinty current` to
+a file.
+
 Once you understand the functionality and the lifecycle, you can do a
 lot with it.
 
