@@ -4,7 +4,7 @@ use crate::constants::{
 };
 use crate::utils::{
     create_theme_filename_without_extension, get_all_scheme_names, get_shell_command_from_string,
-    read_file_to_string, write_to_file,
+    write_to_file,
 };
 use anyhow::{anyhow, Context, Result};
 use std::fs;
@@ -106,7 +106,7 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
                     extension,
                 );
                 let data_theme_path = data_path.join(filename);
-                let theme_content = read_file_to_string(theme_file.path().as_ref())?;
+                let theme_content = fs::read_to_string(theme_file.path())?;
 
                 write_to_file(&data_theme_path, theme_content.as_str())?;
 

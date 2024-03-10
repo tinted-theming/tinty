@@ -1,7 +1,6 @@
 use crate::{
     config::SupportedSchemeSystems,
     constants::{REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME},
-    utils::read_file_to_string,
 };
 use anyhow::{anyhow, Result};
 use hex_color::HexColor;
@@ -92,7 +91,7 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
         .map_or_else(|| "".to_string(), |f| f.to_string_lossy().into_owned()); // Ensures ownership
     let system = dir_name.as_str();
     let mut palette: Vec<String> = vec![];
-    let str = read_file_to_string(scheme_path)?;
+    let str = fs::read_to_string(scheme_path)?;
     let slug = scheme_path
         .file_stem()
         .and_then(|name| name.to_str())

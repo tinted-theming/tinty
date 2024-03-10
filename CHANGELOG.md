@@ -15,6 +15,10 @@
   theme file in the repository template instead of the copied version
   under `~/.local/share/tinted-theming/tinty`
 
+### Updated
+
+- Remove unnecessary helper function and optimise code
+
 ## [0.10.1] - 2024-02-20
 
 - Fix bug where spaces in config or data directory paths would cause

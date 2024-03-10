@@ -2,7 +2,7 @@ use crate::config::{Config, ConfigItem, SupportedSchemeSystems, DEFAULT_CONFIG_S
 use crate::constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME, SCHEME_EXTENSION};
 use anyhow::{anyhow, Context, Result};
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str;
@@ -17,20 +17,6 @@ pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Reads the contents of a file and returns it as a string.
-pub fn read_file_to_string(path: &Path) -> Result<String> {
-    if !path.exists() {
-        return Err(anyhow!("File does not exist: {}", path.display()));
-    }
-
-    let mut file = File::open(path)?;
-    let mut contents = String::new();
-
-    file.read_to_string(&mut contents)?;
-
-    Ok(contents)
 }
 
 pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {

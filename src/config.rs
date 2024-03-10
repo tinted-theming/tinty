@@ -1,10 +1,10 @@
 use crate::constants::REPO_NAME;
-use crate::utils::read_file_to_string;
 use anyhow::{anyhow, Context, Result};
 use serde::de::{self, Deserializer, Unexpected, Visitor};
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::fmt;
+use std::fs;
 use std::path::Path;
 use url::Url;
 
@@ -151,7 +151,7 @@ impl Config {
             ));
         }
 
-        let contents = read_file_to_string(path).unwrap_or(String::from(""));
+        let contents = fs::read_to_string(path).unwrap_or(String::from(""));
         let mut config: Config = toml::from_str(contents.as_str()).with_context(|| {
             format!(
                 "Couldn't parse {} configuration file ({:?}). Check if it's syntactically correct",

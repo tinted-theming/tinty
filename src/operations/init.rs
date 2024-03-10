@@ -1,7 +1,8 @@
+use crate::config::Config;
 use crate::constants::{CURRENT_SCHEME_FILE_NAME, REPO_NAME};
 use crate::operations;
-use crate::{config::Config, utils::read_file_to_string};
 use anyhow::{anyhow, Context, Result};
+use std::fs;
 use std::path::Path;
 
 /// Initialize based on existing data_path files
@@ -10,7 +11,7 @@ use std::path::Path;
 /// theme or your default theme set in config.
 pub fn init(config_path: &Path, data_path: &Path) -> Result<()> {
     let config = Config::read(config_path)?;
-    let active_scheme_name = read_file_to_string(&data_path.join(CURRENT_SCHEME_FILE_NAME))
+    let active_scheme_name = fs::read_to_string(data_path.join(CURRENT_SCHEME_FILE_NAME))
         .unwrap_or(config.default_scheme.clone().unwrap_or_default());
 
     if active_scheme_name.is_empty() {
