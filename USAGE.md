@@ -42,6 +42,49 @@ a file.
 Once you understand the functionality and the lifecycle, you can do a
 lot with it.
 
+## Sourcing scripts that set environment variables
+
+General `config.toml` hooks can be used to source and execute scripts,
+but due to the way shell sub-processes work, the scripts sourced by
+Tinty can't set your current shell session's environment variables.
+There is a work around for this specific issue.
+
+1. Create a function which executes `tinty` with all the same arguments
+2. Check for any `*.sh` files in the active Tinty themes directory
+3. Source any matching files
+
+The following script does that. Add it to your shell `*.rc` file:
+```shell
+# Tinty isn't able to apply environment variables to your shell due to
+# the way shell sub-processes work. This is a work around by running
+# Tinty through a function and then executing the shell scripts.
+tinty_source_shell_theme() {
+  tinty $@
+  subcommand="$1"
+
+  if [ "$subcommand" = "apply" ] || [ "$subcommand" = "init" ]; then
+    tinty_data_dir="$XDG_DATA_HOME/tinted-theming/tinty"
+
+    for tinty_script_file in $(find "$tinty_data_dir" -maxdepth 1 -type f -name "*.sh"); do
+      . $tinty_script_file
+    done
+
+    unset tinty_data_dir
+  fi
+
+  unset subcommand
+}
+
+if [ -n "$(command -v 'tinty')" ]; then
+  tinty_source_shell_theme "init"
+
+  alias tinty=tinty_source_shell_theme
+fi
+```
+
+**Note:** Make sure to swap out `$XDG_DATA_HOME` with the path to your data
+directory if you don't use the [XDG Base Directory specification].
+
 ## Vim or Neovim
 
 There are two different ways you could have vim hooked up to Tiny:
@@ -219,6 +262,34 @@ themes-dir = "colors"
 
 ## fzf
 
+### Using shell ANSI colors
+
+There is a special fzf theme file in [tinted-fzf] created for using the
+shell's ANSI colors to style fzf. If you are using [tinted-shell] 
+
+### Using theme
+
+Due to the way shell sub-processes work, Tinty isn't able to set shell
+environment variables in your session, which is how fzf themes are
+applied, so a workaround is needed. 
+
+**1. Add the following to your `config.toml`:**
+
+```toml
+[[items]]
+path = "https://github.com/tinted-theming/tinted-fzf"
+name = "tinted-fzf"
+themes-dir = "sh"
+# Or for fish shell
+# themes-dir = "fish"
+```
+
+**2. Source the fzf theme script files in your shell**
+
+Have a look at [Sourcing scripts that set env vars] section. Once you've
+implemented that, your fzf theme should be updating correctly when you
+run `tinty init` or `tinty apply base16-mocha` or some other theme name.
+
 ### Add to Tinty config.toml
 
 ```toml
@@ -254,3 +325,5 @@ alias bat="bat --theme='base16-256'"
 [bat]: https://github.com/sharkdp/bat
 [bat has an integration]: https://github.com/sharkdp/bat?tab=readme-ov-file#highlighting-theme
 [base16-shell]: https://github.com/tinted-theming/base16-shell
+[XDG Base Directory specification]: https://wiki.archlinux.org/title/XDG_Base_Directory
+[Sourcing scripts that set env vars]: #sourcing-scripts-that-set-env-vars

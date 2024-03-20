@@ -254,12 +254,6 @@ path = "~/path/path/to/base16-tmux"
 themes_dir = "colors"
 hook = "tmux source-file ~/.tmux.conf"
 supported_systems = ["base16"]
-
-[[items]]
-name = "tmux"
-path = "/absolute/path/path/to/base16-fzf"
-themes_dir = "colors"
-hook = "source %f"
 ```
 
 ### Select and apply a scheme using fzf
