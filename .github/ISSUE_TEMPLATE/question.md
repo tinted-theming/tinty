@@ -8,4 +8,4 @@ assignees:
 ---
 
 **What version of `tinty` are you using?**
-[paste the output of `fd --version` here]
+[paste the output of `tinty --version` here]
