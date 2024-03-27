@@ -1,3 +1,4 @@
+[graph]
 targets = [
     { triple = "x86_64-unknown-linux-gnu" },
     { triple = "aarch64-unknown-linux-gnu" },
@@ -7,18 +8,11 @@ targets = [
 ]
 all-features = false
 no-default-features = false
+
+[output]
 feature-depth = 1
 
-[advisories]
-vulnerability = "deny"
-unmaintained = "deny"
-notice = "deny"
-unsound = "deny"
-
 [licenses]
-unlicensed = "deny"
-allow-osi-fsf-free = "neither"
-copyleft = "deny"
 # We want really high confidence when inferring licenses from text
 confidence-threshold = 0.93
 allow = [
