@@ -6,6 +6,8 @@ For more general usage, look at the [Usage section] in [README.md].
 ## Table of contents
 
 - [How it works](#how-it-works)
+- [Sourcing scripts that set environment variables](#sourcing-scripts-that-set-environment-variables)
+- [shell](#shell)
 - [Vim or Neovim](#vim-or-neovim)
 - [tmux](#tmux)
 - [fzf](#fzf)
@@ -54,7 +56,8 @@ There is a work around for this specific issue.
 3. Source any matching files
 
 The following script does that. Add it to your shell `*.rc` file:
-```shell
+
+```sh
 # Tinty isn't able to apply environment variables to your shell due to
 # the way shell sub-processes work. This is a work around by running
 # Tinty through a function and then executing the shell scripts.
@@ -84,6 +87,29 @@ fi
 
 **Note:** Make sure to swap out `$XDG_DATA_HOME` with the path to your data
 directory if you don't use the [XDG Base Directory specification].
+
+## Shell
+
+When Tinty does not have any `[[items]]` set up in `config.toml`, Tinty
+automatically uses [tinted-shell] as a default `[[items]]`. If you have
+added anything to `[[items]]`, you must also add [tinted-shell] there
+too if you want it to be part of the templates you apply.
+
+Add the following to your `config.toml`:
+
+```toml
+[[items]]
+name = "vim"
+path = "https://github.com/tinted-theming/tinted-shell"
+themes_dir = "scripts"
+hook = ". %f"
+```
+
+[tinted-shell] does set some environment variables in the script, but
+it's not neccessary for shell styling. If you still want access to these
+variables, you will need to execute the [tinted-shell] theme script in
+your current shell session. Have a look at [Sourcing scripts that set
+env vars](#sourcing-scripts-that-set-env-vars)
 
 ## Vim or Neovim
 
@@ -260,6 +286,21 @@ hook = "test -n \"$TMUX\" && tmux source-file %f"
 themes-dir = "colors"
 ```
 
+### Without Tinty template setup
+
+If you're using [tinted-tmux] as a [tmux tpm] plugin, you can add add the
+following to your `tmux.conf`:
+
+```tmux
+run-shell "tmux set-option -g @tinted-color $(tinty current)"
+```
+
+And add the following to Tinty `config.toml`:
+
+```toml
+hooks = ["tmux source-file /path/to/tmux.conf"]
+```
+
 ## fzf
 
 ### Using shell ANSI colors
@@ -294,8 +335,8 @@ run `tinty init` or `tinty apply base16-mocha` or some other theme name.
 
 ```toml
 [[items]]
-path = "https://github.com/tinted-theming/base16-fzf"
-name = "base16-fzf"
+path = "https://github.com/tinted-theming/tinted-fzf"
+name = "tinted-fzf"
 hook = ". %f"
 themes-dir = "sh"
 # Or for fish shell
@@ -304,19 +345,19 @@ themes-dir = "sh"
 
 ## bat
 
-[bat has an integration] with [base16-shell] and another option to allow
+[bat has an integration] with [tinted-shell] and another option to allow
 ANSI colors to be used. The available `bat` theme names for this are
 `base16-256` and `ansi`.
 
 - `bat --theme="base16-256"` if you're using the default Tinty or
-base16-shell with Tinty.
+  [tinted-shell] with Tinty.
 - `bat --theme="ansi"` if you're using another shell template theme with
-Tinty.
+  Tinty.
 
 Set the alias in your `.*rc` file to make sure this is run by default
 whenever `bat` is executed.
 
-```shell
+```sh
 alias bat="bat --theme='base16-256'"
 ```
 
@@ -324,6 +365,9 @@ alias bat="bat --theme='base16-256'"
 [README.md]: https://github.com/tinted-theming/tinty/blob/main/README.md
 [bat]: https://github.com/sharkdp/bat
 [bat has an integration]: https://github.com/sharkdp/bat?tab=readme-ov-file#highlighting-theme
-[base16-shell]: https://github.com/tinted-theming/base16-shell
+[tinted-fzf]: https://github.com/tinted-theming/tinted-fzf
+[tinted-shell]: https://github.com/tinted-theming/tinted-shell
+[tinted-tmux]: https://github.com/tinted-theming/tinted-tmux
+[tmux tpm]: https://github.com/tmux-plugins/tpm
 [XDG Base Directory specification]: https://wiki.archlinux.org/title/XDG_Base_Directory
 [Sourcing scripts that set env vars]: #sourcing-scripts-that-set-env-vars
