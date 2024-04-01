@@ -26,6 +26,7 @@ base16-atlas
 base16-ayu-dark
 base16-ayu-light
 base16-ayu-mirage
+base16-aztec
 base16-bespin
 base16-black-metal-bathory
 base16-black-metal-burzum
@@ -208,6 +209,7 @@ base16-solarized-dark
 base16-solarized-light
 base16-spaceduck
 base16-spacemacs
+base16-sparky
 base16-standardized-dark
 base16-standardized-light
 base16-stella
@@ -226,6 +228,7 @@ base16-tokyo-city-terminal-dark
 base16-tokyo-city-terminal-light
 base16-tokyo-night-dark
 base16-tokyo-night-light
+base16-tokyo-night-moon
 base16-tokyo-night-storm
 base16-tokyo-night-terminal-dark
 base16-tokyo-night-terminal-light
@@ -267,3 +270,4 @@ base24-hardcore
 base24-one-black
 base24-one-dark
 base24-one-light
+base24-sparky
