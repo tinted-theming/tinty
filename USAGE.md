@@ -101,7 +101,7 @@ Add the following to your `config.toml`:
 [[items]]
 name = "vim"
 path = "https://github.com/tinted-theming/tinted-shell"
-themes_dir = "scripts"
+themes-dir = "scripts"
 hook = ". %f"
 ```
 
@@ -279,8 +279,8 @@ endif
 
 ```toml
 [[items]]
-path = "https://github.com/tinted-theming/base16-tmux"
-name = "base16-tmux"
+path = "https://github.com/tinted-theming/tinted-tmux"
+name = "tinted-tmux"
 # Check if tmux is in use and if it is, reload the config file
 hook = "test -n \"$TMUX\" && tmux source-file %f"
 themes-dir = "colors"
