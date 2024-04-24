@@ -92,8 +92,18 @@ jobs:
             os: ubuntu-latest
             cross: false
             deb: false
+          - prefix: x86_64-linux
+            target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            cross: false
+            deb: false
           - prefix: i686-linux
             target: i686-unknown-linux-gnu
+            os: ubuntu-latest
+            cross: true
+            deb: true
+          - prefix: i686-linux
+            target: i686-unknown-linux-musl
             os: ubuntu-latest
             cross: true
             deb: true
