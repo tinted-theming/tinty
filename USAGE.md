@@ -30,9 +30,9 @@ applied through Tinty, this file is updated.
 1. `tinty apply` sets `current_scheme`.
 1. It then runs through the `[[items]]` in your `config.toml
 1. For each `[[items]]`, or theme template, it copies the relevant theme
-   to `~/.local/shared/tinted-theming/tinty` and executes the the `hook`
+   to `~/.local/shared/tinted-theming/tinty` and executes the `hook`
    property of the `[[items]]`. `%f` is a template variable that can be
-   used in the hook, eg: `hook = "cp -f %f
+   used in the hook, e.g., `hook = "cp -f %f
    ~/.config/alacritty/colors.yml`.
 
 `tinty apply` can also be used without a theme template. The
@@ -49,7 +49,7 @@ lot with it.
 General `config.toml` hooks can be used to source and execute scripts,
 but due to the way shell sub-processes work, the scripts sourced by
 Tinty can't set your current shell session's environment variables.
-There is a work around for this specific issue.
+There is a workaround for this specific issue.
 
 1. Create a function which executes `tinty` with all the same arguments
 2. Check for any `*.sh` files in the active Tinty themes directory
@@ -99,17 +99,16 @@ Add the following to your `config.toml`:
 
 ```toml
 [[items]]
-name = "vim"
 path = "https://github.com/tinted-theming/tinted-shell"
+name = "base16-shell"
 themes-dir = "scripts"
 hook = ". %f"
 ```
 
 [tinted-shell] does set some environment variables in the script, but
-it's not neccessary for shell styling. If you still want access to these
+it's not necessary for shell styling. If you still want access to these
 variables, you will need to execute the [tinted-shell] theme script in
-your current shell session. Have a look at [Sourcing scripts that set
-env vars](#sourcing-scripts-that-set-env-vars)
+your current shell session. Have a look at [Sourcing scripts that set environment variables]
 
 ## Vim or Neovim
 
@@ -327,7 +326,7 @@ themes-dir = "sh"
 
 **2. Source the fzf theme script files in your shell**
 
-Have a look at [Sourcing scripts that set env vars] section. Once you've
+Have a look at [Sourcing scripts that set environment variables] section. Once you've
 implemented that, your fzf theme should be updating correctly when you
 run `tinty init` or `tinty apply base16-mocha` or some other theme name.
 
@@ -370,4 +369,4 @@ alias bat="bat --theme='base16-256'"
 [tinted-tmux]: https://github.com/tinted-theming/tinted-tmux
 [tmux tpm]: https://github.com/tmux-plugins/tpm
 [XDG Base Directory specification]: https://wiki.archlinux.org/title/XDG_Base_Directory
-[Sourcing scripts that set env vars]: #sourcing-scripts-that-set-env-vars
+[Sourcing scripts that set environment variables]: #sourcing-scripts-that-set-environment-variables
