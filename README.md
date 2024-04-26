@@ -167,9 +167,9 @@ Some subcommands support additional flags and options to modify their behavior:
 
 | Flag/Option       | Description                             | Applicable Subcommands | Default Value | Example Usage                             |
 |-------------------|-----------------------------------------|------------------------|---------------|-------------------------------------------|
-| `--config` `-c`   | Specifies a custom configuration file path. | All | If not provided tinty looks for `config.toml` at `$XDG_CONFIG_HOME/tinty/config.toml` otherwise `~/.tinty/config.toml` | `tinty apply base16-ayu-dark --config /path/to/custom/config.toml` |
-| `--data-dir`    | Specifies a custom path for the data directory. | All | If not provided tinty looks for the data directory at `$XDG_DATA_HOME/tinted-theming/tinty` otherwise `~/.local/share` | `tinty install --data-dir /path/to/custom/data-dir` |
-| `--help` `-h`     | Displays help information for the subcommand. | All | - | `tinty --help`, `tinty apply --help`, etc |
+| `--config` `-c`   | Specifies a custom configuration file path. | All | If not provided tinty looks for `config.toml` at `$XDG_CONFIG_HOME/tinty/config.toml` otherwise `~/.config/tinty/config.toml` | `tinty apply base16-ayu-dark --config /path/to/custom/config.toml` |
+| `--data-dir`    | Specifies a custom path for the data directory. | All | If not provided tinty looks for the data directory at `$XDG_DATA_HOME/tinted-theming/tinty` otherwise `~/.local/share/tinted-theming/tinty` | `tinty install --data-dir /path/to/custom/data-dir` |
+| `--help` `-h`     | Displays help information for the subcommand. | All | - | `tinty --help`, `tinty apply --help`, etc. |
 | `--version` `-V`  | Shows the version of tinty. | All | - | `tinty --version` |
 
 ## Configuration
@@ -193,12 +193,12 @@ to your preferences and environment.
 | `shell`           | `string`           | Optional | Specifies the shell command used to execute hooks. | `"sh -c '{}'"` | `shell = "bash -c '{}'"` |
 | `default_scheme`  | `string`           | Optional | Defines the default theme scheme to be applied if no specific scheme is set. | None | `default_scheme = "base16-mocha"` |
 | `hooks`           | `array<string>`    | Optional | A list of strings which are executed after every `tinty apply` | None | `hooks = ["echo \"The current scheme is: $(tinty current)\""]` |
-| `[[items]]`       | `array<items>`     | Required | An array of `items` configurations. Each item represents a themable component. Detailed structure provided in the next section. | - | - |
+| `[[items]]`       | `array<items>`     | Required | An array of `items` configurations. Each item represents a themeable component. Detailed structure provided in the next section. | - | - |
 
 ### Items table `config.toml` Schema
 
 The `[[items]]` section within `config.toml` allows for detailed
-customization of individual themable components. Each item represents a
+customization of individual themeable components. Each item represents a
 specific element you can theme, such as a text editor or terminal. The
 table below outlines the structure for these items, including how to
 specify templates, directories for theme files, and hooks for applying
@@ -221,7 +221,7 @@ options are `"base16"` and `"base24"`, indicating support for [Base16]
 and [Base24] theming systems, respectively. If the template repository
 does not support a system, it should not be included in this property.
 
-The `[[items]]` configuration allows defining multiple themable
+The `[[items]]` configuration allows defining multiple themeable
 components, each with its own set of configurations as described above.
 Here's how you might define multiple items in your `config.toml`:
 
@@ -268,7 +268,7 @@ tinty apply $(tinty list | fzf)
 ### Migration from Flavours
 
 [Flavours] is a great base16 manager written in Rust and it's where
-Tinty has gotten a lot of it's inspiration. Flavours isn't actively
+Tinty has gotten a lot of its inspiration. Flavours isn't actively
 maintained anymore and that's the reason I continued to build and
 develop Tinty.
 
