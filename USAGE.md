@@ -55,7 +55,7 @@ There is a workaround for this specific issue.
 2. Check for any `*.sh` files in the active Tinty themes directory
 3. Source any matching files
 
-The following script does that. Add it to your shell `*.rc` file:
+The following script does that. Add it to your shell startup file (`*rc`):
 
 ```sh
 # Tinty isn't able to apply environment variables to your shell due to
@@ -66,7 +66,7 @@ tinty_source_shell_theme() {
   subcommand="$1"
 
   if [ "$subcommand" = "apply" ] || [ "$subcommand" = "init" ]; then
-    tinty_data_dir="$XDG_DATA_HOME/tinted-theming/tinty"
+    tinty_data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/tinted-theming/tinty"
 
     for tinty_script_file in $(find "$tinty_data_dir" -maxdepth 1 -type f -name "*.sh"); do
       . $tinty_script_file
@@ -85,8 +85,9 @@ if [ -n "$(command -v 'tinty')" ]; then
 fi
 ```
 
-**Note:** Make sure to swap out `$XDG_DATA_HOME` with the path to your data
-directory if you don't use the [XDG Base Directory specification].
+**Note:** Make sure to swap out `$tinty_data_dir` with the path to your custom data
+directory if you don't use the default of Tinty.
+Tinty stores themes to `$XDG_DATA_HOME` based on [XDG Base Directory specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) by default.
 
 ## Shell
 
