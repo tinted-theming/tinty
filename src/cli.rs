@@ -1,9 +1,10 @@
 use clap::{builder::styling, Arg, ArgAction, ArgMatches, Command};
+use clap_complete::Shell;
 
 use crate::constants::REPO_NAME;
 
 /// Builds the command-line interface for the application.
-fn build_cli() -> Command {
+pub fn build_cli() -> Command {
     Command::new(REPO_NAME)
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -25,6 +26,13 @@ fn build_cli() -> Command {
                 .long("data-dir")
                 .global(true)
                 .action(ArgAction::Set)
+        )
+        .arg(
+            Arg::new("generate-completion")
+                .long("generate-completion")
+                .value_name("SHELL")
+                .value_parser(clap::value_parser!(Shell))
+                .help("Generate completion scripts")
         )
         .subcommand(
             Command::new("current").about("Prints the last scheme name applied")

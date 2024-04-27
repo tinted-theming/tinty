@@ -4,8 +4,10 @@ mod constants;
 mod operations;
 mod utils;
 
-use crate::cli::get_matches;
+use crate::cli::{build_cli, get_matches};
 use anyhow::{anyhow, Context, Result};
+use clap::Command;
+use clap_complete::{generate, Generator, Shell};
 use config::CONFIG_FILE_NAME;
 use constants::{REPO_DIR, REPO_NAME};
 use std::path::PathBuf;
@@ -15,6 +17,14 @@ use utils::{ensure_directory_exists, replace_tilde_slash_with_home};
 fn main() -> Result<()> {
     // Parse the command line arguments
     let matches = get_matches();
+
+    // Generate completion scripts
+    if let Some(generator) = matches.get_one::<Shell>("generate-completion") {
+        let mut cmd = build_cli();
+        eprintln!("Generating completion file for {generator}...");
+        print_completions(*generator, &mut cmd);
+        return Ok(());
+    };
 
     // Other configuration paths
     let config_path_result: Result<PathBuf> =
@@ -86,4 +96,8 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
+    generate(gen, cmd, cmd.get_name().to_string(), &mut std::io::stdout());
 }
