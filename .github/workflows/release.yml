@@ -179,6 +179,10 @@ jobs:
           files="example.toml THIRD_PARTY_LICENSES.md LICENSE README.md"
           $GITHUB_WORKSPACE/scripts/package_build \
             "example.toml THIRD_PARTY_LICENSES.md LICENSE README.md" \
+            "contrib/completion/tinty.bash" \
+            "contrib/completion/tinty.zsh" \
+            "contrib/completion/tinty.fish" \
+            "contrib/completion/tinty.ps1" \
             "${{ matrix.target }}" \
             "$GITHUB_WORKSPACE" \
             "${{ steps.cargo_version.outputs.value }}"
@@ -209,6 +213,7 @@ jobs:
 
   publish:
     needs: release
+    runs-on: ubuntu-latest
     steps:
       - name: Publish to crates.io
         if: github.ref == 'refs/heads/main'
