@@ -159,7 +159,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | `list`     | Lists all available themes. | - | `tinty list` |
 | `apply`    | Applies a specific theme. | `<scheme_system>-<scheme_name>`: Name of the system and scheme to apply. | `tinty apply base16-mocha` |
 | `update`   | Updates the templates and schemes. | - | `tinty update`                    |
-| `init`     | Initializes the tool with the last applied theme otherwise `default_scheme` from `config.toml`. | - | `tinty init` |
+| `init`     | Initializes the tool with the last applied theme otherwise `default-scheme` from `config.toml`. | - | `tinty init` |
 | `current`  | Displays the currently applied theme. | - | `tinty current` |
 | `info`     | Provides information about themes. | `[<scheme_system>-<scheme_name>]`: Optional argument to specify a theme for detailed info. | `tinty info base16-mocha` |
 
@@ -167,7 +167,7 @@ Some subcommands support additional flags and options to modify their behavior:
 
 | Flag/Option       | Description                             | Applicable Subcommands | Default Value | Example Usage                             |
 |-------------------|-----------------------------------------|------------------------|---------------|-------------------------------------------|
-| `--config` `-c`   | Specifies a custom configuration file path. | All | If not provided tinty looks for `config.toml` at `$XDG_CONFIG_HOME/tinty/config.toml` otherwise `~/.config/tinty/config.toml` | `tinty apply base16-ayu-dark --config /path/to/custom/config.toml` |
+| `--config` `-c`   | Specifies a custom configuration file path. | All | If not provided tinty looks for `config.toml` at `$XDG_CONFIG_HOME/tinty/config.toml` otherwise `~/.config/tinted-theming/tinty/config.toml` | `tinty apply base16-ayu-dark --config /path/to/custom/config.toml` |
 | `--data-dir`    | Specifies a custom path for the data directory. | All | If not provided tinty looks for the data directory at `$XDG_DATA_HOME/tinted-theming/tinty` otherwise `~/.local/share/tinted-theming/tinty` | `tinty install --data-dir /path/to/custom/data-dir` |
 | `--help` `-h`     | Displays help information for the subcommand. | All | - | `tinty --help`, `tinty apply --help`, etc. |
 | `--version` `-V`  | Shows the version of tinty. | All | - | `tinty --version` |
@@ -191,7 +191,7 @@ to your preferences and environment.
 | Key               | Type               | Required | Description                                                                            | Default | Example |
 |-------------------|--------------------|----------|----------------------------------------------------------------------------------------|---------|---------|
 | `shell`           | `string`           | Optional | Specifies the shell command used to execute hooks. | `"sh -c '{}'"` | `shell = "bash -c '{}'"` |
-| `default_scheme`  | `string`           | Optional | Defines the default theme scheme to be applied if no specific scheme is set. | None | `default_scheme = "base16-mocha"` |
+| `default-scheme`  | `string`           | Optional | Defines the default theme scheme to be applied if no specific scheme is set. | None | `default-scheme = "base16-mocha"` |
 | `hooks`           | `array<string>`    | Optional | A list of strings which are executed after every `tinty apply` | None | `hooks = ["echo \"The current scheme is: $(tinty current)\""]` |
 | `[[items]]`       | `array<items>`     | Required | An array of `items` configurations. Each item represents a themeable component. Detailed structure provided in the next section. | - | - |
 
@@ -209,13 +209,13 @@ themes across different applications seamlessly.
 |-----------------------|----------|----------|---------------------------------------------------------------|---------|--------------------------------------------|
 | `name`                | `string`   | Required | A unique name for the item being configured. | - | `name = "vim"`                             |
 | `path`                | `string`   | Required | The file system path or URL to the theme template repository. Paths beginning with `~/` map to home dir. | - | `path = "https://github.com/base16-vim"`   |
-| `themes_dir`          | `string`   | Required | The directory within the repository where theme files are located. | - | `themes_dir = "colors"`                    |
+| `themes-dir`          | `string`   | Required | The directory within the repository where theme files are located. | - | `themes-dir = "colors"`                    |
 | `hook`                | `string`   | Optional | A command to be executed after the theme is applied. Useful for reloading configurations. `%f` template variable maps to the path of the applied theme file. | None    | `hook = "source ~/.vimrc"`                 |
-| `supported_systems`   | `array<"base16" or "base24">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported_systems = ["base16", "base24"]` |
+| `supported-systems`   | `array<"base16" or "base24">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported-systems = ["base16", "base24"]` |
 
-#### Note on `supported_systems`
+#### Note on `supported-systems`
 
-The `supported_systems` key within an `[[items]]` table allows for
+The `supported-systems` key within an `[[items]]` table allows for
 specifying compatibility with different theming systems. The available
 options are `"base16"` and `"base24"`, indicating support for [Base16]
 and [Base24] theming systems, respectively. If the template repository
@@ -233,28 +233,28 @@ multiple items along with global settings:
 ```toml
 # Global settings
 shell = "zsh -c '{}'"
-default_scheme = "base16-mocha"
+default-scheme = "base16-mocha"
 
 # Item configurations
 [[items]]
 name = "vim"
 path = "https://github.com/tinted-theming/base16-shell"
-themes_dir = "scripts"
+themes-dir = "scripts"
 hook = "source %f"
 
 [[items]]
 name = "vim"
 path = "https://github.com/tinted-theming/base16-vim"
-themes_dir = "colors"
+themes-dir = "colors"
 hook = "source ~/.vimrc"
-supported_systems = ["base16"]
+supported-systems = ["base16"]
 
 [[items]]
 name = "tmux"
 path = "~/path/path/to/base16-tmux"
-themes_dir = "colors"
+themes-dir = "colors"
 hook = "tmux source-file ~/.tmux.conf"
-supported_systems = ["base16"]
+supported-systems = ["base16"]
 ```
 
 ### Select and apply a scheme using fzf
@@ -313,7 +313,7 @@ light = false
 **Tinty:**
 
 ```toml
-# ~/.config/tinty/config.toml
+# ~/.config/tinted-theming/tinty/config.toml
 [[items]]
 path = "https://github.com/aarowill/base16-alacritty"
 name = "base16-alacritty"
