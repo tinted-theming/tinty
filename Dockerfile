@@ -1,5 +1,5 @@
 # Stage 1: Build Environment
-FROM rust:latest AS base
+FROM rust:1.71 AS base
 WORKDIR /usr/src/tinty
 COPY . .
 RUN cargo build --release
@@ -10,4 +10,5 @@ RUN rustup component add clippy rustfmt
 RUN cargo clippy -- -D warnings
 RUN cargo fmt --all -- --check
 ENV RUST_TEST_THREADS=1
-RUN cargo test --release
+
+CMD ["cargo", "test", "--release", "--", "--nocapture"]

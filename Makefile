@@ -14,7 +14,7 @@ test_docker: setup_tests
 	@echo "-------------------"
 	@echo "Running test_docker"
 	@echo "-------------------"
-	docker build --target tests -t tinty-clippy .
+	docker build --no-cache --target tests -t tinty-clippy .
 
 test: setup_tests
 	@echo "------------"
