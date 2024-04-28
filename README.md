@@ -321,7 +321,7 @@ themes-dir = "colors"
 hook = "cp -f %f ~/.config/alacritty/colors.toml"
 
 [[items]]
-path = "https://github.com/mnussbaum/base16-waybar"
+path = "https://github.com/tinted-theming/base16-waybar"
 name = "base16-waybar"
 themes-dir = "colors"
 hook = "cp -r %f ~/.config/waybar/colors.css"
