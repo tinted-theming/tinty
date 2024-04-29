@@ -19,7 +19,6 @@ _tinty() {
 '--config=[Optional path to the tinty config.toml file]:FILE: ' \
 '-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
 '--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--generate-completion=[Generate completion scripts]:SHELL:(bash elvish fish powershell zsh)' \
 '-h[Print help]' \
 '--help[Print help]' \
 '-V[Print version]' \
@@ -41,6 +40,17 @@ _arguments "${_arguments_options[@]}" \
 '--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
 '-h[Print help]' \
 '--help[Print help]' \
+&& ret=0
+;;
+(generate-completion)
+_arguments "${_arguments_options[@]}" \
+'-c+[Optional path to the tinty config.toml file]:FILE: ' \
+'--config=[Optional path to the tinty config.toml file]:FILE: ' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-h[Print help]' \
+'--help[Print help]' \
+':shell_name -- The name of the shell you want to generate a completion script for:(bash elvish fish powershell zsh)' \
 && ret=0
 ;;
 (info)
@@ -121,6 +131,10 @@ _arguments "${_arguments_options[@]}" \
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
+(generate-completion)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
 (info)
 _arguments "${_arguments_options[@]}" \
 && ret=0
@@ -162,6 +176,7 @@ esac
 _tinty_commands() {
     local commands; commands=(
 'current:Prints the last scheme name applied' \
+'generate-completion:Generates a shell completion script' \
 'info:Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg\: tinty info base16-mocha)' \
 'init:Initializes with the exising config. Used to Initialize exising theme for when your shell starts up' \
 'list:Lists available schemes' \
@@ -192,10 +207,21 @@ _tinty__help__current_commands() {
     local commands; commands=()
     _describe -t commands 'tinty help current commands' commands "$@"
 }
+(( $+functions[_tinty__generate-completion_commands] )) ||
+_tinty__generate-completion_commands() {
+    local commands; commands=()
+    _describe -t commands 'tinty generate-completion commands' commands "$@"
+}
+(( $+functions[_tinty__help__generate-completion_commands] )) ||
+_tinty__help__generate-completion_commands() {
+    local commands; commands=()
+    _describe -t commands 'tinty help generate-completion commands' commands "$@"
+}
 (( $+functions[_tinty__help_commands] )) ||
 _tinty__help_commands() {
     local commands; commands=(
 'current:Prints the last scheme name applied' \
+'generate-completion:Generates a shell completion script' \
 'info:Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg\: tinty info base16-mocha)' \
 'init:Initializes with the exising config. Used to Initialize exising theme for when your shell starts up' \
 'list:Lists available schemes' \

@@ -7,8 +7,10 @@ fn generate_shell_completion_test(shell_name: &str) -> Result<String> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) =
-        setup("test_cli_generatecompletion_subcommand", format!("generate-completion {shell_name}").as_str())?;
+    let (_, _, command_vec, cleanup) = setup(
+        "test_cli_generatecompletion_subcommand",
+        format!("generate-completion {shell_name}").as_str(),
+    )?;
 
     // ---
     // Act
@@ -41,7 +43,8 @@ fn test_cli_generatecompletion_subcommand_bash() -> Result<()> {
     // Assert
     // ------
     assert!(
-        stdout.contains(r##"_tinty() {
+        stdout.contains(
+            r##"_tinty() {
     local i cur prev opts cmd
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -49,7 +52,8 @@ fn test_cli_generatecompletion_subcommand_bash() -> Result<()> {
     cmd=""
     opts=""
 
-    for i in ${COMP_WORDS[@]}"##),
+    for i in ${COMP_WORDS[@]}"##
+        ),
         "stdout does not contain the expected output"
     );
 
@@ -68,10 +72,12 @@ fn test_cli_generatecompletion_subcommand_elvish() -> Result<()> {
     // Assert
     // ------
     assert!(
-        stdout.contains(r##"use builtin;
+        stdout.contains(
+            r##"use builtin;
 use str;
 
-set edit:completion:arg-completer[tinty] = {|@words|"##),
+set edit:completion:arg-completer[tinty] = {|@words|"##
+        ),
         "stdout does not contain the expected output"
     );
 
@@ -111,10 +117,12 @@ fn test_cli_generatecompletion_subcommand_powershell() -> Result<()> {
     // Assert
     // ------
     assert!(
-        stdout.contains(r##"using namespace System.Management.Automation
+        stdout.contains(
+            r##"using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
-Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {"##),
+Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {"##
+        ),
         "stdout does not contain the expected output"
     );
 
@@ -133,14 +141,16 @@ fn test_cli_generatecompletion_subcommand_zsh() -> Result<()> {
     // Assert
     // ------
     assert!(
-        stdout.contains(r##"#compdef tinty
+        stdout.contains(
+            r##"#compdef tinty
 
 autoload -U is-at-least
 
 _tinty() {
     typeset -A opt_args
     typeset -a _arguments_options
-    local ret=1"##),
+    local ret=1"##
+        ),
         "stdout does not contain the expected output"
     );
 

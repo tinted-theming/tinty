@@ -25,12 +25,12 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
             [CompletionResult]::new('--config', 'config', [CompletionResultType]::ParameterName, 'Optional path to the tinty config.toml file')
             [CompletionResult]::new('-d', 'd', [CompletionResultType]::ParameterName, 'Optional path to the tinty data directory')
             [CompletionResult]::new('--data-dir', 'data-dir', [CompletionResultType]::ParameterName, 'Optional path to the tinty data directory')
-            [CompletionResult]::new('--generate-completion', 'generate-completion', [CompletionResultType]::ParameterName, 'Generate completion scripts')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('-V', 'V ', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('current', 'current', [CompletionResultType]::ParameterValue, 'Prints the last scheme name applied')
+            [CompletionResult]::new('generate-completion', 'generate-completion', [CompletionResultType]::ParameterValue, 'Generates a shell completion script')
             [CompletionResult]::new('info', 'info', [CompletionResultType]::ParameterValue, 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)')
             [CompletionResult]::new('init', 'init', [CompletionResultType]::ParameterValue, 'Initializes with the exising config. Used to Initialize exising theme for when your shell starts up')
             [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'Lists available schemes')
@@ -41,6 +41,15 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
             break
         }
         'tinty;current' {
+            [CompletionResult]::new('-c', 'c', [CompletionResultType]::ParameterName, 'Optional path to the tinty config.toml file')
+            [CompletionResult]::new('--config', 'config', [CompletionResultType]::ParameterName, 'Optional path to the tinty config.toml file')
+            [CompletionResult]::new('-d', 'd', [CompletionResultType]::ParameterName, 'Optional path to the tinty data directory')
+            [CompletionResult]::new('--data-dir', 'data-dir', [CompletionResultType]::ParameterName, 'Optional path to the tinty data directory')
+            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'tinty;generate-completion' {
             [CompletionResult]::new('-c', 'c', [CompletionResultType]::ParameterName, 'Optional path to the tinty config.toml file')
             [CompletionResult]::new('--config', 'config', [CompletionResultType]::ParameterName, 'Optional path to the tinty config.toml file')
             [CompletionResult]::new('-d', 'd', [CompletionResultType]::ParameterName, 'Optional path to the tinty data directory')
@@ -105,6 +114,7 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
         }
         'tinty;help' {
             [CompletionResult]::new('current', 'current', [CompletionResultType]::ParameterValue, 'Prints the last scheme name applied')
+            [CompletionResult]::new('generate-completion', 'generate-completion', [CompletionResultType]::ParameterValue, 'Generates a shell completion script')
             [CompletionResult]::new('info', 'info', [CompletionResultType]::ParameterValue, 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)')
             [CompletionResult]::new('init', 'init', [CompletionResultType]::ParameterValue, 'Initializes with the exising config. Used to Initialize exising theme for when your shell starts up')
             [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'Lists available schemes')
@@ -115,6 +125,9 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
             break
         }
         'tinty;help;current' {
+            break
+        }
+        'tinty;help;generate-completion' {
             break
         }
         'tinty;help;info' {

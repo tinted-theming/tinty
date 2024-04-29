@@ -23,9 +23,9 @@ section] for more information about the command usage.
 
 A shell completion generation via `tinty` doesn't include any dynamic
 values, meaning scheme names (such as `base16-ocean`) won't be completed
-typing `tinty apply base`. We've created a modified completion script
+typing `tinty apply base`. We've created modified completion script
 files for this reason so it can also generate the scheme names.
-Currently this is only supported for the bash completion file, but we
+Currently this is only supported for the `bash` completion file, but we
 plan to include the other shells too. You can find these completion
 files in [contrib/completion].
 
