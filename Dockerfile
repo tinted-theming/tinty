@@ -1,5 +1,5 @@
 # Stage 1: Build Environment
-FROM rust:1.71 AS base
+FROM rust:1.77.2 AS base
 WORKDIR /usr/src/tinty
 COPY . .
 RUN cargo build --release
