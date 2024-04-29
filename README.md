@@ -162,6 +162,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | `init`     | Initializes the tool with the last applied theme otherwise `default-scheme` from `config.toml`. | - | `tinty init` |
 | `current`  | Displays the currently applied theme. | - | `tinty current` |
 | `info`     | Provides information about themes. | `[<scheme_system>-<scheme_name>]`: Optional argument to specify a theme for detailed info. | `tinty info base16-mocha` |
+| `generate-completion` | Generates a shell completion file to source in your shell startup file (`*rc`). | `<shell_name>`: Name of the shell to generate a completion script for. Supports `bash`, `elvish`, `fish`, `powershell`, `zsh` | `tinty generate-completion bash` |
 
 Some subcommands support additional flags and options to modify their behavior:
 

@@ -18,6 +18,9 @@ _tinty() {
             tinty,current)
                 cmd="tinty__current"
                 ;;
+            tinty,generate-completion)
+                cmd="tinty__generate__completion"
+                ;;
             tinty,help)
                 cmd="tinty__help"
                 ;;
@@ -41,6 +44,9 @@ _tinty() {
                 ;;
             tinty__help,current)
                 cmd="tinty__help__current"
+                ;;
+            tinty__help,generate-completion)
+                cmd="tinty__help__generate__completion"
                 ;;
             tinty__help,help)
                 cmd="tinty__help__help"
@@ -67,7 +73,7 @@ _tinty() {
 
     case "${cmd}" in
         tinty)
-            opts="-c -d -h -V --config --data-dir --generate-completion --help --version current info init list apply install update help"
+            opts="-c -d -h -V --config --data-dir --help --version current generate-completion info init list apply install update help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -87,10 +93,6 @@ _tinty() {
                     ;;
                 -d)
                     COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                --generate-completion)
-                    COMPREPLY=($(compgen -W "bash elvish fish powershell zsh" -- "${cur}"))
                     return 0
                     ;;
                 *)
@@ -164,8 +166,38 @@ _tinty() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        tinty__generate__completion)
+            opts="-c -d -h --config --data-dir --help bash elvish fish powershell zsh"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --config)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -c)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --data-dir)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -d)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         tinty__help)
-            opts="current info init list apply install update help"
+            opts="current generate-completion info init list apply install update help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -193,6 +225,20 @@ _tinty() {
             return 0
             ;;
         tinty__help__current)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        tinty__help__generate__completion)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )

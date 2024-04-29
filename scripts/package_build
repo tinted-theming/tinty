@@ -20,7 +20,7 @@ package_build() {
       continue
     fi
 
-    cp "$file" "$release_dir/$file"
+    cp --parents "$file" "$release_dir/"
     files_to_include+="$file "
   done
 
