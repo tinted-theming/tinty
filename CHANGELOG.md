@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Add shell completions functionality with `generate-completion`
+  subcommand
+
 ## [0.11.0] - 2024-03-10
 
 ### Added

@@ -18,14 +18,6 @@ fn main() -> Result<()> {
     // Parse the command line arguments
     let matches = get_matches();
 
-    // Generate completion scripts
-    if let Some(generator) = matches.get_one::<Shell>("generate-completion") {
-        let mut cmd = build_cli();
-        eprintln!("Generating completion file for {generator}...");
-        print_completions(*generator, &mut cmd);
-        return Ok(());
-    };
-
     // Other configuration paths
     let config_path_result: Result<PathBuf> =
         if let Some(config_file_path) = matches.get_one::<String>("config") {
@@ -62,6 +54,14 @@ fn main() -> Result<()> {
     match matches.subcommand() {
         Some(("current", _)) => {
             operations::current::current(&data_path)?;
+        }
+        Some(("generate-completion", sub_matches)) => {
+            if let Some(generator) = sub_matches.get_one::<Shell>("shell_name") {
+                let mut cmd = build_cli();
+                eprintln!("Generating completion file for {generator}...");
+                print_completions(*generator, &mut cmd);
+                return Ok(());
+            };
         }
         Some(("info", sub_matches)) => {
             let scheme_name_option = sub_matches.get_one::<String>("scheme_name");

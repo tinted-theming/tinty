@@ -27,15 +27,16 @@ pub fn build_cli() -> Command {
                 .global(true)
                 .action(ArgAction::Set)
         )
-        .arg(
-            Arg::new("generate-completion")
-                .long("generate-completion")
-                .value_name("SHELL")
-                .value_parser(clap::value_parser!(Shell))
-                .help("Generate completion scripts")
-        )
         .subcommand(
             Command::new("current").about("Prints the last scheme name applied")
+        )
+        .subcommand(
+            Command::new("generate-completion").about("Generates a shell completion script").arg(
+                Arg::new("shell_name")
+                    .value_parser(clap::value_parser!(Shell))
+                    .help("The name of the shell you want to generate a completion script for")
+                    .required(true),
+            ),
         )
         .subcommand(
             Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {} info base16-mocha)", REPO_NAME)).arg(

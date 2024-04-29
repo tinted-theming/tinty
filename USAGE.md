@@ -5,6 +5,7 @@ For more general usage, look at the [Usage section] in [README.md].
 
 ## Table of contents
 
+- [Shell completions](#shell-completions)
 - [How it works](#how-it-works)
 - [Sourcing scripts that set environment variables](#sourcing-scripts-that-set-environment-variables)
 - [shell](#shell)
@@ -12,6 +13,21 @@ For more general usage, look at the [Usage section] in [README.md].
 - [tmux](#tmux)
 - [fzf](#fzf)
 - [bat](#bat)
+
+## Shell completions
+
+You can generate shell completions with the `generate-completion`
+subcommand, source the generated file in your shell startup file (`*rc`)
+and completions will exist for `tinty`. Have a look at the [README CLI
+section] for more information about the command usage.
+
+A shell completion generation via `tinty` doesn't include any dynamic
+values, meaning scheme names (such as `base16-ocean`) won't be completed
+typing `tinty apply base`. We've created a modified completion script
+files for this reason so it can also generate the scheme names.
+Currently this is only supported for the bash completion file, but we
+plan to include the other shells too. You can find these completion
+files in [contrib/completion].
 
 ## How it works
 
@@ -371,3 +387,5 @@ alias bat="bat --theme='base16-256'"
 [tmux tpm]: https://github.com/tmux-plugins/tpm
 [XDG Base Directory specification]: https://wiki.archlinux.org/title/XDG_Base_Directory
 [Sourcing scripts that set environment variables]: #sourcing-scripts-that-set-environment-variables
+[README CLI section]: README.md#cli
+[contrib/completion]: contrib/completion
