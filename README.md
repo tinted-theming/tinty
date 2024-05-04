@@ -28,6 +28,9 @@ Tinty have a look at our [Base16 Gallery].
 - [Basic usage](#basic-usage)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [Debugging](#debugging)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## How it Works
 
@@ -161,6 +164,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | `update`   | Updates the templates and schemes. | - | `tinty update`                    |
 | `init`     | Initializes the tool with the last applied theme otherwise `default-scheme` from `config.toml`. | - | `tinty init` |
 | `current`  | Displays the currently applied theme. | - | `tinty current` |
+| `config`   | Displays config related information currently in use by Tinty. Without flags it returns `config.yml` content. | - | `tinty config` |
 | `info`     | Provides information about themes. | `[<scheme_system>-<scheme_name>]`: Optional argument to specify a theme for detailed info. | `tinty info base16-mocha` |
 | `generate-completion` | Generates a shell completion file to source in your shell startup file (`*rc`). | `<shell_name>`: Name of the shell to generate a completion script for. Supports `bash`, `elvish`, `fish`, `powershell`, `zsh` | `tinty generate-completion bash` |
 
@@ -172,6 +176,8 @@ Some subcommands support additional flags and options to modify their behavior:
 | `--data-dir`    | Specifies a custom path for the data directory. | All | If not provided tinty looks for the data directory at `$XDG_DATA_HOME/tinted-theming/tinty` otherwise `~/.local/share/tinted-theming/tinty` | `tinty install --data-dir /path/to/custom/data-dir` |
 | `--help` `-h`     | Displays help information for the subcommand. | All | - | `tinty --help`, `tinty apply --help`, etc. |
 | `--version` `-V`  | Shows the version of tinty. | All | - | `tinty --version` |
+| `--config-path`   | Shows the config.yml path. | `config` | - | `tinty config --config-path` |
+| `--data-path`     | Shows the data directory path. | `config` | - | `tinty config --data-path` |
 
 ## Configuration
 
@@ -345,6 +351,13 @@ hook = "cp -f %f ~/.config/sway/config && swaymsg reload"
   variable which translates to the base16-alacritty relevant theme file.
   So the hook does a copy of the selected theme and replaces
   `~/.config/alacritty/colors.toml`.
+
+## Debugging
+
+`tinty config` with the relevant flags `--config-path` and `--data-path`
+can be useful when debugging to make sure that the expected config is
+applied and the expected config and data directories are being used by
+Tinty.
 
 ## Contributing
 

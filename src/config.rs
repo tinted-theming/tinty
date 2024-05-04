@@ -104,19 +104,20 @@ impl fmt::Display for ConfigItem {
             .clone()
             .unwrap_or(default_supported_systems)
             .into_iter()
-            .map(|system| system.to_str())
-            .collect::<Vec<&str>>()
+            .map(|system| format!("\"{}\"", system))
+            .collect::<Vec<String>>()
             .join(", ");
 
         // You can format the output however you like
-        writeln!(f, "  - Item")?;
-        writeln!(f, "    - name: {}", self.name)?;
-        writeln!(f, "    - path: {}", self.path)?;
+        writeln!(f)?;
+        writeln!(f, "[[items]]")?;
+        writeln!(f, "name = \"{}\"", self.name)?;
+        writeln!(f, "path = \"{}\"", self.path)?;
         if !hook.is_empty() {
-            writeln!(f, "    - hook: {}", hook)?;
+            writeln!(f, "hook = \"{}\"", hook)?;
         }
-        writeln!(f, "    - systems: [{}]", system_text)?;
-        writeln!(f, "    - themes-dir: {}", self.themes_dir)
+        writeln!(f, "supported-systems = [{}]", system_text)?;
+        write!(f, "themes-dir = \"{}\"", self.themes_dir)
     }
 }
 
@@ -228,22 +229,21 @@ impl Config {
 
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Config")?;
         writeln!(
             f,
-            "- shell: {}",
+            "shell = \"{}\"",
             self.shell.as_ref().unwrap_or(&"None".to_string())
         )?;
-        writeln!(
-            f,
-            "- default-scheme: {}",
-            self.default_scheme.as_ref().unwrap_or(&"".to_string())
-        )?;
+        if self.default_scheme.is_some() {
+            writeln!(
+                f,
+                "default-scheme = \"{}\"",
+                self.default_scheme.as_ref().unwrap_or(&"".to_string())
+            )?;
+        }
 
         match &self.items {
             Some(items) => {
-                writeln!(f, "- Items")?;
-
                 for item in items {
                     writeln!(f, "{}", item)?;
                 }
