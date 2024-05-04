@@ -28,7 +28,7 @@ Tinty have a look at our [Base16 Gallery].
 - [Basic usage](#basic-usage)
 - [Usage](#usage)
 - [Configuration](#configuration)
-- [Debugging](#debugging)
+- [Debugging Tinty issues](#debugging-tinty-issues)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -352,10 +352,11 @@ hook = "cp -f %f ~/.config/sway/config && swaymsg reload"
   So the hook does a copy of the selected theme and replaces
   `~/.config/alacritty/colors.toml`.
 
-## Debugging
+## Debugging Tinty issues
 
-`tinty config` with the relevant flags `--config-path` and `--data-path`
-can be useful when debugging to make sure that the expected config is
+`tinty config` with the relevant flags, `--config-path` and
+`--data-path`, can be useful when attempting to debug an issue with
+Tinty. These commands can help to make sure that the expected config is
 applied and the expected config and data directories are being used by
 Tinty.
 
