@@ -15,12 +15,13 @@ test_docker: setup_tests
 	@echo "Running test_docker"
 	@echo "-------------------"
 	docker build --no-cache --target tests -t tinty-clippy .
+	cargo fmt --all --check
 
 test: setup_tests
 	@echo "------------"
 	@echo "Running test"
 	@echo "------------"
-	RUST_TEST_THREADS=1 cargo test --release
+	RUST_TEST_THREADS=1 cargo test --release $(TINTY_RUST_TEST)
 
 setup_tests: build
 	@echo "-----------------"

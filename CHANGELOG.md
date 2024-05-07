@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Add `tinty config` subcommand with flags to return config related
+  information
+
 ## [0.12.0] - 2024-04-29
 
 ### Added

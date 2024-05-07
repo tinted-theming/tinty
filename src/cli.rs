@@ -50,6 +50,25 @@ pub fn build_cli() -> Command {
         )
         .subcommand(Command::new("list").about("Lists available schemes"))
         .subcommand(
+            Command::new("config").about("Provides config related information")
+                .arg(
+                    Arg::new("config-path")
+                        .help(format!("Returns path to the {} config file", REPO_NAME))
+                        .value_name("FILE")
+                        .long("config-path")
+                        .conflicts_with("data-dir-path")
+                        .action(ArgAction::SetTrue)
+                )
+                .arg(
+                    Arg::new("data-dir-path")
+                        .help(format!("Returns path to the {} data directory", REPO_NAME))
+                        .value_name("DIRECTORY")
+                        .long("data-dir-path")
+                        .conflicts_with("config-path")
+                        .action(ArgAction::SetTrue)
+                )
+        )
+        .subcommand(
             Command::new("apply").about("Applies a theme based on the chosen scheme").arg(
                 Arg::new("scheme_name")
                     .help("The scheme you want to apply")
