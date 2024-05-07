@@ -865,8 +865,8 @@ This page lists the licenses of the projects used in cargo-about.
 #### Used by
 
 - [anstream 0.6.11](https://github.com/rust-cli/anstyle.git)
-- [anstyle 1.0.6](https://github.com/rust-cli/anstyle.git)
 - [anstyle-query 1.0.2](https://github.com/rust-cli/anstyle)
+- [anstyle 1.0.6](https://github.com/rust-cli/anstyle.git)
 - [clap 4.5.4](https://github.com/clap-rs/clap)
 - [colorchoice 1.0.0](https://github.com/rust-cli/anstyle)
 - [serde_spanned 0.6.5](https://github.com/toml-rs/toml)
@@ -1295,8 +1295,8 @@ limitations under the License.
 
 #### Used by
 
-- [dirs 5.0.1](https://github.com/soc/dirs-rs)
 - [dirs-sys 0.4.1](https://github.com/dirs-dev/dirs-sys-rs)
+- [dirs 5.0.1](https://github.com/soc/dirs-rs)
 
 ```
                               Apache License
@@ -2446,7 +2446,7 @@ according to those terms.
 
 #### Used by
 
-- [tinty 0.12.0](https://github.com/tinted-theming/tinty)
+- [tinty 0.13.0](https://github.com/tinted-theming/tinty)
 
 ```
 MIT License
