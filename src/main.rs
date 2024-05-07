@@ -56,10 +56,15 @@ fn main() -> Result<()> {
             operations::current::current(&data_path)?;
         }
         Some(("config", sub_matches)) => {
-            let data_path_flag = sub_matches.get_flag("data-path");
+            let data_dir_path_flag = sub_matches.get_flag("data-dir-path");
             let config_path_flag = sub_matches.get_flag("config-path");
 
-            operations::config::config(&config_path, &data_path, config_path_flag, data_path_flag)?;
+            operations::config::config(
+                &config_path,
+                &data_path,
+                config_path_flag,
+                data_dir_path_flag,
+            )?;
         }
         Some(("generate-completion", sub_matches)) => {
             if let Some(generator) = sub_matches.get_one::<Shell>("shell_name") {

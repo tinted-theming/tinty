@@ -177,7 +177,7 @@ Some subcommands support additional flags and options to modify their behavior:
 | `--help` `-h`     | Displays help information for the subcommand. | All | - | `tinty --help`, `tinty apply --help`, etc. |
 | `--version` `-V`  | Shows the version of tinty. | All | - | `tinty --version` |
 | `--config-path`   | Shows the config.yml path. | `config` | - | `tinty config --config-path` |
-| `--data-path`     | Shows the data directory path. | `config` | - | `tinty config --data-path` |
+| `--data-dir-path`     | Shows the data directory path. | `config` | - | `tinty config --data-dir-path` |
 
 ## Configuration
 
@@ -355,7 +355,7 @@ hook = "cp -f %f ~/.config/sway/config && swaymsg reload"
 ## Debugging Tinty issues
 
 `tinty config` with the relevant flags, `--config-path` and
-`--data-path`, can be useful when attempting to debug an issue with
+`--data-dir-path`, can be useful when attempting to debug an issue with
 Tinty. These commands can help to make sure that the expected config is
 applied and the expected config and data directories are being used by
 Tinty.

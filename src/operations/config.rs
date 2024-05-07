@@ -7,10 +7,10 @@ pub fn config(
     config_path: &Path,
     data_path: &Path,
     config_path_flag: bool,
-    data_path_flag: bool,
+    data_dir_path_flag: bool,
 ) -> Result<()> {
     let config = Config::read(config_path)?;
-    let path_tuple: (bool, bool) = (config_path_flag, data_path_flag);
+    let path_tuple: (bool, bool) = (config_path_flag, data_dir_path_flag);
 
     match path_tuple {
         (true, false) => {
@@ -23,9 +23,9 @@ pub fn config(
             println!("{config}");
         }
         (true, true) => {
-            // This case should be dealth with by clap
+            // This case should be dealt with by clap
             return Err(anyhow!(
-                "the argument '--data-path' cannot be used with '--config-path'",
+                "the argument '--data-dir-path' cannot be used with '--config-path'",
             ));
         }
     }

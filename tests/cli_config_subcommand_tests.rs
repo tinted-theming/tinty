@@ -98,7 +98,7 @@ fn test_cli_config_with_data_flag() -> Result<()> {
     // Arrange
     // -------
     let (_, data_path, command_vec, cleanup) =
-        setup("test_cli_config_with_data_flag", "config --data-path")?;
+        setup("test_cli_config_with_data_flag", "config --data-dir-path")?;
 
     // ---
     // Act
