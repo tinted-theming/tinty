@@ -4,7 +4,8 @@
 
 ### Added
 
-- Add `tinty config` subcommand to return config related information
+- Add `tinty config` subcommand with flags to return config related
+  information
 
 ## [0.12.0] - 2024-04-29
 

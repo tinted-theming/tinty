@@ -356,9 +356,8 @@ hook = "cp -f %f ~/.config/sway/config && swaymsg reload"
 
 `tinty config` with the relevant flags, `--config-path` and
 `--data-dir-path`, can be useful when attempting to debug an issue with
-Tinty. These commands can help to make sure that the expected config is
-applied and the expected config and data directories are being used by
-Tinty.
+Tinty. These commands can help to make sure that the expected config
+file is applied and the expected data directory are being used by Tinty.
 
 ## Contributing
 

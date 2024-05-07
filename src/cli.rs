@@ -53,8 +53,8 @@ pub fn build_cli() -> Command {
             Command::new("config").about("Provides config related information")
                 .arg(
                     Arg::new("config-path")
-                        .help(format!("Returns path to the {} config directory", REPO_NAME))
-                        .value_name("DIRECTORY")
+                        .help(format!("Returns path to the {} config file", REPO_NAME))
+                        .value_name("FILE")
                         .long("config-path")
                         .conflicts_with("data-dir-path")
                         .action(ArgAction::SetTrue)
