@@ -172,7 +172,7 @@ Some subcommands support additional flags and options to modify their behavior:
 
 | Flag/Option       | Description                             | Applicable Subcommands | Default Value | Example Usage                             |
 |-------------------|-----------------------------------------|------------------------|---------------|-------------------------------------------|
-| `--config` `-c`   | Specifies a custom configuration file path. | All | If not provided tinty looks for `config.toml` at `$XDG_CONFIG_HOME/tinty/config.toml` otherwise `~/.config/tinted-theming/tinty/config.toml` | `tinty apply base16-ayu-dark --config /path/to/custom/config.toml` |
+| `--config` `-c`   | Specifies a custom configuration file path. | All | If not provided tinty looks for `config.toml` at `$XDG_CONFIG_HOME/tinted-theming/tinty/config.toml` otherwise `~/.config/tinted-theming/tinty/config.toml` | `tinty apply base16-ayu-dark --config /path/to/custom/config.toml` |
 | `--data-dir`    | Specifies a custom path for the data directory. | All | If not provided tinty looks for the data directory at `$XDG_DATA_HOME/tinted-theming/tinty` otherwise `~/.local/share/tinted-theming/tinty` | `tinty install --data-dir /path/to/custom/data-dir` |
 | `--help` `-h`     | Displays help information for the subcommand. | All | - | `tinty --help`, `tinty apply --help`, etc. |
 | `--version` `-V`  | Shows the version of tinty. | All | - | `tinty --version` |
