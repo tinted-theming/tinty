@@ -1,6 +1,6 @@
-mod common;
+mod utils;
 
-use crate::common::{
+use crate::utils::{
     read_file_to_string, setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME,
 };
 use anyhow::Result;
@@ -19,7 +19,7 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -43,7 +43,7 @@ fn test_cli_init_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -73,8 +73,8 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert

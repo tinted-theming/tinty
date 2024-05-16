@@ -1,10 +1,10 @@
-mod common;
+mod utils;
 
-use crate::common::REPO_NAME;
+use crate::utils::REPO_NAME;
 use anyhow::Result;
-use common::setup;
 use std::fs;
 use std::path::Path;
+use utils::setup;
 
 #[test]
 fn test_cli_list_subcommand_with_setup() -> Result<()> {
@@ -18,8 +18,8 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -52,7 +52,7 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert

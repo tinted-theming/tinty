@@ -1,6 +1,6 @@
-mod common;
+mod utils;
 
-use crate::common::{
+use crate::utils::{
     read_file_to_string, setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME,
 };
 use anyhow::Result;
@@ -21,8 +21,8 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -59,7 +59,7 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -88,8 +88,8 @@ fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -118,7 +118,7 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -147,7 +147,7 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -180,8 +180,8 @@ hooks = ["echo 'This '", "echo 'is '", "echo 'expected '", "echo 'output.'"]
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -221,8 +221,8 @@ hook = "echo \"path: %f\""
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert

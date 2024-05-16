@@ -1,6 +1,6 @@
-mod common;
+mod utils;
 
-use crate::common::{setup, REPO_NAME};
+use crate::utils::{setup, REPO_NAME};
 use anyhow::Result;
 
 #[test]
@@ -17,7 +17,7 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -43,8 +43,8 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert

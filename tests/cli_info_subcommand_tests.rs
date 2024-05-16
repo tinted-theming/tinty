@@ -1,6 +1,6 @@
-mod common;
+mod utils;
 
-use crate::common::{setup, write_to_file, REPO_NAME};
+use crate::utils::{setup, write_to_file, REPO_NAME};
 use anyhow::Result;
 
 #[test]
@@ -15,8 +15,8 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -48,8 +48,8 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -79,7 +79,7 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -111,8 +111,8 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert

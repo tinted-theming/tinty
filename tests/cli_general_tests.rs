@@ -1,6 +1,6 @@
-mod common;
+mod utils;
 
-use crate::common::{
+use crate::utils::{
     cleanup, read_file_to_string, setup, write_to_file, COMMAND_NAME, CURRENT_SCHEME_FILE_NAME,
     REPO_NAME,
 };
@@ -17,7 +17,7 @@ fn test_cli_no_arguments() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -60,8 +60,8 @@ hook = "echo 'test_cli_config_path_tilde_as_home_config_output'"
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -116,8 +116,8 @@ fn test_cli_default_data_path() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    common::run_command(init_command_vec.clone()).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    utils::run_command(init_command_vec.clone()).unwrap();
 
     // This test is important to determine the config.toml is being read correctly
     assert_eq!(
@@ -125,9 +125,9 @@ fn test_cli_default_data_path() -> Result<()> {
         init_scheme_name
     );
 
-    common::run_command(apply_command_vec.clone()).unwrap();
-    common::run_command(init_command_vec).unwrap();
-    let (stdout, stderr) = common::run_command(apply_command_vec).unwrap();
+    utils::run_command(apply_command_vec.clone()).unwrap();
+    utils::run_command(init_command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(apply_command_vec).unwrap();
 
     // ------
     // Assert
@@ -175,8 +175,8 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = common::run_command(command_vec).unwrap();
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert

@@ -1,6 +1,6 @@
-mod common;
+mod utils;
 
-use crate::common::{setup, write_to_file};
+use crate::utils::{setup, write_to_file};
 use anyhow::Result;
 
 #[test]
@@ -28,7 +28,7 @@ themes-dir = "some-dir"
     // ---
     // Act
     // ---
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -61,7 +61,7 @@ themes-dir = "some-dir""##;
     // ---
     // Act
     // ---
-    let (_, stderr) = common::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -87,7 +87,7 @@ fn test_cli_install_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -112,8 +112,8 @@ fn test_cli_install_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    common::run_command(command_vec.clone()).unwrap();
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    utils::run_command(command_vec.clone()).unwrap();
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert

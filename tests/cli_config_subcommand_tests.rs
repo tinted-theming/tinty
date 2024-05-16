@@ -1,6 +1,6 @@
-mod common;
+mod utils;
 
-use crate::common::{setup, write_to_file};
+use crate::utils::{setup, write_to_file};
 use anyhow::Result;
 
 #[test]
@@ -23,7 +23,7 @@ themes-dir = "scripts"
     // ---
     // Act
     // ---
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -56,7 +56,7 @@ themes-dir = "colors"
     // ---
     // Act
     // ---
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -78,7 +78,7 @@ fn test_cli_config_with_config_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -103,7 +103,7 @@ fn test_cli_config_with_data_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = common::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert

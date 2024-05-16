@@ -1,6 +1,6 @@
-mod common;
+mod utils;
 
-use crate::common::setup;
+use crate::utils::setup;
 use anyhow::Result;
 
 fn generate_shell_completion_test(shell_name: &str) -> Result<String> {
@@ -15,7 +15,7 @@ fn generate_shell_completion_test(shell_name: &str) -> Result<String> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = common::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
 
     // Ok((stdout, stderr, cleanup))
 
