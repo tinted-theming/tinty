@@ -28,6 +28,15 @@ pub fn build_cli() -> Command {
                 .action(ArgAction::Set)
         )
         .subcommand(
+            Command::new("build")
+                .about("Builds the target theme template")
+                .arg(
+                    Arg::new("template-dir")
+                        .help("Local path to the theme template you want to build")
+                        .required(true),
+                ),
+        )
+        .subcommand(
             Command::new("current").about("Prints the last scheme name applied")
         )
         .subcommand(

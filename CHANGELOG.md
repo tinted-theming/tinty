@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Add `tinty build` subcommand to build a base16 or base24 template
+  directory
+
 ## [0.13.0] - 2024-05-07
 
 ### Added

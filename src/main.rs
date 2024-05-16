@@ -9,7 +9,7 @@ use anyhow::{anyhow, Context, Result};
 use clap::Command;
 use clap_complete::{generate, Generator, Shell};
 use config::CONFIG_FILE_NAME;
-use constants::{REPO_DIR, REPO_NAME};
+use constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
 use std::path::PathBuf;
 use utils::{ensure_directory_exists, replace_tilde_slash_with_home};
 
@@ -52,6 +52,15 @@ fn main() -> Result<()> {
 
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
+        Some(("build", sub_matches)) => {
+            if let Some(template_dir) = sub_matches.get_one::<String>("template-dir") {
+                let schemes_repo_path =
+                    data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
+                let template_path = PathBuf::from(template_dir);
+
+                operations::build::build(&template_path, &schemes_repo_path)?;
+            }
+        }
         Some(("current", _)) => {
             operations::current::current(&data_path)?;
         }

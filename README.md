@@ -3,6 +3,7 @@
 [![Matrix Chat](https://img.shields.io/matrix/tinted-theming:matrix.org)](https://matrix.to/#/#tinted-theming:matrix.org)
 [![Crates.io](https://img.shields.io/crates/v/tinty.svg)](https://crates.io/crates/tinty)
 [![Tests](https://github.com/tinted-theming/tinty/actions/workflows/test.yml/badge.svg)](https://github.com/tinted-theming/tinty/actions/workflows/test.yml)
+[![LICENSE](https://img.shields.io/crates/l/tinty)](./LICENSE)
 
 <p align="center">
   <img
@@ -166,6 +167,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | `current`  | Displays the currently applied theme. | - | `tinty current` |
 | `config`   | Displays config related information currently in use by Tinty. Without flags it returns `config.yml` content. | - | `tinty config` |
 | `info`     | Provides information about themes. | `[<scheme_system>-<scheme_name>]`: Optional argument to specify a theme for detailed info. | `tinty info base16-mocha` |
+| `build`    | Builds the provided base16 or base24 template using [tinted-builder-rust]. | `<DIR>`: Path to the base16 or base24 template directory. | `tinty build path/to/tinted-tmux` |
 | `generate-completion` | Generates a shell completion file to source in your shell startup file (`*rc`). | `<shell_name>`: Name of the shell to generate a completion script for. Supports `bash`, `elvish`, `fish`, `powershell`, `zsh` | `tinty generate-completion bash` |
 
 Some subcommands support additional flags and options to modify their behavior:
@@ -384,3 +386,4 @@ license. Have a look at the [LICENSE] document for more information.
 [CONTRIBUTING.md]: CONTRIBUTING.md
 [LICENSE]: LICENSE
 [USAGE.md]: USAGE.md
+[tinted-builder-rust]: https://github.com/tinted-theming/tinted-builder-rust

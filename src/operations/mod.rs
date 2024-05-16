@@ -1,4 +1,5 @@
 pub mod apply;
+pub mod build;
 pub mod config;
 pub mod current;
 pub mod info;

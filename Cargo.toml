@@ -21,5 +21,6 @@ serde = { version = "1.0.196", features = ["derive"] }
 serde_yaml = "0.9.31"
 shell-words = "1.1.0"
 strip-ansi-escapes = "0.2.0"
+tinted-builder-rust = "0.5.0"
 toml = "0.8.9"
 url = "2.5.0"
