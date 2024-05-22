@@ -15,17 +15,7 @@ fn generate_shell_completion_test(shell_name: &str) -> Result<String> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
-
-    // Ok((stdout, stderr, cleanup))
-
-    // ------
-    // Assert
-    // ------
-    assert!(
-        stderr.contains(format!("Generating completion file for {shell_name}...").as_str()),
-        "stderr does not contain the expected output"
-    );
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
 
     cleanup()?;
     Ok(stdout)

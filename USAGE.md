@@ -21,6 +21,18 @@ subcommand, source the generated file in your shell startup file (`*rc`)
 and completions will exist for `tinty`. Have a look at the [README CLI
 section] for more information about the command usage.
 
+```sh
+tinty generate-completion zsh > path/to/tinty-zsh-completion.sh
+```
+
+In your startup file (`*rc`) add the following:
+
+```sh
+source path/to/tinty-zsh-completion.sh
+```
+
+### Completions in the repo
+
 A shell completion generation via `tinty` doesn't include any dynamic
 values, meaning scheme names (such as `base16-ocean`) won't be completed
 typing `tinty apply base`. We've created modified completion script

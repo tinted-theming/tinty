@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Remove stderr comment output for `tinty generate-completion`
+
 ## [0.14.0] - 2024-05-07
 
 ### Added

@@ -88,7 +88,7 @@ fn main() -> Result<()> {
         Some(("generate-completion", sub_matches)) => {
             if let Some(generator) = sub_matches.get_one::<Shell>("shell_name") {
                 let mut cmd = build_cli();
-                eprintln!("Generating completion file for {generator}...");
+
                 print_completions(*generator, &mut cmd);
                 return Ok(());
             };
