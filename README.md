@@ -2,7 +2,7 @@
 
 [![Matrix Chat](https://img.shields.io/matrix/tinted-theming:matrix.org)](https://matrix.to/#/#tinted-theming:matrix.org)
 [![Crates.io](https://img.shields.io/crates/v/tinty.svg)](https://crates.io/crates/tinty)
-[![Tests](https://github.com/tinted-theming/tinty/actions/workflows/test.yml/badge.svg)](https://github.com/tinted-theming/tinty/actions/workflows/test.yml)
+[![Tests](https://github.com/tinted-theming/tinty/actions/workflows/ci.yml/badge.svg)](https://github.com/tinted-theming/tinty/actions/workflows/ci.yml)
 [![LICENSE](https://img.shields.io/crates/l/tinty)](./LICENSE)
 
 <p align="center">
