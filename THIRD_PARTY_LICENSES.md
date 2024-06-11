@@ -4,8 +4,8 @@ This page lists the licenses of the projects used in cargo-about.
     
 ## Overview of licenses
 
-- Apache License 2.0 (51)
-- MIT License (4)
+- Apache License 2.0 (60)
+- MIT License (10)
 - Mozilla Public License 2.0 (1)
 - Unicode License Agreement - Data Files and Software (2016) (1)
 
@@ -653,7 +653,7 @@ This page lists the licenses of the projects used in cargo-about.
 
 #### Used by
 
-- [anstyle-parse 0.2.3](https://github.com/rust-cli/anstyle.git)
+- [anstyle-parse 0.2.4](https://github.com/rust-cli/anstyle.git)
 
 ```
                                  Apache License
@@ -864,15 +864,16 @@ This page lists the licenses of the projects used in cargo-about.
 
 #### Used by
 
-- [anstream 0.6.11](https://github.com/rust-cli/anstyle.git)
-- [anstyle-query 1.0.2](https://github.com/rust-cli/anstyle)
-- [anstyle 1.0.6](https://github.com/rust-cli/anstyle.git)
+- [anstream 0.6.14](https://github.com/rust-cli/anstyle.git)
+- [anstyle-query 1.0.3](https://github.com/rust-cli/anstyle)
+- [anstyle 1.0.7](https://github.com/rust-cli/anstyle.git)
 - [clap 4.5.4](https://github.com/clap-rs/clap)
-- [colorchoice 1.0.0](https://github.com/rust-cli/anstyle)
-- [serde_spanned 0.6.5](https://github.com/toml-rs/toml)
-- [toml 0.8.10](https://github.com/toml-rs/toml)
-- [toml_datetime 0.6.5](https://github.com/toml-rs/toml)
-- [toml_edit 0.22.4](https://github.com/toml-rs/toml)
+- [colorchoice 1.0.1](https://github.com/rust-cli/anstyle)
+- [is_terminal_polyfill 1.70.0](https://github.com/polyfill-rs/is_terminal_polyfill)
+- [serde_spanned 0.6.6](https://github.com/toml-rs/toml)
+- [toml 0.8.13](https://github.com/toml-rs/toml)
+- [toml_datetime 0.6.6](https://github.com/toml-rs/toml)
+- [toml_edit 0.22.13](https://github.com/toml-rs/toml)
 
 ```
                                  Apache License
@@ -1480,16 +1481,18 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
 #### Used by
 
-- [anyhow 1.0.79](https://github.com/dtolnay/anyhow)
-- [itoa 1.0.10](https://github.com/dtolnay/itoa)
-- [libc 0.2.153](https://github.com/rust-lang/libc)
-- [proc-macro2 1.0.78](https://github.com/dtolnay/proc-macro2)
-- [quote 1.0.35](https://github.com/dtolnay/quote)
-- [ryu 1.0.16](https://github.com/dtolnay/ryu)
-- [serde 1.0.196](https://github.com/serde-rs/serde)
-- [serde_derive 1.0.196](https://github.com/serde-rs/serde)
-- [serde_yaml 0.9.31](https://github.com/dtolnay/serde-yaml)
-- [syn 2.0.48](https://github.com/dtolnay/syn)
+- [anyhow 1.0.83](https://github.com/dtolnay/anyhow)
+- [itoa 1.0.11](https://github.com/dtolnay/itoa)
+- [libc 0.2.154](https://github.com/rust-lang/libc)
+- [proc-macro2 1.0.82](https://github.com/dtolnay/proc-macro2)
+- [quote 1.0.36](https://github.com/dtolnay/quote)
+- [ryu 1.0.18](https://github.com/dtolnay/ryu)
+- [serde 1.0.202](https://github.com/serde-rs/serde)
+- [serde_derive 1.0.202](https://github.com/serde-rs/serde)
+- [serde_yaml 0.9.34+deprecated](https://github.com/dtolnay/serde-yaml)
+- [syn 2.0.64](https://github.com/dtolnay/syn)
+- [thiserror-impl 1.0.60](https://github.com/dtolnay/thiserror)
+- [thiserror 1.0.60](https://github.com/dtolnay/thiserror)
 - [unicode-ident 1.0.12](https://github.com/dtolnay/unicode-ident)
 - [utf8parse 0.2.1](https://github.com/alacritty/vte)
 - [vte 0.11.1](https://github.com/alacritty/vte)
@@ -1891,15 +1894,18 @@ limitations under the License.
 
 - [equivalent 1.0.1](https://github.com/cuviper/equivalent)
 - [form_urlencoded 1.2.1](https://github.com/servo/rust-url)
-- [hashbrown 0.14.3](https://github.com/rust-lang/hashbrown)
+- [hashbrown 0.14.5](https://github.com/rust-lang/hashbrown)
 - [heck 0.5.0](https://github.com/withoutboats/heck)
 - [idna 0.5.0](https://github.com/servo/rust-url/)
-- [indexmap 2.2.2](https://github.com/indexmap-rs/indexmap)
+- [indexmap 2.2.6](https://github.com/indexmap-rs/indexmap)
 - [is_executable 1.0.1](https://github.com/fitzgen/is_executable)
 - [percent-encoding 2.3.1](https://github.com/servo/rust-url/)
+- [regex-automata 0.4.6](https://github.com/rust-lang/regex/tree/master/regex-automata)
+- [regex-syntax 0.8.3](https://github.com/rust-lang/regex/tree/master/regex-syntax)
+- [regex 1.10.4](https://github.com/rust-lang/regex)
 - [strip-ansi-escapes 0.2.0](https://github.com/luser/strip-ansi-escapes)
 - [unicode-bidi 0.3.15](https://github.com/servo/unicode-bidi)
-- [unicode-normalization 0.1.22](https://github.com/unicode-rs/unicode-normalization)
+- [unicode-normalization 0.1.23](https://github.com/unicode-rs/unicode-normalization)
 - [unicode-xid 0.2.4](https://github.com/unicode-rs/unicode-xid)
 - [url 2.5.0](https://github.com/servo/rust-url)
 
@@ -2322,6 +2328,9 @@ limitations under the License.
 
 #### Used by
 
+- [ribboncurls 0.2.0](https://github.com/tinted-theming/ribboncurls)
+- [tinted-builder-rust 0.6.0](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinted-builder 0.3.0](https://github.com/tinted-theming/tinted-builder-rust)
 - [vte_generate_state_changes 0.1.1](https://github.com/jwilm/vte)
 
 ```
@@ -2428,7 +2437,7 @@ limitations under the License.
 
 #### Used by
 
-- [unicode-normalization 0.1.22](https://github.com/unicode-rs/unicode-normalization)
+- [unicode-normalization 0.1.23](https://github.com/unicode-rs/unicode-normalization)
 - [unicode-xid 0.2.4](https://github.com/unicode-rs/unicode-xid)
 
 ```
@@ -2446,7 +2455,39 @@ according to those terms.
 
 #### Used by
 
-- [tinty 0.13.0](https://github.com/tinted-theming/tinty)
+- [html-escape 0.2.13](https://github.com/magiclen/html-escape)
+- [utf8-width 0.1.7](https://github.com/magiclen/utf8-width)
+
+```
+MIT License
+
+Copyright (c) 2020 magiclen.org (Ron Li)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+```
+
+### MIT License
+
+#### Used by
+
+- [tinty 0.14.0](https://github.com/tinted-theming/tinty)
 
 ```
 MIT License
@@ -2477,7 +2518,7 @@ SOFTWARE.
 
 #### Used by
 
-- [unsafe-libyaml 0.2.10](https://github.com/dtolnay/unsafe-libyaml)
+- [unsafe-libyaml 0.2.11](https://github.com/dtolnay/unsafe-libyaml)
 
 ```
 Permission is hereby granted, free of charge, to any
@@ -2510,7 +2551,7 @@ DEALINGS IN THE SOFTWARE.
 
 #### Used by
 
-- [winnow 0.5.39](https://github.com/winnow-rs/winnow)
+- [winnow 0.6.8](https://github.com/winnow-rs/winnow)
 
 ```
 Permission is hereby granted, free of charge, to any person obtaining
@@ -2531,6 +2572,38 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+```
+
+### MIT License
+
+#### Used by
+
+- [aho-corasick 1.1.3](https://github.com/BurntSushi/aho-corasick)
+- [memchr 2.7.2](https://github.com/BurntSushi/memchr)
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2015 Andrew Gallant
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 
 ```
 
@@ -2564,6 +2637,20 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+```
+
+### MIT License
+
+#### Used by
+
+- [aho-corasick 1.1.3](https://github.com/BurntSushi/aho-corasick)
+- [memchr 2.7.2](https://github.com/BurntSushi/memchr)
+
+```
+This project is dual-licensed under the Unlicense and MIT licenses.
+
+You may use this code under the terms of either license.
 
 ```
 
