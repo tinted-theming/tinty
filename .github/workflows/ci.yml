@@ -1,0 +1,35 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  setup-environment:
+    name: Set env vars
+    runs-on: ubuntu-latest
+    outputs:
+      cargo_cache_key: ${{ steps.cargo_cache_key.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set cargo cache key
+        id: cargo_cache_key
+        run: |
+          CARGO_CACHE_KEY="${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
+          echo "value=$CARGO_CACHE_KEY" >> $GITHUB_OUTPUT
+
+  lint:
+    needs: setup-environment
+    uses: ./.github/workflows/lint.yml
+    with:
+      cache-key: ${{ needs.setup-environment.outputs.cargo_cache_key }}
+
+  test:
+    needs: setup-environment
+    uses: ./.github/workflows/test.yml
+    with:
+      cache-key: ${{ needs.setup-environment.outputs.cargo_cache_key }}

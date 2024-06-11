@@ -6,8 +6,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str;
 
+#[allow(dead_code)]
 pub const REPO_NAME: &str = env!("CARGO_PKG_NAME");
 pub const COMMAND_NAME: &str = "./target/release/tinty";
+#[allow(dead_code)]
 pub const CURRENT_SCHEME_FILE_NAME: &str = "current_scheme";
 
 pub fn run_command(command_vec: Vec<String>) -> Result<(String, String), Box<dyn Error>> {
@@ -29,6 +31,7 @@ pub fn run_command(command_vec: Vec<String>) -> Result<(String, String), Box<dyn
     Ok((String::from_utf8(stdout)?, String::from_utf8(stderr)?))
 }
 
+#[allow(dead_code)]
 pub fn run_install_command(config_path: &Path, data_path: &Path) -> Result<()> {
     let output_install = Command::new(COMMAND_NAME)
         .args([
@@ -52,7 +55,7 @@ pub fn cleanup(config_path: &Path, data_path: &Path) -> Result<()> {
     }
 
     if data_path.is_dir() {
-        fs::remove_dir_all(&data_path)?;
+        fs::remove_dir_all(data_path)?;
     }
 
     Ok(())
@@ -74,6 +77,7 @@ pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn read_file_to_string(path: &Path) -> Result<String> {
     if !path.exists() {
         return Err(anyhow!("File does not exist: {}", path.display()));
@@ -87,6 +91,7 @@ pub fn read_file_to_string(path: &Path) -> Result<String> {
     Ok(contents)
 }
 
+#[allow(clippy::type_complexity)]
 pub fn setup(
     name: &str,
     command: &str,

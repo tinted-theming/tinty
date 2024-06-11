@@ -1,20 +1,31 @@
-name: Tests
+name: Test
 on:
+  workflow_call:
+    inputs:
+      cache-key:
+        required: true
+        type: string
   workflow_dispatch:
-  push:
-    branches:
-      - main
-  pull_request:
+
+env:
+  CARGO_CACHE_KEY: ${{ inputs.cache-key || 'default-cache-key-if-none-provided' }}
 
 jobs:
-  run:
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch the repository code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/.cargo/bin
+          key: ${{ env.CARGO_CACHE_KEY }}
+          id: cache-cargo-test
 
-      - name: Deny banned crates and licenses
-        uses: EmbarkStudios/cargo-deny-action@v1
-
-      - name: Run linting and tests
+      - name: Cargo test
         run: docker build --target tests -t tinty-clippy .

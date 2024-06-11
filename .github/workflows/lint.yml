@@ -1,0 +1,70 @@
+name: Lint
+on:
+  workflow_call:
+    inputs:
+      cache-key:
+        required: true
+        type: string
+  workflow_dispatch:
+
+env:
+  CARGO_CACHE_KEY: ${{ inputs.cache-key || 'default-cache-key-if-none-provided' }}
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/.cargo/bin
+          key: ${{ env.CARGO_CACHE_KEY }}
+        id: cache-cargo-fmt
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt
+
+      - name: Rustfmt Check
+        uses: actions-rust-lang/rustfmt@v1
+
+  deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/.cargo/bin
+          key: ${{ env.CARGO_CACHE_KEY }}
+        id: cache-cargo-deny
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - uses: EmbarkStudios/cargo-deny-action@v1
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/.cargo/bin
+          key: ${{ env.CARGO_CACHE_KEY }}
+        id: cache-cargo-fmt
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      - name: Cargo audit
+        run: cargo audit
