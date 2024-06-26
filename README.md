@@ -339,7 +339,7 @@ hook = "cp -f %f ~/.config/waybar/colors.css"
 path = "https://github.com/rkubosz/base16-sway"
 name = "base16-sway"
 themes-dir = "themes"
-hook = "cp -f %f ~/.config/sway/config && swaymsg reload"
+hook = "cp -f %f ~/.config/sway/config.d/theme && swaymsg reload"
 ```
 
 - `path`: A `path` to the repository is provided in the Tinty
