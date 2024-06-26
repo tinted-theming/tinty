@@ -291,7 +291,7 @@ If you're looking for a base16 or base24 builder, have a look at
 
 #### CLI mapping
 
-- `flavours apply mocha` -> `tinty set base16-mocha`
+- `flavours apply mocha` -> `tinty apply base16-mocha`
 - `flavours info mocha` -> `tinty info base16-mocha`
 - `flavours current` -> `tinty current`
 - `flavours update` -> `tinty install`
@@ -333,7 +333,7 @@ hook = "cp -f %f ~/.config/alacritty/colors.toml"
 path = "https://github.com/tinted-theming/base16-waybar"
 name = "base16-waybar"
 themes-dir = "colors"
-hook = "cp -r %f ~/.config/waybar/colors.css"
+hook = "cp -f %f ~/.config/waybar/colors.css"
 
 [[items]]
 path = "https://github.com/rkubosz/base16-sway"
