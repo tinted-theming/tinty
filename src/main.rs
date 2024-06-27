@@ -6,6 +6,7 @@ mod operations {
     pub mod build;
     pub mod config;
     pub mod current;
+    pub mod generate_scheme;
     pub mod info;
     pub mod init;
     pub mod install;
@@ -19,8 +20,10 @@ use anyhow::{anyhow, Context, Result};
 use clap::Command;
 use clap_complete::{generate, Generator, Shell};
 use config::CONFIG_FILE_NAME;
-use constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
+use constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
+use operations::generate_scheme;
 use std::path::PathBuf;
+use tinted_scheme_extractor::{System, Variant};
 use utils::{ensure_directory_exists, replace_tilde_slash_with_home};
 
 /// Entry point of the application.
@@ -101,8 +104,13 @@ fn main() -> Result<()> {
         Some(("init", _)) => {
             operations::init::init(&config_path, &data_path)?;
         }
-        Some(("list", _)) => {
-            operations::list::list(&data_path)?;
+        Some(("list", sub_matches)) => {
+            let is_custom = sub_matches
+                .get_one::<bool>("custom-schemes")
+                .map(|b| b.to_owned())
+                .unwrap_or(false);
+
+            operations::list::list(&data_path, is_custom)?;
         }
         Some(("apply", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("scheme_name") {
@@ -118,6 +126,73 @@ fn main() -> Result<()> {
         }
         Some(("update", _)) => {
             operations::update::update(&config_path, &data_path)?;
+        }
+        Some(("generate-scheme", sub_matches)) => {
+            let slug_default = "tinty-generated".to_string();
+            let slug = sub_matches
+                .get_one::<String>("slug")
+                .unwrap_or(&slug_default);
+            let name_default = "Tinty Generated".to_string();
+            let name = sub_matches
+                .get_one::<String>("name")
+                .unwrap_or(&name_default);
+            let author_default = "Tinty".to_string();
+            let author = sub_matches
+                .get_one::<String>("author")
+                .unwrap_or(&author_default);
+            let image_path = match sub_matches.get_one::<String>("image_path") {
+                Some(content) => PathBuf::from(content)
+                    .canonicalize()
+                    .with_context(|| "Invalid image file supplied"),
+                None => Err(anyhow!("No image file specified")),
+            }?;
+            let system = match sub_matches.get_one::<String>("system").map(|s| s.as_str()) {
+                Some("base24") => System::Base24,
+                _ => System::Base16,
+            };
+            let variant = match sub_matches.get_one::<String>("variant").map(|s| s.as_str()) {
+                Some("light") => Variant::Light,
+                _ => Variant::Dark,
+            };
+            let outfile_path_option = {
+                let custom_scheme_path = data_path.join(CUSTOM_SCHEMES_DIR_NAME);
+                let save = sub_matches.get_one::<bool>("save").unwrap_or(&false);
+
+                // Ensure schemes/base16 and schemes/base24 paths exist
+                ensure_directory_exists(custom_scheme_path.join("base16")).with_context(|| {
+                    format!(
+                        "Failed to create custom scheme directory at {}",
+                        data_path.display()
+                    )
+                })?;
+                ensure_directory_exists(custom_scheme_path.join("base24")).with_context(|| {
+                    format!(
+                        "Failed to create custom scheme directory at {}",
+                        data_path.display()
+                    )
+                })?;
+
+                if *save {
+                    let filename = format!("{}.yaml", slug);
+
+                    Some(custom_scheme_path.join(format!("{}/{}", system, filename)))
+                } else {
+                    match sub_matches.get_one::<String>("outfile").map(|s| s.as_str()) {
+                        Some("-") | None => None,
+                        Some(value) => Some(PathBuf::from(value)),
+                    }
+                }
+            };
+
+            generate_scheme::generate_scheme(
+                image_path,
+                outfile_path_option,
+                author.to_string(),
+                name.to_string(),
+                slug.to_string(),
+                system,
+                variant,
+            )?;
         }
         _ => {
             println!("Basic usage: {} apply <SCHEME_NAME>", REPO_NAME);

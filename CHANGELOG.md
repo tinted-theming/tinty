@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add `tinty generate-scheme` command to generate a scheme based on
+  provided image input, with the included functionality of saving this
+  scheme file and applying it with `tinty apply`.
+- Add `--custom-schemes` flag for `tinty lint` subcommand to list custom
+  schemes saved with `tinnty generate-scheme`.
+
 ## [0.16.0] - 2024-07-02
 
 ### Added
