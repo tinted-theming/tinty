@@ -51,7 +51,7 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // ------
     cleanup()?;
     assert!(
-        stdout.contains(&expected_output),
+        stdout.contains(expected_output),
         "stdout does not contain the expected output"
     );
 

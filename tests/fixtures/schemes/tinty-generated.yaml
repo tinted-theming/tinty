@@ -1,0 +1,22 @@
+system: base16
+name: Tinty Generated
+slug: tinty-generated
+author: Tinty
+variant: dark
+palette:
+  base00: '#282628'
+  base01: '#403e3f'
+  base02: '#595757'
+  base03: '#71706e'
+  base04: '#8a8986'
+  base05: '#a2a29d'
+  base06: '#bbbbb5'
+  base07: '#d4d4cd'
+  base08: '#bf2546'
+  base09: '#f69622'
+  base0A: '#f99923'
+  base0B: '#19953f'
+  base0C: '#40dab9'
+  base0D: '#0666dc'
+  base0E: '#8554ac'
+  base0F: '#ac7424'

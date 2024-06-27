@@ -1,7 +1,10 @@
 # Stage 1: Build Environment
-FROM rust:1.77.2 AS base
+FROM rust:1.79.0 AS base
 WORKDIR /usr/src/tinty
-COPY . .
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+COPY tests ./tests
+
 RUN cargo build --release
 
 # Stage 2: Run lint and tests
