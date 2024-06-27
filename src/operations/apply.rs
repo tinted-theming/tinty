@@ -102,7 +102,7 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
         match theme_option {
             Some(theme_file) => {
                 let theme_file_path = &theme_file.path();
-			          let extension = theme_file_path
+                let extension = theme_file_path
                     .extension()
                     .unwrap_or_default()
                     .to_str()
