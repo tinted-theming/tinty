@@ -190,7 +190,7 @@ fn print_single_schemes(files: Vec<PathBuf>, scheme_name: &str) -> Result<()> {
 
     if !SupportedSchemeSystems::variants()
         .iter()
-        .map(|s| s.to_str())
+        .map(|s| s.as_str())
         .collect::<Vec<&str>>()
         .contains(&scheme_system_name)
     {
@@ -254,14 +254,14 @@ pub fn info(data_path: &Path, scheme_name_option: Option<&String>) -> Result<()>
     }
 
     let files_entries =
-        fs::read_dir(schemes_repo_path.join(SupportedSchemeSystems::default().to_str()))?;
+        fs::read_dir(schemes_repo_path.join(SupportedSchemeSystems::default().as_str()))?;
     let mut files: Vec<PathBuf> = files_entries
         .filter_map(|entry| entry.ok().map(|e| e.path()))
         .collect();
     let scheme_systems_without_default: Vec<&str> = SupportedSchemeSystems::variants()
         .iter()
-        .filter(|s| s.to_str() != SupportedSchemeSystems::default().to_str())
-        .map(|s| s.to_str())
+        .filter(|s| s.as_str() != SupportedSchemeSystems::default().as_str())
+        .map(|s| s.as_str())
         .collect();
 
     // Add other scheme_system schemes to vec

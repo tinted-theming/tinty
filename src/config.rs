@@ -53,7 +53,7 @@ impl<'de> Deserialize<'de> for SupportedSchemeSystems {
 }
 
 impl SupportedSchemeSystems {
-    pub fn to_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             SupportedSchemeSystems::Base16 => "base16",
             SupportedSchemeSystems::Base24 => "base24",
@@ -79,7 +79,7 @@ impl SupportedSchemeSystems {
 
 impl fmt::Display for SupportedSchemeSystems {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.to_str())
+        write!(f, "{}", self.as_str())
     }
 }
 
