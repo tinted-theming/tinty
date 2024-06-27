@@ -117,6 +117,19 @@ fi
 directory if you don't use the default of Tinty.
 Tinty stores themes to `$XDG_DATA_HOME` based on [XDG Base Directory specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) by default.
 
+## Use your own schemes
+
+To use your own schemes, create a
+`custom-schemes/<scheme_system>-your-scheme-name.yaml` file in your
+data-dir (Run `tinty config --data-dir-path` to get the path to your
+data-dir). Where `<scheme_system>` is the system you use, currently we
+support `base16` and `base24`. After you've added your scheme, make sure
+it exists correctly by running `tinty list --custom-schemes`; If you do
+not see it listed, something is wrong and Tinty will not apply it.
+
+If everything works as expected, `tinty apply
+base16-your-scheme-name.yaml` should apply your scheme.
+
 ## Shell
 
 When Tinty does not have any `[[items]]` set up in `config.toml`, Tinty

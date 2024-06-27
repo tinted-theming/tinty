@@ -160,7 +160,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | Subcommand | Description                                         | Arguments            | Example Usage                              |
 |------------|-----------------------------------------------------|----------------------|--------------------------------------------|
 | `install`  | Installs requirements for the configuration. | - | `tinty install` |
-| `list`     | Lists all available themes. | - | `tinty list` |
+| `list`     | Lists all available themes. | `--custom-schemes` to list saved custom theme files using `tinty generate-scheme` | `tinty list` |
 | `apply`    | Applies a specific theme. | `<scheme_system>-<scheme_name>`: Name of the system and scheme to apply. | `tinty apply base16-mocha` |
 | `update`   | Updates the templates and schemes. | - | `tinty update`                    |
 | `init`     | Initializes the tool with the last applied theme otherwise `default-scheme` from `config.toml`. | - | `tinty init` |
@@ -169,6 +169,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | `info`     | Provides information about themes. | `[<scheme_system>-<scheme_name>]`: Optional argument to specify a theme for detailed info. | `tinty info base16-mocha` |
 | `build`    | Builds the provided base16 or base24 template using [tinted-builder-rust]. | `<DIR>`: Path to the base16 or base24 template directory. | `tinty build path/to/tinted-tmux` |
 | `generate-completion` | Generates a shell completion file to source in your shell startup file (`*rc`). | `<shell_name>`: Name of the shell to generate a completion script for. Supports `bash`, `elvish`, `fish`, `powershell`, `zsh` | `tinty generate-completion bash` |
+| `generate-scheme` | Generates a yaml scheme file with colors inferred from provided image. | `<image_path>`: Path to image. Either `<outpath>` (`-` value to print to stdout) or `--save` to save for use within `tinty` | `tinty generate-completion bash` |
 
 Some subcommands support additional flags and options to modify their behavior:
 
@@ -372,6 +373,12 @@ information.
 Like most other [Tinted Theming] projects, Tinty falls under the MIT
 license. Have a look at the [LICENSE] document for more information.
 
+### Third-Party Licenses
+
+This project includes third-party code licensed under the MPL-2.0,
+BSD-2-Clause and BSD-3-Clause License. See the [THIRD_PARTY_LICENSES]
+file for details.
+
 [Tinted Theming]: https://github.com/tinted-theming/home
 [Base16 builder specification]: https://github.com/tinted-theming/home/blob/main/builder.md
 [home repository]: https://github.com/tinted-theming/home
@@ -388,3 +395,4 @@ license. Have a look at the [LICENSE] document for more information.
 [LICENSE]: LICENSE
 [USAGE.md]: USAGE.md
 [tinted-builder-rust]: https://github.com/tinted-theming/tinted-builder-rust
+[THIRD_PARTY_LICENSES.md]: THIRD_PARTY_LICENSES.md

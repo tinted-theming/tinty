@@ -1,4 +1,7 @@
-use clap::{builder::styling, Arg, ArgAction, ArgMatches, Command};
+use clap::{
+    builder::{styling, PossibleValue},
+    Arg, ArgAction, ArgGroup, ArgMatches, Command, ValueHint,
+};
 use clap_complete::Shell;
 
 use crate::constants::REPO_NAME;
@@ -48,6 +51,70 @@ pub fn build_cli() -> Command {
             ),
         )
         .subcommand(
+            Command::new("generate-scheme")
+                .about("Generates a scheme based on an image")
+                .arg(
+                    Arg::new("image_path")
+                    .help("Which image file to use.")
+                    .required(true)
+                    .value_name("INFILE")
+                    .value_hint(ValueHint::FilePath)
+                )
+                .arg(
+                    Arg::new("outfile")
+                    .help("Output path to save the <slug>.yaml file to. Use '-' for stdout")
+                    .value_name("OUTFILE")
+                    .value_hint(ValueHint::FilePath)
+                )
+                .arg(
+                    Arg::new("author")
+                    .long("author")
+                    .help("Scheme author info (name, email, etc) to write, defaults to 'Tinty'")
+                    .value_hint(ValueHint::Other)
+                )
+                .arg(
+                    Arg::new("name")
+                    .long("name")
+                    .help("Scheme display name (can include spaces and capitalization). Defaults to 'Tinty Generated'")
+                    .value_hint(ValueHint::Other)
+                )
+                .arg(
+                    Arg::new("slug")
+                    .long("slug")
+                    .help("Scheme slug (the name you specify when applying schemes). Can not contain white-space or capitalization. Defaults to 'tinty-generated'")
+                    .value_hint(ValueHint::Other)
+                )
+                .arg(
+                    Arg::new("system")
+                    .long("system")
+                    .help("Whether to generate a base16 or base24 scheme")
+                    .value_parser([
+                        PossibleValue::new("base16"),
+                        PossibleValue::new("base24"),
+                    ])
+                    .value_hint(ValueHint::Other)
+                )
+                .arg(
+                    Arg::new("save")
+                    .long("save")
+                    .help("Whether to add the scheme to the installed schemes.")
+                    .action(ArgAction::SetTrue)
+                )
+                .arg(
+                    Arg::new("variant")
+                    .long("variant")
+                    .help("Whether to generate a dark or light scheme")
+                    .value_parser([
+                        PossibleValue::new("dark"),
+                        PossibleValue::new("light"),
+                    ])
+                    .value_hint(ValueHint::Other)
+                )
+                .group(ArgGroup::new("required_flags")
+                    .args(["outfile", "save"])
+                    .required(true)),
+        )
+        .subcommand(
             Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {} info base16-mocha)", REPO_NAME)).arg(
                 Arg::new("scheme_name")
                     .help("The scheme you want to get information about")
@@ -57,7 +124,13 @@ pub fn build_cli() -> Command {
         .subcommand(
             Command::new("init").about("Initializes with the exising config. Used to Initialize exising theme for when your shell starts up")
         )
-        .subcommand(Command::new("list").about("Lists available schemes"))
+        .subcommand(Command::new("list").about("Lists available schemes")
+                .arg(
+                    Arg::new("custom-schemes")
+                        .help("Lists availabile custom schemes")
+                        .long("custom-schemes")
+                        .action(ArgAction::SetTrue)
+                ))
         .subcommand(
             Command::new("config").about("Provides config related information")
                 .arg(

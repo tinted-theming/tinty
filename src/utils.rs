@@ -1,5 +1,5 @@
 use crate::config::{Config, ConfigItem, SupportedSchemeSystems, DEFAULT_CONFIG_SHELL};
-use crate::constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME, SCHEME_EXTENSION};
+use crate::constants::{REPO_NAME, SCHEME_EXTENSION};
 use anyhow::{anyhow, Context, Result};
 use std::fs::{self, File};
 use std::io::Write;
@@ -110,9 +110,11 @@ pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<Stri
     ))
 }
 
-pub fn get_all_scheme_names(data_path: &Path) -> Result<Vec<String>> {
-    let schemes_repo_path = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
-    if !schemes_repo_path.exists() {
+pub fn get_all_scheme_names(
+    schemes_path: &Path,
+    scheme_systems_option: Option<SupportedSchemeSystems>,
+) -> Result<Vec<String>> {
+    if !schemes_path.exists() {
         return Err(anyhow!(
             "Schemes do not exist, run install and try again: `{} install`",
             REPO_NAME
@@ -121,8 +123,11 @@ pub fn get_all_scheme_names(data_path: &Path) -> Result<Vec<String>> {
 
     // For each supported scheme system, add schemes to vec
     let mut scheme_vec: Vec<String> = Vec::new();
-    for scheme_system in SupportedSchemeSystems::variants() {
-        let scheme_system_dir = schemes_repo_path.join(scheme_system.to_str());
+    let scheme_systems = scheme_systems_option
+        .map(|s| vec![s])
+        .unwrap_or(SupportedSchemeSystems::variants().to_vec());
+    for scheme_system in scheme_systems {
+        let scheme_system_dir = schemes_path.join(scheme_system.to_str());
         if !scheme_system_dir.exists() {
             continue;
         }
