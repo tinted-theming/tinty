@@ -120,7 +120,8 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
                 // Run hook for item if provided
                 if let Some(hook_text) = &item.hook {
                     let hook_script =
-                        hook_text.replace("%f", format!("\"{}\"", data_theme_path.display()).as_str());
+                        hook_text.replace("%f", format!("\"{}\"", data_theme_path.display()).as_str())
+                        .replace("%n", full_scheme_name);
                     let command_vec =
                         get_shell_command_from_string(config_path, hook_script.as_str())?;
                     Command::new(&command_vec[0])
