@@ -1,3 +1,4 @@
+
 use crate::config::{Config, SupportedSchemeSystems};
 use crate::constants::{
     CURRENT_SCHEME_FILE_NAME, DEFAULT_SCHEME_SYSTEM, REPO_DIR, REPO_NAME, REPO_URL,
@@ -70,7 +71,6 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
     for item in system_items {
         let repo_path = data_path.join(REPO_DIR).join(&item.name);
         let themes_path = repo_path.join(&item.themes_dir);
-
         if !themes_path.exists() {
             return Err(anyhow!(format!(
                 "Provided theme path for {} does not exist: {}\nTry running `{} install` or `{} update` or check your config.toml file and try again.",
@@ -86,16 +86,23 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
             .with_context(|| format!("Themes are missing from {}, try running `{} install` or `{} update` and try again.", item.name, REPO_NAME, REPO_NAME))?;
         let theme_option = &theme_dir.filter_map(Result::ok).find(|entry| {
             let path = entry.path();
-            let filename = path.file_stem().and_then(|name| name.to_str());
-
-            full_scheme_name == filename.unwrap_or_default()
+            match &item.theme_file_extension {
+                Some(extension) => {
+                    let filename = path.file_name().and_then(|name| name.to_str());
+                    format!("{}{}", full_scheme_name, extension) == filename.unwrap_or_default()
+                },
+                None => {
+                    let filename = path.file_stem().and_then(|name| name.to_str());
+                    full_scheme_name == filename.unwrap_or_default()
+                }
+            }
         });
 
         // Copy that theme to the data_path or log a message that it isn't found
         match theme_option {
             Some(theme_file) => {
                 let theme_file_path = &theme_file.path();
-                let extension = theme_file_path
+			          let extension = theme_file_path
                     .extension()
                     .unwrap_or_default()
                     .to_str()

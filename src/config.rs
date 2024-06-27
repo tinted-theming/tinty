@@ -11,7 +11,7 @@ use url::Url;
 pub const DEFAULT_CONFIG_SHELL: &str = "sh -c '{}'";
 pub const CONFIG_FILE_NAME: &str = "config.toml";
 pub const BASE16_SHELL_REPO_URL: &str = "https://github.com/tinted-theming/base16-shell";
-pub const BASE16_SHELL_REPO_NAME: &str = "base16-shell";
+pub const BASE16_SHELL_REPO_NAME: &str = "base16-shells";
 pub const BASE16_SHELL_THEMES_DIR: &str = "scripts";
 pub const BASE16_SHELL_HOOK: &str = ". %f";
 
@@ -93,6 +93,8 @@ pub struct ConfigItem {
     pub themes_dir: String,
     #[serde(rename = "supported-systems")]
     pub supported_systems: Option<Vec<SupportedSchemeSystems>>,
+    #[serde(rename = "theme-file-extension")]
+    pub theme_file_extension: Option<String>
 }
 
 impl fmt::Display for ConfigItem {
@@ -171,6 +173,7 @@ impl Config {
             themes_dir: BASE16_SHELL_THEMES_DIR.to_string(),
             hook: Some(BASE16_SHELL_HOOK.to_string()),
             supported_systems: Some(vec![SupportedSchemeSystems::Base16]), // DEFAULT_SCHEME_SYSTEM
+	    theme_file_extension: None
         };
 
         // Add default `item` if no items exist

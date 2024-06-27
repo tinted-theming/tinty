@@ -155,6 +155,7 @@ base16-mellow-purple
 base16-mexico-light
 base16-mocha
 base16-monokai
+base16-moonlight
 base16-mountain
 base16-nebula
 base16-nord-light
@@ -177,6 +178,10 @@ base16-pico
 base16-pinky
 base16-pop
 base16-porple
+base16-precious-dark-eleven
+base16-precious-dark-fifteen
+base16-precious-light-warm
+base16-precious-light-white
 base16-primer-dark-dimmed
 base16-primer-dark
 base16-primer-light
