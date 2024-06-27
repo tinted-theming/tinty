@@ -127,7 +127,7 @@ pub fn get_all_scheme_names(
         .map(|s| vec![s])
         .unwrap_or(SupportedSchemeSystems::variants().to_vec());
     for scheme_system in scheme_systems {
-        let scheme_system_dir = schemes_path.join(scheme_system.to_str());
+        let scheme_system_dir = schemes_path.join(scheme_system.as_str());
         if !scheme_system_dir.exists() {
             continue;
         }
@@ -143,7 +143,7 @@ pub fn get_all_scheme_names(
             if extension == SCHEME_EXTENSION {
                 scheme_vec.push(format!(
                     "{}-{}",
-                    scheme_system.to_str(),
+                    scheme_system.as_str(),
                     file.unwrap()
                         .path()
                         .file_stem()
