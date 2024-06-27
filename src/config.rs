@@ -15,7 +15,7 @@ pub const BASE16_SHELL_REPO_NAME: &str = "base16-shell";
 pub const BASE16_SHELL_THEMES_DIR: &str = "scripts";
 pub const BASE16_SHELL_HOOK: &str = ". %f";
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub enum SupportedSchemeSystems {
     #[default]
     Base16,

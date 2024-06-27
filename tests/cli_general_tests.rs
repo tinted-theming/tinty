@@ -37,7 +37,7 @@ fn test_cli_config_path_tilde_as_home() -> Result<()> {
     let name = "test_cli_config_path_tilde_as_home";
     let config_path_name = format!("config_path_{}", name);
     let home_path = dirs::home_dir().unwrap();
-    let config_path = PathBuf::from(home_path.join(&config_path_name));
+    let config_path = home_path.join(&config_path_name);
     let provided_config_path = format!("~/{}", config_path_name);
     let data_path = PathBuf::from(format!("data_path_{}", name));
     let command = format!(
@@ -161,7 +161,7 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     let data_path_name = "test_cli_data_path_tilde_as_home";
     let home_path = dirs::home_dir().unwrap();
     let config_path = PathBuf::from(format!("{}.toml", data_path_name));
-    let data_path = PathBuf::from(home_path.join(data_path_name));
+    let data_path = home_path.join(data_path_name);
     let provided_data_path = format!("~/{}", data_path_name);
     let command = format!(
         "{} --config=\"{}\" --data-dir=\"{}\" apply base16-mocha",

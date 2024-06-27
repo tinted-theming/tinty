@@ -35,7 +35,7 @@ themes-dir = "some-dir"
     // ------
     cleanup()?;
     assert!(
-        stderr.contains(&expected_output),
+        stderr.contains(expected_output),
         "stdout does not contain the expected output"
     );
 
@@ -68,7 +68,7 @@ themes-dir = "some-dir""##;
     // ------
     cleanup()?;
     assert!(
-        stderr.contains(&expected_output),
+        stderr.contains(expected_output),
         "stdout does not contain the expected output"
     );
 
@@ -93,7 +93,7 @@ fn test_cli_install_subcommand_without_setup() -> Result<()> {
     // Assert
     // ------
     assert!(
-        stdout.contains(&expected_output),
+        stdout.contains(expected_output),
         "stdout does not contain the expected output"
     );
 
@@ -120,7 +120,7 @@ fn test_cli_install_subcommand_with_setup() -> Result<()> {
     // ------
 
     assert!(
-        stdout.contains(&expected_output),
+        stdout.contains(expected_output),
         "stdout does not contain the expected output"
     );
 

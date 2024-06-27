@@ -1,6 +1,7 @@
 use crate::config::{Config, SupportedSchemeSystems};
 use crate::constants::{
-    CURRENT_SCHEME_FILE_NAME, DEFAULT_SCHEME_SYSTEM, REPO_DIR, REPO_NAME, REPO_URL,
+    CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, DEFAULT_SCHEME_SYSTEM, REPO_DIR, REPO_NAME,
+    REPO_URL, SCHEMES_REPO_NAME,
 };
 use crate::utils::{
     create_theme_filename_without_extension, get_all_scheme_names, get_shell_command_from_string,
@@ -8,8 +9,9 @@ use crate::utils::{
 };
 use anyhow::{anyhow, Context, Result};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+use tinted_builder_rust::operation_build::build;
 
 fn str_matches_scheme_system(value: &str) -> bool {
     match value {
@@ -24,11 +26,11 @@ fn str_matches_scheme_system(value: &str) -> bool {
 /// For each of the provided config items, copy the theme to the data_dir based on the provided
 /// scheme_name
 pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Result<()> {
-    let scheme_name_arr = full_scheme_name.split('-');
-    let scheme_system_option = scheme_name_arr.clone().next();
+    let scheme_name_arr: Vec<String> = full_scheme_name.split('-').map(|s| s.to_string()).collect();
+    let scheme_system_option = scheme_name_arr.clone().first().map(|s| s.to_string());
 
     // Check provided scheme exists
-    if scheme_name_arr.count() < 2 {
+    if scheme_name_arr.len() < 2 {
         return Err(anyhow!(
             "Invalid scheme name. Make sure the scheme system is prefixed <SCHEME_SYSTEM>-<SCHEME_NAME>, eg: `{}-ayu-dark`",
             DEFAULT_SCHEME_SYSTEM,
@@ -36,7 +38,7 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
     }
 
     // Check provided scheme is valid
-    if !str_matches_scheme_system(scheme_system_option.unwrap_or_default()) {
+    if !str_matches_scheme_system(scheme_system_option.clone().unwrap_or_default().as_str()) {
         return Err(anyhow!(
             "Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"{}\" or \"{}\"), eg: {}-{}",
             SupportedSchemeSystems::Base16.to_str(),
@@ -46,23 +48,60 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
         ));
     }
 
+    // Go through custom schemes
+    let scheme_system =
+        SupportedSchemeSystems::from_str(&scheme_system_option.unwrap_or("base16".to_string()));
+    let schemes_path = &data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
+    let schemes_vec = get_all_scheme_names(schemes_path, Some(scheme_system))?;
+    let custom_schemes_path = &data_path.join(CUSTOM_SCHEMES_DIR_NAME);
+    let custom_schemes_vec = if custom_schemes_path.is_dir() {
+        get_all_scheme_names(custom_schemes_path, Some(scheme_system))?
+    } else {
+        Vec::new()
+    };
+
     // Check theme
-    let scheme_system = scheme_system_option.unwrap_or("");
     let config = Config::read(config_path)?;
     let items = config.items.unwrap_or_default();
-    let schemes_vec = get_all_scheme_names(data_path)?;
+    let generate_custom_schemes: Result<()> = {
+        match (
+            schemes_vec.iter().find(|s| *s == full_scheme_name),
+            custom_schemes_vec.iter().find(|s| *s == full_scheme_name),
+        ) {
+            (Some(_), None) => Ok(()),
+            (None, Some(_)) => {
+                let config = Config::read(config_path)?;
 
-    if !schemes_vec.contains(&full_scheme_name.to_string()) {
-        return Err(anyhow!("Scheme does not exist: {}", full_scheme_name));
-    }
+                if let Some(items) = config.items {
+                    let item_name_vec: Vec<String> = items.iter().map(|p| p.name.clone()).collect();
 
+                    for item_name in item_name_vec {
+                        let item_template_path: PathBuf =
+                            data_path.join(format!("{}/{}", REPO_DIR, &item_name));
+
+                        build(&item_template_path, custom_schemes_path, false)?;
+                    }
+
+                    Ok(())
+                } else {
+                    Ok(())
+                }
+            }
+            (Some(_), Some(_)) => {
+                let scheme_partial_name = scheme_name_arr.last().unwrap();
+
+                Err(anyhow!("You have a Tinty generated scheme named the same as an official scheme, please rename or remove it: {}", format!("{}/{}.yaml", custom_schemes_path.display(), scheme_partial_name)))
+            }
+            _ => Err(anyhow!("Scheme does not exist: {}", full_scheme_name)),
+        }
+    };
+
+    generate_custom_schemes?;
     write_to_file(&data_path.join(CURRENT_SCHEME_FILE_NAME), full_scheme_name)?;
 
     // Collect config items that match the provided system
     let system_items = items.iter().filter(|item| match &item.supported_systems {
-        Some(supported_systems) => {
-            supported_systems.contains(&SupportedSchemeSystems::from_str(scheme_system))
-        }
+        Some(supported_systems) => supported_systems.contains(&scheme_system),
         None => false,
     });
 
