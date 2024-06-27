@@ -15,8 +15,8 @@ use tinted_builder_rust::operation_build::build;
 
 fn str_matches_scheme_system(value: &str) -> bool {
     match value {
-        _ if value == SupportedSchemeSystems::Base16.to_str() => true,
-        _ if value == SupportedSchemeSystems::Base24.to_str() => true,
+        _ if value == SupportedSchemeSystems::Base16.as_str() => true,
+        _ if value == SupportedSchemeSystems::Base24.as_str() => true,
         _ => false,
     }
 }
@@ -41,8 +41,8 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
     if !str_matches_scheme_system(scheme_system_option.clone().unwrap_or_default().as_str()) {
         return Err(anyhow!(
             "Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"{}\" or \"{}\"), eg: {}-{}",
-            SupportedSchemeSystems::Base16.to_str(),
-            SupportedSchemeSystems::Base24.to_str(),
+            SupportedSchemeSystems::Base16.as_str(),
+            SupportedSchemeSystems::Base24.as_str(),
             DEFAULT_SCHEME_SYSTEM,
             full_scheme_name
         ));
