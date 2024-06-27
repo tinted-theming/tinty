@@ -10,7 +10,7 @@ use url::Url;
 
 pub const DEFAULT_CONFIG_SHELL: &str = "sh -c '{}'";
 pub const CONFIG_FILE_NAME: &str = "config.toml";
-pub const BASE16_SHELL_REPO_URL: &str = "https://github.com/tinted-theming/base16-shell";
+pub const BASE16_SHELL_REPO_URL: &str = "https://github.com/tinted-theming/base16-shells";
 pub const BASE16_SHELL_REPO_NAME: &str = "base16-shells";
 pub const BASE16_SHELL_THEMES_DIR: &str = "scripts";
 pub const BASE16_SHELL_HOOK: &str = ". %f";
