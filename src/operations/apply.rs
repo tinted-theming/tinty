@@ -71,6 +71,7 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
     for item in system_items {
         let repo_path = data_path.join(REPO_DIR).join(&item.name);
         let themes_path = repo_path.join(&item.themes_dir);
+
         if !themes_path.exists() {
             return Err(anyhow!(format!(
                 "Provided theme path for {} does not exist: {}\nTry running `{} install` or `{} update` or check your config.toml file and try again.",
