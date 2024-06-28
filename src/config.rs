@@ -94,7 +94,7 @@ pub struct ConfigItem {
     #[serde(rename = "supported-systems")]
     pub supported_systems: Option<Vec<SupportedSchemeSystems>>,
     #[serde(rename = "theme-file-extension")]
-    pub theme_file_extension: Option<String>
+    pub theme_file_extension: Option<String>,
 }
 
 impl fmt::Display for ConfigItem {
@@ -173,7 +173,7 @@ impl Config {
             themes_dir: BASE16_SHELL_THEMES_DIR.to_string(),
             hook: Some(BASE16_SHELL_HOOK.to_string()),
             supported_systems: Some(vec![SupportedSchemeSystems::Base16]), // DEFAULT_SCHEME_SYSTEM
-	    theme_file_extension: None
+            theme_file_extension: None,
         };
 
         // Add default `item` if no items exist

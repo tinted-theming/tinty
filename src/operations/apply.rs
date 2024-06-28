@@ -90,7 +90,7 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
                 Some(extension) => {
                     let filename = path.file_name().and_then(|name| name.to_str());
                     format!("{}{}", full_scheme_name, extension) == filename.unwrap_or_default()
-                },
+                }
                 None => {
                     let filename = path.file_stem().and_then(|name| name.to_str());
                     full_scheme_name == filename.unwrap_or_default()
