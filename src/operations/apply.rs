@@ -1,4 +1,3 @@
-
 use crate::config::{Config, SupportedSchemeSystems};
 use crate::constants::{
     CURRENT_SCHEME_FILE_NAME, DEFAULT_SCHEME_SYSTEM, REPO_DIR, REPO_NAME, REPO_URL,
