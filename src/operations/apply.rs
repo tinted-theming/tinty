@@ -86,9 +86,16 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
             .with_context(|| format!("Themes are missing from {}, try running `{} install` or `{} update` and try again.", item.name, REPO_NAME, REPO_NAME))?;
         let theme_option = &theme_dir.filter_map(Result::ok).find(|entry| {
             let path = entry.path();
-            let filename = path.file_stem().and_then(|name| name.to_str());
-
-            full_scheme_name == filename.unwrap_or_default()
+            match &item.theme_file_extension {
+                Some(extension) => {
+                    let filename = path.file_name().and_then(|name| name.to_str());
+                    format!("{}{}", full_scheme_name, extension) == filename.unwrap_or_default()
+                }
+                None => {
+                    let filename = path.file_stem().and_then(|name| name.to_str());
+                    full_scheme_name == filename.unwrap_or_default()
+                }
+            }
         });
 
         // Copy that theme to the data_path or log a message that it isn't found
@@ -113,7 +120,9 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
                 // Run hook for item if provided
                 if let Some(hook_text) = &item.hook {
                     let hook_script =
-                        hook_text.replace("%f", format!("\"{}\"", data_theme_path.display()).as_str());
+                        hook_text
+                        .replace("%f", format!("\"{}\"", data_theme_path.display()).as_str())
+                        .replace("%n", full_scheme_name);
                     let command_vec =
                         get_shell_command_from_string(config_path, hook_script.as_str())?;
                     Command::new(&command_vec[0])

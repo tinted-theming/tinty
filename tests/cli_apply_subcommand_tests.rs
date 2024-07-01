@@ -240,3 +240,50 @@ hook = "echo \"path: %f\""
     cleanup()?;
     Ok(())
 }
+
+#[test]
+fn test_cli_apply_subcommand_with_config_theme_file_extension() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-uwunicorn";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_with_custom_schemes",
+        format!("apply {}", &scheme_name).as_str(),
+    )?;
+    let config_content = r#"
+[[items]]
+path = "https://github.com/tinted-theming/tinted-alacritty"
+name = "tinted-alacritty"
+themes-dir = "colors"
+hook = "echo \"expected alacritty output: %n\""
+
+[[items]]
+name = "base16-emacs"
+path = "https://github.com/tinted-theming/base16-emacs"
+theme-file-extension="-theme.el"
+themes-dir="build"
+hook = "echo \"expected emacs output: %n\""
+"#;
+    let expected_output =
+        "expected alacritty output: base16-uwunicorn\nexpected emacs output: base16-uwunicorn\n";
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert_eq!(stdout, expected_output,);
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
+    );
+
+    cleanup()?;
+    Ok(())
+}
