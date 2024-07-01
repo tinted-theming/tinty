@@ -220,6 +220,7 @@ themes across different applications seamlessly.
 | `path`                | `string`   | Required | The file system path or URL to the theme template repository. Paths beginning with `~/` map to home dir. | - | `path = "https://github.com/base16-vim"`   |
 | `themes-dir`          | `string`   | Required | The directory within the repository where theme files are located. | - | `themes-dir = "colors"`                    |
 | `hook`                | `string`   | Optional | A command to be executed after the theme is applied. Useful for reloading configurations. `%f` template variable maps to the path of the applied theme file. | None    | `hook = "source ~/.vimrc"`                 |
+| `theme-file-extension` | `string` | Optional | Define a custom theme file extension that isn't `/\.*$/`. Tinty looks for themes named `base16-uwunicorn.*` (for example), but when the theme file isn't structured that way, this option can help specify the pattern. | - | `theme-file-extension = ".module.css"` |
 | `supported-systems`   | `array<"base16" or "base24">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported-systems = ["base16", "base24"]` |
 
 #### Note on `supported-systems`

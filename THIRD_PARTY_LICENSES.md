@@ -6,7 +6,7 @@ This page lists the licenses of the projects used in cargo-about.
 
 - Apache License 2.0 (65)
 - Unicode License v3 (19)
-- MIT License (11)
+- MIT License (10)
 - Mozilla Public License 2.0 (1)
 - Unicode License Agreement - Data Files and Software (2016) (1)
 
@@ -2931,7 +2931,7 @@ SOFTWARE.
 
 #### Used by
 
-- [tinty 0.15.0](https://github.com/tinted-theming/tinty)
+- [tinty 0.16.0](https://github.com/tinted-theming/tinty)
 
 ```
 MIT License
@@ -3089,7 +3089,6 @@ SOFTWARE.
 #### Used by
 
 - [aho-corasick 1.1.3](https://github.com/BurntSushi/aho-corasick)
-- [memchr 2.7.2](https://github.com/BurntSushi/memchr)
 
 ```
 This project is dual-licensed under the Unlicense and MIT licenses.
