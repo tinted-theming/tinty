@@ -28,4 +28,4 @@ jobs:
           id: cache-cargo-test
 
       - name: Cargo test
-        run: docker build --target tests -t tinty-clippy .
+        run: cargo test --release --all-targets --all-features -- --test-threads=1

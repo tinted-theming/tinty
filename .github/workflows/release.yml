@@ -1,8 +1,6 @@
 name: Release
 on:
-  push:
-    tags:
-      - "v[0-9]+\\.[0-9]+\\.[0-9]+"
+  workflow_dispatch:
 env:
   CARGO_INCREMENTAL: 0
 permissions:
@@ -10,44 +8,7 @@ permissions:
 
 jobs:
   setup-environment:
-    runs-on: ubuntu-latest
-    outputs:
-      cargo_version: ${{ steps.cargo_version.outputs.value }}
-      cargo_cache_key: ${{ steps.cargo_cache_key.outputs.value }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          ref: ${{ github.ref }}
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-
-      - name: Set cargo cache key
-        id: cargo_cache_key
-        run: |
-          CARGO_CACHE_KEY="${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
-          echo "value=$CARGO_CACHE_KEY" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-            ~/.cargo/bin
-          key: ${{ steps.cargo_cache_key.outputs.value }}
-          id: cache-cargo-release
-
-      - name: Get Cargo version
-        id: cargo_version
-        run: |
-          VERSION=$(cargo read-manifest | jq -r ".version")
-          echo "value=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Abort if there is a Cargo.toml and git tag mismatch
-        run: |
-          if [[ "v${{ steps.cargo_version.outputs.value }}" != "${{ github.ref_name }}" ]]; then
-            echo "There is a Cargo.toml version and git tag mismatch." && exit 1;
-          fi
+    uses: ./.github/workflows/setup-environment.yml
 
   lint:
     needs: setup-environment
@@ -61,18 +22,35 @@ jobs:
     with:
       cache-key: ${{ needs.setup-environment.outputs.cargo_cache_key }}
 
+  tag-release:
+    needs:
+      - setup-environment
+      - check-msrv
+      - lint
+      - test
+    uses: ./.github/workflows/tag-release.yml
+    with:
+      git_tag_name: ${{ needs.setup-environment.outputs.git_tag_name }}
+    secrets:
+      RELEASE: ${{ secrets.RELEASE }}
+
   create-release:
-    needs: [lint, test]
+    needs: 
+      - setup-environment
+      - tag-release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/create-gh-release-action@v1
         with:
+          ref: 'refs/tags/${{ needs.setup-environment.outputs.git_tag_name }}'
           changelog: CHANGELOG.md
           token: ${{ secrets.GITHUB_TOKEN }}
 
   release:
-    needs: create-release
+    needs:
+      - setup-environment
+      - create-release
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -92,7 +70,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
+          ref: refs/tags/${{ needs.setup-environment.outputs.git_tag_name }}
           bin: tinty
-          checksum: sha256
           target: ${{ matrix.target }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          checksum: sha256
+
+  publish-crate:
+    needs: release
+    uses: ./.github/workflows/publish-crate.yml
+    secrets:
+      CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}

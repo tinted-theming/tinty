@@ -1,0 +1,20 @@
+name: Publish crate to crates.io
+on:
+  workflow_call:
+    secrets:
+      CRATES_IO_TOKEN:
+        description: crates.io token
+        required: true
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo publish --locked
