@@ -3,7 +3,7 @@ on:
   workflow_call:
     secrets:
       RELEASE:
-        description: Docker GHCR token
+        description: Release token
         required: true
     inputs:
       git_tag_name:
