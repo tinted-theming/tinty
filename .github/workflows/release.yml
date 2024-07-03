@@ -25,7 +25,6 @@ jobs:
   tag-release:
     needs:
       - setup-environment
-      - check-msrv
       - lint
       - test
     uses: ./.github/workflows/tag-release.yml
