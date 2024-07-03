@@ -121,7 +121,7 @@ Tinty stores themes to `$XDG_DATA_HOME` based on [XDG Base Directory specificati
 ## Use your own schemes
 
 To use your own schemes, create a
-`custom-schemes/<scheme_system>-your-scheme-name.yaml` file in your
+`custom-schemes/<scheme_system>/your-scheme-name.yaml` file in your
 data-dir (Run `tinty config --data-dir-path` to get the path to your
 data-dir) - where `<scheme_system>` is the system you use. Currently we
 support scheme_system `base16` and `base24`. After you've added your
@@ -131,6 +131,13 @@ Tinty will not apply it.
 
 If everything works as expected, `tinty apply
 base16-your-scheme-name.yaml` should apply your scheme.
+
+```sh
+mkdir "$(tinty config --data-dir-path)/custom-themes/base16"
+cp path/to/your/base16-your-scheme.yaml "$(tinty config --data-dir-path)/custom-themes/base16/your-scheme.yaml"
+tinty list --custom-schemes # Should show your scheme
+tinty apply base16-your-scheme
+```
 
 ## Shell
 
