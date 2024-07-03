@@ -8,6 +8,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [Shell completions](#shell-completions)
 - [How it works](#how-it-works)
 - [Sourcing scripts that set environment variables](#sourcing-scripts-that-set-environment-variables)
+- [Use your own schemes](#use-your-own-schemes)
 - [shell](#shell)
 - [Vim or Neovim](#vim-or-neovim)
 - [tmux](#tmux)
