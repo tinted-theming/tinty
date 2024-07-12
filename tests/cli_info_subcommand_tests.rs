@@ -98,6 +98,35 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
 }
 
 #[test]
+fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let test_name = "test_info_list_subcommand_without_setup_with_custom_schemes_flag";
+    let (_, _, command_vec, cleanup) = setup(test_name, "list --custom-schemes")?;
+    let expected_output = format!(
+        "You don't have any local custom schemes at: data_path_{}/custom-schemes",
+        test_name
+    );
+
+    // ---
+    // Act
+    // ---
+    let (_, stderr) = utils::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert!(
+        stderr.contains(&expected_output),
+        "stdout does not contain the expected output"
+    );
+
+    cleanup()?;
+    Ok(())
+}
+
+#[test]
 fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // -------
     // Arrange

@@ -25,8 +25,7 @@ pub fn list(data_path: &Path, is_custom: bool) -> Result<()> {
         }
         (false, false) => {
             return Err(anyhow!(
-                "Scheme repo path does not exist: {}\nRun `{} install` and try again",
-                schemes_dir_path.display(),
+                "Schemes are missing, run install and then try again: `{} install`",
                 REPO_NAME
             ))
         }
