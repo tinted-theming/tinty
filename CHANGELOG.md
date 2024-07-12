@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.18.0] - 2024-07-12
+
+### Added
+
+- Add `--custom-schemes` flag support for `tinty info`
+
+### Fixed
+
+- Fix bug where `tinty generate-scheme` would generate schemes without
+  scheme values being wrapped in double quotes
+- Fix error message when `tinty list --custom-schemes` when no custom
+  schemes exist
+
 ## [0.17.0] - 2024-07-03
 
 ### Added
@@ -7,7 +20,7 @@
 - Add `tinty generate-scheme` command to generate a scheme based on
   provided image input, with the included functionality of saving this
   scheme file and applying it with `tinty apply`.
-- Add `--custom-schemes` flag for `tinty lint` subcommand to list custom
+- Add `--custom-schemes` flag for `tinty list` subcommand to list custom
   schemes saved with `tinnty generate-scheme`.
 
 ## [0.16.0] - 2024-07-02
@@ -136,6 +149,7 @@
 
 - Initial release
 
+[0.18.0]: https://github.com/tinted-theming/tinty/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/tinted-theming/tinty/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/tinted-theming/tinty/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/tinted-theming/tinty/compare/v0.14.0...v0.15.0

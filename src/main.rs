@@ -97,9 +97,13 @@ fn main() -> Result<()> {
             };
         }
         Some(("info", sub_matches)) => {
+            let is_custom = sub_matches
+                .get_one::<bool>("custom-schemes")
+                .map(|b| b.to_owned())
+                .unwrap_or(false);
             let scheme_name_option = sub_matches.get_one::<String>("scheme_name");
 
-            operations::info::info(&data_path, scheme_name_option)?;
+            operations::info::info(&data_path, scheme_name_option, is_custom)?;
         }
         Some(("init", _)) => {
             operations::init::init(&config_path, &data_path)?;

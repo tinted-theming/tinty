@@ -115,11 +115,18 @@ pub fn build_cli() -> Command {
                     .required(true)),
         )
         .subcommand(
-            Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {} info base16-mocha)", REPO_NAME)).arg(
-                Arg::new("scheme_name")
-                    .help("The scheme you want to get information about")
-                    .required(false),
-            )
+            Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {} info base16-mocha)", REPO_NAME))
+                .arg(
+                    Arg::new("scheme_name")
+                        .help("The scheme you want to get information about")
+                        .required(false),
+                )
+                .arg(
+                    Arg::new("custom-schemes")
+                        .help("Lists availabile custom schemes")
+                        .long("custom-schemes")
+                        .action(ArgAction::SetTrue)
+                )
         )
         .subcommand(
             Command::new("init").about("Initializes with the exising config. Used to Initialize exising theme for when your shell starts up")

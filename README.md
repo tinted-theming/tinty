@@ -160,13 +160,13 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | Subcommand | Description                                         | Arguments            | Example Usage                              |
 |------------|-----------------------------------------------------|----------------------|--------------------------------------------|
 | `install`  | Installs requirements for the configuration. | - | `tinty install` |
-| `list`     | Lists all available themes. | `--custom-schemes` to list saved custom theme files using `tinty generate-scheme` | `tinty list` |
+| `list`     | Lists all available themes. | Optional argument `--custom-schemes` to list saved custom theme files using `tinty generate-scheme` | `tinty list` |
 | `apply`    | Applies a specific theme. | `<scheme_system>-<scheme_name>`: Name of the system and scheme to apply. | `tinty apply base16-mocha` |
 | `update`   | Updates the templates and schemes. | - | `tinty update`                    |
 | `init`     | Initializes the tool with the last applied theme otherwise `default-scheme` from `config.toml`. | - | `tinty init` |
 | `current`  | Displays the currently applied theme. | - | `tinty current` |
 | `config`   | Displays config related information currently in use by Tinty. Without flags it returns `config.yml` content. | - | `tinty config` |
-| `info`     | Provides information about themes. | `[<scheme_system>-<scheme_name>]`: Optional argument to specify a theme for detailed info. | `tinty info base16-mocha` |
+| `info`     | Provides information about themes. | `[<scheme_system>-<scheme_name>]`: Optional argument `--custom-schemes` to provide information on any custom schemes | `tinty info base16-mocha` |
 | `build`    | Builds the provided base16 or base24 template using [tinted-builder-rust]. | `<DIR>`: Path to the base16 or base24 template directory. | `tinty build path/to/tinted-tmux` |
 | `generate-completion` | Generates a shell completion file to source in your shell startup file (`*rc`). | `<shell_name>`: Name of the shell to generate a completion script for. Supports `bash`, `elvish`, `fish`, `powershell`, `zsh` | `tinty generate-completion bash` |
 | `generate-scheme` | Generates a yaml scheme file with colors inferred from provided image. | `<image_path>`: Path to image. Either `<outpath>` (`-` value to print to stdout) or `--save` to save for use within `tinty` | `tinty generate-completion bash` |

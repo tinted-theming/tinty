@@ -4,7 +4,7 @@ This page lists the licenses of the projects used in cargo-about.
     
 ## Overview of licenses
 
-- Apache License 2.0 (116)
+- Apache License 2.0 (117)
 - MIT License (32)
 - BSD 3-Clause &quot;New&quot; or &quot;Revised&quot; License (4)
 - BSD 2-Clause &quot;Simplified&quot; License (3)
@@ -3998,8 +3998,9 @@ limitations under the License.
 - [profiling 1.0.15](https://github.com/aclysma/profiling)
 - [ribboncurls 0.2.1](https://github.com/tinted-theming/ribboncurls)
 - [siphasher 0.3.11](https://github.com/jedisct1/rust-siphash)
-- [tinted-builder-rust 0.9.1](https://github.com/tinted-theming/tinted-builder-rust)
-- [tinted-builder 0.4.4](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinted-builder-rust 0.9.2](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinted-builder 0.4.5](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinted-builder 0.5.0](https://github.com/tinted-theming/tinted-builder-rust)
 - [zune-core 0.4.12](https://crates.io/crates/zune-core)
 - [zune-inflate 0.2.54](https://crates.io/crates/zune-inflate)
 - [zune-jpeg 0.4.11](https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg)
@@ -4783,7 +4784,7 @@ SOFTWARE.
 
 #### Used by
 
-- [tinty 0.17.0](https://github.com/tinted-theming/tinty)
+- [tinty 0.18.0](https://github.com/tinted-theming/tinty)
 
 ```
 MIT License
@@ -5149,7 +5150,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 #### Used by
 
-- [tinted-scheme-extractor 0.2.2](https://github.com/tinted-theming/tinted-scheme-extractor-rs)
+- [tinted-scheme-extractor 0.3.2](https://github.com/tinted-theming/tinted-scheme-extractor-rs)
 
 ```
 Mozilla Public License Version 2.0

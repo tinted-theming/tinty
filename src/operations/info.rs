@@ -1,6 +1,6 @@
 use crate::{
     config::SupportedSchemeSystems,
-    constants::{REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME},
+    constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME},
 };
 use anyhow::{anyhow, Result};
 use hex_color::HexColor;
@@ -239,22 +239,32 @@ fn print_all_schemes(files: Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-pub fn info(data_path: &Path, scheme_name_option: Option<&String>) -> Result<()> {
-    let schemes_repo_path = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
+pub fn info(data_path: &Path, scheme_name_option: Option<&String>, is_custom: bool) -> Result<()> {
+    let schemes_dir_path = if is_custom {
+        data_path.join(CUSTOM_SCHEMES_DIR_NAME)
+    } else {
+        data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME))
+    };
 
-    if !schemes_repo_path
-        .join(SupportedSchemeSystems::default().to_string())
-        .exists()
-    {
-        return Err(anyhow!(
-            "Scheme repo path does not exist: {}\nRun `{} install` and try again",
-            schemes_repo_path.display(),
-            REPO_NAME
-        ));
+    match (schemes_dir_path.exists(), is_custom) {
+        (false, true) => {
+            return Err(anyhow!(
+                "You don't have any local custom schemes at: {}",
+                schemes_dir_path.display(),
+            ))
+        }
+        (false, false) => {
+            return Err(anyhow!(
+                "Scheme repo path does not exist: {}\nRun `{} install` and try again",
+                schemes_dir_path.display(),
+                REPO_NAME
+            ))
+        }
+        _ => {}
     }
 
     let files_entries =
-        fs::read_dir(schemes_repo_path.join(SupportedSchemeSystems::default().as_str()))?;
+        fs::read_dir(schemes_dir_path.join(SupportedSchemeSystems::default().as_str()))?;
     let mut files: Vec<PathBuf> = files_entries
         .filter_map(|entry| entry.ok().map(|e| e.path()))
         .collect();
@@ -266,9 +276,9 @@ pub fn info(data_path: &Path, scheme_name_option: Option<&String>) -> Result<()>
 
     // Add other scheme_system schemes to vec
     for scheme_system in scheme_systems_without_default {
-        if schemes_repo_path.join(scheme_system).exists() {
+        if schemes_dir_path.join(scheme_system).exists() {
             files.extend(
-                fs::read_dir(schemes_repo_path.join(scheme_system))?
+                fs::read_dir(schemes_dir_path.join(scheme_system))?
                     .filter_map(|entry| entry.ok().map(|e| e.path())),
             );
         }

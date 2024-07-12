@@ -16,11 +16,21 @@ pub fn list(data_path: &Path, is_custom: bool) -> Result<()> {
         data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME))
     };
 
-    if !schemes_dir_path.exists() {
-        return Err(anyhow!(
-            "Schemes are missing, run install and then try again: `{} install`",
-            REPO_NAME
-        ));
+    match (schemes_dir_path.exists(), is_custom) {
+        (false, true) => {
+            return Err(anyhow!(
+                "You don't have any local custom schemes at: {}",
+                schemes_dir_path.display(),
+            ))
+        }
+        (false, false) => {
+            return Err(anyhow!(
+                "Scheme repo path does not exist: {}\nRun `{} install` and try again",
+                schemes_dir_path.display(),
+                REPO_NAME
+            ))
+        }
+        _ => {}
     }
 
     let scheme_vec = get_all_scheme_names(&schemes_dir_path, None)?;

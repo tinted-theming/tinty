@@ -1286,9 +1286,9 @@ dependencies = [
 
 [[package]]
 name = "tinted-builder"
-version = "0.4.4"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2785011c35e7f575d4a92dbf8de55f64fcfc874e2dd9ba760a64e06a2e8c473"
+checksum = "8e66036f08d47c5ff9b652101fb6e97bcee5210648d33e92404d2cc88ac2d443"
 dependencies = [
  "anyhow",
  "clap",
@@ -1302,9 +1302,9 @@ dependencies = [
 
 [[package]]
 name = "tinted-builder-rust"
-version = "0.9.1"
+version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11894f65c737aeb1150ca4d42f0f98a4037994f0a0dd057134affd63d4042583"
+checksum = "3db9ba45390f39eb492e2e83f8e7538ec53b9e378569cb58badc27bf4a2d89e2"
 dependencies = [
  "anyhow",
  "clap",
@@ -1316,9 +1316,9 @@ dependencies = [
 
 [[package]]
 name = "tinted-scheme-extractor"
-version = "0.2.2"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e65c7ca5c92de53b069910855697c9b0f73b8bb28bb9c551d510d9637441440"
+checksum = "614f71a79f6b826a2fa3e8f7d5f07c588123f0dcd97d652ee552d84e548edbc4"
 dependencies = [
  "color-thief",
  "image",
@@ -1329,7 +1329,7 @@ dependencies = [
 
 [[package]]
 name = "tinty"
-version = "0.17.0"
+version = "0.18.0"
 dependencies = [
  "anyhow",
  "clap",
