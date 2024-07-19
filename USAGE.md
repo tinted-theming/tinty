@@ -139,6 +139,28 @@ tinty list --custom-schemes # Should show your scheme
 tinty apply base16-your-scheme
 ```
 
+## Alacritty
+
+```toml
+[[items]]
+path = "https://github.com/tinted-theming/tinted-alacritty"
+name = "tinted-alacritty"
+themes-dir = "colors" # or "colors-256"
+hook = "cp -f %f ~/.config/alacritty/colors.toml && touch ~/.config/alacritty/alacritty.toml"
+```
+
+The hook copies the applied theme contents to
+`~/.config/alacritty/colors.toml` and then does a `touch` on
+`~/.config/alacritty/alacritty.toml` to alert alacritty that the config
+has been updated and it should rerender with the new config.
+
+Make sure your `alacritty.toml` contains the import to the `colors.toml`
+file by including this line:
+
+```toml
+import = ["~/.config/alacritty/colors.toml"]
+```
+
 ## Shell
 
 When Tinty does not have any `[[items]]` set up in `config.toml`, Tinty
@@ -151,7 +173,7 @@ Add the following to your `config.toml`:
 ```toml
 [[items]]
 path = "https://github.com/tinted-theming/tinted-shell"
-name = "base16-shell"
+name = "tinted-shell"
 themes-dir = "scripts"
 hook = ". %f"
 ```
