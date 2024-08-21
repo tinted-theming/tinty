@@ -1,18 +1,11 @@
-name: Auto assignment for issues
+name: "Auto assignment for issues"
 
 on:
-    issues:
-        types: [opened]
+  issues:
+    types: ["opened"]
 
 jobs:
-    auto-assign:
-        runs-on: ubuntu-latest
-        permissions:
-            issues: write
-        steps:
-            - name: 'Auto-assign issue'
-              uses: pozil/auto-assign-issue@v1
-              with:
-                  assignees: JamyGolden
-                  numOfAssignee: 1
-                  allowSelfAssign: true
+  auto-assign:
+    uses: tinted-theming/home/.github/workflows/shared-auto-assign-issues.yml@main
+    secrets:
+      token: ${{ secrets.BOT_ACCESS_TOKEN }}
