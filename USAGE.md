@@ -14,6 +14,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [tmux](#tmux)
 - [fzf](#fzf)
 - [bat](#bat)
+- [qutebrowser](#qutebrowser)
 
 ## Shell completions
 
@@ -433,6 +434,20 @@ whenever `bat` is executed.
 alias bat="bat --theme='base16-256'"
 ```
 
+## Qutebrowser
+
+To add [base16-qutebrowser] support, add the following to Tinty
+config.toml:
+
+```toml
+[[items]]
+path = "https://github.com/tinted-theming/base16-qutebrowser"
+name = "base16-qutebrowser"
+themes-dir = "themes/default" # Or "themes/minimal"
+hook = "cp -f %f ~/.config/qutebrowser/config.d/colorscheme.py"
+theme-file-extension = ".config.py"
+```
+
 [Usage section]: https://github.com/tinted-theming/tinty?tab=readme-ov-file#usage
 [README.md]: https://github.com/tinted-theming/tinty/blob/main/README.md
 [bat]: https://github.com/sharkdp/bat
@@ -445,3 +460,4 @@ alias bat="bat --theme='base16-256'"
 [Sourcing scripts that set environment variables]: #sourcing-scripts-that-set-environment-variables
 [README CLI section]: README.md#cli
 [contrib/completion]: contrib/completion
+[base16-qutebrowser]: https://github.com/tinted-theming/base16-qutebrowser
