@@ -416,6 +416,17 @@ themes-dir = "sh"
 # themes-dir = "fish"
 ```
 
+## Iterm2
+
+```toml
+[[items]]
+path = "https://github.com/tinted-theming/tinted-iterm2"
+name = "tinted-iterm2"
+hook = "sh %f"
+themes-dir = "scripts"
+supported-systems = ["base16", "base24"]
+```
+
 ## bat
 
 [bat has an integration] with [tinted-shell] and another option to allow
