@@ -355,7 +355,7 @@ endif
 path = "https://github.com/tinted-theming/tinted-tmux"
 name = "tinted-tmux"
 # Check if tmux is in use and if it is, reload the config file
-hook = "test -n \"$TMUX\" && tmux source-file %f"
+hook = "tmux run 2> /dev/null && tmux source-file %f"
 themes-dir = "colors"
 ```
 
