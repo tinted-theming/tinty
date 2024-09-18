@@ -461,7 +461,8 @@ theme-file-extension = ".config.py"
 
 ## Rofi
 
-~/.config/tinted-theming/tinty/config.toml
+Add the following to `~/.config/tinted-theming/tinty/config.toml`:
+
 ```toml
 [[items]]
 path = "https://github.com/tinted-theming/base16-rofi"
