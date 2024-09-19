@@ -459,6 +459,24 @@ hook = "cp -f %f ~/.config/qutebrowser/config.d/colorscheme.py"
 theme-file-extension = ".config.py"
 ```
 
+## Rofi
+
+Add the following to `~/.config/tinted-theming/tinty/config.toml`:
+
+```toml
+[[items]]
+path = "https://github.com/tinted-theming/base16-rofi"
+name = "tinted-rofi"
+themes-dir = "colors"
+hook = "cp -f %f ~/.config/rofi/base16-theme.rasi"
+```
+
+`~/.config/rofi/config.rasi` should contain this line:
+
+```
+@theme "~/.config/rofi/base16-theme.rasi"
+```
+
 [Usage section]: https://github.com/tinted-theming/tinty?tab=readme-ov-file#usage
 [README.md]: https://github.com/tinted-theming/tinty/blob/main/README.md
 [bat]: https://github.com/sharkdp/bat
