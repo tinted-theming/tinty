@@ -7,6 +7,11 @@
 - Add `--quiet` flag for `build` subcommand
 - Add `--verbose` flag for `init` subcommand
 
+### Fixed
+
+- Fix bug where `scheme_partial_name` doesn't render correctly in all
+  situations when a scheme name exists in schemes and custom schemes
+
 ## [0.18.0] - 2024-07-12
 
 ### Added

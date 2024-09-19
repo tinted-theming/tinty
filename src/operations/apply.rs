@@ -70,11 +70,11 @@ pub fn apply(
     let items = config.items.unwrap_or_default();
     let generate_custom_schemes: Result<()> = {
         match (
-            schemes_vec.iter().find(|s| *s == full_scheme_name),
-            custom_schemes_vec.iter().find(|s| *s == full_scheme_name),
+            schemes_vec.contains(&full_scheme_name.to_string()),
+            custom_schemes_vec.contains(&full_scheme_name.to_string()),
         ) {
-            (Some(_), None) => Ok(()),
-            (None, Some(_)) => {
+            (true, false) => Ok(()),
+            (false, true) => {
                 let config = Config::read(config_path)?;
 
                 if let Some(items) = config.items {
@@ -92,10 +92,10 @@ pub fn apply(
                     Ok(())
                 }
             }
-            (Some(_), Some(_)) => {
-                let scheme_partial_name = scheme_name_arr.last().unwrap();
+            (true, true) => {
+                let scheme_partial_name = &scheme_name_arr[1..].join("-");
 
-                Err(anyhow!("You have a Tinty generated scheme named the same as an official scheme, please rename or remove it: {}", format!("{}/{}.yaml", custom_schemes_path.display(), scheme_partial_name)))
+                Err(anyhow!("You have a Tinty generated scheme named the same as an official scheme name, please rename or remove it: {}", format!("{}/{}.yaml", custom_schemes_path.display(), scheme_partial_name)))
             }
             _ => Err(anyhow!("Scheme does not exist: {}", full_scheme_name)),
         }
