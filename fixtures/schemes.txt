@@ -72,6 +72,7 @@ base16-darkmoss
 base16-darktooth
 base16-darkviolet
 base16-decaf
+base16-deep-oceanic-next
 base16-default-dark
 base16-default-light
 base16-dirtysea
@@ -164,6 +165,7 @@ base16-nova
 base16-ocean
 base16-oceanicnext
 base16-one-light
+base16-onedark-dark
 base16-onedark
 base16-outrun-dark
 base16-oxocarbon-dark
@@ -227,6 +229,8 @@ base16-synth-midnight-light
 base16-tango
 base16-tarot
 base16-tender
+base16-terracotta-dark
+base16-terracotta
 base16-tokyo-city-dark
 base16-tokyo-city-light
 base16-tokyo-city-terminal-dark
@@ -266,6 +270,7 @@ base16-zenbones
 base16-zenburn
 base24-brogrammer
 base24-chalk
+base24-deep-oceanic-next
 base24-dracula
 base24-espresso
 base24-flat
