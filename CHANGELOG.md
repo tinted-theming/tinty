@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add `--quiet` flag for `build` subcommand
+- Add `--verbose` flag for `init` subcommand
+
 ## [0.18.0] - 2024-07-12
 
 ### Added

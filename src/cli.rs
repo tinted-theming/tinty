@@ -37,7 +37,15 @@ pub fn build_cli() -> Command {
                     Arg::new("template-dir")
                         .help("Local path to the theme template you want to build")
                         .required(true),
+                )
+                .arg(
+                    Arg::new("quiet")
+                        .long("quiet")
+                        .short('q')
+                        .help("Silence stdout")
+                        .action(ArgAction::SetTrue),
                 ),
+
         )
         .subcommand(
             Command::new("current").about("Prints the last scheme name applied")
@@ -130,6 +138,13 @@ pub fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("init").about("Initializes with the exising config. Used to Initialize exising theme for when your shell starts up")
+                .arg(
+                    Arg::new("verbose")
+                        .long("verbose")
+                        .help("Print to stdout")
+                        .action(ArgAction::SetTrue),
+                )
+
         )
         .subcommand(Command::new("list").about("Lists available schemes")
                 .arg(

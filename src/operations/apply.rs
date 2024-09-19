@@ -25,7 +25,12 @@ fn str_matches_scheme_system(value: &str) -> bool {
 ///
 /// For each of the provided config items, copy the theme to the data_dir based on the provided
 /// scheme_name
-pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Result<()> {
+pub fn apply(
+    config_path: &Path,
+    data_path: &Path,
+    full_scheme_name: &str,
+    is_quiet: bool,
+) -> Result<()> {
     let scheme_name_arr: Vec<String> = full_scheme_name.split('-').map(|s| s.to_string()).collect();
     let scheme_system_option = scheme_name_arr.clone().first().map(|s| s.to_string());
 
@@ -79,7 +84,7 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
                         let item_template_path: PathBuf =
                             data_path.join(format!("{}/{}", REPO_DIR, &item_name));
 
-                        build(&item_template_path, custom_schemes_path, false)?;
+                        build(&item_template_path, custom_schemes_path, is_quiet)?;
                     }
 
                     Ok(())
@@ -158,8 +163,7 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
 
                 // Run hook for item if provided
                 if let Some(hook_text) = &item.hook {
-                    let hook_script =
-                        hook_text
+                    let hook_script = hook_text
                         .replace("%f", format!("\"{}\"", data_theme_path.display()).as_str())
                         .replace("%n", full_scheme_name);
                     let command_vec =
@@ -172,10 +176,14 @@ pub fn apply(config_path: &Path, data_path: &Path, full_scheme_name: &str) -> Re
                         })?;
                 }
             }
-            None => println!(
-                "Theme does not exists for {} in {}. Try running `{} update` or submit an issue on {}",
-                item.name, themes_path.display(), REPO_NAME, REPO_URL
-            ),
+            None => {
+                if !is_quiet {
+                    println!(
+                        "Theme does not exists for {} in {}. Try running `{} update` or submit an issue on {}",
+                        item.name, themes_path.display(), REPO_NAME, REPO_URL
+                    )
+                }
+            }
         }
     }
 

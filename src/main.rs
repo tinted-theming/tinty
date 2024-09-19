@@ -105,8 +105,13 @@ fn main() -> Result<()> {
 
             operations::info::info(&data_path, scheme_name_option, is_custom)?;
         }
-        Some(("init", _)) => {
-            operations::init::init(&config_path, &data_path)?;
+        Some(("init", sub_matches)) => {
+            let is_verbose = sub_matches
+                .get_one::<bool>("verbose")
+                .map(|b| b.to_owned())
+                .unwrap_or(false);
+
+            operations::init::init(&config_path, &data_path, is_verbose)?;
         }
         Some(("list", sub_matches)) => {
             let is_custom = sub_matches
@@ -118,9 +123,14 @@ fn main() -> Result<()> {
         }
         Some(("apply", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("scheme_name") {
+                let is_quiet = sub_matches
+                    .get_one::<bool>("quiet")
+                    .map(|b| b.to_owned())
+                    .unwrap_or(false);
+
                 let scheme_name = theme.as_str();
-                operations::apply::apply(&config_path, &data_path, scheme_name)
-                    .with_context(|| format!("Failed to apply theme \"{:?}\"", scheme_name,))?;
+                operations::apply::apply(&config_path, &data_path, scheme_name, is_quiet)
+                    .with_context(|| format!("Failed to apply theme \"{:?}\"", scheme_name))?;
             } else {
                 return Err(anyhow!("scheme_name is required for apply command"));
             }
