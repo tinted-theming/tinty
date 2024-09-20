@@ -109,7 +109,7 @@ tinty_source_shell_theme() {
 }
 
 if [ -n "$(command -v 'tinty')" ]; then
-  tinty_source_shell_theme "init"
+  tinty_source_shell_theme "init" > /dev/null
 
   alias tinty=tinty_source_shell_theme
 fi
