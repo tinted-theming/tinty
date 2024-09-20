@@ -134,8 +134,8 @@ If everything works as expected, `tinty apply
 base16-your-scheme-name.yaml` should apply your scheme.
 
 ```sh
-mkdir "$(tinty config --data-dir-path)/custom-themes/base16"
-cp path/to/your/base16-your-scheme.yaml "$(tinty config --data-dir-path)/custom-themes/base16/your-scheme.yaml"
+mkdir "$(tinty config --data-dir-path)/custom-schemes/base16"
+cp path/to/your/base16-your-scheme.yaml "$(tinty config --data-dir-path)/custom-schemes/base16/your-scheme.yaml"
 tinty list --custom-schemes # Should show your scheme
 tinty apply base16-your-scheme
 ```
