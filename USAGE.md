@@ -15,6 +15,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [fzf](#fzf)
 - [bat](#bat)
 - [qutebrowser](#qutebrowser)
+- [rofi](#rofi)
 
 ## Shell completions
 
@@ -475,6 +476,27 @@ hook = "cp -f %f ~/.config/rofi/base16-theme.rasi"
 
 ```
 @theme "~/.config/rofi/base16-theme.rasi"
+```
+
+## Dunst
+Add the following to `~/.config/tinted-theming/tinty/config.toml`:
+
+```toml
+[[items]]
+path = "https://github.com/tinted-theming/base16-dunst"
+name = "base16-dunst"
+themes-dir = "themes"
+hook = "cp -f %f ~/.config/dunst/dunstrc && systemctl --user restart dunst"
+```
+
+The above `hook` assumes `dunst` is being managed as a service. If that is not the case, you will need to handle the restart for your system accordingly.
+
+The above workflow is an all or nothing ordeal as the `dunstrc` configuration file does not appear to support importing or including additional files.
+
+However, limited testing has shown `dunst` will not complain if its configuration file contains multiple `[global]` sections. This means we can persist our tinty-agnostic settings (fonts, etc) in a separate file and then use our `hook` to concatenate them like so:
+
+```toml
+hook = "cat ~/.config/dunst/dunstrc.local %f > ~/.config/dunst/dunstrc && systemctl --user restart dunst"
 ```
 
 [Usage section]: https://github.com/tinted-theming/tinty?tab=readme-ov-file#usage
