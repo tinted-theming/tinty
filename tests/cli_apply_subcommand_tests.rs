@@ -181,7 +181,10 @@ hooks = ["echo 'Path: %f'"]
 "##;
     let custom_scheme_file_path =
         data_path.join(format!("custom-schemes/base16/{}.yaml", scheme_name));
-    let expected_output = r#"base16 themes generated for "base16" at"#;
+    let expected_output = format!(
+        r#"Successfully generated "base16" themes for "base16" at "{}/repos/base16-shell/scripts/*.sh"#,
+        data_path.display()
+    );
     let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
     let scheme_content =
         fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
@@ -202,7 +205,7 @@ hooks = ["echo 'Path: %f'"]
         scheme_name_with_system,
     );
     assert!(
-        stdout.contains(expected_output),
+        stdout.contains(&expected_output),
         "stdout does not contain the expected output"
     );
     assert!(
