@@ -7,6 +7,10 @@
 - Add `--quiet` flag for `build` subcommand
 - Add `--verbose` flag for `init` subcommand
 
+### Changed
+
+- Update dependencies
+
 ### Fixed
 
 - Fix bug where `scheme_partial_name` doesn't render correctly in all

@@ -12,16 +12,16 @@ keywords = ["cli", "base16", "shell", "tinted-theming", "theme"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-anyhow = "1.0.83"
+anyhow = "1.0.89"
 clap = { version = "4.5.4", features = ["derive"] }
-clap_complete = { version = "4.5.2", features = ["unstable-dynamic"] }
+clap_complete = { version = "4.5.29", features = ["unstable-dynamic"] }
 dirs = "5.0.1"
 hex_color = "3.0.0"
-serde = { version = "1.0.202", features = ["derive"] }
+serde = { version = "1.0.210", features = ["derive"] }
 serde_yaml = "0.9.31"
 shell-words = "1.1.0"
 strip-ansi-escapes = "0.2.0"
-tinted-builder-rust = "0.9.3"
+tinted-builder-rust = "0.11.0"
 tinted-scheme-extractor = "0.3.2"
-toml = "0.8.13"
-url = "2.5.0"
+toml = "0.8.19"
+url = "2.5.2"
