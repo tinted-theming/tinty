@@ -43,6 +43,9 @@ deny = [
     { name = "cmake" },
     { name = "windows" },
 ]
+skip = [
+    { name = "miniz_oxide" }
+]
 
 [sources]
 unknown-registry = "deny"
