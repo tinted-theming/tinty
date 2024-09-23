@@ -1,7 +1,7 @@
 [package]
 name = "tinty"
 description = "Change the theme of your terminal, text editor and anything else with one command!"
-version = "0.18.0"
+version = "0.19.0"
 edition = "2021"
 license = "MIT"
 readme = "README.md"

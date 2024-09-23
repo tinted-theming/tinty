@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.19.0] - 2024-09-23
 
 ### Added
 
@@ -165,6 +165,7 @@
 
 - Initial release
 
+[0.19.0]: https://github.com/tinted-theming/tinty/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/tinted-theming/tinty/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/tinted-theming/tinty/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/tinted-theming/tinty/compare/v0.15.0...v0.16.0

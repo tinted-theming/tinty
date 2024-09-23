@@ -376,7 +376,7 @@ license. Have a look at the [LICENSE] document for more information.
 ### Third-Party Licenses
 
 This project includes third-party code licensed under the MPL-2.0,
-BSD-2-Clause and BSD-3-Clause License. See the [THIRD_PARTY_LICENSES]
+BSD-2-Clause and BSD-3-Clause License. See the [LICENSES-THIRD-PARTY]
 file for details.
 
 [Tinted Theming]: https://github.com/tinted-theming/home
@@ -395,4 +395,4 @@ file for details.
 [LICENSE]: LICENSE
 [USAGE.md]: USAGE.md
 [tinted-builder-rust]: https://github.com/tinted-theming/tinted-builder-rust
-[THIRD_PARTY_LICENSES.md]: THIRD_PARTY_LICENSES.md
+[LICENSES-THIRD-PARTY.md]: LICENSES-THIRD-PARTY.md
