@@ -1304,22 +1304,6 @@ dependencies = [
 
 [[package]]
 name = "tinted-builder"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b33d3ee8803a1c0c467e4136a8f7d1fdaf30fe89d6c2a3d7fadc020c57e8229"
-dependencies = [
- "anyhow",
- "clap",
- "dirs",
- "regex",
- "ribboncurls",
- "serde",
- "serde_yaml",
- "unicode-normalization",
-]
-
-[[package]]
-name = "tinted-builder"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "18da7757f50202506e8c75c75e747f12e21c93ecfb3e67650742c9cdc06bd6df"
@@ -1346,20 +1330,20 @@ dependencies = [
  "dirs",
  "serde",
  "serde_yaml",
- "tinted-builder 0.7.0",
+ "tinted-builder",
 ]
 
 [[package]]
 name = "tinted-scheme-extractor"
-version = "0.3.2"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "614f71a79f6b826a2fa3e8f7d5f07c588123f0dcd97d652ee552d84e548edbc4"
+checksum = "4248b1870fec73e8143280d7ab7bfcf177e20c218c07be17e3604ace78938ded"
 dependencies = [
  "color-thief",
  "image",
  "palette",
  "thiserror",
- "tinted-builder 0.5.1",
+ "tinted-builder",
 ]
 
 [[package]]
@@ -1375,6 +1359,7 @@ dependencies = [
  "serde_yaml",
  "shell-words",
  "strip-ansi-escapes",
+ "tinted-builder",
  "tinted-builder-rust",
  "tinted-scheme-extractor",
  "toml",

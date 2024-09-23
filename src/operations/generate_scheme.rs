@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
-use tinted_scheme_extractor::{create_scheme_from_image, SchemeParams, System, Variant};
+use tinted_builder::{SchemeSystem, SchemeVariant};
+use tinted_scheme_extractor::{create_scheme_from_image, SchemeParams};
 
 use crate::utils::write_to_file;
 
@@ -11,8 +12,8 @@ pub(crate) fn generate_scheme(
     author: String,
     name: String,
     slug: String,
-    system: System,
-    variant: Variant,
+    system: SchemeSystem,
+    variant: SchemeVariant,
 ) -> Result<()> {
     let params = SchemeParams {
         author,

@@ -23,7 +23,7 @@ use config::CONFIG_FILE_NAME;
 use constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
 use operations::generate_scheme;
 use std::path::PathBuf;
-use tinted_scheme_extractor::{System, Variant};
+use tinted_builder::{SchemeSystem, SchemeVariant};
 use utils::{ensure_directory_exists, replace_tilde_slash_with_home};
 
 /// Entry point of the application.
@@ -161,12 +161,12 @@ fn main() -> Result<()> {
                 None => Err(anyhow!("No image file specified")),
             }?;
             let system = match sub_matches.get_one::<String>("system").map(|s| s.as_str()) {
-                Some("base24") => System::Base24,
-                _ => System::Base16,
+                Some("base24") => SchemeSystem::Base24,
+                _ => SchemeSystem::Base16,
             };
             let variant = match sub_matches.get_one::<String>("variant").map(|s| s.as_str()) {
-                Some("light") => Variant::Light,
-                _ => Variant::Dark,
+                Some("light") => SchemeVariant::Light,
+                _ => SchemeVariant::Dark,
             };
             let outfile_path_option = {
                 let custom_scheme_path = data_path.join(CUSTOM_SCHEMES_DIR_NAME);
