@@ -14,7 +14,7 @@ categories = ["command-line-utilities"]
 [dependencies]
 anyhow = "1.0.89"
 clap = { version = "4.5.4", features = ["derive"] }
-clap_complete = { version = "4.5.29", features = ["unstable-dynamic"] }
+clap_complete = { version = "4.5.29" }
 dirs = "5.0.1"
 hex_color = "3.0.0"
 serde = { version = "1.0.210", features = ["derive"] }
