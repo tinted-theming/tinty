@@ -16,6 +16,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [bat](#bat)
 - [qutebrowser](#qutebrowser)
 - [rofi](#rofi)
+- [dunst](#dunst)
 
 ## Shell completions
 
