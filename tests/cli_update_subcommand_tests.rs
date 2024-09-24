@@ -12,7 +12,7 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
         "test_cli_install_subcommand_non_unique_config_item_name",
         "update",
     )?;
-    let expected_output = format!("base16-shell not installed (run `{} install`)", REPO_NAME);
+    let expected_output = format!("tinted-shell not installed (run `{} install`)", REPO_NAME);
 
     // ---
     // Act
@@ -38,7 +38,7 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // -------
     let (config_path, data_path, command_vec, cleanup) =
         setup("test_cli_update_subcommand_with_setup", "update")?;
-    let expected_output = "base16-shell up to date";
+    let expected_output = "tinted-shell up to date";
 
     // ---
     // Act

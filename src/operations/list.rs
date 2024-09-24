@@ -8,7 +8,7 @@ use std::path::Path;
 /// Lists available color schemes
 ///
 /// Lists colorschemes file which is updated via scripts/install by getting a list of schemes
-/// available in https://github.com/tinted-theming/schemes/base16
+/// available in https://github.com/tinted-theming/schemes
 pub fn list(data_path: &Path, is_custom: bool) -> Result<()> {
     let schemes_dir_path = if is_custom {
         data_path.join(CUSTOM_SCHEMES_DIR_NAME)

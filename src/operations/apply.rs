@@ -187,7 +187,7 @@ pub fn apply(
         }
     }
 
-    // Run global hooks
+    // Run global tinty/config.toml hooks
     if let Some(hooks_vec) = config.hooks.clone() {
         for hook in hooks_vec.iter() {
             let hook_command_vec = get_shell_command_from_string(config_path, hook.as_str())?;

@@ -18,7 +18,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
         "test_cli_apply_subcommand_with_setup",
         format!("apply {}", &scheme_name).as_str(),
     )?;
-    let shell_theme_filename = "base16-shell-scripts-file.sh";
+    let shell_theme_filename = "tinted-shell-scripts-file.sh";
     let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
 
     // ---
@@ -182,7 +182,7 @@ hooks = ["echo 'Path: %f'"]
     let custom_scheme_file_path =
         data_path.join(format!("custom-schemes/base16/{}.yaml", scheme_name));
     let expected_output = format!(
-        r#"Successfully generated "base16" themes for "base16" at "{}/repos/base16-shell/scripts/*.sh"#,
+        r#"Successfully generated "base16" themes for "base16" at "{}/repos/tinted-shell/scripts/*.sh"#,
         data_path.display()
     );
     let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
@@ -228,9 +228,8 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
         format!("apply {}", &scheme_name).as_str(),
     )?;
     let expected_output = "This\nis\nexpected\noutput.";
-    let config_content = r##"
-hooks = ["echo 'This '", "echo 'is '", "echo 'expected '", "echo 'output.'"]
-"##;
+    let config_content =
+        r#"hooks = ["echo 'This'", "echo 'is'", "echo 'expected'", "echo 'output.'"]"#;
     write_to_file(&config_path, config_content)?;
 
     // ---

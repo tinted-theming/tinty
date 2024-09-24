@@ -82,7 +82,7 @@ fn test_cli_install_subcommand_without_setup() -> Result<()> {
     // -------
     let (_, _, command_vec, cleanup) =
         setup("test_cli_install_subcommand_without_setup", "install")?;
-    let expected_output = "base16-shell installed";
+    let expected_output = "tinted-shell installed";
 
     // ---
     // Act
@@ -107,7 +107,7 @@ fn test_cli_install_subcommand_with_setup() -> Result<()> {
     // Arrange
     // -------
     let (_, _, command_vec, cleanup) = setup("test_cli_install_subcommand_with_setup", "install")?;
-    let expected_output = "base16-shell already installed";
+    let expected_output = "tinted-shell already installed";
 
     // ---
     // Act

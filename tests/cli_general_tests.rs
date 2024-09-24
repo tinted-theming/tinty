@@ -134,7 +134,7 @@ fn test_cli_default_data_path() -> Result<()> {
     // ------
     fs::remove_file(&config_path)?; // cleanup
     assert!(
-        data_path.join("repos/base16-shell").exists(),
+        data_path.join("repos/tinted-shell").exists(),
         "stdout does not contain the expected output"
     );
     assert_eq!(
@@ -182,7 +182,7 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     // Assert
     // ------
     assert!(
-        data_path.join("repos/base16-shell").exists(),
+        data_path.join("repos/tinted-shell").exists(),
         "stdout does not contain the expected output"
     );
     assert!(

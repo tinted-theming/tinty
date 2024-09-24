@@ -23,7 +23,7 @@ pub fn config(
             println!("{config}");
         }
         (true, true) => {
-            // This case should be dealt with by clap
+            // This case should already be handled by clap
             return Err(anyhow!(
                 "the argument '--data-dir-path' cannot be used with '--config-path'",
             ));

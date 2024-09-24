@@ -22,9 +22,9 @@
 # [[items]]
 # # Path to template repository. Can be a URL, absolute path or path
 # # beginning with `~/`.
-# path = "https://github.com/tinted-theming/base16-shell"
+# path = "https://github.com/tinted-theming/tinted-shell"
 # # Unique name of item
-# name = "base16-shell"
+# name = "tinted-shell"
 # # Name of the repository directory containing the theme files
 # themes-dir = "scripts"
 # # (Optional) Command to execute after copying template (goes through `shell`)
@@ -41,8 +41,8 @@
 # default-scheme = "base16-oceanicnext"
 #
 # [[items]]
-# path = "https://github.com/tinted-theming/base16-shell"
-# name = "base16-shell"
+# path = "https://github.com/tinted-theming/tinted-shell"
+# name = "tinted-shell"
 # hook = ". %f"
 # themes-dir = "scripts"
 #

@@ -104,13 +104,13 @@ workflow, making your experience more enjoyable and productive.
 
 ### Cargo
 
-```shell
+```sh
 cargo install tinty
 ```
 
 ### Homebrew
 
-```shell
+```sh
 brew tap tinted-theming/tinted
 brew install tinty
 ```
@@ -121,7 +121,7 @@ Download the relevant binary from the [repository releases] page.
 
 ### Manual
 
-```shell
+```sh
 git clone https://github.com/tinted-theming/tinty path/to/tinty
 cd path/to/tinty
 make install
@@ -134,20 +134,20 @@ cp target/release/tinty /path/to/bin/dir
 For the most basic usage without configuration, install Tinty and run
 the following to apply `base16-mocha`:
 
-```shell
+```sh
 tinty install # Required once or when your config file is updated
 tinty apply base16-mocha
 ```
 
 To get a list of [schemes] and more information about the colors:
 
-```shell
+```sh
 tinty list
 tinty info base16-oceanicnext
 ```
 
-Without any `config.toml` file, `tinty` will apply your shell theme using
-[base16-shell] using `sh` shell.
+Without any `config.toml` file, `tinty` will apply your shell theme
+using [tinted-shell] using `sh` shell.
 
 ## Usage
 
@@ -217,14 +217,14 @@ specify templates, directories for theme files, and hooks for applying
 themes. Configuring items effectively enables you to manage multiple
 themes across different applications seamlessly.
 
-| Key                   | Type     | Required | Description                                                   | Default | Example                                    |
-|-----------------------|----------|----------|---------------------------------------------------------------|---------|--------------------------------------------|
-| `name`                | `string`   | Required | A unique name for the item being configured. | - | `name = "vim"`                             |
-| `path`                | `string`   | Required | The file system path or URL to the theme template repository. Paths beginning with `~/` map to home dir. | - | `path = "https://github.com/base16-vim"`   |
-| `themes-dir`          | `string`   | Required | The directory within the repository where theme files are located. | - | `themes-dir = "colors"`                    |
-| `hook`                | `string`   | Optional | A command to be executed after the theme is applied. Useful for reloading configurations. `%f` template variable maps to the path of the applied theme file. | None    | `hook = "source ~/.vimrc"`                 |
+| Key                    | Type     | Required | Description                                                   | Default | Example                                    |
+|------------------------|----------|----------|---------------------------------------------------------------|---------|--------------------------------------------|
+| `name`                 | `string` | Required | A unique name for the item being configured.                  | - | `name = "vim"`                             |
+| `path`                 | `string` | Required | The file system path or URL to the theme template repository. Paths beginning with `~/` map to home dir. | - | `path = "https://github.com/tinted-tmux"` |
+| `themes-dir`           | `string` | Required | The directory within the repository where theme files are located. | - | `themes-dir = "colors"`                    |
+| `hook`                 | `string` | Optional | A command to be executed after the theme is applied. Useful for reloading configurations. `%f` template variable maps to the path of the applied theme file. | None    | `hook = "source ~/.vimrc"` |
 | `theme-file-extension` | `string` | Optional | Define a custom theme file extension that isn't `/\.*$/`. Tinty looks for themes named `base16-uwunicorn.*` (for example), but when the theme file isn't structured that way, this option can help specify the pattern. | - | `theme-file-extension = ".module.css"` |
-| `supported-systems`   | `array<"base16" or "base24">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported-systems = ["base16", "base24"]` |
+| `supported-systems`    | `array<"base16" or "base24">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported-systems = ["base16", "base24"]` |
 
 #### Note on `supported-systems`
 
@@ -250,31 +250,32 @@ default-scheme = "base16-mocha"
 
 # Item configurations
 [[items]]
-name = "vim"
-path = "https://github.com/tinted-theming/base16-shell"
+name = "tinted-shell"
+path = "https://github.com/tinted-theming/tinted-shell"
 themes-dir = "scripts"
 hook = "source %f"
+supported-systems = ["base16", "base24"]
 
 [[items]]
-name = "vim"
+name = "base16-vim"
 path = "https://github.com/tinted-theming/base16-vim"
 themes-dir = "colors"
-hook = "source ~/.vimrc"
 supported-systems = ["base16"]
+# Look at USAGE.md for more information on sourcing the generated file in vim
 
 [[items]]
 name = "tmux"
 path = "~/path/path/to/base16-tmux"
 themes-dir = "colors"
-hook = "tmux source-file ~/.tmux.conf"
-supported-systems = ["base16"]
+hook = "tmux run 2> /dev/null && tmux source-file %f"
+supported-systems = ["base16", "base24"]
 ```
 
 ### Select and apply a scheme using fzf
 
 Note: Requires [fzf]
 
-```shell
+```sh
 tinty apply $(tinty list | fzf)
 ```
 
@@ -328,8 +329,8 @@ light = false
 ```toml
 # ~/.config/tinted-theming/tinty/config.toml
 [[items]]
-path = "https://github.com/aarowill/base16-alacritty"
-name = "base16-alacritty"
+path = "https://github.com/tinted-theming/tinted-alacritty"
+name = "tinted-alacritty"
 themes-dir = "colors"
 hook = "cp -f %f ~/.config/alacritty/colors.toml"
 
@@ -385,7 +386,7 @@ file for details.
 [Base16 builder specification]: https://github.com/tinted-theming/home/blob/main/builder.md
 [home repository]: https://github.com/tinted-theming/home
 [Base16 Gallery]: https://tinted-theming.github.io/base16-gallery
-[base16-shell]: https://github.com/tinted-theming/base16-shell
+[tinted-shell]: https://github.com/tinted-theming/tinted-shell
 [schemes]: https://github.com/tinted-theming/schemes
 [fzf]: https://github.com/junegunn/fzf
 [Base16]: https://github.com/tinted-theming/home/blob/main/styling.md

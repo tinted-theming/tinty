@@ -11,8 +11,8 @@ fn test_cli_config_without_config() -> Result<()> {
     let expected = r#"shell = "sh -c '{}'"
 
 [[items]]
-name = "base16-shell"
-path = "https://github.com/tinted-theming/base16-shell"
+name = "tinted-shell"
+path = "https://github.com/tinted-theming/tinted-shell"
 hook = ". %f"
 supported-systems = ["base16"]
 themes-dir = "scripts"
