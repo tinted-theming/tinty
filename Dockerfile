@@ -4,6 +4,7 @@ WORKDIR /usr/src/tinty
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY tests ./tests
+COPY fixtures ./fixtures
 
 RUN cargo build --release
 
