@@ -34,7 +34,7 @@ fn test_cli_generatecompletion_subcommand_bash() -> Result<()> {
     // ------
     assert!(
         stdout.contains(
-            r##"_tinty() {
+            r#"_tinty() {
     local i cur prev opts cmd
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -42,7 +42,7 @@ fn test_cli_generatecompletion_subcommand_bash() -> Result<()> {
     cmd=""
     opts=""
 
-    for i in ${COMP_WORDS[@]}"##
+    for i in ${COMP_WORDS[@]}"#
         ),
         "stdout does not contain the expected output"
     );
@@ -63,10 +63,11 @@ fn test_cli_generatecompletion_subcommand_elvish() -> Result<()> {
     // ------
     assert!(
         stdout.contains(
-            r##"use builtin;
+            r#"
+use builtin;
 use str;
 
-set edit:completion:arg-completer[tinty] = {|@words|"##
+set edit:completion:arg-completer[tinty] = {|@words|"#
         ),
         "stdout does not contain the expected output"
     );
@@ -82,13 +83,17 @@ fn test_cli_generatecompletion_subcommand_fish() -> Result<()> {
     let shell_name = "fish";
     let stdout = generate_shell_completion_test(shell_name)?;
 
+    println!("{}", stdout);
+
     // ------
     // Assert
     // ------
     assert!(
-        stdout.contains(r##"complete -c tinty -n "__fish_use_subcommand" -s c -l config -d 'Optional path to the tinty config.toml file' -r
-complete -c tinty -n "__fish_use_subcommand" -s d -l data-dir -d 'Optional path to the tinty data directory' -r
-complete -c tinty -n "__fish_use_subcommand" -s h -l help -d 'Print help'"##),
+        stdout.contains(r#"
+complete -c tinty -n "__fish_tinty_needs_command" -s c -l config -d 'Optional path to the tinty config.toml file' -r
+complete -c tinty -n "__fish_tinty_needs_command" -s d -l data-dir -d 'Optional path to the tinty data directory' -r
+complete -c tinty -n "__fish_tinty_needs_command" -s h -l help -d 'Print help'
+"#),
         "stdout does not contain the expected output"
     );
 
@@ -108,10 +113,11 @@ fn test_cli_generatecompletion_subcommand_powershell() -> Result<()> {
     // ------
     assert!(
         stdout.contains(
-            r##"using namespace System.Management.Automation
+            r#"
+using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
 
-Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {"##
+Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {"#
         ),
         "stdout does not contain the expected output"
     );
@@ -132,14 +138,14 @@ fn test_cli_generatecompletion_subcommand_zsh() -> Result<()> {
     // ------
     assert!(
         stdout.contains(
-            r##"#compdef tinty
+            r#"#compdef tinty
 
 autoload -U is-at-least
 
 _tinty() {
     typeset -A opt_args
     typeset -a _arguments_options
-    local ret=1"##
+    local ret=1"#
         ),
         "stdout does not contain the expected output"
     );

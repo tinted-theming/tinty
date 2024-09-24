@@ -26,15 +26,28 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand --help 'Print help'
             cand -V 'Print version'
             cand --version 'Print version'
+            cand build 'Builds the target theme template'
             cand current 'Prints the last scheme name applied'
             cand generate-completion 'Generates a shell completion script'
+            cand generate-scheme 'Generates a scheme based on an image'
             cand info 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)'
             cand init 'Initializes with the exising config. Used to Initialize exising theme for when your shell starts up'
             cand list 'Lists available schemes'
+            cand config 'Provides config related information'
             cand apply 'Applies a theme based on the chosen scheme'
             cand install 'Install the environment needed for tinty'
             cand update 'Update to the latest themes'
             cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'tinty;build'= {
+            cand -c 'Optional path to the tinty config.toml file'
+            cand --config 'Optional path to the tinty config.toml file'
+            cand -d 'Optional path to the tinty data directory'
+            cand --data-dir 'Optional path to the tinty data directory'
+            cand -q 'Silence stdout'
+            cand --quiet 'Silence stdout'
+            cand -h 'Print help'
+            cand --help 'Print help'
         }
         &'tinty;current'= {
             cand -c 'Optional path to the tinty config.toml file'
@@ -52,11 +65,26 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand -h 'Print help'
             cand --help 'Print help'
         }
+        &'tinty;generate-scheme'= {
+            cand --author 'Scheme author info (name, email, etc) to write, defaults to ''Tinty'''
+            cand --name 'Scheme display name (can include spaces and capitalization). Defaults to ''Tinty Generated'''
+            cand --slug 'Scheme slug (the name you specify when applying schemes). Can not contain white-space or capitalization. Defaults to ''tinty-generated'''
+            cand --system 'Whether to generate a base16 or base24 scheme'
+            cand --variant 'Whether to generate a dark or light scheme'
+            cand -c 'Optional path to the tinty config.toml file'
+            cand --config 'Optional path to the tinty config.toml file'
+            cand -d 'Optional path to the tinty data directory'
+            cand --data-dir 'Optional path to the tinty data directory'
+            cand --save 'Whether to add the scheme to the installed schemes.'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
         &'tinty;info'= {
             cand -c 'Optional path to the tinty config.toml file'
             cand --config 'Optional path to the tinty config.toml file'
             cand -d 'Optional path to the tinty data directory'
             cand --data-dir 'Optional path to the tinty data directory'
+            cand --custom-schemes 'Lists availabile custom schemes'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -65,6 +93,7 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand --config 'Optional path to the tinty config.toml file'
             cand -d 'Optional path to the tinty data directory'
             cand --data-dir 'Optional path to the tinty data directory'
+            cand --verbose 'Print to stdout'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -73,6 +102,17 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand --config 'Optional path to the tinty config.toml file'
             cand -d 'Optional path to the tinty data directory'
             cand --data-dir 'Optional path to the tinty data directory'
+            cand --custom-schemes 'Lists availabile custom schemes'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'tinty;config'= {
+            cand -c 'Optional path to the tinty config.toml file'
+            cand --config 'Optional path to the tinty config.toml file'
+            cand -d 'Optional path to the tinty data directory'
+            cand --data-dir 'Optional path to the tinty data directory'
+            cand --config-path 'Returns path to the tinty config file'
+            cand --data-dir-path 'Returns path to the tinty data directory'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -101,25 +141,34 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand --help 'Print help'
         }
         &'tinty;help'= {
+            cand build 'Builds the target theme template'
             cand current 'Prints the last scheme name applied'
             cand generate-completion 'Generates a shell completion script'
+            cand generate-scheme 'Generates a scheme based on an image'
             cand info 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)'
             cand init 'Initializes with the exising config. Used to Initialize exising theme for when your shell starts up'
             cand list 'Lists available schemes'
+            cand config 'Provides config related information'
             cand apply 'Applies a theme based on the chosen scheme'
             cand install 'Install the environment needed for tinty'
             cand update 'Update to the latest themes'
             cand help 'Print this message or the help of the given subcommand(s)'
         }
+        &'tinty;help;build'= {
+        }
         &'tinty;help;current'= {
         }
         &'tinty;help;generate-completion'= {
+        }
+        &'tinty;help;generate-scheme'= {
         }
         &'tinty;help;info'= {
         }
         &'tinty;help;init'= {
         }
         &'tinty;help;list'= {
+        }
+        &'tinty;help;config'= {
         }
         &'tinty;help;apply'= {
         }
