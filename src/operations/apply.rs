@@ -84,7 +84,7 @@ pub fn apply(
                         let item_template_path: PathBuf =
                             data_path.join(format!("{}/{}", REPO_DIR, &item_name));
 
-                        build(&item_template_path, custom_schemes_path, is_quiet)?;
+                        build(&item_template_path, custom_schemes_path, true)?;
                     }
 
                     Ok(())
