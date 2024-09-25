@@ -25,13 +25,13 @@ subcommand, source the generated file in your shell startup file (`*rc`)
 and completions will exist for `tinty`. Have a look at the [README CLI
 section] for more information about the command usage.
 
-```shell
+```sh
 tinty generate-completion zsh > path/to/tinty-zsh-completion.sh
 ```
 
 In your startup file (`*rc`) add the following:
 
-```shell
+```sh
 source path/to/tinty-zsh-completion.sh
 ```
 
@@ -89,7 +89,7 @@ There is a workaround for this specific issue.
 
 The following script does that. Add it to your shell startup file (`*rc`):
 
-```shell
+```sh
 # Tinty isn't able to apply environment variables to your shell due to
 # the way shell sub-processes work. This is a work around by running
 # Tinty through a function and then executing the shell scripts.
@@ -137,7 +137,7 @@ Tinty will not apply it.
 If everything works as expected, `tinty apply
 base16-your-scheme-name.yaml` should apply your scheme.
 
-```shell
+```sh
 mkdir "$(tinty config --data-dir-path)/custom-schemes/base16"
 cp path/to/your/base16-your-scheme.yaml "$(tinty config --data-dir-path)/custom-schemes/base16/your-scheme.yaml"
 tinty list --custom-schemes # Should show your scheme
@@ -445,7 +445,7 @@ ANSI colors to be used. The available `bat` theme names for this are
 Set the alias in your `.*rc` file to make sure this is run by default
 whenever `bat` is executed.
 
-```shell
+```sh
 alias bat="bat --theme='base16-256'"
 ```
 
