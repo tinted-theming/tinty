@@ -178,10 +178,6 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
     )?;
     let custom_scheme_file_path =
         data_path.join(format!("custom-schemes/base16/{}.yaml", scheme_name));
-    let expected_output = format!(
-        r#"Successfully generated "base16" themes for "base16" at "{}/repos/tinted-shell/scripts/*.sh"#,
-        data_path.display()
-    );
     let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
     let scheme_content =
         fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
@@ -201,7 +197,7 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
         scheme_name_with_system,
     );
     assert!(
-        stdout.contains(&expected_output),
+        stdout.is_empty(),
         "stdout does not contain the expected output"
     );
     assert!(

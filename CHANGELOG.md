@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.1] - 2024-09-25
+
+### Fixed
+
+- Fix bug where `tinted-builder-rust` displays build information by
+  default when `tinty apply` is run
+
 ## [0.20.0] - 2024-09-25
 
 ### Added
@@ -178,6 +185,7 @@
 
 - Initial release
 
+[0.20.1]: https://github.com/tinted-theming/tinty/compare/v0.20.0...v0.20.1
 [0.20.0]: https://github.com/tinted-theming/tinty/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/tinted-theming/tinty/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/tinted-theming/tinty/compare/v0.17.0...v0.18.0
