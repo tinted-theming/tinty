@@ -29,6 +29,7 @@ Tinty have a look at our [Base16 Gallery].
 - [Basic usage](#basic-usage)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [Migration from Flavours](#migration-from-flavours)
 - [Debugging Tinty issues](#debugging-tinty-issues)
 - [Contributing](#contributing)
 - [License](#license)
@@ -279,7 +280,7 @@ Note: Requires [fzf]
 tinty apply $(tinty list | fzf)
 ```
 
-### Migration from Flavours
+## Migration from Flavours
 
 [Flavours] is a great base16 manager written in Rust and it's where
 Tinty has gotten a lot of its inspiration. Flavours isn't actively
@@ -294,16 +295,16 @@ image colors is not functionality included.
 If you're looking for a base16 or base24 builder, have a look at
 [builder-go].
 
-#### CLI mapping
+### CLI mapping
 
 - `flavours apply mocha` -> `tinty apply base16-mocha`
 - `flavours info mocha` -> `tinty info base16-mocha`
 - `flavours current` -> `tinty current`
 - `flavours update` -> `tinty install`
 
-#### config.toml mapping
+### config.toml mapping
 
-**Flavours:**
+#### Flavours
 
 ```toml
 # ~/.config/flavours/config.toml
@@ -324,7 +325,7 @@ hook = "swaymsg reload"
 light = false
 ```
 
-**Tinty:**
+#### Tinty
 
 ```toml
 # ~/.config/tinted-theming/tinty/config.toml
