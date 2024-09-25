@@ -94,15 +94,17 @@ The following script does that. Add it to your shell startup file (`*rc`):
 # the way shell sub-processes work. This is a work around by running
 # Tinty through a function and then executing the shell scripts.
 tinty_source_shell_theme() {
+	newer_file=$(mktemp)
   tinty $@
   subcommand="$1"
 
   if [ "$subcommand" = "apply" ] || [ "$subcommand" = "init" ]; then
     tinty_data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/tinted-theming/tinty"
 
-    for tinty_script_file in $(find "$tinty_data_dir" -maxdepth 1 -type f -name "*.sh"); do
-      . $tinty_script_file
-    done
+		while read -r script; do
+			# shellcheck disable=SC1090
+			. "$script"
+		done < <(find "$tinty_data_dir" -maxdepth 1 -type f -name "*.sh" -newer "$newer_file")
 
     unset tinty_data_dir
   fi
