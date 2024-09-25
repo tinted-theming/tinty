@@ -167,6 +167,18 @@ _arguments "${_arguments_options[@]}" : \
 '--help[Print help]' \
 && ret=0
 ;;
+(sync)
+_arguments "${_arguments_options[@]}" : \
+'-c+[Optional path to the tinty config.toml file]:FILE: ' \
+'--config=[Optional path to the tinty config.toml file]:FILE: ' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-q[Silence stdout]' \
+'--quiet[Silence stdout]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
 (help)
 _arguments "${_arguments_options[@]}" : \
 ":: :_tinty__help_commands" \
@@ -223,6 +235,10 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
+(sync)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
 (help)
 _arguments "${_arguments_options[@]}" : \
 && ret=0
@@ -250,6 +266,7 @@ _tinty_commands() {
 'apply:Applies a theme based on the chosen scheme' \
 'install:Install the environment needed for tinty' \
 'update:Update to the latest themes' \
+'sync:Install missing templates in tinty/config.toml and update existing templates' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'tinty commands' commands "$@"
@@ -298,6 +315,7 @@ _tinty__help_commands() {
 'apply:Applies a theme based on the chosen scheme' \
 'install:Install the environment needed for tinty' \
 'update:Update to the latest themes' \
+'sync:Install missing templates in tinty/config.toml and update existing templates' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'tinty help commands' commands "$@"
@@ -357,6 +375,11 @@ _tinty__help__list_commands() {
     local commands; commands=()
     _describe -t commands 'tinty help list commands' commands "$@"
 }
+(( $+functions[_tinty__help__sync_commands] )) ||
+_tinty__help__sync_commands() {
+    local commands; commands=()
+    _describe -t commands 'tinty help sync commands' commands "$@"
+}
 (( $+functions[_tinty__help__update_commands] )) ||
 _tinty__help__update_commands() {
     local commands; commands=()
@@ -381,6 +404,11 @@ _tinty__install_commands() {
 _tinty__list_commands() {
     local commands; commands=()
     _describe -t commands 'tinty list commands' commands "$@"
+}
+(( $+functions[_tinty__sync_commands] )) ||
+_tinty__sync_commands() {
+    local commands; commands=()
+    _describe -t commands 'tinty sync commands' commands "$@"
 }
 (( $+functions[_tinty__update_commands] )) ||
 _tinty__update_commands() {

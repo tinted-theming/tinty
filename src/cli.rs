@@ -206,6 +206,16 @@ pub fn build_cli() -> Command {
                         .action(ArgAction::SetTrue),
                 ),
         )
+        .subcommand(
+            Command::new("sync").about("Install missing templates in tinty/config.toml and update existing templates")
+                .arg(
+                    Arg::new("quiet")
+                        .long("quiet")
+                        .short('q')
+                        .help("Silence stdout")
+                        .action(ArgAction::SetTrue),
+                ),
+        )
 }
 
 // Parse the command line arguments with styling

@@ -5,6 +5,8 @@
 ### Added
 
 - Add `--quiet` flag for `apply`, `install` and `update` subcommands
+- Add `sync` quality-of-life subcommand combining `install` and `update`
+  subcommands
 
 ### Fixed
 
