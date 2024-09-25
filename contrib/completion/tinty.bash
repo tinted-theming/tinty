@@ -121,7 +121,7 @@ _tinty() {
             return 0
             ;;
         tinty__apply)
-            opts="-c -d -h --config --data-dir --help $($1 list)"
+            opts="-q -c -d -h --quiet --config --data-dir --help $($1 list)"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -578,7 +578,7 @@ _tinty() {
             return 0
             ;;
         tinty__install)
-            opts="-c -d -h --config --data-dir --help"
+            opts="-q -c -d -h --quiet --config --data-dir --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -638,7 +638,7 @@ _tinty() {
             return 0
             ;;
         tinty__update)
-            opts="-c -d -h --config --data-dir --help"
+            opts="-q -c -d -h --quiet --config --data-dir --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

@@ -177,13 +177,34 @@ pub fn build_cli() -> Command {
                 Arg::new("scheme_name")
                     .help("The scheme you want to apply")
                     .required(true),
+            )
+            .arg(
+                Arg::new("quiet")
+                    .long("quiet")
+                    .short('q')
+                    .help("Silence stdout")
+                    .action(ArgAction::SetTrue),
             ),
         )
         .subcommand(
             Command::new("install").about(format!("Install the environment needed for {}", REPO_NAME))
+                .arg(
+                    Arg::new("quiet")
+                        .long("quiet")
+                        .short('q')
+                        .help("Silence stdout")
+                        .action(ArgAction::SetTrue),
+                ),
         )
         .subcommand(
             Command::new("update").about("Update to the latest themes")
+                .arg(
+                    Arg::new("quiet")
+                        .long("quiet")
+                        .short('q')
+                        .help("Silence stdout")
+                        .action(ArgAction::SetTrue),
+                ),
         )
 }
 

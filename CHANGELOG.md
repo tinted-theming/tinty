@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Add `--quiet` flag for `apply`, `install` and `update` subcommands
+
 ### Fixed
 
 - Fix bug where Tinty won't update after custom schemes have been built

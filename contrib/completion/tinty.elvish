@@ -121,6 +121,8 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand --config 'Optional path to the tinty config.toml file'
             cand -d 'Optional path to the tinty data directory'
             cand --data-dir 'Optional path to the tinty data directory'
+            cand -q 'Silence stdout'
+            cand --quiet 'Silence stdout'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -129,6 +131,8 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand --config 'Optional path to the tinty config.toml file'
             cand -d 'Optional path to the tinty data directory'
             cand --data-dir 'Optional path to the tinty data directory'
+            cand -q 'Silence stdout'
+            cand --quiet 'Silence stdout'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -137,6 +141,8 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand --config 'Optional path to the tinty config.toml file'
             cand -d 'Optional path to the tinty data directory'
             cand --data-dir 'Optional path to the tinty data directory'
+            cand -q 'Silence stdout'
+            cand --quiet 'Silence stdout'
             cand -h 'Print help'
             cand --help 'Print help'
         }

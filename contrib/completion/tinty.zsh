@@ -136,6 +136,8 @@ _arguments "${_arguments_options[@]}" : \
 '--config=[Optional path to the tinty config.toml file]:FILE: ' \
 '-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
 '--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-q[Silence stdout]' \
+'--quiet[Silence stdout]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ':scheme_name -- The scheme you want to apply:' \
@@ -147,6 +149,8 @@ _arguments "${_arguments_options[@]}" : \
 '--config=[Optional path to the tinty config.toml file]:FILE: ' \
 '-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
 '--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-q[Silence stdout]' \
+'--quiet[Silence stdout]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -157,6 +161,8 @@ _arguments "${_arguments_options[@]}" : \
 '--config=[Optional path to the tinty config.toml file]:FILE: ' \
 '-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
 '--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-q[Silence stdout]' \
+'--quiet[Silence stdout]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
