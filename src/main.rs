@@ -11,6 +11,7 @@ mod operations {
     pub mod init;
     pub mod install;
     pub mod list;
+    pub mod sync;
     pub mod update;
 }
 mod utils;
@@ -148,6 +149,14 @@ fn main() -> Result<()> {
                 .unwrap_or(false);
 
             operations::update::update(&config_path, &data_path, is_quiet)?;
+        }
+        Some(("sync", sub_matches)) => {
+            let is_quiet = sub_matches
+                .get_one::<bool>("quiet")
+                .map(|b| b.to_owned())
+                .unwrap_or(false);
+
+            operations::sync::sync(&config_path, &data_path, is_quiet)?;
         }
         Some(("generate-scheme", sub_matches)) => {
             let slug_default = "tinty-generated".to_string();
