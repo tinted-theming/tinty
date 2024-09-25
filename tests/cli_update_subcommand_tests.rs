@@ -44,7 +44,7 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // Act
     // ---
     utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
 
     // ------
     // Assert
@@ -53,6 +53,42 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     assert!(
         stdout.contains(expected_output),
         "stdout does not contain the expected output"
+    );
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_update_subcommand_with_setup_quiet_flag() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_update_subcommand_with_setup_quiet_flag",
+        "update --quiet",
+    )?;
+
+    // ---
+    // Act
+    // ---
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    cleanup()?;
+    assert!(
+        stdout.is_empty(),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
     );
 
     Ok(())

@@ -131,15 +131,23 @@ fn main() -> Result<()> {
                 let scheme_name = theme.as_str();
                 operations::apply::apply(&config_path, &data_path, scheme_name, is_quiet)
                     .with_context(|| format!("Failed to apply theme \"{:?}\"", scheme_name))?;
-            } else {
-                return Err(anyhow!("scheme_name is required for apply command"));
             }
         }
-        Some(("install", _)) => {
-            operations::install::install(&config_path, &data_path)?;
+        Some(("install", sub_matches)) => {
+            let is_quiet = sub_matches
+                .get_one::<bool>("quiet")
+                .map(|b| b.to_owned())
+                .unwrap_or(false);
+
+            operations::install::install(&config_path, &data_path, is_quiet)?;
         }
-        Some(("update", _)) => {
-            operations::update::update(&config_path, &data_path)?;
+        Some(("update", sub_matches)) => {
+            let is_quiet = sub_matches
+                .get_one::<bool>("quiet")
+                .map(|b| b.to_owned())
+                .unwrap_or(false);
+
+            operations::update::update(&config_path, &data_path, is_quiet)?;
         }
         Some(("generate-scheme", sub_matches)) => {
             let slug_default = "tinty-generated".to_string();

@@ -20,7 +20,7 @@ pub fn run_command(command_vec: Vec<String>) -> Result<(String, String), Box<dyn
 
     if !output.stderr.is_empty() {
         println!(
-            "Init command stderr: {}",
+            "tests::utils::run_command stderr: {}",
             String::from_utf8_lossy(&output.stderr)
         );
     }

@@ -176,9 +176,6 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
         "test_cli_apply_subcommand_with_custom_schemes",
         format!("apply {}", &scheme_name_with_system).as_str(),
     )?;
-    let config_content = r##"
-hooks = ["echo 'Path: %f'"]
-"##;
     let custom_scheme_file_path =
         data_path.join(format!("custom-schemes/base16/{}.yaml", scheme_name));
     let expected_output = format!(
@@ -189,7 +186,6 @@ hooks = ["echo 'Path: %f'"]
     let scheme_content =
         fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
     write_to_file(&custom_scheme_file_path, &scheme_content)?;
-    write_to_file(&config_path, config_content)?;
 
     // ---
     // Act
@@ -206,6 +202,51 @@ hooks = ["echo 'Path: %f'"]
     );
     assert!(
         stdout.contains(&expected_output),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
+    );
+
+    cleanup()?;
+    Ok(())
+}
+
+#[test]
+fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_system = "base16";
+    let scheme_name = "tinty-generated";
+    let scheme_name_with_system = format!("{}-{}", scheme_system, scheme_name);
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_with_custom_schemes_quiet_flag",
+        format!("apply {} --quiet", &scheme_name_with_system).as_str(),
+    )?;
+    let custom_scheme_file_path =
+        data_path.join(format!("custom-schemes/base16/{}.yaml", scheme_name));
+    let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
+    let scheme_content =
+        fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
+    write_to_file(&custom_scheme_file_path, &scheme_content)?;
+
+    // ---
+    // Act
+    // ---
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert_eq!(
+        fs::read_to_string(current_scheme_path)?,
+        scheme_name_with_system,
+    );
+    assert!(
+        stdout.is_empty(),
         "stdout does not contain the expected output"
     );
     assert!(

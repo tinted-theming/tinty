@@ -95,7 +95,7 @@ pub fn apply(
             (true, true) => {
                 let scheme_partial_name = &scheme_name_arr[1..].join("-");
 
-                Err(anyhow!("You have a Tinty generated scheme named the same as an official scheme name, please rename or remove it: {}", format!("{}/{}.yaml", custom_schemes_path.display(), scheme_partial_name)))
+                Err(anyhow!("You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it: {}", format!("{}/{}.yaml", custom_schemes_path.display(), scheme_partial_name)))
             }
             _ => Err(anyhow!("Scheme does not exist: {}", full_scheme_name)),
         }
