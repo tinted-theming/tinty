@@ -102,8 +102,8 @@ tinty_source_shell_theme() {
     tinty_data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/tinted-theming/tinty"
 
     while read -r script; do
-	    # shellcheck disable=SC1090
-	    . "$script"
+      # shellcheck disable=SC1090
+      . "$script"
     done < <(find "$tinty_data_dir" -maxdepth 1 -type f -name "*.sh" -newer "$newer_file")
 
     unset tinty_data_dir
