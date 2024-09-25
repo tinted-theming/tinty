@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fix bug where Tinty won't update after custom schemes have been built
+  in local templates
+
 ## [0.19.0] - 2024-09-23
 
 ### Added

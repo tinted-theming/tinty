@@ -95,11 +95,20 @@ pub fn git_diff(target_dir: &Path) -> Result<bool> {
         .with_context(|| format!("Failed to execute process in {}", target_dir.display()))?;
     let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
 
+    // If there is no output, then there is no diff
     if stdout.is_empty() {
-        Ok(false)
-    } else {
-        Ok(true)
+        return Ok(false);
     }
+
+    // Iterate over the lines and check for changes that should be considered a diff
+    // Don't consider untracked files a diff
+    let has_diff = stdout.lines().any(|line| {
+        let status_code = &line[..2];
+        // Status codes: M = modified, A = added, ?? = untracked
+        status_code != "??"
+    });
+
+    Ok(has_diff)
 }
 
 pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<String> {
