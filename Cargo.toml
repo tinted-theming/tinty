@@ -15,7 +15,6 @@ categories = ["command-line-utilities"]
 anyhow = "1.0.89"
 clap = { version = "4.5.4", features = ["derive"] }
 clap_complete = { version = "4.5.29" }
-dirs = "5.0.1"
 hex_color = "3.0.0"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_yaml = "0.9.31"
@@ -26,3 +25,5 @@ tinted-builder= "0.7.0"
 tinted-scheme-extractor = "0.4.0"
 toml = "0.8.19"
 url = "2.5.2"
+xdg = "2.5.2"
+home = "0.5.9"

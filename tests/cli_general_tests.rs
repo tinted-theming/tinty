@@ -2,9 +2,9 @@ mod utils;
 
 use crate::utils::{
     cleanup, read_file_to_string, setup, write_to_file, COMMAND_NAME, CURRENT_SCHEME_FILE_NAME,
-    REPO_NAME,
+    ORG_NAME, REPO_NAME,
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use std::{fs, path::PathBuf};
 
 #[test]
@@ -36,7 +36,7 @@ fn test_cli_config_path_tilde_as_home() -> Result<()> {
     // -------
     let name = "test_cli_config_path_tilde_as_home";
     let config_path_name = format!("config_path_{}", name);
-    let home_path = dirs::home_dir().unwrap();
+    let home_path = home::home_dir().unwrap();
     let config_path = home_path.join(&config_path_name);
     let provided_config_path = format!("~/{}", config_path_name);
     let data_path = PathBuf::from(format!("data_path_{}", name));
@@ -87,9 +87,9 @@ fn test_cli_default_data_path() -> Result<()> {
     let config_path = PathBuf::from(format!("{}.toml", "test_cli_default_data_path"));
     let scheme_name = "base16-uwunicorn";
     let init_scheme_name = "base16-mocha";
-    let data_path = dirs::data_dir()
-        .ok_or_else(|| anyhow!("Error getting data directory"))?
-        .join(format!("tinted-theming/{}", REPO_NAME));
+    let xdg_dirs =
+        xdg::BaseDirectories::with_prefix(format!("{}/{}", ORG_NAME, REPO_NAME)).unwrap();
+    let data_path = xdg_dirs.get_data_home();
     let init_command = format!(
         "{} --config=\"{}\" init",
         COMMAND_NAME,
@@ -159,7 +159,7 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     // Arrange
     // -------
     let data_path_name = "test_cli_data_path_tilde_as_home";
-    let home_path = dirs::home_dir().unwrap();
+    let home_path = home::home_dir().unwrap();
     let config_path = PathBuf::from(format!("{}.toml", data_path_name));
     let data_path = home_path.join(data_path_name);
     let provided_data_path = format!("~/{}", data_path_name);

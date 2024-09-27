@@ -1,5 +1,6 @@
 use crate::constants::REPO_NAME;
 use anyhow::{anyhow, Context, Result};
+use home::home_dir;
 use serde::de::{self, Deserializer, Unexpected, Visitor};
 use serde::Deserialize;
 use std::collections::HashSet;
@@ -10,6 +11,7 @@ use url::Url;
 
 pub const DEFAULT_CONFIG_SHELL: &str = "sh -c '{}'";
 pub const CONFIG_FILE_NAME: &str = "config.toml";
+pub const ORG_NAME: &str = "tinted-theming";
 pub const BASE16_SHELL_REPO_URL: &str = "https://github.com/tinted-theming/tinted-shell";
 pub const BASE16_SHELL_REPO_NAME: &str = "tinted-shell";
 pub const BASE16_SHELL_THEMES_DIR: &str = "scripts";
@@ -196,7 +198,7 @@ impl Config {
                 // Replace `~/` with absolute home path
                 let trimmed_path = item.path.trim();
                 if trimmed_path.starts_with("~/") {
-                    match dirs::home_dir() {
+                    match home_dir() {
                         Some(home_dir) => {
                             item.path = trimmed_path.replacen(
                                 "~/",

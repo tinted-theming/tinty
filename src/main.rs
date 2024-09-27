@@ -20,38 +20,38 @@ use crate::cli::{build_cli, get_matches};
 use anyhow::{anyhow, Context, Result};
 use clap::Command;
 use clap_complete::{generate, Generator, Shell};
-use config::CONFIG_FILE_NAME;
+use config::{CONFIG_FILE_NAME, ORG_NAME};
 use constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
 use operations::generate_scheme;
 use std::path::PathBuf;
 use tinted_builder::{SchemeSystem, SchemeVariant};
 use utils::{ensure_directory_exists, replace_tilde_slash_with_home};
+use xdg::BaseDirectories;
 
 /// Entry point of the application.
 fn main() -> Result<()> {
     // Parse the command line arguments
     let matches = get_matches();
+    let xdg_dirs = BaseDirectories::with_prefix(format!("{}/{}", ORG_NAME, REPO_NAME)).unwrap();
 
     // Other configuration paths
     let config_path_result: Result<PathBuf> =
         if let Some(config_file_path) = matches.get_one::<String>("config") {
             replace_tilde_slash_with_home(config_file_path)
         } else {
-            Ok(dirs::config_dir()
-                .ok_or_else(|| anyhow!("Error getting config directory"))?
-                .join(format!("tinted-theming/{}/{}", REPO_NAME, CONFIG_FILE_NAME)))
+            xdg_dirs
+                .place_config_file(CONFIG_FILE_NAME)
+                .context(format!(
+                    "Unable to create XDG_HOME/{}/{}/{}",
+                    ORG_NAME, REPO_NAME, CONFIG_FILE_NAME
+                ))
         };
     let config_path = config_path_result?;
-    // Determine the data-dir path
-    let data_path_result: Result<PathBuf> =
-        if let Some(data_file_path) = matches.get_one::<String>("data-dir") {
-            replace_tilde_slash_with_home(data_file_path)
-        } else {
-            Ok(dirs::data_dir()
-                .ok_or_else(|| anyhow!("Error getting data directory"))?
-                .join(format!("tinted-theming/{}", REPO_NAME)))
-        };
-    let data_path = data_path_result?;
+    let data_path: PathBuf = if let Some(data_file_path) = matches.get_one::<String>("data-dir") {
+        replace_tilde_slash_with_home(data_file_path)?
+    } else {
+        xdg_dirs.get_data_home()
+    };
     let data_repo_path = data_path.join(REPO_DIR);
 
     // Ensure config dirs exist
