@@ -269,6 +269,10 @@ base16-xcode-dusk
 base16-zenbones
 base16-zenburn
 base24-brogrammer
+base24-catppuccin-frappe
+base24-catppuccin-latte
+base24-catppuccin-macchiato
+base24-catppuccin-mocha
 base24-chalk
 base24-deep-oceanic-next
 base24-dracula
