@@ -218,7 +218,7 @@ local function get_tinty_theme()
   if vim.v.shell_error ~= 0 then
     return default_theme
   else
-    return theme_name
+    return vim.trim(theme_name)
   end
 end
 
@@ -258,7 +258,7 @@ function! GetTintyTheme()
   if v:shell_error != 0
     return g:default_theme
   else
-    return l:theme_name
+    return trim(l:theme_name)
   endif
 endfunction
 
