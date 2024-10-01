@@ -487,6 +487,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "home"
+version = "0.5.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3d1354bf6b7235cb4a0576c2619fd4ed18183f689b12b006a0ee7329eeff9a5"
+dependencies = [
+ "windows-sys 0.52.0",
+]
+
+[[package]]
 name = "html-escape"
 version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1341,8 +1350,8 @@ dependencies = [
  "anyhow",
  "clap",
  "clap_complete",
- "dirs",
  "hex_color",
+ "home",
  "serde",
  "serde_yaml",
  "shell-words",
@@ -1352,6 +1361,7 @@ dependencies = [
  "tinted-scheme-extractor",
  "toml",
  "url",
+ "xdg",
 ]
 
 [[package]]
@@ -1704,6 +1714,12 @@ checksum = "68a9bda4691f099d435ad181000724da8e5899daa10713c2d432552b9ccd3a6f"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "xdg"
+version = "2.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "213b7324336b53d2414b2db8537e56544d981803139155afa84f76eeebb7a546"
 
 [[package]]
 name = "zerocopy"

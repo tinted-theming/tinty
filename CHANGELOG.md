@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- BREAKING: MacOS breaking change only since Tinty now uses `XDG` paths
+  for config and data directories while falling back to `XDG` defaults 
+  for these dirs if the environment variables aren't set. This is how 
+  Tinty functions on Linux already
+
 ## [0.20.1] - 2024-09-25
 
 ### Fixed
