@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fix bug where `tinty build` subcommand doesn't support `filename`
+  config.yaml property
+
 ## [0.21.0] - 2024-10-01
 
 ### Changed
