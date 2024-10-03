@@ -27,7 +27,7 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand -V 'Print version'
             cand --version 'Print version'
             cand build 'Builds the target theme template'
-            cand current 'Prints the last scheme name applied'
+            cand current 'Prints the last scheme name applied or specific values from the current scheme'
             cand generate-completion 'Generates a shell completion script'
             cand generate-scheme 'Generates a scheme based on an image'
             cand info 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)'
@@ -159,7 +159,7 @@ set edit:completion:arg-completer[tinty] = {|@words|
         }
         &'tinty;help'= {
             cand build 'Builds the target theme template'
-            cand current 'Prints the last scheme name applied'
+            cand current 'Prints the last scheme name applied or specific values from the current scheme'
             cand generate-completion 'Generates a shell completion script'
             cand generate-scheme 'Generates a scheme based on an image'
             cand info 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)'

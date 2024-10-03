@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support arguments with `current` subcommand to allow consumers to get
+  specific current scheme data
+
 ## [0.21.1] - 2024-10-02
 
 ### Fixed

@@ -75,8 +75,13 @@ fn main() -> Result<()> {
                 operations::build::build(&template_path, &schemes_repo_path)?;
             }
         }
-        Some(("current", _)) => {
-            operations::current::current(&data_path)?;
+        Some(("current", sub_matches)) => {
+            let property_name = sub_matches
+                .get_one::<String>("property_name")
+                .map(|s| s.as_str())
+                .unwrap_or_default();
+
+            operations::current::current(&data_path, property_name)?;
         }
         Some(("config", sub_matches)) => {
             let data_dir_path_flag = sub_matches.get_flag("data-dir-path");

@@ -30,7 +30,7 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
             [CompletionResult]::new('-V', '-V ', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'Builds the target theme template')
-            [CompletionResult]::new('current', 'current', [CompletionResultType]::ParameterValue, 'Prints the last scheme name applied')
+            [CompletionResult]::new('current', 'current', [CompletionResultType]::ParameterValue, 'Prints the last scheme name applied or specific values from the current scheme')
             [CompletionResult]::new('generate-completion', 'generate-completion', [CompletionResultType]::ParameterValue, 'Generates a shell completion script')
             [CompletionResult]::new('generate-scheme', 'generate-scheme', [CompletionResultType]::ParameterValue, 'Generates a scheme based on an image')
             [CompletionResult]::new('info', 'info', [CompletionResultType]::ParameterValue, 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)')
@@ -175,7 +175,7 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
         }
         'tinty;help' {
             [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'Builds the target theme template')
-            [CompletionResult]::new('current', 'current', [CompletionResultType]::ParameterValue, 'Prints the last scheme name applied')
+            [CompletionResult]::new('current', 'current', [CompletionResultType]::ParameterValue, 'Prints the last scheme name applied or specific values from the current scheme')
             [CompletionResult]::new('generate-completion', 'generate-completion', [CompletionResultType]::ParameterValue, 'Generates a shell completion script')
             [CompletionResult]::new('generate-scheme', 'generate-scheme', [CompletionResultType]::ParameterValue, 'Generates a scheme based on an image')
             [CompletionResult]::new('info', 'info', [CompletionResultType]::ParameterValue, 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)')
