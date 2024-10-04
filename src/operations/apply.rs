@@ -1,4 +1,4 @@
-use crate::config::{Config, SupportedSchemeSystems};
+use crate::config::Config;
 use crate::constants::{
     CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, DEFAULT_SCHEME_SYSTEM, REPO_DIR, REPO_NAME,
     REPO_URL, SCHEMES_REPO_NAME,
@@ -11,12 +11,14 @@ use anyhow::{anyhow, Context, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::str::FromStr;
+use tinted_builder::SchemeSystem;
 use tinted_builder_rust::operation_build::build;
 
 fn str_matches_scheme_system(value: &str) -> bool {
     match value {
-        _ if value == SupportedSchemeSystems::Base16.as_str() => true,
-        _ if value == SupportedSchemeSystems::Base24.as_str() => true,
+        _ if value == SchemeSystem::Base16.as_str() => true,
+        _ if value == SchemeSystem::Base24.as_str() => true,
         _ => false,
     }
 }
@@ -46,8 +48,8 @@ pub fn apply(
     if !str_matches_scheme_system(scheme_system_option.clone().unwrap_or_default().as_str()) {
         return Err(anyhow!(
             "Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"{}\" or \"{}\"), eg: {}-{}",
-            SupportedSchemeSystems::Base16.as_str(),
-            SupportedSchemeSystems::Base24.as_str(),
+            SchemeSystem::Base16.as_str(),
+            SchemeSystem::Base24.as_str(),
             DEFAULT_SCHEME_SYSTEM,
             full_scheme_name
         ));
@@ -55,12 +57,12 @@ pub fn apply(
 
     // Go through custom schemes
     let scheme_system =
-        SupportedSchemeSystems::from_str(&scheme_system_option.unwrap_or("base16".to_string()));
+        SchemeSystem::from_str(&scheme_system_option.unwrap_or("base16".to_string()))?;
     let schemes_path = &data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
-    let schemes_vec = get_all_scheme_names(schemes_path, Some(scheme_system))?;
+    let schemes_vec = get_all_scheme_names(schemes_path, Some(scheme_system.clone()))?;
     let custom_schemes_path = &data_path.join(CUSTOM_SCHEMES_DIR_NAME);
     let custom_schemes_vec = if custom_schemes_path.is_dir() {
-        get_all_scheme_names(custom_schemes_path, Some(scheme_system))?
+        get_all_scheme_names(custom_schemes_path, Some(scheme_system.clone()))?
     } else {
         Vec::new()
     };

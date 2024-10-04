@@ -1,12 +1,12 @@
 use crate::constants::REPO_NAME;
 use anyhow::{anyhow, Context, Result};
 use home::home_dir;
-use serde::de::{self, Deserializer, Unexpected, Visitor};
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::fmt;
 use std::fs;
 use std::path::Path;
+use tinted_builder::SchemeSystem;
 use url::Url;
 
 pub const DEFAULT_CONFIG_SHELL: &str = "sh -c '{}'";
@@ -17,74 +17,6 @@ pub const BASE16_SHELL_REPO_NAME: &str = "tinted-shell";
 pub const BASE16_SHELL_THEMES_DIR: &str = "scripts";
 pub const BASE16_SHELL_HOOK: &str = ". %f";
 
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub enum SupportedSchemeSystems {
-    #[default]
-    Base16,
-    Base24,
-}
-
-impl<'de> Deserialize<'de> for SupportedSchemeSystems {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        struct SupportedSystemVisitor;
-
-        impl<'de> Visitor<'de> for SupportedSystemVisitor {
-            type Value = SupportedSchemeSystems;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("`base16` or `base24`")
-            }
-
-            fn visit_str<E>(self, value: &str) -> Result<SupportedSchemeSystems, E>
-            where
-                E: de::Error,
-            {
-                match value {
-                    "base16" => Ok(SupportedSchemeSystems::Base16),
-                    "base24" => Ok(SupportedSchemeSystems::Base24),
-                    _ => Err(E::invalid_value(Unexpected::Str(value), &self)),
-                }
-            }
-        }
-
-        deserializer.deserialize_str(SupportedSystemVisitor)
-    }
-}
-
-impl SupportedSchemeSystems {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            SupportedSchemeSystems::Base16 => "base16",
-            SupportedSchemeSystems::Base24 => "base24",
-        }
-    }
-
-    pub fn from_str(system_string: &str) -> SupportedSchemeSystems {
-        match system_string {
-            "base16" => SupportedSchemeSystems::Base16,
-            "base24" => SupportedSchemeSystems::Base24,
-            _ => SupportedSchemeSystems::Base16,
-        }
-    }
-
-    pub fn variants() -> &'static [SupportedSchemeSystems] {
-        static VARIANTS: &[SupportedSchemeSystems] = &[
-            SupportedSchemeSystems::Base16,
-            SupportedSchemeSystems::Base24,
-        ];
-        VARIANTS
-    }
-}
-
-impl fmt::Display for SupportedSchemeSystems {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.as_str())
-    }
-}
-
 /// Structure for configuration apply items
 #[derive(Deserialize, Debug)]
 pub struct ConfigItem {
@@ -94,7 +26,7 @@ pub struct ConfigItem {
     #[serde(rename = "themes-dir")]
     pub themes_dir: String,
     #[serde(rename = "supported-systems")]
-    pub supported_systems: Option<Vec<SupportedSchemeSystems>>,
+    pub supported_systems: Option<Vec<SchemeSystem>>,
     #[serde(rename = "theme-file-extension")]
     pub theme_file_extension: Option<String>,
 }
@@ -102,7 +34,7 @@ pub struct ConfigItem {
 impl fmt::Display for ConfigItem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let hook = self.hook.clone().unwrap_or_default();
-        let default_supported_systems = vec![SupportedSchemeSystems::default()];
+        let default_supported_systems = vec![SchemeSystem::default()];
         let system_text = self
             .supported_systems
             .clone()
@@ -174,7 +106,7 @@ impl Config {
             name: BASE16_SHELL_REPO_NAME.to_string(),
             themes_dir: BASE16_SHELL_THEMES_DIR.to_string(),
             hook: Some(BASE16_SHELL_HOOK.to_string()),
-            supported_systems: Some(vec![SupportedSchemeSystems::Base16]), // DEFAULT_SCHEME_SYSTEM
+            supported_systems: Some(vec![SchemeSystem::Base16]), // DEFAULT_SCHEME_SYSTEM
             theme_file_extension: None,
         };
 
@@ -192,7 +124,7 @@ impl Config {
         if let Some(ref mut items) = config.items {
             for item in items.iter_mut() {
                 if item.supported_systems.is_none() {
-                    item.supported_systems = Some(vec![SupportedSchemeSystems::default()]);
+                    item.supported_systems = Some(vec![SchemeSystem::default()]);
                 }
 
                 // Replace `~/` with absolute home path

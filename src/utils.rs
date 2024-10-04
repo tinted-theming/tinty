@@ -1,4 +1,4 @@
-use crate::config::{Config, ConfigItem, SupportedSchemeSystems, DEFAULT_CONFIG_SHELL};
+use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
 use crate::constants::{REPO_NAME, SCHEME_EXTENSION};
 use anyhow::{anyhow, Context, Result};
 use home::home_dir;
@@ -7,6 +7,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str;
+use tinted_builder::SchemeSystem;
 
 /// Ensures that a directory exists, creating it if it does not.
 pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
@@ -122,7 +123,7 @@ pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<Stri
 
 pub fn get_all_scheme_names(
     schemes_path: &Path,
-    scheme_systems_option: Option<SupportedSchemeSystems>,
+    scheme_systems_option: Option<SchemeSystem>,
 ) -> Result<Vec<String>> {
     if !schemes_path.exists() {
         return Err(anyhow!(
@@ -135,7 +136,7 @@ pub fn get_all_scheme_names(
     let mut scheme_vec: Vec<String> = Vec::new();
     let scheme_systems = scheme_systems_option
         .map(|s| vec![s])
-        .unwrap_or(SupportedSchemeSystems::variants().to_vec());
+        .unwrap_or(SchemeSystem::variants().to_vec());
     for scheme_system in scheme_systems {
         let scheme_system_dir = schemes_path.join(scheme_system.as_str());
         if !scheme_system_dir.exists() {

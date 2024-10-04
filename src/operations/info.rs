@@ -1,7 +1,4 @@
-use crate::{
-    config::SupportedSchemeSystems,
-    constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME},
-};
+use crate::constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME};
 use anyhow::{anyhow, Result};
 use hex_color::HexColor;
 use serde::Deserialize;
@@ -9,6 +6,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+use tinted_builder::SchemeSystem;
 
 #[derive(Debug, Deserialize)]
 struct Base16Scheme {
@@ -188,7 +186,7 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
 fn print_single_schemes(files: Vec<PathBuf>, scheme_name: &str) -> Result<()> {
     let scheme_system_name = scheme_name.split('-').next().unwrap_or_default();
 
-    if !SupportedSchemeSystems::variants()
+    if !SchemeSystem::variants()
         .iter()
         .map(|s| s.as_str())
         .collect::<Vec<&str>>()
@@ -200,7 +198,7 @@ Make sure to add the system prefix to the theme name. Eg: {}-oceanicnext
 Run `{} list` to get a list of scheme names"##,
             scheme_system_name,
             scheme_name,
-            SupportedSchemeSystems::default(),
+            SchemeSystem::default(),
             REPO_NAME
         ));
     }
@@ -263,14 +261,13 @@ pub fn info(data_path: &Path, scheme_name_option: Option<&String>, is_custom: bo
         _ => {}
     }
 
-    let files_entries =
-        fs::read_dir(schemes_dir_path.join(SupportedSchemeSystems::default().as_str()))?;
+    let files_entries = fs::read_dir(schemes_dir_path.join(SchemeSystem::default().as_str()))?;
     let mut files: Vec<PathBuf> = files_entries
         .filter_map(|entry| entry.ok().map(|e| e.path()))
         .collect();
-    let scheme_systems_without_default: Vec<&str> = SupportedSchemeSystems::variants()
+    let scheme_systems_without_default: Vec<&str> = SchemeSystem::variants()
         .iter()
-        .filter(|s| s.as_str() != SupportedSchemeSystems::default().as_str())
+        .filter(|s| s.as_str() != SchemeSystem::default().as_str())
         .map(|s| s.as_str())
         .collect();
 
