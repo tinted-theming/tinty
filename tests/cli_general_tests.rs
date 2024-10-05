@@ -1,8 +1,7 @@
 mod utils;
 
 use crate::utils::{
-    cleanup, read_file_to_string, setup, write_to_file, COMMAND_NAME, CURRENT_SCHEME_FILE_NAME,
-    ORG_NAME, REPO_NAME,
+    cleanup, setup, write_to_file, COMMAND_NAME, CURRENT_SCHEME_FILE_NAME, ORG_NAME, REPO_NAME,
 };
 use anyhow::Result;
 use std::{fs, path::PathBuf};
@@ -121,7 +120,7 @@ fn test_cli_default_data_path() -> Result<()> {
 
     // This test is important to determine the config.toml is being read correctly
     assert_eq!(
-        read_file_to_string(&current_scheme_file_path)?,
+        fs::read_to_string(&current_scheme_file_path)?,
         init_scheme_name
     );
 
@@ -138,7 +137,7 @@ fn test_cli_default_data_path() -> Result<()> {
         "stdout does not contain the expected output"
     );
     assert_eq!(
-        read_file_to_string(&data_path.join(CURRENT_SCHEME_FILE_NAME))?,
+        fs::read_to_string(data_path.join(CURRENT_SCHEME_FILE_NAME))?,
         scheme_name
     );
     assert!(

@@ -1,8 +1,8 @@
 mod utils;
 
-use crate::utils::{
-    read_file_to_string, setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME,
-};
+use std::fs;
+
+use crate::utils::{setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME};
 use anyhow::Result;
 
 #[test]
@@ -79,7 +79,7 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     // ------
     // Assert
     // ------
-    let expected_scheme_name = read_file_to_string(&data_path.join(CURRENT_SCHEME_FILE_NAME))?;
+    let expected_scheme_name = fs::read_to_string(data_path.join(CURRENT_SCHEME_FILE_NAME))?;
     assert!(
         stdout.is_empty(),
         "stdout does not contain the expected output"

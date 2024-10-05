@@ -3,9 +3,7 @@ mod utils;
 use std::fs;
 use std::path::Path;
 
-use crate::utils::{
-    read_file_to_string, setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME,
-};
+use crate::utils::{setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME};
 use anyhow::Result;
 
 #[test]
@@ -38,7 +36,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
         data_path.join(shell_theme_filename).exists(),
         "Path does not exist"
     );
-    assert_eq!(read_file_to_string(&current_scheme_path)?, scheme_name);
+    assert_eq!(fs::read_to_string(&current_scheme_path)?, scheme_name);
 
     cleanup()?;
     Ok(())
