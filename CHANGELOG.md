@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Update `list` operation to get schemes from `schemes/` and
+  `custom-schemes/` directories recursively
+
 ## [0.21.1] - 2024-10-02
 
 ### Fixed

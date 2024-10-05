@@ -1,9 +1,7 @@
-use crate::{
-    constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME},
-    utils::get_all_scheme_names,
-};
+use crate::constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
 use anyhow::{anyhow, Result};
 use std::path::Path;
+use tinted_builder_rust::utils::get_scheme_files;
 
 /// Lists available color schemes
 ///
@@ -32,9 +30,13 @@ pub fn list(data_path: &Path, is_custom: bool) -> Result<()> {
         _ => {}
     }
 
-    let scheme_vec = get_all_scheme_names(&schemes_dir_path, None)?;
-    for scheme in scheme_vec {
-        println!("{}", scheme);
+    let scheme_files = get_scheme_files(&schemes_dir_path, true)?;
+    for scheme_file in scheme_files {
+        let scheme_container = scheme_file.get_scheme()?;
+        let system = scheme_container.get_scheme_system();
+        let slug = scheme_container.get_scheme_slug();
+
+        println!("{}-{}", system, slug);
     }
 
     Ok(())

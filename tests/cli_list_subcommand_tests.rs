@@ -4,7 +4,7 @@ use crate::utils::REPO_NAME;
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
-use utils::setup;
+use utils::{setup, write_to_file};
 
 #[test]
 fn test_cli_list_subcommand_without_setup() -> Result<()> {
@@ -95,6 +95,7 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
     Ok(())
 }
 
+// Also tests recursive dir listing since custom scheme isn't nested within scheme_system directory
 #[test]
 fn test_cli_list_subcommand_with_custom() -> Result<()> {
     // -------
@@ -103,7 +104,7 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     let (_, data_path, command_vec, cleanup) =
         setup("test_cli_list_subcommand_with_custom", "list")?;
     let scheme_system = "base16";
-    let scheme_name_one = "tinted-theming";
+    let scheme_name_one = "tinty-generated";
     let scheme_name_two = "tinty";
     let expected_output = format!(
         "{}-{}\n{}-{}",
@@ -112,13 +113,35 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     let custom_scheme_path = data_path.join("custom-schemes");
 
     fs::create_dir_all(custom_scheme_path.join(scheme_system))?;
-    fs::write(
-        custom_scheme_path.join(format!("{}/{}.yaml", scheme_system, scheme_name_one)),
-        "",
+    fs::copy(
+        "./tests/fixtures/schemes/tinty-generated.yaml",
+        custom_scheme_path.join("base16-tinty-generated.yaml"),
     )?;
-    fs::write(
-        custom_scheme_path.join(format!("{}/{}.yaml", scheme_system, scheme_name_two)),
-        "",
+    write_to_file(
+        custom_scheme_path.join(format!("{}.yaml", scheme_name_two)),
+        r#"
+system: base16
+name: Tinty
+slug: tinty
+author: Tinty
+variant: dark
+palette:
+  base00: '#282628'
+  base01: '#403e3f'
+  base02: '#595757'
+  base03: '#71706e'
+  base04: '#8a8986'
+  base05: '#a2a29d'
+  base06: '#bbbbb5'
+  base07: '#d4d4cd'
+  base08: '#bf2546'
+  base09: '#f69622'
+  base0A: '#f99923'
+  base0B: '#19953f'
+  base0C: '#40dab9'
+  base0D: '#0666dc'
+  base0E: '#8554ac'
+  base0F: '#ac7424'"#,
     )?;
 
     let mut command_vec = command_vec.clone();
