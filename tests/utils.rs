@@ -51,25 +51,25 @@ pub fn run_install_command(config_path: &Path, data_path: &Path) -> Result<()> {
     }
 }
 
-pub fn cleanup(config_path: &Path, data_path: &Path) -> Result<()> {
-    if config_path.is_file() {
+pub fn cleanup(config_path: impl AsRef<Path>, data_path: impl AsRef<Path>) -> Result<()> {
+    if config_path.as_ref().is_file() {
         fs::remove_file(config_path)?;
     }
 
-    if data_path.is_dir() {
+    if data_path.as_ref().is_dir() {
         fs::remove_dir_all(data_path)?;
     }
 
     Ok(())
 }
 
-pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
-    if path.exists() {
-        fs::remove_file(path)?;
+pub fn write_to_file(path: impl AsRef<Path>, contents: &str) -> Result<()> {
+    if path.as_ref().exists() {
+        fs::remove_file(&path)?;
     }
 
-    if path.parent().is_some() && !path.parent().unwrap().exists() {
-        fs::create_dir_all(path.parent().unwrap())?;
+    if path.as_ref().parent().is_some() && !path.as_ref().parent().unwrap().exists() {
+        fs::create_dir_all(path.as_ref().parent().unwrap())?;
     }
 
     let mut file = File::create(path)?;
