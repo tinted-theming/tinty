@@ -53,6 +53,7 @@ _arguments "${_arguments_options[@]}" : \
 '--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
 '-h[Print help]' \
 '--help[Print help]' \
+'::property_name -- Optional field to retrieve scheme information for\: author, description, name, etc.:(author description name slug system variant)' \
 && ret=0
 ;;
 (generate-completion)
@@ -256,7 +257,7 @@ esac
 _tinty_commands() {
     local commands; commands=(
 'build:Builds the target theme template' \
-'current:Prints the last scheme name applied' \
+'current:Prints the last scheme name applied or specific values from the current scheme' \
 'generate-completion:Generates a shell completion script' \
 'generate-scheme:Generates a scheme based on an image' \
 'info:Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg\: tinty info base16-mocha)' \
@@ -305,7 +306,7 @@ _tinty__generate-scheme_commands() {
 _tinty__help_commands() {
     local commands; commands=(
 'build:Builds the target theme template' \
-'current:Prints the last scheme name applied' \
+'current:Prints the last scheme name applied or specific values from the current scheme' \
 'generate-completion:Generates a shell completion script' \
 'generate-scheme:Generates a scheme based on an image' \
 'info:Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg\: tinty info base16-mocha)' \

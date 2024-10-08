@@ -13,6 +13,10 @@ pub const ORG_NAME: &str = "tinted-theming";
 pub const COMMAND_NAME: &str = "./target/release/tinty";
 #[allow(dead_code)]
 pub const CURRENT_SCHEME_FILE_NAME: &str = "current_scheme";
+#[allow(dead_code)]
+pub const REPO_DIR: &str = "repos";
+#[allow(dead_code)]
+pub const SCHEMES_REPO_NAME: &str = "schemes";
 
 pub fn run_command(command_vec: Vec<String>) -> Result<(String, String), Box<dyn Error>> {
     let output = Command::new(&command_vec[0])
@@ -112,4 +116,22 @@ pub fn setup(
         command_vec,
         Box::new(move || cleanup(&config_path_clone, &data_path_clone)),
     ))
+}
+
+#[allow(dead_code)]
+pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
+    fs::create_dir_all(&dst)?;
+
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let dest_path = dst.as_ref().join(entry.file_name());
+
+        if file_type.is_dir() {
+            copy_dir_all(entry.path(), &dest_path)?;
+        } else {
+            fs::copy(entry.path(), &dest_path)?;
+        }
+    }
+    Ok(())
 }

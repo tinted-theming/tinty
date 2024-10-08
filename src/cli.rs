@@ -48,7 +48,21 @@ pub fn build_cli() -> Command {
 
         )
         .subcommand(
-            Command::new("current").about("Prints the last scheme name applied")
+            Command::new("current")
+                .about("Prints the last scheme name applied or specific values from the current scheme")
+                .arg(
+                    Arg::new("property_name")
+                        .help("Optional field to retrieve scheme information for: author, description, name, etc.")
+                        .value_parser([
+                            PossibleValue::new("author"),
+                            PossibleValue::new("description"),
+                            PossibleValue::new("name"),
+                            PossibleValue::new("slug"),
+                            PossibleValue::new("system"),
+                            PossibleValue::new("variant"),
+                        ])
+                        .required(false)
+                )
         )
         .subcommand(
             Command::new("generate-completion").about("Generates a shell completion script").arg(

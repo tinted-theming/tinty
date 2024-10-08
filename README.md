@@ -164,7 +164,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | `list`     | Lists all available themes. | Optional argument `--custom-schemes` to list saved custom theme files using `tinty generate-scheme` | `tinty list` |
 | `apply`    | Applies a specific theme. | `<scheme_system>-<scheme_name>`: Name of the system and scheme to apply. | `tinty apply base16-mocha` |
 | `init`     | Initializes the tool with the last applied theme otherwise `default-scheme` from `config.toml`. | - | `tinty init` |
-| `current`  | Displays the currently applied theme. | - | `tinty current` |
+| `current`  | Displays the currently applied theme or current theme values. | `<scheme_property_name>` (Optional argument with the following supported values: `author` \| `description` \| `name` \| `slug` \| `system` \| `variant`) | `tinty current` |
 | `config`   | Displays config related information currently in use by Tinty. Without flags it returns `config.yml` content. | - | `tinty config` |
 | `info`     | Provides information about themes. | `[<scheme_system>-<scheme_name>]`: Optional argument `--custom-schemes` to provide information on any custom schemes | `tinty info base16-mocha` |
 | `build`    | Builds the provided base16 or base24 template using [tinted-builder-rust]. | `<DIR>`: Path to the base16 or base24 template directory. | `tinty build path/to/tinted-tmux` |

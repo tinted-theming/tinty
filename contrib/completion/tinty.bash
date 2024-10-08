@@ -217,7 +217,7 @@ _tinty() {
             return 0
             ;;
         tinty__current)
-            opts="-c -d -h --config --data-dir --help"
+            opts="-c -d -h --config --data-dir --help author description name slug system variant"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
