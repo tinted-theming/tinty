@@ -6,6 +6,8 @@
 
 - Support arguments with `current` subcommand to allow consumers to get
   specific current scheme data
+- Add hook string template variable (`%o`) to print the current
+  command operation executing the hook
 
 ## [0.21.1] - 2024-10-02
 

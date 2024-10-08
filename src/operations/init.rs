@@ -18,7 +18,7 @@ pub fn init(config_path: &Path, data_path: &Path, is_verbose: bool) -> Result<()
         return Err(anyhow!("Failed to initialize, config files seem to be missing. Try applying a theme first with `{} apply <SCHEME_NAME>`.", REPO_NAME));
     }
 
-    operations::apply::apply(config_path, data_path, active_scheme_name.as_str(), !is_verbose)
+    operations::apply::apply(config_path, data_path, active_scheme_name.as_str(), !is_verbose, Some("init"))
             .with_context(|| {
                 format!(
                     "Failed to initialize {}, config files are missing. Try applying a theme first with `{} apply <SCHEME_NAME>`.",

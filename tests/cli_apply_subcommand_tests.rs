@@ -262,7 +262,7 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
         "test_cli_apply_subcommand_root_hooks_with_setup",
         format!("apply {}", &scheme_name).as_str(),
     )?;
-    let expected_output = "This\nis\nexpected\noutput.";
+    let expected_output = "This\nis\nexpected\noutput.\n";
     let config_content =
         r#"hooks = ["echo 'This'", "echo 'is'", "echo 'expected'", "echo 'output.'"]"#;
     write_to_file(&config_path, config_content)?;
@@ -276,10 +276,7 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
     // ------
     // Assert
     // ------
-    assert!(
-        stdout.contains(expected_output),
-        "stdout does not contain the expected output"
-    );
+    assert_eq!(stdout, expected_output);
     assert!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
@@ -304,7 +301,7 @@ fn test_cli_apply_subcommand_hook_with_setup() -> Result<()> {
 path = "https://github.com/tinted-theming/base16-vim"
 name = "tinted-vim"
 themes-dir = "colors"
-hook = "echo \"path: %f\""
+hook = "echo \"path: %f, operation: %o\""
 "##;
     write_to_file(&config_path, config_content)?;
 
@@ -317,10 +314,12 @@ hook = "echo \"path: %f\""
     // ------
     // Assert
     // ------
-    assert!(
-        stdout
-            .contains(format!("path: {}/tinted-vim-colors-file.vim", data_path.display()).as_str()),
-        "stdout does not contain the expected output"
+    assert_eq!(
+        stdout,
+        format!(
+            "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
+            data_path.display()
+        )
     );
     assert!(
         stderr.is_empty(),
@@ -368,7 +367,7 @@ hook = "echo \"expected emacs output: %n\""
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, expected_output,);
+    assert_eq!(stdout, expected_output);
     assert!(
         stderr.is_empty(),
         "stderr does not contain the expected output"

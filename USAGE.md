@@ -65,7 +65,7 @@ applied through Tinty, this file is updated.
    to `~/.local/shared/tinted-theming/tinty` and executes the `hook`
    property of the `[[items]]`. `%f` is a template variable that can be
    used in the hook, e.g., `hook = "cp -f %f
-   ~/.config/alacritty/colors.yml`.
+   ~/.config/alacritty/colors.yml"`.
 
 `tinty apply` can also be used without a theme template. The
 `config.hooks` property will execute the array of hooks regardless of
