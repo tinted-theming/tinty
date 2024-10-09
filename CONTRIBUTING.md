@@ -22,3 +22,12 @@ make build
 ```sh
 make test
 ```
+
+## PRs
+
+Include Rust related changes under `## Unreleased` (Copy the format from
+the existing releases).
+
+Changes should be included under `### Added`, `### Changed` and `###
+Removed`. Bullet point information should be written in present tense
+and should describe what the change does.
