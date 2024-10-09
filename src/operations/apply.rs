@@ -32,6 +32,7 @@ pub fn apply(
     data_path: &Path,
     full_scheme_name: &str,
     is_quiet: bool,
+    active_operation: Option<&str>,
 ) -> Result<()> {
     let scheme_name_arr: Vec<String> = full_scheme_name.split('-').map(|s| s.to_string()).collect();
     let scheme_system_option = scheme_name_arr.clone().first().map(|s| s.to_string());
@@ -166,6 +167,7 @@ pub fn apply(
                 // Run hook for item if provided
                 if let Some(hook_text) = &item.hook {
                     let hook_script = hook_text
+                        .replace("%o", active_operation.unwrap_or("apply"))
                         .replace("%f", format!("\"{}\"", data_theme_path.display()).as_str())
                         .replace("%n", full_scheme_name);
                     let command_vec =

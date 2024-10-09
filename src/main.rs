@@ -135,7 +135,7 @@ fn main() -> Result<()> {
                     .unwrap_or(false);
 
                 let scheme_name = theme.as_str();
-                operations::apply::apply(&config_path, &data_path, scheme_name, is_quiet)
+                operations::apply::apply(&config_path, &data_path, scheme_name, is_quiet, None)
                     .with_context(|| format!("Failed to apply theme \"{:?}\"", scheme_name))?;
             }
         }

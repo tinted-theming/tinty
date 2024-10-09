@@ -209,6 +209,38 @@ to your preferences and environment.
 | `hooks`           | `array<string>`    | Optional | A list of strings which are executed after every `tinty apply` | None | `hooks = ["echo \"The current scheme is: $(tinty current)\""]` |
 | `[[items]]`       | `array<items>`     | Required | An array of `items` configurations. Each item represents a themeable component. Detailed structure provided in the next section. | - | - |
 
+#### hooks
+
+Hooks have the following template variables:
+
+- `%f` - Path to the relevant `[[items]]` theme file, eg:
+  `/home/user/.local/share/tinted-theming/tinty/tinted-alacritty-colors-file.toml`.
+
+  This can be useful when copying an applied theme to a path on your
+  system:
+
+  ```toml
+  hook = "cp -f %f ~/.config/alacritty/colors.yml"
+  ```
+
+- `%n` - Name of the current scheme applied, eg: `base16-ayu-dark`.
+
+  This can be useful when triggering an external service:
+
+  ```toml
+  hook = "tinty info %n"
+  ```
+
+- `%o` - Name of the command operation that is running the hook, eg:
+  `apply` or `init`.
+
+  This can be useful for saving system resources and only running
+  certain hooks when they need to be run:
+
+  ```toml
+  hook = "[ \"%o\" = \"apply\" ] && cp -f %f ~/.config/alacritty/colors.yml"
+  ```
+
 ### Items table `config.toml` Schema
 
 The `[[items]]` section within `config.toml` allows for detailed
