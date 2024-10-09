@@ -3875,8 +3875,8 @@ limitations under the License.
 - [rand_core 0.6.4](https://github.com/rust-random/rand)
 - [ribboncurls 0.2.1](https://github.com/tinted-theming/ribboncurls)
 - [siphasher 0.3.11](https://github.com/jedisct1/rust-siphash)
-- [tinted-builder-rust 0.11.1](https://github.com/tinted-theming/tinted-builder-rust)
-- [tinted-builder 0.7.0](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinted-builder-rust 0.12.0](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinted-builder 0.8.0](https://github.com/tinted-theming/tinted-builder-rust)
 - [zune-core 0.4.12](https://crates.io/crates/zune-core)
 - [zune-inflate 0.2.54](https://crates.io/crates/zune-inflate)
 - [zune-jpeg 0.4.13](https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg)
@@ -4565,7 +4565,7 @@ SOFTWARE.
 
 #### Used by
 
-- [tinty 0.21.1](https://github.com/tinted-theming/tinty)
+- [tinty 0.22.0](https://github.com/tinted-theming/tinty)
 
 ```
 MIT License
@@ -4962,7 +4962,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 #### Used by
 
-- [tinted-scheme-extractor 0.4.0](https://github.com/tinted-theming/tinted-scheme-extractor-rs)
+- [tinted-scheme-extractor 0.5.0](https://github.com/tinted-theming/tinted-scheme-extractor-rs)
 
 ```
 Mozilla Public License Version 2.0
