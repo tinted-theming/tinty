@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Change `tinty generate-scheme` API by removing the `OUTFILE` option
+  and only printing to stdout or saving to the tinty data directory with
+  the `--save` flag
+
 ## [0.22.0] - 2024-10-09
 
 ### Added

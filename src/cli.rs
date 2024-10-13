@@ -1,6 +1,6 @@
 use clap::{
     builder::{styling, PossibleValue},
-    Arg, ArgAction, ArgGroup, ArgMatches, Command, ValueHint,
+    Arg, ArgAction, ArgMatches, Command, ValueHint,
 };
 use clap_complete::Shell;
 
@@ -79,13 +79,7 @@ pub fn build_cli() -> Command {
                     Arg::new("image_path")
                     .help("Which image file to use.")
                     .required(true)
-                    .value_name("INFILE")
-                    .value_hint(ValueHint::FilePath)
-                )
-                .arg(
-                    Arg::new("outfile")
-                    .help("Output path to save the <slug>.yaml file to. Use '-' for stdout")
-                    .value_name("OUTFILE")
+                    .value_name("IMAGE_FILE")
                     .value_hint(ValueHint::FilePath)
                 )
                 .arg(
@@ -132,9 +126,6 @@ pub fn build_cli() -> Command {
                     ])
                     .value_hint(ValueHint::Other)
                 )
-                .group(ArgGroup::new("required_flags")
-                    .args(["outfile", "save"])
-                    .required(true)),
         )
         .subcommand(
             Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {} info base16-mocha)", REPO_NAME))

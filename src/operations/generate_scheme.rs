@@ -35,7 +35,7 @@ pub(crate) fn generate_scheme(
 
             println!("Scheme created: {}", path.display());
         }
-        None => println!("scheme:\n{}", scheme),
+        None => print!("{scheme}"), // Scheme .display() already ends with a newline
     };
 
     Ok(())

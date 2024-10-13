@@ -213,10 +213,7 @@ fn main() -> Result<()> {
 
                     Some(custom_scheme_path.join(format!("{}/{}", system, filename)))
                 } else {
-                    match sub_matches.get_one::<String>("outfile").map(|s| s.as_str()) {
-                        Some("-") | None => None,
-                        Some(value) => Some(PathBuf::from(value)),
-                    }
+                    None
                 }
             };
 
