@@ -116,6 +116,12 @@ brew tap tinted-theming/tinted
 brew install tinty
 ```
 
+### Arch linux
+
+```sh
+paru -S tinty-git
+```
+
 ### Binaries
 
 Download the relevant binary from the [repository releases] page.
