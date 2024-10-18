@@ -17,6 +17,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [qutebrowser](#qutebrowser)
 - [rofi](#rofi)
 - [dunst](#dunst)
+- [kitty](#kitty)
 
 ## Shell completions
 
@@ -500,6 +501,27 @@ However, limited testing has shown `dunst` will not complain if its configuratio
 
 ```toml
 hook = "cat ~/.config/dunst/dunstrc.local %f > ~/.config/dunst/dunstrc && systemctl --user restart dunst"
+```
+
+## kitty
+
+Add the following to `~/.config/kitty/kitty.conf`
+
+```
+allow_remote_control yes
+listen_on unix:kitty-{kitty_pid}.sock
+include current-theme.conf
+```
+
+Add the following to `~/.config/tinted-theming/tinty/config.toml`:
+
+```toml
+[[items]]
+path = "https://github.com/tinted-theming/tinted-kitty"
+name = "tinted-kitty"
+themes-dir = "colors"
+hook = "cp -f %f ~/.config/kitty/current-theme.conf && for i in $(pgrep kitty); do kitten @ --to unix:/tmp/kitty-${i}.sock set-colors -a -c ~/.config/kitty/current-theme.conf; done"
+supported-systems = ["base16", "base24"]
 ```
 
 [Usage section]: https://github.com/tinted-theming/tinty?tab=readme-ov-file#usage
