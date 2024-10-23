@@ -8,6 +8,11 @@
   and only printing to stdout or saving to the tinty data directory with
   the `--save` flag
 
+### Fixed
+
+- Fix bug where `tinty info` doesn't list schemes correctly when the
+  `palette` hex values contain a `#` prefix
+
 ## [0.22.0] - 2024-10-09
 
 ### Added

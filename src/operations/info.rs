@@ -168,7 +168,7 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
 
     let reset = "\x1B[0m";
     for color in palette {
-        let hex_text = format!("#{}", color);
+        let hex_text = format!("#{}", color.strip_prefix('#').unwrap_or(&color));
         let hex = HexColor::parse(&hex_text)?;
         let bg_ansi = format!("\x1B[48;2;{};{};{}m", hex.r, hex.g, hex.b);
         let fg_ansi = format!("\x1B[38;2;{};{};{}m", hex.r, hex.g, hex.b);
