@@ -10,7 +10,7 @@ use std::str;
 pub const REPO_NAME: &str = env!("CARGO_PKG_NAME");
 #[allow(dead_code)]
 pub const ORG_NAME: &str = "tinted-theming";
-pub const COMMAND_NAME: &str = "./target/release/tinty";
+pub const COMMAND_NAME: &str = env!("CARGO_BIN_EXE_tinty");
 #[allow(dead_code)]
 pub const CURRENT_SCHEME_FILE_NAME: &str = "current_scheme";
 #[allow(dead_code)]
