@@ -6,6 +6,7 @@
 
 - In tests, use `CARGO_BIN_EXE_tinty` env var for the binary path
   instead of assuming it exists in `./target/release` directory
+- Upgrade `url` crate dependency due to security vulnerability
 
 ## [0.23.0] - 2024-11-17
 

@@ -17,10 +17,11 @@ feature-depth = 1
 confidence-threshold = 0.93
 allow = [
     "Apache-2.0",
-    "MIT",
     "BSD-2-Clause",
     "BSD-3-Clause",
+    "MIT",
     "MPL-2.0",
+    "Unicode-3.0",
 ]
 exceptions = [
     { allow = [

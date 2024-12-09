@@ -4,8 +4,9 @@ This page lists the licenses of the projects used in cargo-about.
     
 ## Overview of licenses
 
-- Apache License 2.0 (115)
-- MIT License (31)
+- Apache License 2.0 (120)
+- MIT License (32)
+- Unicode License v3 (19)
 - BSD 3-Clause &quot;New&quot; or &quot;Revised&quot; License (4)
 - BSD 2-Clause &quot;Simplified&quot; License (3)
 - Mozilla Public License 2.0 (2)
@@ -209,6 +210,9 @@ This page lists the licenses of the projects used in cargo-about.
 #### Used by
 
 - [tinyvec 1.8.0](https://github.com/Lokathor/tinyvec)
+- [utf16_iter 1.0.5](https://github.com/hsivonen/utf16_iter)
+- [utf8_iter 1.0.4](https://github.com/hsivonen/utf8_iter)
+- [write16 1.0.0](https://github.com/hsivonen/write16)
 
 ```
 
@@ -2522,13 +2526,15 @@ limitations under the License.
 - [crossbeam-deque 0.8.5](https://github.com/crossbeam-rs/crossbeam)
 - [crossbeam-epoch 0.9.18](https://github.com/crossbeam-rs/crossbeam)
 - [crossbeam-utils 0.8.20](https://github.com/crossbeam-rs/crossbeam)
+- [displaydoc 0.2.5](https://github.com/yaahc/displaydoc)
 - [either 1.13.0](https://github.com/rayon-rs/either)
 - [equivalent 1.0.1](https://github.com/cuviper/equivalent)
 - [flate2 1.0.33](https://github.com/rust-lang/flate2-rs)
 - [form_urlencoded 1.2.1](https://github.com/servo/rust-url)
 - [hashbrown 0.14.5](https://github.com/rust-lang/hashbrown)
 - [heck 0.5.0](https://github.com/withoutboats/heck)
-- [idna 0.5.0](https://github.com/servo/rust-url/)
+- [idna 1.0.3](https://github.com/servo/rust-url/)
+- [idna_adapter 1.2.0](https://github.com/hsivonen/idna_adapter)
 - [indexmap 2.5.0](https://github.com/indexmap-rs/indexmap)
 - [itertools 0.12.1](https://github.com/rust-itertools/itertools)
 - [jpeg-decoder 0.3.1](https://github.com/image-rs/jpeg-decoder)
@@ -2551,10 +2557,10 @@ limitations under the License.
 - [regex 1.11.0](https://github.com/rust-lang/regex)
 - [scopeguard 1.2.0](https://github.com/bluss/scopeguard)
 - [smallvec 1.13.2](https://github.com/servo/rust-smallvec)
+- [stable_deref_trait 1.2.0](https://github.com/storyyeller/stable_deref_trait)
 - [strip-ansi-escapes 0.2.0](https://github.com/luser/strip-ansi-escapes)
-- [unicode-bidi 0.3.15](https://github.com/servo/unicode-bidi)
 - [unicode-normalization 0.1.24](https://github.com/unicode-rs/unicode-normalization)
-- [url 2.5.2](https://github.com/servo/rust-url)
+- [url 2.5.4](https://github.com/servo/rust-url)
 - [xdg 2.5.2](https://github.com/whitequark/rust-xdg)
 
 ```
@@ -4512,6 +4518,23 @@ DEALINGS IN THE SOFTWARE.
 
 #### Used by
 
+- [synstructure 0.13.1](https://github.com/mystor/synstructure)
+
+```
+Copyright 2016 Nika Layzell
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+```
+
+### MIT License
+
+#### Used by
+
 - [built 0.7.4](https://github.com/lukaslueg/built)
 
 ```
@@ -5917,6 +5940,73 @@ Exhibit B - &quot;Incompatible With Secondary Licenses&quot; Notice
 
   This Source Code Form is &quot;Incompatible With Secondary Licenses&quot;, as
   defined by the Mozilla Public License, v. 2.0.
+
+```
+
+### Unicode License v3
+
+#### Used by
+
+- [icu_collections 1.5.0](https://github.com/unicode-org/icu4x)
+- [icu_locid 1.5.0](https://github.com/unicode-org/icu4x)
+- [icu_locid_transform 1.5.0](https://github.com/unicode-org/icu4x)
+- [icu_locid_transform_data 1.5.0](https://github.com/unicode-org/icu4x)
+- [icu_normalizer 1.5.0](https://github.com/unicode-org/icu4x)
+- [icu_normalizer_data 1.5.0](https://github.com/unicode-org/icu4x)
+- [icu_properties 1.5.1](https://github.com/unicode-org/icu4x)
+- [icu_properties_data 1.5.0](https://github.com/unicode-org/icu4x)
+- [icu_provider 1.5.0](https://github.com/unicode-org/icu4x)
+- [icu_provider_macros 1.5.0](https://github.com/unicode-org/icu4x)
+- [litemap 0.7.4](https://github.com/unicode-org/icu4x)
+- [tinystr 0.7.6](https://github.com/unicode-org/icu4x)
+- [writeable 0.5.5](https://github.com/unicode-org/icu4x)
+- [yoke-derive 0.7.5](https://github.com/unicode-org/icu4x)
+- [yoke 0.7.5](https://github.com/unicode-org/icu4x)
+- [zerofrom-derive 0.1.5](https://github.com/unicode-org/icu4x)
+- [zerofrom 0.1.5](https://github.com/unicode-org/icu4x)
+- [zerovec-derive 0.10.3](https://github.com/unicode-org/icu4x)
+- [zerovec 0.10.4](https://github.com/unicode-org/icu4x)
+
+```
+UNICODE LICENSE V3
+
+COPYRIGHT AND PERMISSION NOTICE
+
+Copyright © 1991-2023 Unicode, Inc.
+
+NOTICE TO USER: Carefully read the following legal agreement. BY
+DOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING DATA FILES, AND/OR
+SOFTWARE, YOU UNEQUIVOCALLY ACCEPT, AND AGREE TO BE BOUND BY, ALL OF THE
+TERMS AND CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE, DO NOT
+DOWNLOAD, INSTALL, COPY, DISTRIBUTE OR USE THE DATA FILES OR SOFTWARE.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of data files and any associated documentation (the &quot;Data Files&quot;) or
+software and any associated documentation (the &quot;Software&quot;) to deal in the
+Data Files or Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, and/or sell
+copies of the Data Files or Software, and to permit persons to whom the
+Data Files or Software are furnished to do so, provided that either (a)
+this copyright and permission notice appear with all copies of the Data
+Files or Software, or (b) this copyright and permission notice appear in
+associated Documentation.
+
+THE DATA FILES AND SOFTWARE ARE PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF
+THIRD PARTY RIGHTS.
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS NOTICE
+BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES,
+OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE DATA
+FILES OR SOFTWARE.
+
+Except as contained in this notice, the name of a copyright holder shall
+not be used in advertising or otherwise to promote the sale, use or other
+dealings in these Data Files or Software without prior written
+authorization of the copyright holder.
 
 ```
 
