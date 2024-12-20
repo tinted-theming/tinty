@@ -25,9 +25,6 @@ allow = [
 ]
 exceptions = [
     { allow = [
-        "Unicode-DFS-2016",
-    ], name = "unicode-ident" },
-    { allow = [
         "MPL-2.0",
     ], name = "option-ext" },
 ]

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed
+
+- Update Cargo dependencies
+- Update to latest tinted-scheme-extractor which alters how it adjusts
+  colors slightly to ensure >= `base08` aren't too dark compared to
+  `base00`
+
 ### Fixed
 
 - In tests, use `CARGO_BIN_EXE_tinty` env var for the binary path
