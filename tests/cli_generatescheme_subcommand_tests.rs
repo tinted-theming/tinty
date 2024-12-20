@@ -43,22 +43,22 @@ palette:
   base05: "4e6154"
   base06: "2c4334"
   base07: "0b2614"
-  base08: "dd5319"
-  base09: "e29c0d"
-  base0A: "e29c0d"
-  base0B: "079f31"
+  base08: "dd5218"
+  base09: "e29c0c"
+  base0A: "e29c0c"
+  base0B: "069f31"
   base0C: "00fffe"
-  base0D: "055de1"
-  base0E: "66495d"
-  base0F: "97421d"
-  base10: "ab674a"
-  base11: "ab8943"
-  base12: "ab8943"
-  base13: "2d7842"
+  base0D: "045de1"
+  base0E: "8e6682"
+  base0F: "98421d"
+  base10: "aa664a"
+  base11: "ab8942"
+  base12: "ab8942"
+  base13: "2d7742"
   base14: "41bdbd"
-  base15: "3d68a8"
-  base16: "5e505a"
-  base17: "774e3c"
+  base15: "3c67a8"
+  base16: "83707d"
+  base17: "784e3c"
 "#
     );
 
@@ -103,14 +103,14 @@ palette:
   base05: "b4bdb7"
   base06: "d5dad7"
   base07: "f7f7f7"
-  base08: "dd5319"
-  base09: "e29c0d"
-  base0A: "e29c0d"
-  base0B: "079f31"
+  base08: "dd5218"
+  base09: "e29c0c"
+  base0A: "e29c0c"
+  base0B: "069f31"
   base0C: "00fffe"
-  base0D: "055de1"
-  base0E: "66495d"
-  base0F: "97421d"
+  base0D: "045de1"
+  base0E: "8e6682"
+  base0F: "98421d"
 "#;
 
     // ---
@@ -161,14 +161,14 @@ palette:
   base05: b4bdb7
   base06: d5dad7
   base07: f7f7f7
-  base08: dd5319
-  base09: e29c0d
-  base0A: e29c0d
-  base0B: 079f31
+  base08: dd5218
+  base09: e29c0c
+  base0A: e29c0c
+  base0B: 069f31
   base0C: 00fffe
-  base0D: 055de1
-  base0E: 66495d
-  base0F: 97421d
+  base0D: 045de1
+  base0E: 8e6682
+  base0F: 98421d
 "#
     );
 
@@ -177,6 +177,8 @@ palette:
     // ---
     let (stdout, stderr) = utils::run_command(command_vec).unwrap();
     let actual_output = fs::read_to_string(&out_scheme_path)?;
+
+    println!("{actual_output}");
 
     // ------
     // Assert
