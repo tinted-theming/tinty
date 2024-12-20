@@ -4548,7 +4548,7 @@ SOFTWARE.
 
 #### Used by
 
-- [tinty 0.23.0](https://github.com/tinted-theming/tinty)
+- [tinty 0.24.0](https://github.com/tinted-theming/tinty)
 
 ```
 MIT License

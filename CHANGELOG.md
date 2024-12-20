@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.24.0] - 2024-12-20
 
 ### Changed
 
@@ -238,6 +238,7 @@
 
 - Initial release
 
+[0.24.0]: https://github.com/tinted-theming/tinty/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/tinted-theming/tinty/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/tinted-theming/tinty/compare/v0.21.1...v0.22.0
 [0.21.1]: https://github.com/tinted-theming/tinty/compare/v0.21.0...v0.21.1
