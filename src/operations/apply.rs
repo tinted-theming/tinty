@@ -149,13 +149,12 @@ pub fn apply(
         match theme_option {
             Some(theme_file) => {
                 let theme_file_path = &theme_file.path();
-                let extension = theme_file_path
-                    .extension()
-                    .unwrap_or_default()
-                    .to_str()
-                    .unwrap_or_default();
+                let extension = match theme_file_path.extension() {
+                    Some(ext) => format!(".{}", ext.to_str().unwrap_or_default()),
+                    None => String::new(),
+                };
                 let filename = format!(
-                    "{}.{}",
+                    "{}{}",
                     create_theme_filename_without_extension(item)?,
                     extension,
                 );

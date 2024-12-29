@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fix bug where period preceeding extension is still added to generated files even when an extension doesn't exist
+
 ## [0.24.0] - 2024-12-20
 
 ### Changed
