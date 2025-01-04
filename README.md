@@ -100,7 +100,6 @@ By understanding the sequence of actions Tinty performs and the options
 available to you, you can tailor the theming process to suit your
 workflow, making your experience more enjoyable and productive.
 
-
 ## Installation
 
 ### Cargo
@@ -116,7 +115,7 @@ brew tap tinted-theming/tinted
 brew install tinty
 ```
 
-### Arch linux
+### Arch Linux
 
 ```sh
 paru -S tinty-git
@@ -219,7 +218,7 @@ to your preferences and environment.
 
 Hooks have the following template variables:
 
-- `%f` - Path to the relevant `[[items]]` theme file, eg:
+- `%f` - Path to the relevant `[[items]]` theme file, e.g.:
   `/home/user/.local/share/tinted-theming/tinty/tinted-alacritty-colors-file.toml`.
 
   This can be useful when copying an applied theme to a path on your
@@ -229,7 +228,7 @@ Hooks have the following template variables:
   hook = "cp -f %f ~/.config/alacritty/colors.yml"
   ```
 
-- `%n` - Name of the current scheme applied, eg: `base16-ayu-dark`.
+- `%n` - Name of the current scheme applied, e.g.: `base16-ayu-dark`.
 
   This can be useful when triggering an external service:
 
@@ -237,7 +236,7 @@ Hooks have the following template variables:
   hook = "tinty info %n"
   ```
 
-- `%o` - Name of the command operation that is running the hook, eg:
+- `%o` - Name of the command operation that is running the hook, e.g.:
   `apply` or `init`.
 
   This can be useful for saving system resources and only running
@@ -419,7 +418,7 @@ license. Have a look at the [LICENSE] document for more information.
 ### Third-Party Licenses
 
 This project includes third-party code licensed under the MPL-2.0,
-BSD-2-Clause and BSD-3-Clause License. See the [LICENSES-THIRD-PARTY]
+BSD-2-Clause and BSD-3-Clause License. See the [LICENSES-THIRD-PARTY.md]
 file for details.
 
 [Tinted Theming]: https://github.com/tinted-theming/home
