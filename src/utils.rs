@@ -2,6 +2,7 @@ use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
 use crate::constants::{REPO_NAME, SCHEME_EXTENSION};
 use anyhow::{anyhow, Context, Result};
 use home::home_dir;
+use rand::Rng;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -90,6 +91,7 @@ pub fn git_pull(repo_path: &Path) -> Result<()> {
 }
 
 pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> Result<()> {
+
     if !repo_path.is_dir() {
         return Err(anyhow!(
             "Error with updating. {} is not a directory",
@@ -97,34 +99,38 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
         ));
     }
 
-    let command = format!("git remote set-url origin \"{}\"", repo_url);
-    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
+    let remote_name = random_remote_name();
 
-    let remote = Command::new(&command_vec[0])
-        .args(&command_vec[1..])
+    let remote = Command::new("git")
+        .args(vec!["remote", "add", &remote_name, repo_url])
         .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
         .with_context(|| format!("Failed to execute process in {}", repo_path.display()))?;
 
     if !remote.success() {
-        return Err(anyhow!("Error with setting remote URL to \"{}\"", repo_url));
+        return Err(anyhow!("Error with adding \"{}\" as remote", repo_url));
     }
 
-
     let revision_str = revision.unwrap_or("main");
-    return git_to_revision(repo_path, revision_str)
+    let res = git_to_revision(repo_path, &remote_name,revision_str);
 
+    if let Err(e) = res {
+        return Err(e);
+    } else {
+        Ok(())
+    }
 }
 
-fn git_to_revision(repo_path: &Path, revision: &str) -> Result<()> {
-    println!("{}", repo_path.display());
+fn random_remote_name() -> String {
+    let mut rng = rand::thread_rng();
+    let random_number: u32 = rng.gen();
+    format!("tinty-remote-{}", random_number)
+}
 
-    let command = format!("git fetch origin \"{}\"", revision);
-    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
-
-    let fetch = Command::new(&command_vec[0])
-        .args(&command_vec[1..])
+fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
+    let fetch = Command::new("git")
+        .args(vec!["fetch", remote_name, revision])
         .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
@@ -170,6 +176,25 @@ fn git_to_revision(repo_path: &Path, revision: &str) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn git_current_revision(repo_path: &Path) -> Result<String> {
+    let parse_out = Command::new("git")
+        .args(vec!["rev-parse", "--abbrev-ref", "HEAD"])
+        .current_dir(repo_path)
+        .output()
+        .with_context(|| format!("rev-parse: Failed to execute process in {}", repo_path.display()))?;
+
+    if !parse_out.status.success() {
+        return Err(anyhow!("Error getting current SHA of \"{}\"", repo_path.display()));
+    }
+
+    let stdout = String::from_utf8_lossy(&parse_out.stdout);
+
+    return match stdout.lines().next() {
+        Some(sha) => Ok(sha.to_string()),
+        None => Err(anyhow!("Error getting current SHA of \"{}\"", repo_path.display())),
+    };
 }
 
 pub fn git_diff(target_dir: &Path) -> Result<bool> {
