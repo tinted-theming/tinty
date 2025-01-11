@@ -1,16 +1,16 @@
 use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_URL};
-use crate::utils::{git_diff, git_pull};
+use crate::utils::{git_diff, git_update};
 use crate::{config::Config, constants::REPO_NAME};
 use anyhow::{Context, Result};
 use std::path::Path;
 
-fn update_item(item_name: &str, item_url: &str, item_path: &Path, is_quiet: bool) -> Result<()> {
+fn update_item(item_name: &str, item_url: &str, item_path: &Path, revision: Option<&str>, is_quiet: bool) -> Result<()> {
     if item_path.is_dir() {
         let is_diff = git_diff(item_path)?;
 
         if !is_diff {
-            git_pull(item_path)
-                .with_context(|| format!("Error pulling {} from {}", item_name, item_url))?;
+            git_update(item_path, item_url, revision)
+                .with_context(|| format!("Error updating {} to {}@{}", item_name, item_url, revision.unwrap_or("main")))?;
 
             if !is_quiet {
                 println!("{} up to date", item_name);
@@ -36,7 +36,7 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
     for item in items {
         let item_path = hooks_path.join(&item.name);
 
-        update_item(item.name.as_str(), item.path.as_str(), &item_path, is_quiet)?;
+        update_item(item.name.as_str(), item.path.as_str(), &item_path, item.revision.as_deref(), is_quiet)?;
     }
 
     let schemes_repo_path = hooks_path.join(SCHEMES_REPO_NAME);
@@ -45,6 +45,7 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
         SCHEMES_REPO_NAME,
         SCHEMES_REPO_URL,
         &schemes_repo_path,
+        None,
         is_quiet,
     )?;
 

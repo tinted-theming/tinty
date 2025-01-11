@@ -41,7 +41,7 @@ pub fn get_shell_command_from_string(config_path: &Path, command: &str) -> Resul
     shell_words::split(&full_command).map_err(anyhow::Error::new)
 }
 
-pub fn git_clone(repo_url: &str, target_dir: &Path) -> Result<()> {
+pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> Result<()> {
     if target_dir.exists() {
         return Err(anyhow!(
             "Error cloning {}. Target directory '{}' already exists",
@@ -58,6 +58,17 @@ pub fn git_clone(repo_url: &str, target_dir: &Path) -> Result<()> {
         .stdout(Stdio::null())
         .status()
         .with_context(|| format!("Failed to clone repository from {}", repo_url))?;
+
+    let revision_str = revision.unwrap_or("main")
+    let command = format!("git reset --hard \"{}\"", revision_str);
+    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+
+    Command::new(&command_vec[0])
+        .args(&command_vec[1..])
+        .current_dir(repo_url)
+        .stdout(Stdio::null())
+        .status()
+        .with_context(|| format!("Failed to checkout revision {}", revision_str))?;
 
     Ok(())
 }
@@ -85,6 +96,48 @@ pub fn git_pull(repo_path: &Path) -> Result<()> {
     } else {
         Err(anyhow!("Error wth git pull in {}", repo_path.display()))
     }
+}
+
+pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> Result<()> {
+
+    if !repo_path.is_dir() {
+        return Err(anyhow!(
+            "Error with updating. {} is not a directory",
+            repo_path.display()
+        ));
+    }
+
+    let command = format!("git remote set-url origin \"{}\"", repo_url);
+    let command_vec = shell_words::split(command).map_err(anyhow::Error::new)?;
+
+    let remote = Command::new(&command_vec[0])
+        .args(&command_vec[1..])
+        .current_dir(repo_path)
+        .stdout(Stdio::null())
+        .status()
+        .with_context(|| format!("Failed to execute process in {}", repo_path.display()))?;
+
+    if !remote.success() {
+        return Err(anyhow!("Error with setting remote URL to \"{}\"", repo_url));
+    }
+
+    let revision_str = revision.unwrap_or("main");
+    let command = format!("git reset --hard \"{}\"", revision_str);
+    let command_vec = shell_words::split(command).map_err(anyhow::Error::new)?;
+
+    let revision = Command::new(&command_vec[0])
+        .args(&command_vec[1..])
+        .current_dir(repo_path)
+        .stdout(Stdio::null())
+        .status()
+        .with_context(|| format!("Failed to execute process in {}", repo_path.display()))?;
+
+    if !revision.success() {
+        return Err(anyhow!("Error with checking out revision \"{}\"", revision_str));
+    }
+
+    Ok(())
+
 }
 
 pub fn git_diff(target_dir: &Path) -> Result<bool> {
