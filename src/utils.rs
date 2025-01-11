@@ -59,18 +59,9 @@ pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> R
         .status()
         .with_context(|| format!("Failed to clone repository from {}", repo_url))?;
 
-    let revision_str = revision.unwrap_or("main")
-    let command = format!("git reset --hard \"{}\"", revision_str);
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
 
-    Command::new(&command_vec[0])
-        .args(&command_vec[1..])
-        .current_dir(repo_url)
-        .stdout(Stdio::null())
-        .status()
-        .with_context(|| format!("Failed to checkout revision {}", revision_str))?;
-
-    Ok(())
+    let revision_str = revision.unwrap_or("main");
+    return git_to_revision(target_dir, revision_str)
 }
 
 pub fn git_pull(repo_path: &Path) -> Result<()> {
@@ -99,7 +90,6 @@ pub fn git_pull(repo_path: &Path) -> Result<()> {
 }
 
 pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> Result<()> {
-
     if !repo_path.is_dir() {
         return Err(anyhow!(
             "Error with updating. {} is not a directory",
@@ -108,7 +98,7 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
     }
 
     let command = format!("git remote set-url origin \"{}\"", repo_url);
-    let command_vec = shell_words::split(command).map_err(anyhow::Error::new)?;
+    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
 
     let remote = Command::new(&command_vec[0])
         .args(&command_vec[1..])
@@ -121,23 +111,65 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
         return Err(anyhow!("Error with setting remote URL to \"{}\"", repo_url));
     }
 
-    let revision_str = revision.unwrap_or("main");
-    let command = format!("git reset --hard \"{}\"", revision_str);
-    let command_vec = shell_words::split(command).map_err(anyhow::Error::new)?;
 
-    let revision = Command::new(&command_vec[0])
+    let revision_str = revision.unwrap_or("main");
+    return git_to_revision(repo_path, revision_str)
+
+}
+
+fn git_to_revision(repo_path: &Path, revision: &str) -> Result<()> {
+    println!("{}", repo_path.display());
+
+    let command = format!("git fetch origin \"{}\"", revision);
+    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
+
+    let fetch = Command::new(&command_vec[0])
         .args(&command_vec[1..])
         .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
-        .with_context(|| format!("Failed to execute process in {}", repo_path.display()))?;
+        .with_context(|| format!("fetch: Failed to execute process in {}", repo_path.display()))?;
 
-    if !revision.success() {
-        return Err(anyhow!("Error with checking out revision \"{}\"", revision_str));
+    if !fetch.success() {
+        return Err(anyhow!("Error with fetching \"{}\"", revision));
+    }
+
+    // Normalize the revision into the SHA. This way we can support all sorts of revisions, from
+    // branches, tags, SHAs, etc.
+    let command = format!("git rev-parse \"origin/{}\"", revision);
+    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
+
+    let parse_out = Command::new(&command_vec[0])
+        .args(&command_vec[1..])
+        .current_dir(repo_path)
+        .output()
+        .with_context(|| format!("rev-parse: Failed to execute process in {}", repo_path.display()))?;
+
+    if !parse_out.status.success() {
+        return Err(anyhow!("Error resolving revision \"{}\"", revision));
+    }
+
+    let stdout = String::from_utf8_lossy(&parse_out.stdout);
+
+    let commit_sha = match stdout.lines().next() {
+        Some(sha) => sha,
+        None => return Err(anyhow!("Error resolving revision \"{}\"", revision))
+    };
+
+    let command = format!("git checkout \"{}\"", commit_sha);
+    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
+
+    let checkout = Command::new(&command_vec[0])
+        .args(&command_vec[1..])
+        .current_dir(repo_path)
+        .status()
+        .with_context(|| format!("checkout: Failed to execute process in {}", repo_path.display()))?;
+
+    if !checkout.success() {
+        return Err(anyhow!("Error checking out revision \"{}\"", commit_sha));
     }
 
     Ok(())
-
 }
 
 pub fn git_diff(target_dir: &Path) -> Result<bool> {
