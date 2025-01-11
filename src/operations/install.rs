@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_URL};
+use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_REVISION, SCHEMES_REPO_URL};
 use crate::utils::git_clone;
 use anyhow::{anyhow, Result};
 use std::fs::{remove_file as remove_symlink, symlink_metadata};
@@ -100,7 +100,7 @@ pub fn install(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<(
         &schemes_repo_path,
         SCHEMES_REPO_NAME,
         SCHEMES_REPO_URL,
-        None,
+        Some(SCHEMES_REPO_REVISION),
         is_quiet,
     )?;
 

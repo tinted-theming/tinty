@@ -156,7 +156,7 @@ fn git_to_revision(repo_path: &Path, revision: &str) -> Result<()> {
         None => return Err(anyhow!("Error resolving revision \"{}\"", revision))
     };
 
-    let command = format!("git checkout \"{}\"", commit_sha);
+    let command = format!("git -c advice.detachedHead=false checkout \"{}\"", commit_sha);
     let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
 
     let checkout = Command::new(&command_vec[0])

@@ -1,4 +1,4 @@
-use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_URL};
+use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_URL, SCHEMES_REPO_REVISION};
 use crate::utils::{git_diff, git_update};
 use crate::{config::Config, constants::REPO_NAME};
 use anyhow::{Context, Result};
@@ -45,7 +45,7 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
         SCHEMES_REPO_NAME,
         SCHEMES_REPO_URL,
         &schemes_repo_path,
-        None,
+        Some(SCHEMES_REPO_REVISION),
         is_quiet,
     )?;
 
