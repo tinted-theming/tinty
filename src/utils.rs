@@ -62,7 +62,7 @@ pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> R
 
 
     let revision_str = revision.unwrap_or("main");
-    return git_to_revision(target_dir, revision_str)
+    return git_to_revision(target_dir, "origin", revision_str)
 }
 
 pub fn git_pull(repo_path: &Path) -> Result<()> {
@@ -99,28 +99,64 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
         ));
     }
 
-    let remote_name = random_remote_name();
+    // To make this operation atomic, we'll satisfy the remote & revision in this sequence:
+    // 1.) add the remote URL as a new temporary remote.
+    // 2.) check if the revision exists in the temporary remote.
+    // 3.) checkout the revision from temporary remote
+    // 4.) On success:
+    //      4.1) replace the origin remote URL
+    //      4.2) remove the temporary remote
+    // 5.) On error, remove temporary remote
+    //
+    // Note that this sequence works even if the directory is already on that remote & revision.
+    //
+    let tmp_remote_name = random_remote_name();
 
-    let remote = Command::new("git")
-        .args(vec!["remote", "add", &remote_name, repo_url])
+    let command = format!("git remote add \"{}\" \"{}\"", tmp_remote_name, repo_url);
+    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
+
+    // Create a temporary remote
+    Command::new(&command_vec[0])
+        .args(&command_vec[1..])
         .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
-        .with_context(|| format!("Failed to execute process in {}", repo_path.display()))?;
+        .with_context(|| format!("Error with adding {} as a remote named {} in {}", repo_url,tmp_remote_name, repo_path.display()))?;
 
-    if !remote.success() {
-        return Err(anyhow!("Error with adding \"{}\" as remote", repo_url));
-    }
-
+    // Attempt to switch to the revision on temporary remote
     let revision_str = revision.unwrap_or("main");
-    let res = git_to_revision(repo_path, &remote_name,revision_str);
+    let res = git_to_revision(repo_path, &tmp_remote_name, revision_str);
 
     if let Err(e) = res {
+        // Failed to switch to the desired revision. Cleanup!
+        Command::new("git")
+            .current_dir(repo_path)
+            .args(vec!["remote", "rm", &tmp_remote_name])
+            .stdout(Stdio::null())
+            .status()
+            .with_context(|| format!("Failed to execute process in {}", repo_path.display()))?;
         return Err(e);
-    } else {
-        Ok(())
     }
+
+    let command = format!("git remote set-url origin \"{}\"", repo_url);
+    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
+
+    // Success! Cleanup: update the origin remote to remote URL & delete temporary remote.
+    Command::new(&command_vec[0])
+        .current_dir(repo_path)
+        .args(&command_vec[1..])
+        .stdout(Stdio::null())
+        .status()
+        .with_context(|| format!("Failed to set origin remote to {} in {}", repo_url, repo_path.display()))?;
+    Command::new("git")
+        .current_dir(repo_path)
+        .args(vec!["remote", "rm", &tmp_remote_name])
+        .stdout(Stdio::null())
+        .status()
+        .with_context(|| format!("Failed to remove temporary remote {} in {}", tmp_remote_name, repo_path.display()))?;
+    return Ok(())
 }
+
 
 fn random_remote_name() -> String {
     let mut rng = rand::thread_rng();
@@ -129,8 +165,12 @@ fn random_remote_name() -> String {
 }
 
 fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
-    let fetch = Command::new("git")
-        .args(vec!["fetch", remote_name, revision])
+
+    let command = format!("git fetch \"{}\" \"{}\"", remote_name, revision);
+    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
+
+    let fetch = Command::new(&command_vec[0])
+        .args(&command_vec[1..])
         .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
@@ -142,59 +182,32 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
 
     // Normalize the revision into the SHA. This way we can support all sorts of revisions, from
     // branches, tags, SHAs, etc.
-    let command = format!("git rev-parse \"origin/{}\"", revision);
+    let command = format!("git rev-parse \"{}/{}\"", remote_name, revision);
     let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
 
     let parse_out = Command::new(&command_vec[0])
         .args(&command_vec[1..])
         .current_dir(repo_path)
         .output()
-        .with_context(|| format!("rev-parse: Failed to execute process in {}", repo_path.display()))?;
-
-    if !parse_out.status.success() {
-        return Err(anyhow!("Error resolving revision \"{}\"", revision));
-    }
+        .with_context(|| format!("Unable to parse revision {} in {}", revision, repo_path.display()))?;
 
     let stdout = String::from_utf8_lossy(&parse_out.stdout);
 
     let commit_sha = match stdout.lines().next() {
         Some(sha) => sha,
-        None => return Err(anyhow!("Error resolving revision \"{}\"", revision))
+        None => return Err(anyhow!("Unable to parse revision {} in {}", revision, repo_path.display()))
     };
 
     let command = format!("git -c advice.detachedHead=false checkout \"{}\"", commit_sha);
     let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
 
-    let checkout = Command::new(&command_vec[0])
+    Command::new(&command_vec[0])
         .args(&command_vec[1..])
         .current_dir(repo_path)
         .status()
-        .with_context(|| format!("checkout: Failed to execute process in {}", repo_path.display()))?;
-
-    if !checkout.success() {
-        return Err(anyhow!("Error checking out revision \"{}\"", commit_sha));
-    }
+        .with_context(|| format!("Failed to checkout SHA {} in {}", commit_sha, repo_path.display()))?;
 
     Ok(())
-}
-
-fn git_current_revision(repo_path: &Path) -> Result<String> {
-    let parse_out = Command::new("git")
-        .args(vec!["rev-parse", "--abbrev-ref", "HEAD"])
-        .current_dir(repo_path)
-        .output()
-        .with_context(|| format!("rev-parse: Failed to execute process in {}", repo_path.display()))?;
-
-    if !parse_out.status.success() {
-        return Err(anyhow!("Error getting current SHA of \"{}\"", repo_path.display()));
-    }
-
-    let stdout = String::from_utf8_lossy(&parse_out.stdout);
-
-    return match stdout.lines().next() {
-        Some(sha) => Ok(sha.to_string()),
-        None => Err(anyhow!("Error getting current SHA of \"{}\"", repo_path.display())),
-    };
 }
 
 pub fn git_diff(target_dir: &Path) -> Result<bool> {
