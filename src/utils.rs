@@ -156,24 +156,21 @@ fn random_remote_name() -> String {
 }
 
 fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
-    let command = format!("git fetch \"{}\" \"{}\"", remote_name, revision);
+    let command = format!("git fetch --quiet \"{}\" \"{}\"", remote_name, revision);
     let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
 
-    let fetch = Command::new(&command_vec[0])
+    Command::new(&command_vec[0])
         .args(&command_vec[1..])
         .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
         .with_context(|| {
             format!(
-                "fetch: Failed to execute process in {}",
+                "Error with fetching revision {} in {}",
+                revision,
                 repo_path.display()
             )
         })?;
-
-    if !fetch.success() {
-        return Err(anyhow!("Error with fetching \"{}\"", revision));
-    }
 
     // Normalize the revision into the SHA. This way we can support all sorts of revisions, from
     // branches, tags, SHAs, etc.
@@ -206,13 +203,14 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     };
 
     let command = format!(
-        "git -c advice.detachedHead=false checkout \"{}\"",
+        "git -c advice.detachedHead=false checkout --quiet \"{}\"",
         commit_sha
     );
     let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
 
     Command::new(&command_vec[0])
         .args(&command_vec[1..])
+        .stdout(Stdio::null())
         .current_dir(repo_path)
         .status()
         .with_context(|| {
