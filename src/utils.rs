@@ -110,8 +110,8 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
     if let Err(e) = res {
         // Failed to switch to the desired revision. Cleanup!
         Command::new("git")
-            .current_dir(repo_path)
             .args(vec!["remote", "rm", &tmp_remote_name])
+            .current_dir(repo_path)
             .stdout(Stdio::null())
             .status()
             .with_context(|| format!("Failed to execute process in {}", repo_path.display()))?;
@@ -123,8 +123,8 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
 
     // Success! Cleanup: update the origin remote to remote URL & delete temporary remote.
     Command::new(&command_vec[0])
-        .current_dir(repo_path)
         .args(&command_vec[1..])
+        .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
         .with_context(|| {
@@ -135,8 +135,8 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
             )
         })?;
     Command::new("git")
-        .current_dir(repo_path)
         .args(vec!["remote", "rm", &tmp_remote_name])
+        .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
         .with_context(|| {
