@@ -150,7 +150,11 @@ themes-dir = "themes"
     let remote_url = "https://github.com/tinted-theming/tinted-jqp";
     let has_match = remote_stdout.lines().any(|line| line == remote_url);
 
-    assert!(has_match, "Expected origin remote to point to URL {}", remote_url);
+    assert!(
+        has_match,
+        "Expected origin remote to point to URL {}",
+        remote_url
+    );
 
     Ok(())
 }
@@ -163,7 +167,6 @@ fn test_cli_update_subcommand_with_new_revision() -> Result<()> {
     let (config_path, data_path, command_vec, cleanup) =
         setup("test_cli_update_subcommand_with_new_revision", "update")?;
     let expected_output = "tinted-jqp up to date";
-
 
     let config_content = r##"[[items]]
 path = "https://github.com/tinted-theming/tinted-jqp"
@@ -193,7 +196,11 @@ revision = "tinty-test-tag-01"
     data_path.push("repos");
     data_path.push("tinted-jqp");
 
-    println!("repo_path: {}, exists?: {}", data_path.display(), data_path.exists());
+    println!(
+        "repo_path: {}, exists?: {}",
+        data_path.display(),
+        data_path.exists()
+    );
 
     let output = Command::new("git")
         .args(vec!["rev-parse", "--verify", "HEAD"])
@@ -223,8 +230,10 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_revision() -> Result<(
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) =
-        setup("test_cli_update_subcommand_with_new_remote_but_invalid_revision", "update")?;
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_update_subcommand_with_new_remote_but_invalid_revision",
+        "update",
+    )?;
     let expected_output = "tinted-jqp up to date";
     let config_content = r##"[[items]]
 path = "https://github.com/tinted-theming/tinted-jqp"

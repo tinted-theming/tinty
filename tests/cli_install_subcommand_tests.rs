@@ -356,7 +356,5 @@ revision = "invalid-revision"
         repo_path.display(),
     );
 
-
-
     Ok(())
 }
