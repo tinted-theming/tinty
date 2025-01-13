@@ -261,7 +261,10 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     // and check if it belongs in the remote.
     let remote_branch_prefix = format!("refs/remotes/{}/", remote_name);
     let mut command = safe_command(
-        format!("git branch --format=\"%(refname)\" -a --contains \"{}\"", revision),
+        format!(
+            "git branch --format=\"%(refname)\" -a --contains \"{}\"",
+            revision
+        ),
         repo_path,
     )?;
     let mut child = command.stdout(Stdio::piped()).spawn().with_context(|| {
