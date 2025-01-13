@@ -1,10 +1,11 @@
 use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
 use crate::constants::{REPO_NAME, SCHEME_EXTENSION};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use home::home_dir;
 use rand::Rng;
+use regex::bytes::Regex;
 use std::fs::{self, File};
-use std::io::Write;
+use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str;
@@ -136,7 +137,6 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
         })?;
     Command::new("git")
         .args(vec!["remote", "rm", &tmp_remote_name])
-        .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
         .with_context(|| {
@@ -153,6 +153,140 @@ fn random_remote_name() -> String {
     let mut rng = rand::thread_rng();
     let random_number: u32 = rng.gen();
     format!("tinty-remote-{}", random_number)
+}
+
+// Resolvees the SHA1 of revision at remote_name.
+// revision can be a tag, a branch, or a commit SHA1.
+fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<String> {
+    // 1.) Check if its a tag.
+    let expected_tag_ref = format!("refs/tags/{}", revision);
+    let mut command = safe_command(
+        format!(
+            "git ls-remote --quiet --tags \"{}\" \"{}\"",
+            remote_name, expected_tag_ref
+        ),
+        repo_path,
+    )?;
+    let mut child = command
+        .stderr(Stdio::null())
+        .stdout(Stdio::piped())
+        .spawn()
+        .with_context(|| format!("Failed to list remote tags from {}", remote_name))?;
+    let stdout = child.stdout.take().expect("failed to capture stdout");
+    let reader = BufReader::new(stdout);
+
+    for line in reader.lines() {
+        match line {
+            Ok(line) => {
+                let parts: Vec<&str> = line.split("\t").collect();
+                if parts.len() != 2 {
+                    return Err(anyhow!(
+                        "malformed ls-remote result. Expected tab-delimited tuple, found {} parts",
+                        parts.len()
+                    ));
+                }
+                // To hedge against non-exact matches, we'll compare the ref field with
+                // what we'd expect an exact match would look i.e. refs/tags/<TAG_NAME>
+                if parts[1] == expected_tag_ref {
+                    // Found the tag. Return the SHA1
+                    return Ok(parts[0].to_string());
+                }
+            }
+            Err(e) => return Err(anyhow!("failed to capture lines: {}", e)),
+        }
+    }
+
+    child.wait()?;
+
+    // 2.) Check if its a branch
+    let expected_branch_ref = format!("refs/heads/{}", revision);
+    let mut command = safe_command(
+        format!(
+            "git ls-remote --quiet --branches \"{}\" \"{}\"",
+            remote_name, expected_tag_ref
+        ),
+        repo_path,
+    )?;
+    let mut child = command
+        .stdout(Stdio::piped())
+        .spawn()
+        .with_context(|| format!("Failed to list branches tags from {}", remote_name))?;
+    let stdout = child.stdout.take().expect("failed to capture stdout");
+    let reader = BufReader::new(stdout);
+
+    for line in reader.lines() {
+        match line {
+            Ok(line) => {
+                let parts: Vec<&str> = line.split("\t").collect();
+                if parts.len() != 2 {
+                    return Err(anyhow!(
+                        "malformed ls-remote result. Expected tab-delimited tuple, found {} parts",
+                        parts.len()
+                    ));
+                }
+                // To hedge against non-exact matches, we'll compare the ref field with
+                // what we'd expect an exact match would look i.e. refs/heads/<BRANCH_NAME>
+                if parts[1] == expected_branch_ref {
+                    // Found the tag. Return the SHA1
+                    return Ok(parts[0].to_string());
+                }
+            }
+            Err(e) => return Err(anyhow!("failed to capture lines: {}", e)),
+        }
+    }
+
+    child.wait()?;
+
+    // We are here because revision isn't a tag or a branch.
+    // First, we'll check if revision itself *could* be a SHA1.
+    // If it doesn't look like one, we'll return early.
+    let pattern = r"^[0-9a-f]{1,40}$";
+    let re = Regex::new(pattern).expect("Invalid regex");
+    if !re.is_match(revision.as_bytes()) {
+        return Err(anyhow!("cannot resolve {} into a Git SHA1", revision));
+    }
+
+    // 3.) Check if any branch in remote contains the SHA1:
+    // It seems that the only way to do this is to list the branches that contain the SHA1
+    // and check if it belongs in the remote.
+    let remote_branch_prefix = format!("remotes/{}", remote_name);
+    let mut command = safe_command(
+        format!("git branch -a --contains \"{}\"", revision),
+        repo_path,
+    )?;
+    let mut child = command.stdout(Stdio::piped()).spawn().with_context(|| {
+        format!(
+            "Failed to find branches containing commit {} from {}",
+            revision, remote_name
+        )
+    })?;
+    let stdout = child.stdout.take().expect("failed to capture stdout");
+    let reader = BufReader::new(stdout);
+
+    for line in reader.lines() {
+        match line {
+            Ok(line) => {
+                if line.starts_with(&remote_branch_prefix) {
+                    // Found a branch1
+                    return Ok(revision.to_string());
+                }
+            }
+            Err(e) => return Err(anyhow!("failed to capture lines: {}", e)),
+        }
+    }
+
+    return Err(anyhow!(
+        "cannot find revision {} in remote {}",
+        revision,
+        remote_name
+    ));
+}
+
+fn safe_command(command: String, cwd: &Path) -> Result<Command, Error> {
+    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
+    let mut command = Command::new(&command_vec[0]);
+    command.args(&command_vec[1..]).current_dir(cwd);
+    Ok(command)
 }
 
 fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
@@ -180,6 +314,7 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     let parse_out = Command::new(&command_vec[0])
         .args(&command_vec[1..])
         .current_dir(repo_path)
+        .stderr(Stdio::null())
         .output()
         .with_context(|| {
             format!(

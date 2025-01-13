@@ -1468,6 +1468,7 @@ dependencies = [
  "hex_color",
  "home",
  "rand",
+ "regex",
  "serde",
  "serde_yaml",
  "shell-words",
