@@ -331,6 +331,10 @@ revision = "invalid-revision"
 "##;
     write_to_file(&config_path, config_content)?;
 
+    let mut repo_path = repo_path.clone();
+    repo_path.push("repos");
+    repo_path.push("tinted-jqp");
+
     // ---
     // Act
     // ---
@@ -339,11 +343,20 @@ revision = "invalid-revision"
     // ------
     // Assert
     // ------
+    let path_exists = repo_path.exists();
     cleanup()?;
     assert!(
         stderr.contains("cannot resolve invalid-revision"),
         "Expected revision not found",
     );
+
+    assert!(
+        !path_exists,
+        "Expected repo path {} to not exist",
+        repo_path.display(),
+    );
+
+
 
     Ok(())
 }

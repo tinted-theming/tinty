@@ -62,7 +62,14 @@ pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> R
         .with_context(|| format!("Failed to clone repository from {}", repo_url))?;
 
     let revision_str = revision.unwrap_or("main");
-    return git_to_revision(target_dir, "origin", revision_str);
+    let result = git_to_revision(target_dir, "origin", revision_str);
+    if let Err(e) = result {
+        // Cleanup! If we cannot checkout the revision, remove the directory.
+        fs::remove_dir_all(target_dir)
+            .with_context(|| format!("Failed to remove directory {}", target_dir.display()))?;
+        return Err(e);
+    }
+    Ok(())
 }
 
 pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> Result<()> {
