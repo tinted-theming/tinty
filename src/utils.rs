@@ -104,7 +104,7 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
             )
         })?;
 
-    // Attempt to switch to the revision on temporary remote
+    println!("remote name: {}", tmp_remote_name);
     let revision_str = revision.unwrap_or("main");
     let res = git_to_revision(repo_path, &tmp_remote_name, revision_str);
 
@@ -137,6 +137,7 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
         })?;
     Command::new("git")
         .args(vec!["remote", "rm", &tmp_remote_name])
+        .current_dir(repo_path)
         .stdout(Stdio::null())
         .status()
         .with_context(|| {
@@ -171,7 +172,8 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         .stderr(Stdio::null())
         .stdout(Stdio::piped())
         .spawn()
-        .with_context(|| format!("Failed to list remote tags from {}", remote_name))?;
+        .with_context(|| format!("Failed to spawn"))?;
+
     let stdout = child.stdout.take().expect("failed to capture stdout");
     let reader = BufReader::new(stdout);
 
@@ -195,22 +197,25 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
             Err(e) => return Err(anyhow!("failed to capture lines: {}", e)),
         }
     }
+    child
+        .wait()
+        .with_context(|| format!("Failed to list remote tags from {}", remote_name))?;
 
-    child.wait()?;
 
     // 2.) Check if its a branch
     let expected_branch_ref = format!("refs/heads/{}", revision);
     let mut command = safe_command(
         format!(
             "git ls-remote --quiet --branches \"{}\" \"{}\"",
-            remote_name, expected_tag_ref
+            remote_name, expected_branch_ref
         ),
         repo_path,
     )?;
     let mut child = command
         .stdout(Stdio::piped())
         .spawn()
-        .with_context(|| format!("Failed to list branches tags from {}", remote_name))?;
+        .with_context(|| format!("Failed to spawn"))?;
+
     let stdout = child.stdout.take().expect("failed to capture stdout");
     let reader = BufReader::new(stdout);
 
@@ -235,7 +240,9 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         }
     }
 
-    child.wait()?;
+    child
+        .wait()
+        .with_context(|| format!("Failed to list branches tags from {}", remote_name))?;
 
     // We are here because revision isn't a tag or a branch.
     // First, we'll check if revision itself *could* be a SHA1.
