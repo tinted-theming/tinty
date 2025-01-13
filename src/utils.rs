@@ -306,36 +306,8 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
             )
         })?;
 
-    // Normalize the revision into the SHA. This way we can support all sorts of revisions, from
-    // branches, tags, SHAs, etc.
-    let command = format!("git rev-parse \"{}/{}\"", remote_name, revision);
-    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
-
-    let parse_out = Command::new(&command_vec[0])
-        .args(&command_vec[1..])
-        .current_dir(repo_path)
-        .stderr(Stdio::null())
-        .output()
-        .with_context(|| {
-            format!(
-                "Unable to parse revision {} in {}",
-                revision,
-                repo_path.display()
-            )
-        })?;
-
-    let stdout = String::from_utf8_lossy(&parse_out.stdout);
-
-    let commit_sha = match stdout.lines().next() {
-        Some(sha) => sha,
-        None => {
-            return Err(anyhow!(
-                "Unable to parse revision {} in {}",
-                revision,
-                repo_path.display()
-            ))
-        }
-    };
+    // Normalize the revision into the SHA.    let command = format!("git rev-parse \"{}/{}\"", remote_name, revision);
+    let commit_sha = git_resolve_revision(repo_path, remote_name, revision)?;
 
     let command = format!(
         "git -c advice.detachedHead=false checkout --quiet \"{}\"",
