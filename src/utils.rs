@@ -104,7 +104,6 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
             )
         })?;
 
-    println!("remote name: {}", tmp_remote_name);
     let revision_str = revision.unwrap_or("main");
     let res = git_to_revision(repo_path, &tmp_remote_name, revision_str);
 
@@ -201,7 +200,6 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         .wait()
         .with_context(|| format!("Failed to list remote tags from {}", remote_name))?;
 
-
     // 2.) Check if its a branch
     let expected_branch_ref = format!("refs/heads/{}", revision);
     let mut command = safe_command(
@@ -253,12 +251,17 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         return Err(anyhow!("cannot resolve {} into a Git SHA1", revision));
     }
 
+    safe_command(format!("git fetch --quiet \"{}\"", remote_name), repo_path)?
+        .stdout(Stdio::null())
+        .status()
+        .with_context(|| format!("unable to fetch objects from remote {}", remote_name))?;
+
     // 3.) Check if any branch in remote contains the SHA1:
     // It seems that the only way to do this is to list the branches that contain the SHA1
     // and check if it belongs in the remote.
-    let remote_branch_prefix = format!("remotes/{}", remote_name);
+    let remote_branch_prefix = format!("refs/remotes/{}/", remote_name);
     let mut command = safe_command(
-        format!("git branch -a --contains \"{}\"", revision),
+        format!("git branch --format=\"%(refname)\" -a --contains \"{}\"", revision),
         repo_path,
     )?;
     let mut child = command.stdout(Stdio::piped()).spawn().with_context(|| {
@@ -273,14 +276,21 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     for line in reader.lines() {
         match line {
             Ok(line) => {
-                if line.starts_with(&remote_branch_prefix) {
-                    // Found a branch1
+                if line.clone().starts_with(&remote_branch_prefix) {
+                    // Found a branch
                     return Ok(revision.to_string());
                 }
             }
             Err(e) => return Err(anyhow!("failed to capture lines: {}", e)),
         }
     }
+
+    child.wait().with_context(|| {
+        format!(
+            "Failed to list branches from {} containing SHA1 {}",
+            remote_name, revision
+        )
+    })?;
 
     return Err(anyhow!(
         "cannot find revision {} in remote {}",
