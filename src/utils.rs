@@ -326,7 +326,6 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     })?;
 
     // Normalize the revision into the SHA.
-    // let command = format!("git rev-parse \"{}/{}\"", remote_name, revision);
     let commit_sha = git_resolve_revision(repo_path, remote_name, revision)?;
 
     safe_command(
