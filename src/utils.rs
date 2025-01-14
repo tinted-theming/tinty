@@ -128,7 +128,10 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
         return Err(e);
     }
 
-    safe_command(format!("git remote set-url origin \"{}\"", repo_url), repo_path)?
+    safe_command(
+        format!("git remote set-url origin \"{}\"", repo_url),
+        repo_path,
+    )?
     .stdout(Stdio::null())
     .status()
     .with_context(|| {
@@ -178,26 +181,19 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     let stdout = child.stdout.take().expect("failed to capture stdout");
     let reader = BufReader::new(stdout);
 
-    for line in reader.lines() {
-        match line {
-            Ok(line) => {
-                let parts: Vec<&str> = line.split("\t").collect();
-                if parts.len() != 2 {
-                    return Err(anyhow!(
-                        "malformed ls-remote result. Expected tab-delimited tuple, found {} parts",
-                        parts.len()
-                    ));
-                }
-                // To hedge against non-exact matches, we'll compare the ref field with
-                // what we'd expect an exact match would look i.e. refs/tags/<TAG_NAME>
-                if parts[1] == expected_tag_ref {
-                    // Found the tag. Return the SHA1
-                    return Ok(parts[0].to_string());
-                }
-            }
-            Err(e) => return Err(anyhow!("failed to capture lines: {}", e)),
-        }
+    if let Some(parts) = reader
+        .lines()
+        .filter_map(|line| line.ok())
+        .map(|line| line.split("\t").map(String::from).collect::<Vec<String>>())
+        .filter(|parts| parts.len() == 2)
+        .find(|parts| parts[1] == expected_tag_ref)
+    {
+        // we found a tag that matches
+        child.kill()?; // Abort the child process.
+        child.wait()?; // Cleanup
+        return Ok(parts[0].to_string()); // Return early.
     }
+
     child
         .wait()
         .with_context(|| format!("Failed to list remote tags from {}", remote_name))?;
@@ -219,25 +215,17 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     let stdout = child.stdout.take().expect("failed to capture stdout");
     let reader = BufReader::new(stdout);
 
-    for line in reader.lines() {
-        match line {
-            Ok(line) => {
-                let parts: Vec<&str> = line.split("\t").collect();
-                if parts.len() != 2 {
-                    return Err(anyhow!(
-                        "malformed ls-remote result. Expected tab-delimited tuple, found {} parts",
-                        parts.len()
-                    ));
-                }
-                // To hedge against non-exact matches, we'll compare the ref field with
-                // what we'd expect an exact match would look i.e. refs/heads/<BRANCH_NAME>
-                if parts[1] == expected_branch_ref {
-                    // Found the tag. Return the SHA1
-                    return Ok(parts[0].to_string());
-                }
-            }
-            Err(e) => return Err(anyhow!("failed to capture lines: {}", e)),
-        }
+    if let Some(parts) = reader
+        .lines()
+        .filter_map(|line| line.ok())
+        .map(|line| line.split("\t").map(String::from).collect::<Vec<String>>())
+        .filter(|parts| parts.len() == 2)
+        .find(|parts| parts[1] == expected_branch_ref)
+    {
+        // we found a branch that matches.
+        child.kill()?; // Abort the child process.
+        child.wait()?; // Cleanup
+        return Ok(parts[0].to_string()); // Return early.
     }
 
     child
@@ -275,18 +263,18 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
             revision, remote_name
         )
     })?;
+
     let stdout = child.stdout.take().expect("failed to capture stdout");
     let reader = BufReader::new(stdout);
-    for line in reader.lines() {
-        match line {
-            Ok(line) => {
-                if line.clone().starts_with(&remote_branch_prefix) {
-                    // Found a branch
-                    return Ok(revision.to_string());
-                }
-            }
-            Err(e) => return Err(anyhow!("failed to capture lines: {}", e)),
-        }
+    if let Some(_) = reader
+        .lines()
+        .filter_map(|line| line.ok())
+        .find(|line| line.clone().starts_with(&remote_branch_prefix))
+    {
+        // we found a remote ref that contains the commit sha
+        child.kill()?; // Abort the child process.
+        child.wait()?; // Cleanup
+        return Ok(revision.to_string()); // Return early.
     }
 
     child.wait().with_context(|| {
@@ -350,7 +338,6 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
 }
 
 pub fn git_is_working_dir_clean(target_dir: &Path) -> Result<bool> {
-
     // We use the Git plumbing diff-index command to tell us of files that has changed,
     // both staged and unstaged.
     let status = safe_command("git diff-index --quiet HEAD --".to_string(), target_dir)?
