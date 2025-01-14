@@ -226,12 +226,12 @@ revision = "tinty-test-tag-01"
 }
 
 #[test]
-fn test_cli_update_subcommand_with_new_remote_but_invalid_revision() -> Result<()> {
+fn test_cli_update_subcommand_with_new_remote_but_invalid_tag_revision() -> Result<()> {
     // -------
     // Arrange
     // -------
     let (config_path, data_path, command_vec, cleanup) = setup(
-        "test_cli_update_subcommand_with_new_remote_but_invalid_revision",
+        "test_cli_update_subcommand_with_new_remote_but_invalid_tag_revision",
         "update",
     )?;
     let expected_output = "tinted-jqp up to date";
@@ -249,11 +249,12 @@ themes-dir = "themes"
     utils::run_install_command(&config_path, &data_path)?;
 
     // Replace the remote with a new one
+    // tinty-test-tag-01 exist in tinted-theming but not on this one.
     let config_content = r##"[[items]]
 path = "https://github.com/bezhermoso/tinted-jqp"
 name = "tinted-jqp"
 themes-dir = "themes"
-revision = "invalid-revision"
+revision = "tinty-test-tag-01"
 "##;
     write_to_file(&config_path, config_content)?;
     let (stdout, stderr) = utils::run_command(command_vec).unwrap();
@@ -278,7 +279,138 @@ revision = "invalid-revision"
         "stdout contains unexpected output"
     );
     assert!(
-        stderr.contains("cannot resolve invalid-revision"),
+        stderr.contains("cannot resolve tinty-test-tag-01"),
+        "stderr does not contain the expected output"
+    );
+    let expected_remote_url = "https://github.com/tinted-theming/tinted-jqp";
+    let has_match = remote_out.lines().any(|line| line == expected_remote_url);
+
+    assert!(has_match, "Expected remote URL {}", expected_remote_url);
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_update_subcommand_with_new_remote_but_invalid_branch_revision() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_update_subcommand_with_new_remote_but_invalid_branch_revision",
+        "update",
+    )?;
+    let expected_output = "tinted-jqp up to date";
+    let config_content = r##"[[items]]
+path = "https://github.com/tinted-theming/tinted-jqp"
+name = "tinted-jqp"
+themes-dir = "themes"
+"##;
+
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    utils::run_install_command(&config_path, &data_path)?;
+
+    // Replace the remote with a new one
+    // tinty-test-01 exist in tinted-theming but not on this one.
+    let config_content = r##"[[items]]
+path = "https://github.com/bezhermoso/tinted-jqp"
+name = "tinted-jqp"
+themes-dir = "themes"
+revision = "tinty-test-01"
+"##;
+    write_to_file(&config_path, config_content)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+
+    let mut data_path = data_path.clone();
+    data_path.push("repos");
+    data_path.push("tinted-jqp");
+
+    let output = Command::new("git")
+        .args(vec!["remote", "get-url", "origin"])
+        .current_dir(&data_path)
+        .output()?;
+
+    let remote_out = String::from_utf8(output.stdout)?;
+
+    // ------
+    // Assert
+    // ------
+    cleanup()?;
+    assert!(
+        !stdout.contains(expected_output),
+        "stdout contains unexpected output"
+    );
+    assert!(
+        stderr.contains("cannot resolve tinty-test-01"),
+        "stderr does not contain the expected output"
+    );
+    let expected_remote_url = "https://github.com/tinted-theming/tinted-jqp";
+    let has_match = remote_out.lines().any(|line| line == expected_remote_url);
+
+    assert!(has_match, "Expected remote URL {}", expected_remote_url);
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_update_subcommand_with_new_remote_but_invalid_commit_sha1_revision() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_update_subcommand_with_new_remote_but_commit_sha1_revision",
+        "update",
+    )?;
+    let expected_output = "tinted-jqp up to date";
+    let config_content = r##"[[items]]
+path = "https://github.com/tinted-theming/tinted-jqp"
+name = "tinted-jqp"
+themes-dir = "themes"
+"##;
+
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    utils::run_install_command(&config_path, &data_path)?;
+
+    // Replace the remote with a new one
+    // This commit SHA only exist in tinted-theming but not on this one.
+    let config_content = r##"[[items]]
+path = "https://github.com/bezhermoso/tinted-jqp"
+name = "tinted-jqp"
+themes-dir = "themes"
+revision = "43b36ed5eadad59a5027e442330d2485b8607b34"
+"##;
+    write_to_file(&config_path, config_content)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+
+    let mut data_path = data_path.clone();
+    data_path.push("repos");
+    data_path.push("tinted-jqp");
+
+    let output = Command::new("git")
+        .args(vec!["remote", "get-url", "origin"])
+        .current_dir(&data_path)
+        .output()?;
+
+    let remote_out = String::from_utf8(output.stdout)?;
+
+    print!("{}", stdout);
+    // ------
+    // Assert
+    // ------
+    cleanup()?;
+    assert!(
+        !stdout.contains(expected_output),
+        "stdout contains unexpected output"
+    );
+    assert!(
+        stderr.contains("cannot find revision 43b36ed5eadad59a5027e442330d2485b8607b34"),
         "stderr does not contain the expected output"
     );
     let expected_remote_url = "https://github.com/tinted-theming/tinted-jqp";
