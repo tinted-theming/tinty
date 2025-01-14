@@ -12,9 +12,9 @@ fn update_item(
     is_quiet: bool,
 ) -> Result<()> {
     if item_path.is_dir() {
-        let is_diff = git_is_working_dir_clean(item_path)?;
+        let is_clean = git_is_working_dir_clean(item_path)?;
 
-        if !is_diff {
+        if is_clean {
             git_update(item_path, item_url, revision).with_context(|| {
                 format!(
                     "Error updating {} to {}@{}",
