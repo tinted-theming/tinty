@@ -349,30 +349,16 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     Ok(())
 }
 
-pub fn git_diff(target_dir: &Path) -> Result<bool> {
-    let command = "git status --porcelain";
-    let command_vec = shell_words::split(command).map_err(anyhow::Error::new)?;
-    let output = Command::new(&command_vec[0])
-        .args(&command_vec[1..])
-        .current_dir(target_dir)
-        .output()
+pub fn git_is_working_dir_clean(target_dir: &Path) -> Result<bool> {
+
+    // We use the Git plumbing diff-index command to tell us of files that has changed,
+    // both staged and unstaged.
+    let status = safe_command("git diff-index --quiet HEAD --".to_string(), target_dir)?
+        .status()
         .with_context(|| format!("Failed to execute process in {}", target_dir.display()))?;
-    let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
 
-    // If there is no output, then there is no diff
-    if stdout.is_empty() {
-        return Ok(false);
-    }
-
-    // Iterate over the lines and check for changes that should be considered a diff
-    // Don't consider untracked files a diff
-    let has_diff = stdout.lines().any(|line| {
-        let status_code = &line[..2];
-        // Status codes: M = modified, A = added, ?? = untracked
-        status_code != "??"
-    });
-
-    Ok(has_diff)
+    // With the --quiet flag, it will return a 0 exit-code if no files has changed.
+    Ok(!status.success())
 }
 
 pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<String> {

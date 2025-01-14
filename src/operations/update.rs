@@ -1,5 +1,5 @@
 use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_REVISION, SCHEMES_REPO_URL};
-use crate::utils::{git_diff, git_update};
+use crate::utils::{git_is_working_dir_clean, git_update};
 use crate::{config::Config, constants::REPO_NAME};
 use anyhow::{Context, Result};
 use std::path::Path;
@@ -12,7 +12,7 @@ fn update_item(
     is_quiet: bool,
 ) -> Result<()> {
     if item_path.is_dir() {
-        let is_diff = git_diff(item_path)?;
+        let is_diff = git_is_working_dir_clean(item_path)?;
 
         if !is_diff {
             git_update(item_path, item_url, revision).with_context(|| {
