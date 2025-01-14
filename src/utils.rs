@@ -93,57 +93,52 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
     //
     let tmp_remote_name = random_remote_name();
 
-    let command = format!("git remote add \"{}\" \"{}\"", tmp_remote_name, repo_url);
-    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
-
     // Create a temporary remote
-    Command::new(&command_vec[0])
-        .args(&command_vec[1..])
-        .current_dir(repo_path)
-        .stdout(Stdio::null())
-        .status()
-        .with_context(|| {
-            format!(
-                "Error with adding {} as a remote named {} in {}",
-                repo_url,
-                tmp_remote_name,
-                repo_path.display()
-            )
-        })?;
+    safe_command(
+        format!("git remote add \"{}\" \"{}\"", tmp_remote_name, repo_url),
+        repo_path,
+    )?
+    .current_dir(repo_path)
+    .stdout(Stdio::null())
+    .status()
+    .with_context(|| {
+        format!(
+            "Error with adding {} as a remote named {} in {}",
+            repo_url,
+            tmp_remote_name,
+            repo_path.display()
+        )
+    })?;
 
     let revision_str = revision.unwrap_or("main");
     let res = git_to_revision(repo_path, &tmp_remote_name, revision_str);
 
     if let Err(e) = res {
         // Failed to switch to the desired revision. Cleanup!
-        Command::new("git")
-            .args(vec!["remote", "rm", &tmp_remote_name])
-            .current_dir(repo_path)
+        safe_command(format!("git remote rm \"{}\"", &tmp_remote_name), repo_path)?
             .stdout(Stdio::null())
             .status()
-            .with_context(|| format!("Failed to execute process in {}", repo_path.display()))?;
+            .with_context(|| {
+                format!(
+                    "Failed to remove temporary remote {} in {}",
+                    tmp_remote_name,
+                    repo_path.display()
+                )
+            })?;
         return Err(e);
     }
 
-    let command = format!("git remote set-url origin \"{}\"", repo_url);
-    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
-
-    // Success! Cleanup: update the origin remote to remote URL & delete temporary remote.
-    Command::new(&command_vec[0])
-        .args(&command_vec[1..])
-        .current_dir(repo_path)
-        .stdout(Stdio::null())
-        .status()
-        .with_context(|| {
-            format!(
-                "Failed to set origin remote to {} in {}",
-                repo_url,
-                repo_path.display()
-            )
-        })?;
-    Command::new("git")
-        .args(vec!["remote", "rm", &tmp_remote_name])
-        .current_dir(repo_path)
+    safe_command(format!("git remote set-url origin \"{}\"", repo_url), repo_path)?
+    .stdout(Stdio::null())
+    .status()
+    .with_context(|| {
+        format!(
+            "Failed to set origin remote to {} in {}",
+            repo_url,
+            repo_path.display()
+        )
+    })?;
+    safe_command(format!("git remote rm \"{}\"", tmp_remote_name), repo_path)?
         .stdout(Stdio::null())
         .status()
         .with_context(|| {
@@ -282,7 +277,6 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     })?;
     let stdout = child.stdout.take().expect("failed to capture stdout");
     let reader = BufReader::new(stdout);
-
     for line in reader.lines() {
         match line {
             Ok(line) => {
@@ -317,43 +311,41 @@ fn safe_command(command: String, cwd: &Path) -> Result<Command, Error> {
 }
 
 fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
-    let command = format!("git fetch --quiet \"{}\" \"{}\"", remote_name, revision);
-    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
+    // Download the object from the remote
+    safe_command(
+        format!("git fetch --quiet \"{}\" \"{}\"", remote_name, revision),
+        repo_path,
+    )?
+    .status()
+    .with_context(|| {
+        format!(
+            "Error with fetching revision {} in {}",
+            revision,
+            repo_path.display()
+        )
+    })?;
 
-    Command::new(&command_vec[0])
-        .args(&command_vec[1..])
-        .current_dir(repo_path)
-        .stdout(Stdio::null())
-        .status()
-        .with_context(|| {
-            format!(
-                "Error with fetching revision {} in {}",
-                revision,
-                repo_path.display()
-            )
-        })?;
-
-    // Normalize the revision into the SHA.    let command = format!("git rev-parse \"{}/{}\"", remote_name, revision);
+    // Normalize the revision into the SHA.
+    // let command = format!("git rev-parse \"{}/{}\"", remote_name, revision);
     let commit_sha = git_resolve_revision(repo_path, remote_name, revision)?;
 
-    let command = format!(
-        "git -c advice.detachedHead=false checkout --quiet \"{}\"",
-        commit_sha
-    );
-    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
-
-    Command::new(&command_vec[0])
-        .args(&command_vec[1..])
-        .stdout(Stdio::null())
-        .current_dir(repo_path)
-        .status()
-        .with_context(|| {
-            format!(
-                "Failed to checkout SHA {} in {}",
-                commit_sha,
-                repo_path.display()
-            )
-        })?;
+    safe_command(
+        format!(
+            "git -c advice.detachedHead=false checkout --quiet \"{}\"",
+            commit_sha
+        ),
+        repo_path,
+    )?
+    .stdout(Stdio::null())
+    .current_dir(repo_path)
+    .status()
+    .with_context(|| {
+        format!(
+            "Failed to checkout SHA {} in {}",
+            commit_sha,
+            repo_path.display()
+        )
+    })?;
 
     Ok(())
 }
