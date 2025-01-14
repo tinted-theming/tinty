@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+ 
+- Support `[[items]] revision` property that accepts a tag, branch, or commit SHA1.
+
+### Changed
+
+- `tinty update` now keeps the items' `origin` remote URLs up-to-date.
+- The item repositories are now checked out to a specific commit SHA1 in "detached HEAD" mode.
+
 ### Fixed
 
 - Fix bug where period preceeding extension is still added to generated files even when an extension doesn't exist
