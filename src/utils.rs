@@ -1,7 +1,6 @@
 use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
 use crate::constants::{REPO_NAME, SCHEME_EXTENSION};
 use anyhow::{anyhow, Context, Error, Result};
-use core::iter::Map;
 use home::home_dir;
 use rand::Rng;
 use regex::bytes::Regex;
@@ -12,6 +11,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str;
 use tinted_builder::SchemeSystem;
+use tinted_builder_rust::operation_build::utils::SchemeFile;
 
 /// Ensures that a directory exists, creating it if it does not.
 pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
@@ -372,7 +372,7 @@ pub fn get_all_scheme_names(
 pub fn get_all_scheme_file_paths(
     schemes_path: &Path,
     scheme_systems_option: Option<SchemeSystem>,
-) -> Result<HashMap<String, PathBuf>> {
+) -> Result<HashMap<String, (PathBuf, SchemeFile)>> {
     if !schemes_path.exists() {
         return Err(anyhow!(
             "Schemes do not exist, run install and try again: `{} install`",
@@ -380,10 +380,9 @@ pub fn get_all_scheme_file_paths(
         ));
     }
 
-    let mut file_paths: HashMap<String, PathBuf> = HashMap::new();
+    let mut scheme_files: HashMap<String, (PathBuf, SchemeFile)> = HashMap::new();
 
     // For each supported scheme system, add schemes to vec
-
     let scheme_systems = scheme_systems_option
         .map(|s| vec![s])
         .unwrap_or(SchemeSystem::variants().to_vec());
@@ -412,22 +411,14 @@ pub fn get_all_scheme_file_paths(
                         .to_str()
                         .unwrap_or_default()
                 );
-                match file_paths.insert(name.clone(), file_path.clone()) {
-                    Some(k) => {
-                        return Err(anyhow!(
-                            "found a naming collision on {}! {}: {}",
-                            name,
-                            k.as_path().display(),
-                            file_path.as_path().display()
-                        ))
-                    }
-                    None => (),
-                }
+
+                let scheme_file = SchemeFile::new(file_path.as_path())?;
+                scheme_files.insert(name.clone(), (file_path.clone(), scheme_file));
             }
         }
     }
 
-    Ok(file_paths)
+    Ok(scheme_files)
 }
 
 pub fn replace_tilde_slash_with_home(path_str: &str) -> Result<PathBuf> {
