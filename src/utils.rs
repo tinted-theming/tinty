@@ -1,9 +1,11 @@
 use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
 use crate::constants::{REPO_NAME, SCHEME_EXTENSION};
 use anyhow::{anyhow, Context, Error, Result};
+use core::iter::Map;
 use home::home_dir;
 use rand::Rng;
 use regex::bytes::Regex;
+use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -345,7 +347,7 @@ pub fn git_is_working_dir_clean(target_dir: &Path) -> Result<bool> {
         .with_context(|| format!("Failed to execute process in {}", target_dir.display()))?;
 
     // With the --quiet flag, it will return a 0 exit-code if no files has changed.
-    Ok(status.success())
+    Ok(!status.success())
 }
 
 pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<String> {
@@ -360,6 +362,17 @@ pub fn get_all_scheme_names(
     schemes_path: &Path,
     scheme_systems_option: Option<SchemeSystem>,
 ) -> Result<Vec<String>> {
+    let file_paths = get_all_scheme_file_paths(schemes_path, scheme_systems_option)?;
+    let mut scheme_vec: Vec<String> = file_paths.into_keys().collect();
+    scheme_vec.sort();
+
+    Ok(scheme_vec)
+}
+
+pub fn get_all_scheme_file_paths(
+    schemes_path: &Path,
+    scheme_systems_option: Option<SchemeSystem>,
+) -> Result<HashMap<String, PathBuf>> {
     if !schemes_path.exists() {
         return Err(anyhow!(
             "Schemes do not exist, run install and try again: `{} install`",
@@ -367,8 +380,10 @@ pub fn get_all_scheme_names(
         ));
     }
 
+    let mut file_paths: HashMap<String, PathBuf> = HashMap::new();
+
     // For each supported scheme system, add schemes to vec
-    let mut scheme_vec: Vec<String> = Vec::new();
+
     let scheme_systems = scheme_systems_option
         .map(|s| vec![s])
         .unwrap_or(SchemeSystem::variants().to_vec());
@@ -387,7 +402,7 @@ pub fn get_all_scheme_names(
                 .unwrap_or_default();
 
             if extension == SCHEME_EXTENSION {
-                scheme_vec.push(format!(
+                let name = format!(
                     "{}-{}",
                     scheme_system.as_str(),
                     file.unwrap()
@@ -396,15 +411,25 @@ pub fn get_all_scheme_names(
                         .unwrap_or_default()
                         .to_str()
                         .unwrap_or_default()
-                ));
+                );
+                match file_paths.insert(name.clone(), file_path.clone()) {
+                    Some(k) => {
+                        return Err(anyhow!(
+                            "found a naming collision on {}! {}: {}",
+                            name,
+                            k.as_path().display(),
+                            file_path.as_path().display()
+                        ))
+                    }
+                    None => (),
+                }
             }
         }
     }
 
-    scheme_vec.sort();
-
-    Ok(scheme_vec)
+    Ok(file_paths)
 }
+
 pub fn replace_tilde_slash_with_home(path_str: &str) -> Result<PathBuf> {
     let trimmed_path_str = path_str.trim();
     if trimmed_path_str.starts_with("~/") {
