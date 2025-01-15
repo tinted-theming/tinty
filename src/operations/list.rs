@@ -38,17 +38,19 @@ pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
         _ => {}
     }
 
+    let stdout = io::stdout();
+    let mut handle = stdout.lock();
     if is_json {
-        let stdout = io::stdout();
-        let mut handle = stdout.lock();
         let json = print_as_json(get_all_scheme_file_paths(&schemes_dir_path, None)?)?;
-        writeln!(handle, "{}", json)?;
+        if let Err(_) = writeln!(handle, "{}", json) { }
         return Ok(());
     }
 
     let scheme_vec = get_all_scheme_names(&schemes_dir_path, None)?;
     for scheme in scheme_vec {
-        println!("{}", scheme);
+        if let Err(_) = writeln!(handle, "{}", scheme) {
+            break;
+        }
     }
 
     Ok(())
