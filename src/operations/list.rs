@@ -13,7 +13,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
-use tinted_builder::{Color, Scheme};
+use tinted_builder::{Color, Scheme, SchemeSystem, SchemeVariant};
 use tinted_builder_rust::operation_build::utils::SchemeFile;
 
 /// Lists available color schemes
@@ -65,9 +65,54 @@ pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
 #[derive(Clone, Serialize)]
 struct SchemeEntry {
     id: String,
-    scheme_data: Value,
+    name: String,
+    author: String,
+    system: SchemeSystem,
+    variant: SchemeVariant,
     slug: String,
-    palette: HashMap<String, Color>,
+    palette: HashMap<String, ColorOut>,
+}
+
+#[derive(Clone, Serialize)]
+struct ColorOut {
+    hex_str: String,
+    pub hex: (String, String, String),
+    pub rgb: (u8, u8, u8),
+    pub dec: (f32, f32, f32),
+}
+
+impl SchemeEntry {
+    pub fn from_scheme(scheme: &Scheme) -> Self {
+        let slug = scheme.get_scheme_slug();
+        let system = scheme.get_scheme_system();
+        return Self {
+            id: format!("{}-{}", system, slug),
+            name: scheme.get_scheme_name(),
+            system,
+            slug,
+            author: scheme.get_scheme_author(),
+            variant: scheme.get_scheme_variant(),
+            palette: match scheme.clone() {
+                Scheme::Base16(s) | Scheme::Base24(s) => s
+                    .palette
+                    .into_iter()
+                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
+                    .collect(),
+                _ => HashMap::new(),
+            },
+        };
+    }
+}
+
+impl ColorOut {
+    pub fn from_color(color: &Color) -> Self {
+        return Self {
+            hex_str: format!("#{}{}{}", color.hex.0, color.hex.1, color.hex.2),
+            hex: color.hex.clone(),
+            rgb: color.rgb,
+            dec: color.dec,
+        };
+    }
 }
 
 fn as_json(scheme_files: HashMap<String, (PathBuf, SchemeFile)>) -> Result<String> {
@@ -78,22 +123,10 @@ fn as_json(scheme_files: HashMap<String, (PathBuf, SchemeFile)>) -> Result<Strin
     let mut sorted_results: Vec<SchemeEntry> = Vec::new();
     keys.par_chunks(10).try_for_each(|chunk| -> Result<()> {
         for key in chunk {
-            if let Some((path, scheme_file)) = scheme_files.get(key) {
+            if let Some((_, scheme_file)) = scheme_files.get(key) {
                 let scheme = scheme_file.get_scheme()?;
-
-                let palette: HashMap<String, Color> = match scheme.clone() {
-                    Scheme::Base16(s) | Scheme::Base24(s) => s.palette,
-                    _ => HashMap::new(),
-                };
-
                 let mut results_lock = locked_results.lock().unwrap();
-                let entry = SchemeEntry {
-                    id: key.clone(),
-                    scheme_data: read_yaml_into_json(path.to_path_buf())?,
-                    palette,
-                    slug: scheme.get_scheme_slug(),
-                };
-                results_lock.insert(key.clone(), entry);
+                results_lock.insert(key.clone(), SchemeEntry::from_scheme(&scheme));
             }
         }
         Ok(())
@@ -107,10 +140,4 @@ fn as_json(scheme_files: HashMap<String, (PathBuf, SchemeFile)>) -> Result<Strin
     }
 
     return Ok(serde_json::to_string_pretty(&*sorted_results)?);
-}
-
-fn read_yaml_into_json(file_path: PathBuf) -> Result<Value> {
-    let yaml_content = fs::read_to_string(file_path)?; // Read the YAML file
-    let json_value: Value = serde_yaml::from_str(&yaml_content)?; // Parse YAML to JSON
-    Ok(json_value)
 }
