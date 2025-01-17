@@ -132,8 +132,10 @@ impl Lightness {
             _ => return Err(anyhow!("no supported palette found")),
         };
 
-        let foreground = Self::lightness(&fg);
-        let background = Self::lightness(&bg);
+        let fg_luminance = Self::luminance(&fg);
+        let bg_luminance = Self::luminance(&bg);
+        let foreground = Self::luminance_to_lstar(fg_luminance);
+        let background = Self::luminance_to_lstar(bg_luminance);
 
         Ok(Self {
             foreground,
@@ -141,20 +143,12 @@ impl Lightness {
         })
     }
 
-    fn lightness(color: &Color) -> f32 {
-        let r = Self::rgb_to_linear(color.dec.0);
-        let g = Self::rgb_to_linear(color.dec.1);
-        let b = Self::rgb_to_linear(color.dec.2);
-        let luminance = (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
-        return Self::luminance_to_lstar(luminance);
-    }
-
-    fn rgb_to_linear(channel: f32) -> f32 {
+    fn gamma_corrected_to_linear(channel: f32) -> f32 {
         if channel <= 0.04045 {
             return channel / 12.92;
         }
-        let base: f32 = 2.4;
-        return base.powf((channel + 0.555) / 1.055);
+        let base = (channel + 0.055) / 1.055;
+        return base.powf(2.4);
     }
 
     fn luminance_to_lstar(luminance: f32) -> f32 {
@@ -162,8 +156,14 @@ impl Lightness {
             return luminance * (24389 as f32 / 27 as f32);
         }
 
-        let base: f32 = 1 as f32 / 3 as f32;
-        return base.powf(luminance) * 116 as f32 - 16 as f32;
+        return luminance.powf(1 as f32 / 3 as f32) * 116 as f32 - 16 as f32;
+    }
+
+    fn luminance(color: &Color) -> f32 {
+        let r = Self::gamma_corrected_to_linear(color.dec.0);
+        let g = Self::gamma_corrected_to_linear(color.dec.1);
+        let b = Self::gamma_corrected_to_linear(color.dec.2);
+        return (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
     }
 }
 
