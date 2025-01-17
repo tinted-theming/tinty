@@ -176,6 +176,7 @@ fn as_json(scheme_files: HashMap<String, (PathBuf, SchemeFile)>) -> Result<Strin
     let locked_results: Arc<Mutex<HashMap<String, SchemeEntry>>> =
         Arc::new(Mutex::new(HashMap::new()));
     let mut sorted_results: Vec<SchemeEntry> = Vec::new();
+    // We could be parsing hundreds of files. Parallelize with 10 files each arm.
     keys.par_chunks(10).try_for_each(|chunk| -> Result<()> {
         for key in chunk {
             if let Some((_, scheme_file)) = scheme_files.get(key) {
