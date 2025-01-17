@@ -347,7 +347,7 @@ pub fn git_is_working_dir_clean(target_dir: &Path) -> Result<bool> {
         .with_context(|| format!("Failed to execute process in {}", target_dir.display()))?;
 
     // With the --quiet flag, it will return a 0 exit-code if no files has changed.
-    Ok(!status.success())
+    Ok(status.success())
 }
 
 pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<String> {
