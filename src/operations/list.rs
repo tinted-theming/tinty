@@ -2,14 +2,13 @@ use crate::{
     constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME},
     utils::{get_all_scheme_file_paths, get_all_scheme_names},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use io::Write;
 use rayon::prelude::*;
 use serde::Serialize;
-use serde_json::Value;
 use std::{
     collections::HashMap,
-    fs, io,
+    io,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
@@ -71,6 +70,7 @@ struct SchemeEntry {
     variant: SchemeVariant,
     slug: String,
     palette: HashMap<String, ColorOut>,
+    luminance: Option<Lightness>,
 }
 
 #[derive(Clone, Serialize)]
@@ -79,6 +79,12 @@ struct ColorOut {
     pub hex: (String, String, String),
     pub rgb: (u8, u8, u8),
     pub dec: (f32, f32, f32),
+}
+
+#[derive(Clone, Serialize)]
+struct Lightness {
+    foreground: f32,
+    background: f32,
 }
 
 impl SchemeEntry {
@@ -92,6 +98,7 @@ impl SchemeEntry {
             slug,
             author: scheme.get_scheme_author(),
             variant: scheme.get_scheme_variant(),
+            luminance: Lightness::from_color(scheme).ok(),
             palette: match scheme.clone() {
                 Scheme::Base16(s) | Scheme::Base24(s) => s
                     .palette
@@ -114,6 +121,54 @@ impl ColorOut {
         };
     }
 }
+
+impl Lightness {
+    pub fn from_color(scheme: &Scheme) -> Result<Self> {
+
+        let (fg, bg) = match scheme.clone() {
+                Scheme::Base16(s) | Scheme::Base24(s) =>  (
+                s.palette.get("base00").context("no fg color")?.clone(),
+                s.palette.get("base05").context("no bg color")?.clone()
+            ),
+            _ => return Err(anyhow!("no supported palette found")),
+        };
+
+        let foreground = Self::lightness(&fg);
+        let background = Self::lightness(&bg);
+
+        Ok(Self {
+            foreground,
+            background
+        })
+    }
+
+    fn lightness(color: &Color) -> f32 {
+        let r = Self::rgb_to_linear(color.dec.0);
+        let g = Self::rgb_to_linear(color.dec.1);
+        let b = Self::rgb_to_linear(color.dec.2);
+        let luminance = (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
+        return Self::luminance_to_lstar(luminance)
+    }
+
+    fn rgb_to_linear(channel: f32) -> f32 {
+        if channel <= 0.04045 {
+            return channel / 12.92;
+        }
+        let base: f32 = 2.4;
+        return base.powf((channel + 0.555)/ 1.055);
+    }
+
+    fn luminance_to_lstar(luminance: f32) -> f32 {
+        if luminance <= (216 as f32/24389 as f32) {
+            return luminance * (24389 as f32/27 as f32);
+        }
+
+        let base: f32 = 1 as f32/3 as f32;
+        return base.powf(luminance) * 116 as f32 - 16 as f32;
+    }
+}
+
+
 
 fn as_json(scheme_files: HashMap<String, (PathBuf, SchemeFile)>) -> Result<String> {
     let mut keys: Vec<String> = scheme_files.keys().cloned().collect();
