@@ -129,7 +129,6 @@ fn main() -> Result<()> {
                 .map(|b| b.to_owned())
                 .unwrap_or(false);
 
-
             operations::list::list(&data_path, is_custom, is_json)?;
         }
         Some(("apply", sub_matches)) => {
