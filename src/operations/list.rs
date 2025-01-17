@@ -4,12 +4,12 @@ use crate::{
 };
 use anyhow::{anyhow, Context, Result};
 use io::Write;
-use rayon::prelude::*;
+use rayon::{iter::ParallelIterator, slice::ParallelSlice};
 use serde::Serialize;
 use std::{
     collections::HashMap,
     io,
-    path::{Path, PathBuf},
+    path::Path,
     sync::{Arc, Mutex},
 };
 use tinted_builder::{Color, Scheme, SchemeSystem, SchemeVariant};
@@ -43,15 +43,16 @@ pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
     }
 
     let stdout = io::stdout();
-    let mut handle = stdout.lock();
     if is_json {
         let scheme_files = get_all_scheme_file_paths(&schemes_dir_path, None)?;
         let json = as_json(scheme_files)?;
+        let mut handle = stdout.lock();
         if let Err(_) = writeln!(handle, "{}", json) {}
         return Ok(());
     }
 
     let scheme_vec = get_all_scheme_names(&schemes_dir_path, None)?;
+    let mut handle = stdout.lock();
     for scheme in scheme_vec {
         if let Err(_) = writeln!(handle, "{}", scheme) {
             break;
@@ -167,7 +168,7 @@ impl Lightness {
     }
 }
 
-fn as_json(scheme_files: HashMap<String, (PathBuf, SchemeFile)>) -> Result<String> {
+fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
     let mut keys: Vec<String> = scheme_files.keys().cloned().collect();
     // Create a thread-safe HashMap to collect results
     let locked_results = Arc::new(Mutex::new(HashMap::new()));
@@ -175,7 +176,7 @@ fn as_json(scheme_files: HashMap<String, (PathBuf, SchemeFile)>) -> Result<Strin
     // We could be parsing hundreds of files. Parallelize with 10 files each arm.
     keys.par_chunks(10).try_for_each(|chunk| -> Result<()> {
         for key in chunk {
-            if let Some((_, scheme_file)) = scheme_files.get(key) {
+            if let Some(scheme_file) = scheme_files.get(key) {
                 let scheme = scheme_file.get_scheme()?;
                 let mut results_lock = locked_results.lock().unwrap();
                 results_lock.insert(key.clone(), SchemeEntry::from_scheme(&scheme));

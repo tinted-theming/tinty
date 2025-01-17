@@ -372,7 +372,7 @@ pub fn get_all_scheme_names(
 pub fn get_all_scheme_file_paths(
     schemes_path: &Path,
     scheme_systems_option: Option<SchemeSystem>,
-) -> Result<HashMap<String, (PathBuf, SchemeFile)>> {
+) -> Result<HashMap<String, SchemeFile>> {
     if !schemes_path.exists() {
         return Err(anyhow!(
             "Schemes do not exist, run install and try again: `{} install`",
@@ -380,7 +380,7 @@ pub fn get_all_scheme_file_paths(
         ));
     }
 
-    let mut scheme_files: HashMap<String, (PathBuf, SchemeFile)> = HashMap::new();
+    let mut scheme_files: HashMap<String, SchemeFile> = HashMap::new();
 
     // For each supported scheme system, add schemes to vec
     let scheme_systems = scheme_systems_option
@@ -413,7 +413,7 @@ pub fn get_all_scheme_file_paths(
                 );
 
                 let scheme_file = SchemeFile::new(file_path.as_path())?;
-                scheme_files.insert(name.clone(), (file_path.clone(), scheme_file));
+                scheme_files.insert(name.clone(), scheme_file);
             }
         }
     }
