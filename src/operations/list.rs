@@ -124,11 +124,10 @@ impl ColorOut {
 
 impl Lightness {
     pub fn from_color(scheme: &Scheme) -> Result<Self> {
-
         let (fg, bg) = match scheme.clone() {
-                Scheme::Base16(s) | Scheme::Base24(s) =>  (
+            Scheme::Base16(s) | Scheme::Base24(s) => (
                 s.palette.get("base00").context("no fg color")?.clone(),
-                s.palette.get("base05").context("no bg color")?.clone()
+                s.palette.get("base05").context("no bg color")?.clone(),
             ),
             _ => return Err(anyhow!("no supported palette found")),
         };
@@ -138,7 +137,7 @@ impl Lightness {
 
         Ok(Self {
             foreground,
-            background
+            background,
         })
     }
 
@@ -147,7 +146,7 @@ impl Lightness {
         let g = Self::rgb_to_linear(color.dec.1);
         let b = Self::rgb_to_linear(color.dec.2);
         let luminance = (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
-        return Self::luminance_to_lstar(luminance)
+        return Self::luminance_to_lstar(luminance);
     }
 
     fn rgb_to_linear(channel: f32) -> f32 {
@@ -155,20 +154,18 @@ impl Lightness {
             return channel / 12.92;
         }
         let base: f32 = 2.4;
-        return base.powf((channel + 0.555)/ 1.055);
+        return base.powf((channel + 0.555) / 1.055);
     }
 
     fn luminance_to_lstar(luminance: f32) -> f32 {
-        if luminance <= (216 as f32/24389 as f32) {
-            return luminance * (24389 as f32/27 as f32);
+        if luminance <= (216 as f32 / 24389 as f32) {
+            return luminance * (24389 as f32 / 27 as f32);
         }
 
-        let base: f32 = 1 as f32/3 as f32;
+        let base: f32 = 1 as f32 / 3 as f32;
         return base.powf(luminance) * 116 as f32 - 16 as f32;
     }
 }
-
-
 
 fn as_json(scheme_files: HashMap<String, (PathBuf, SchemeFile)>) -> Result<String> {
     let mut keys: Vec<String> = scheme_files.keys().cloned().collect();
