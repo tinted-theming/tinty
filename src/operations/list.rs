@@ -126,8 +126,8 @@ impl Lightness {
     pub fn from_color(scheme: &Scheme) -> Result<Self> {
         let (fg, bg) = match scheme.clone() {
             Scheme::Base16(s) | Scheme::Base24(s) => (
-                s.palette.get("base00").context("no fg color")?.clone(),
-                s.palette.get("base05").context("no bg color")?.clone(),
+                s.palette.get("base05").context("no fg color")?.clone(),
+                s.palette.get("base00").context("no bg color")?.clone(),
             ),
             _ => return Err(anyhow!("no supported palette found")),
         };
