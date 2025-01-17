@@ -70,7 +70,7 @@ struct SchemeEntry {
     variant: SchemeVariant,
     slug: String,
     palette: HashMap<String, ColorOut>,
-    luminance: Option<Lightness>,
+    lightness: Option<Lightness>,
 }
 
 #[derive(Clone, Serialize)]
@@ -98,7 +98,7 @@ impl SchemeEntry {
             slug,
             author: scheme.get_scheme_author(),
             variant: scheme.get_scheme_variant(),
-            luminance: Lightness::from_color(scheme).ok(),
+            lightness: Lightness::from_color(scheme).ok(),
             palette: match scheme.clone() {
                 Scheme::Base16(s) | Scheme::Base24(s) => s
                     .palette
