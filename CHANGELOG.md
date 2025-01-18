@@ -1,11 +1,10 @@
 # Changelog
 
-## Unreleased
+## [0.26.0] - 2025-01-18
 
 ### Added
 
 - Support `--json` option in `tinty list`.
-
 
 ## [0.25.0] - 2025-01-14
 
@@ -260,6 +259,7 @@
 
 - Initial release
 
+[0.26.0]: https://github.com/tinted-theming/tinty/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/tinted-theming/tinty/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/tinted-theming/tinty/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/tinted-theming/tinty/compare/v0.22.0...v0.23.0
