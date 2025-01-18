@@ -1,32 +1,19 @@
 # Release process
 
-1. Create a release commit. This includes specific updated files:
+1. Make sure `## Unreleased` section exists in [CHANGELOG.md]
+1. Run [Release Commit GitHub action]. Select `minor` or `patch` as a
+   dispatch value option. This follows the [semver] pattern.
 
-   1. Cargo.toml (Bump the version using [semver] standards)
-   1. Cargo.lock (This is usually updated automatically with the `cargo`
-      CLI tool)
-   1. Make sure the changes for the new release exist under
-      `CHANGELOG.md`. This should already exist since changes done in
-      GitHub Pull Requests should include updates to the `CHANGELOG.md`.
-      If this doesn't exist, the release will fail.
-   1. Change `CHANGELOG.md` `## Unreleased` to `## [x.x.x] - YYYY-MM-DD`
-      where `x.x.x` is the new Tinty version specified in the
-      `Cargo.toml` file and the link to `[x.x.x]` at the bottom of the
-      `CHANGELOG.md` file and compare it with the previously released
-      version, eg:
+   - `minor` if changes include new features or breaking changes
+   - `patch` if the change only contains bug fixes
 
-      ```md
-      [0.22.0]: https://github.com/tinted-theming/tinty/compare/v0.21.1...v0.22.0
-      ```
+   This action does the following:
 
-   1. Run `cargo about generate about.hbs > LICENSES-THIRD-PARTY.md` to
-      update the third party licenses. (`cargo install cargo-about` if
-      you don't have it installed)
-   1. Create a commit with the 3 changed files titled `Release x.x.x`
-      where `x.x.x` is the new Tinty version specified in the
-      `Cargo.toml` file
+   1. Bumps `Cargo.toml` version by `minor` or `patch`
+   1. Updates `Cargo.lock` with the new version
+   1. Updates [CHANGELOG.md] `## Unreleased` section to the new version
+   1. Updates [LICENSE-THIRD-PARTY.md]
 
-1. Push the commit or create a Pull Request and merge
 1. Once the CI tests have passed, run the [Release GitHub action]. This
    will automatically do the following:
 
@@ -35,11 +22,15 @@
    1. Create a release under [GitHub releases] with the changes
       mentioned in `CHANGELOG`
    1. Generate the various binaries and add it to the GitHub release
+
 1. Run the [homebrew-tinted] [Update CLI tool GitHub
    action] and specify `tinty` as the action input value. This will
    update the version for [Homebrew]
 
 [semver]: https://semver.org/
+[CHANGELOG.md]: ./CHANGELOG.md
+[LICENSE-THIRD-PARTY.md]: ./LICENSE-THIRD-PARTY.md
+[Release Commit GitHub action]: https://github.com/tinted-theming/tinty/actions/workflows/release-commit.yml
 [Release GitHub action]: https://github.com/tinted-theming/tinty/actions/workflows/release.yml
 [GitHub releases]: https://github.com/tinted-theming/tinty/releases
 [homebrew-tinted]: https://github.com/tinted-theming/homebrew-tinted
