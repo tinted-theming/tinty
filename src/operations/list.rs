@@ -191,5 +191,5 @@ fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
         }
     }
 
-    return Ok(serde_json::to_string_pretty(&*sorted_results)?);
+    return Ok(serde_json::to_string(&*sorted_results)?);
 }
