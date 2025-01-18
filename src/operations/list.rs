@@ -153,11 +153,11 @@ impl Lightness {
     }
 
     fn luminance_to_lstar(luminance: f32) -> f32 {
-        if luminance <= (216 as f32 / 24389 as f32) {
-            return luminance * (24389 as f32 / 27 as f32);
+        if luminance <= (216.0 / 24389.0) {
+            return luminance * (24389.0 / 27.0);
         }
 
-        return luminance.powf(1 as f32 / 3 as f32) * 116 as f32 - 16 as f32;
+        return luminance.powf(1.0 / 3.0) * 116.0 - 16.0;
     }
 
     fn luminance(color: &Color) -> f32 {
