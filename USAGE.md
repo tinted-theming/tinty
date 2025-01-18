@@ -9,6 +9,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [How it works](#how-it-works)
 - [Sourcing scripts that set environment variables](#sourcing-scripts-that-set-environment-variables)
 - [Use your own schemes](#use-your-own-schemes)
+- [Scripting](#scripting)
 - [shell](#shell)
 - [Vim or Neovim](#vim-or-neovim)
 - [tmux](#tmux)
@@ -165,6 +166,40 @@ file by including this line:
 
 ```toml
 import = ["~/.config/alacritty/colors.toml"]
+```
+
+## Scripting
+
+The `tinty list --json` option outputs a list of all available schemes in JSON format. It provides extensive information
+about each scheme, like its human-friendly name, its variant (`light` vs `dark`), its scheme (`base16` vs `base24`),
+as well as its color palette in multiple formats. See [this sample object entry](./fixtures/gruvbox-material-dark-hard.json) to see the information available.
+
+Installing [jq] to parse & process the output is recommended.
+
+### Examples
+
+Pretty print:
+
+```sh
+tinty list --json | jq
+```
+
+List light themes only:
+
+```sh
+tinty list --json | jq '.[] | select(.variant == "light") | .id' -r
+```
+
+List all themes but grouping light themes and dark themes together:
+
+```sh
+tinty list --json | jq 'sort_by(.variant) | reverse' -r
+```
+
+Sort themes by background color, from darkest to lightest:
+
+```sh
+tinty list --json | jq 'sort_by(.lightness.background)' -r
 ```
 
 ## Shell
@@ -549,3 +584,4 @@ Configure [delta] as your Git pager and/or difftool under the name `delta`, like
 [contrib/completion]: contrib/completion
 [base16-qutebrowser]: https://github.com/tinted-theming/base16-qutebrowser
 [delta]: https://github.com/dandavison/delta
+[jq]: https://jqlang.github.io/jq/

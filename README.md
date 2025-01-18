@@ -166,7 +166,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | Subcommand | Description                                         | Arguments            | Example Usage                              |
 |------------|-----------------------------------------------------|----------------------|--------------------------------------------|
 | `sync`     | Installs and updates schemes and templates defined in `tinty/config.toml` | - | `tinty sync` |
-| `list`     | Lists all available themes. | Optional argument `--custom-schemes` to list saved custom theme files using `tinty generate-scheme` | `tinty list` |
+| `list`     | Lists all available themes. | Optional argument `--custom-schemes` to list saved custom theme files using `tinty generate-scheme`.<br>Optional argument `--json` to output more info about each scheme in JSON form | `tinty list` |
 | `apply`    | Applies a specific theme. | `<scheme_system>-<scheme_name>`: Name of the system and scheme to apply. | `tinty apply base16-mocha` |
 | `init`     | Initializes the tool with the last applied theme otherwise `default-scheme` from `config.toml`. | - | `tinty init` |
 | `current`  | Displays the currently applied theme or current theme values. | `<scheme_property_name>` (Optional argument with the following supported values: `author` \| `description` \| `name` \| `slug` \| `system` \| `variant`) | `tinty current` |
