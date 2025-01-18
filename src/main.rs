@@ -124,8 +124,12 @@ fn main() -> Result<()> {
                 .get_one::<bool>("custom-schemes")
                 .map(|b| b.to_owned())
                 .unwrap_or(false);
+            let is_json = sub_matches
+                .get_one::<bool>("json")
+                .map(|b| b.to_owned())
+                .unwrap_or(false);
 
-            operations::list::list(&data_path, is_custom)?;
+            operations::list::list(&data_path, is_custom, is_json)?;
         }
         Some(("apply", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("scheme_name") {

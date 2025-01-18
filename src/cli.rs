@@ -157,6 +157,12 @@ pub fn build_cli() -> Command {
                         .help("Lists availabile custom schemes")
                         .long("custom-schemes")
                         .action(ArgAction::SetTrue)
+                )
+                .arg(
+                    Arg::new("json")
+                        .long("json")
+                        .help("Output as JSON")
+                        .action(ArgAction::SetTrue),
                 ))
         .subcommand(
             Command::new("config").about("Provides config related information")

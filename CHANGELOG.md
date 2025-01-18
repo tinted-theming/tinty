@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support `--json` option in `tinty list`.
+
+
 ## [0.25.0] - 2025-01-14
 
 ### Added

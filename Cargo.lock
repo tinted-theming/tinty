@@ -1260,6 +1260,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_json"
+version = "1.0.135"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b0d7ba2887406110130a978386c4e1befb98c674b4fba677954e4db976630d9"
+dependencies = [
+ "itoa",
+ "memchr",
+ "ryu",
+ "serde",
+]
+
+[[package]]
 name = "serde_spanned"
 version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1468,8 +1480,10 @@ dependencies = [
  "hex_color",
  "home",
  "rand",
+ "rayon",
  "regex",
  "serde",
+ "serde_json",
  "serde_yaml",
  "shell-words",
  "strip-ansi-escapes",
