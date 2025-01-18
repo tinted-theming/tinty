@@ -176,8 +176,7 @@ fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
     // We could be parsing hundreds of files. Parallelize with 10 files each arm.
     keys.par_chunks(10).try_for_each(|chunk| -> Result<()> {
         for key in chunk {
-            if let Some(scheme_file) = scheme_files.get(key) {
-                let scheme = scheme_file.get_scheme()?;
+            if let Some(scheme) = scheme_files.get(key).and_then(|sf| sf.get_scheme().ok()) {
                 let mut results_lock = locked_results.lock().unwrap();
                 results_lock.insert(key.clone(), SchemeEntry::from_scheme(&scheme));
             }

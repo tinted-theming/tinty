@@ -1,7 +1,7 @@
 mod utils;
 
 use crate::utils::REPO_NAME;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -249,6 +249,65 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
         "{:?} does not match {:?}",
         expected_gruvbox,
         gruvbox
+    );
+
+    cleanup()?;
+    Ok(())
+}
+
+#[test]
+fn test_cli_list_subcommand_as_json_with_custom() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let (_, data_path, command_vec, cleanup) = setup(
+        "test_cli_list_subcommand_as_json_with_custom",
+        "list --json",
+    )?;
+    let scheme_system = "base16";
+    let scheme_name_one = "tinted-theming";
+    let scheme_name_two = "tinty";
+    let custom_scheme_path = data_path.join("custom-schemes");
+
+    fs::create_dir_all(custom_scheme_path.join(scheme_system))?;
+    fs::write(
+        custom_scheme_path.join(format!("{}/{}.yaml", scheme_system, scheme_name_one)),
+        "",
+    )?;
+
+    fs::copy(
+        Path::new("fixtures/tinty-city-dark.yaml"),
+        custom_scheme_path.join(format!("{}/{}.yaml", scheme_system, scheme_name_two)),
+    )
+    .context("failed to copy scheme from fixtures")?;
+
+    let mut command_vec = command_vec.clone();
+    command_vec.push("--custom-schemes".to_string());
+
+    // ---
+    // Act
+    // ---
+    let (stdout, _) = utils::run_command(command_vec).unwrap();
+
+    let expected_json = fs::read_to_string(Path::new("fixtures/tinty-city-dark.json"))?;
+    let expected_entry: TestSchemeEntry = serde_json::from_str(&expected_json).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    let results: Vec<TestSchemeEntry> = serde_json::from_str(&stdout).unwrap();
+    // There are two YAMLs in the directory of custom schemes but only one of them
+    // contains a YAML body
+    assert!(
+        results.len() == 1,
+        "expected JSON to contain 1 entry, found {}",
+        results.len()
+    );
+    assert!(
+        expected_entry == results[0],
+        "{:?} does not match {:?}",
+        expected_entry,
+        results[0],
     );
 
     cleanup()?;
