@@ -4990,7 +4990,7 @@ SOFTWARE.
 
 #### Used by
 
-- [tinty 0.25.0](https://github.com/tinted-theming/tinty)
+- [tinty 0.26.0](https://github.com/tinted-theming/tinty)
 
 ```
 MIT License
