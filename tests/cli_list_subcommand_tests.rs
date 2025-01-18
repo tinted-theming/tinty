@@ -415,11 +415,21 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         );
     }
 
-    let (foreground, background) = github.lightness.map(|l| (l.foreground, l.background))
+    let (foreground, background) = github
+        .lightness
+        .map(|l| (l.foreground, l.background))
         .unwrap();
 
-    assert!(background == 100.0, "Expected lightness.background to be 100, got {}", background);
-    assert!(foreground == 21.246727, "Expected lightness.background to be 100, got {}", foreground);
+    assert!(
+        background == 100.0,
+        "Expected lightness.background to be 100, got {}",
+        background
+    );
+    assert!(
+        foreground == 21.246727,
+        "Expected lightness.background to be 100, got {}",
+        foreground
+    );
 
     Ok(())
 }
