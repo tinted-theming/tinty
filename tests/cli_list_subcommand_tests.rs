@@ -151,6 +151,10 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     Ok(())
 }
 
+// These structs may appear as duplicate of the serializable structs in operations/list.rs, but
+// this is intentional. These are asserting the expected structure of the JSON output, and
+// sharing the exact same struct would hide a certain class of issues (i.e. comparing a broken
+// implementation w/ an equally-broken assertion)
 #[derive(Clone, Deserialize, PartialEq)]
 struct TestSchemeEntry {
     pub id: String,
@@ -198,6 +202,226 @@ struct TestColorOut {
 struct TestLightness {
     pub foreground: f32,
     pub background: f32,
+}
+
+// This is the basis of the other as_json tests. We'll assert that TestSchemeEntry are
+// deserializing fields as expected.
+#[test]
+fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let github_json = fs::read_to_string(Path::new("fixtures/github.json"))?;
+    // ---
+    // Act
+    // ---
+    let github: TestSchemeEntry = serde_json::from_str(&github_json).unwrap();
+
+    assert!(
+        github.name == "Github",
+        "Expected name to be Github, got {}",
+        github.name
+    );
+    assert!(
+        github.system == SchemeSystem::Base16,
+        "Expected system to be base16, got {}",
+        github.system
+    );
+    assert!(
+        github.variant == SchemeVariant::Light,
+        "Expected variant to be base16, got {}",
+        github.variant
+    );
+    assert!(
+        github.author == "Defman21",
+        "Expected wauthorname to be 'Defman21', got {}",
+        github.author
+    );
+    assert!(
+        github.slug == "github",
+        "Expected slug to be github, got {}",
+        github.slug
+    );
+    assert!(
+        github.id == "base16-github",
+        "Expected id to be base16-github, got {}",
+        github.id
+    );
+    assert!(
+        github.palette.len() == 16,
+        "Expected 16 colors in palette, got {}",
+        github.palette.len()
+    );
+
+    let expected_colors = vec![
+        (
+            "base00",
+            "#ffffff",
+            ("ff".to_string(), "ff".to_string(), "ff".to_string()),
+            (1 as f32, 1 as f32, 1 as f32),
+            (255, 255, 255),
+        ),
+        (
+            "base01",
+            "#f5f5f5",
+            ("f5".to_string(), "f5".to_string(), "f5".to_string()),
+            (0.9607843 as f32, 0.9607843 as f32, 0.9607843 as f32),
+            (245, 245, 245),
+        ),
+        (
+            "base02",
+            "#c8c8fa",
+            ("c8".to_string(), "c8".to_string(), "fa".to_string()),
+            (0.78431374 as f32, 0.78431374 as f32, 0.98039216 as f32),
+            (200, 200, 250),
+        ),
+        (
+            "base03",
+            "#969896",
+            ("96".to_string(), "98".to_string(), "96".to_string()),
+            (0.5882353 as f32, 0.59607846 as f32, 0.5882353 as f32),
+            (150, 152, 150),
+        ),
+        (
+            "base04",
+            "#e8e8e8",
+            ("e8".to_string(), "e8".to_string(), "e8".to_string()),
+            (0.9098039 as f32, 0.9098039 as f32, 0.9098039 as f32),
+            (232, 232, 232),
+        ),
+        (
+            "base05",
+            "#333333",
+            ("33".to_string(), "33".to_string(), "33".to_string()),
+            (0.2 as f32, 0.2 as f32, 0.2 as f32),
+            (51, 51, 51),
+        ),
+        (
+            "base06",
+            "#ffffff",
+            ("ff".to_string(), "ff".to_string(), "ff".to_string()),
+            (1 as f32, 1 as f32, 1 as f32),
+            (255, 255, 255),
+        ),
+        (
+            "base07",
+            "#ffffff",
+            ("ff".to_string(), "ff".to_string(), "ff".to_string()),
+            (1 as f32, 1 as f32, 1 as f32),
+            (255, 255, 255),
+        ),
+        (
+            "base08",
+            "#ed6a43",
+            ("ed".to_string(), "6a".to_string(), "43".to_string()),
+            (0.92941177 as f32, 0.41568628 as f32, 0.2627451 as f32),
+            (237, 106, 67),
+        ),
+        (
+            "base09",
+            "#0086b3",
+            ("00".to_string(), "86".to_string(), "b3".to_string()),
+            (0 as f32, 0.5254902 as f32, 0.7019608 as f32),
+            (0, 134, 179),
+        ),
+        (
+            "base0A",
+            "#795da3",
+            ("79".to_string(), "5d".to_string(), "a3".to_string()),
+            (0.4745098 as f32, 0.3647059 as f32, 0.6392157 as f32),
+            (121, 93, 163),
+        ),
+        (
+            "base0B",
+            "#183691",
+            ("18".to_string(), "36".to_string(), "91".to_string()),
+            (0.09411765 as f32, 0.21176471 as f32, 0.5686275 as f32),
+            (24, 54, 145),
+        ),
+        (
+            "base0C",
+            "#183691",
+            ("18".to_string(), "36".to_string(), "91".to_string()),
+            (0.09411765 as f32, 0.21176471 as f32, 0.5686275 as f32),
+            (24, 54, 145),
+        ),
+        (
+            "base0D",
+            "#795da3",
+            ("79".to_string(), "5d".to_string(), "a3".to_string()),
+            (0.4745098 as f32, 0.3647059 as f32, 0.6392157 as f32),
+            (121, 93, 163),
+        ),
+        (
+            "base0E",
+            "#a71d5d",
+            ("a7".to_string(), "1d".to_string(), "5d".to_string()),
+            (0.654902 as f32, 0.11372549 as f32, 0.3647059 as f32),
+            (167, 29, 93),
+        ),
+        (
+            "base0F",
+            "#333333",
+            ("33".to_string(), "33".to_string(), "33".to_string()),
+            (0.2 as f32, 0.2 as f32, 0.2 as f32),
+            (51, 51, 51),
+        ),
+    ];
+
+    for (color, expected_hex_str, expected_hex, expected_dec, expected_rgb) in expected_colors {
+        let palette_color = github
+            .palette
+            .get(color)
+            .context(format!("color {} not found", color))?;
+        println!(
+            "{}\n({} as f32, {} as f32, {} as f32)",
+            color, palette_color.dec.0, palette_color.dec.1, palette_color.dec.2
+        );
+        assert!(
+            palette_color.hex_str == expected_hex_str,
+            "Exoected {}.hex_str to equal {}, got {}",
+            color,
+            expected_hex_str,
+            palette_color.hex_str
+        );
+        assert!(
+            palette_color.hex == expected_hex,
+            "Exoected {}.hex to equal {}, got {}",
+            color,
+            expected_hex_str,
+            palette_color.hex_str
+        );
+        assert!(
+            palette_color.dec == expected_dec,
+            "Exoected {}.dec to equal ({}, {}, {}), got ({}, {}, {})",
+            color,
+            expected_dec.0,
+            expected_dec.1,
+            expected_dec.2,
+            palette_color.dec.0,
+            palette_color.dec.1,
+            palette_color.dec.2,
+        );
+        assert!(
+            palette_color.rgb == expected_rgb,
+            "Exoected {}.rgb to equal ({}, {}, {}), got ({}, {}, {})",
+            color,
+            expected_rgb.0,
+            expected_rgb.1,
+            expected_rgb.2,
+            palette_color.rgb.0,
+            palette_color.rgb.1,
+            palette_color.rgb.2,
+        );
+    }
+
+    let (foreground, background) = github.lightness.map(|l| (l.foreground, l.background))
+        .unwrap();
+
+    assert!(background == 100.0, "Expected lightness.background to be 100, got {}", background);
+    assert!(foreground == 21.246727, "Expected lightness.background to be 100, got {}", foreground);
+
+    Ok(())
 }
 
 #[test]
