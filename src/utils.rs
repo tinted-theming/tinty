@@ -430,11 +430,11 @@ pub fn get_all_scheme_file_paths(
     }
 
     // Unwrap the Arc<Mutex<HashMap>>
-    return locked_map
-        .lock()
-        .ok()
-        .map(|h| h.clone())
-        .context("unable to acquire underlying HashMap");
+    return match locked_map
+        .lock() {
+            Ok(h) => Ok(h.clone()),
+            Err(_) => Err(anyhow!("unable to acquire results")),
+    };
 }
 
 pub fn replace_tilde_slash_with_home(path_str: &str) -> Result<PathBuf> {
