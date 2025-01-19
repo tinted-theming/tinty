@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+
+main() {
+  local level="$1" # Supported: [major|minor|patch]
+  local old_version=$(get_cargo_version)
+
+  # Ensure things are as expected before doing anything
+  setup
+
+  bump_cargo_version "$level"
+
+  local new_version="$(get_cargo_version)"
+  version_changelog "$old_version" "$new_version"
+
+  update_third_party_licenses
+  check_for_unauthorized_changes
+}
+
+setup() {
+  # Ensure there are no changes in the repository
+  if [[ -n $(git status --porcelain) ]]; then
+    echo "Uncommitted changes or untracked files already exist in the repository."
+    exit 1
+  fi
+}
+
+# Extract the version from Cargo.toml
+get_cargo_version() {
+  local cargo_toml="./Cargo.toml"
+  local version=$(grep -m 1 '^version =' "$cargo_toml" | sed -E 's/version = "(.*)"/\1/')
+
+   if [[ -z "$version" ]]; then
+     echo "Version not found in Cargo.toml"
+     exit 1
+   fi
+
+   echo "$version"
+}
+
+# Bump version in Cargo.toml
+bump_cargo_version() {
+  local level="$1"
+  local version=$(get_cargo_version "$level")
+  local cargo_toml="./Cargo.toml"
+
+  # Split version into major, minor, patch
+  IFS='.' read -r major minor patch <<< "$version"
+  echo "Current version: $version"
+
+  # Increment based on major, minor or patch
+  if [[ "$level" == "major" ]]; then
+    major=$((major + 1))
+    minor=0
+    patch=0
+  elif [[ "$level" == "minor" ]]; then
+    minor=$((minor + 1))
+    patch=0
+  elif [[ "$level" == "patch" ]]; then
+    patch=$((patch + 1))
+  else
+    echo "Usage: $0 [major|minor|patch]"
+    exit 1
+  fi
+
+  local updated_version="$major.$minor.$patch"
+  sed -i -E "s/^version = \"$version\"$/version = \"$updated_version\"/" "$cargo_toml"
+
+  echo "Updated Cargo.toml to version $updated_version"
+}
+
+# Add version and date to "Unreleased" section in changelog
+version_changelog() {
+  local old_version="$1"
+  local new_version="$2"
+  local changelog_file="./CHANGELOG.md"
+
+  if [[ ! $(grep '^## Unreleased' "$changelog_file") ]]; then
+    echo "Warning: CHANGELOG.md does not have an 'Unreleased' section"
+    exit 1
+  fi
+
+  local current_date=$(TZ=UTC date +"%Y-%m-%d")
+
+  sed -i -E "s/## Unreleased/## \[$new_version\] - $current_date/" "$changelog_file"
+  sed -i "/^\[$old_version\]: /i \[$new_version\]: https://github.com/tinted-theming/tinty/compare/v$old_version...v$new_version" "$changelog_file"
+
+  echo "Updated CHANGELOG.md with $new_version"
+}
+
+# Update third-party licenses with `cargo about`
+update_third_party_licenses() {
+  local license_file="./LICENSES-THIRD-PARTY.md"
+
+  cargo deny check
+  cargo about generate about.hbs > "$license_file"
+
+  echo "Updated third-party licenses"
+}
+
+# Exit if disallowed files contain changes
+check_for_unauthorized_changes() {
+  local allowed_files=("Cargo.toml" "Cargo.lock" "LICENSES-THIRD-PARTY.md" "CHANGELOG.md")
+  local changed_files=$(git status --porcelain | awk '{print $2}')
+  local unauthorized_changes=0
+
+  for file in $changed_files; do
+    if [[ ! " ${allowed_files[*]} " =~ " ${file} " ]]; then
+      echo "Unauthorized change detected: $file"
+      unauthorized_changes=1
+    fi
+  done
+
+  if [[ $unauthorized_changes -eq 1 ]]; then
+    echo "Error: Only allow-listed files may change: ${allowed_files[*]}."
+    exit 1
+  fi
+}
+
+main "$@"
