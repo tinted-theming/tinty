@@ -258,112 +258,112 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
             "base00",
             "#ffffff",
             ("ff".to_string(), "ff".to_string(), "ff".to_string()),
-            (1 as f32, 1 as f32, 1 as f32),
+            (1.0, 1.0, 1.0),
             (255, 255, 255),
         ),
         (
             "base01",
             "#f5f5f5",
             ("f5".to_string(), "f5".to_string(), "f5".to_string()),
-            (0.9607843 as f32, 0.9607843 as f32, 0.9607843 as f32),
+            (0.9607843, 0.9607843, 0.9607843),
             (245, 245, 245),
         ),
         (
             "base02",
             "#c8c8fa",
             ("c8".to_string(), "c8".to_string(), "fa".to_string()),
-            (0.78431374 as f32, 0.78431374 as f32, 0.98039216 as f32),
+            (0.78431374, 0.78431374, 0.98039216),
             (200, 200, 250),
         ),
         (
             "base03",
             "#969896",
             ("96".to_string(), "98".to_string(), "96".to_string()),
-            (0.5882353 as f32, 0.59607846 as f32, 0.5882353 as f32),
+            (0.5882353, 0.59607846, 0.5882353),
             (150, 152, 150),
         ),
         (
             "base04",
             "#e8e8e8",
             ("e8".to_string(), "e8".to_string(), "e8".to_string()),
-            (0.9098039 as f32, 0.9098039 as f32, 0.9098039 as f32),
+            (0.9098039, 0.9098039, 0.9098039),
             (232, 232, 232),
         ),
         (
             "base05",
             "#333333",
             ("33".to_string(), "33".to_string(), "33".to_string()),
-            (0.2 as f32, 0.2 as f32, 0.2 as f32),
+            (0.2, 0.2, 0.2),
             (51, 51, 51),
         ),
         (
             "base06",
             "#ffffff",
             ("ff".to_string(), "ff".to_string(), "ff".to_string()),
-            (1 as f32, 1 as f32, 1 as f32),
+            (1.0, 1.0, 1.0),
             (255, 255, 255),
         ),
         (
             "base07",
             "#ffffff",
             ("ff".to_string(), "ff".to_string(), "ff".to_string()),
-            (1 as f32, 1 as f32, 1 as f32),
+            (1.0, 1.0, 1.0),
             (255, 255, 255),
         ),
         (
             "base08",
             "#ed6a43",
             ("ed".to_string(), "6a".to_string(), "43".to_string()),
-            (0.92941177 as f32, 0.41568628 as f32, 0.2627451 as f32),
+            (0.92941177, 0.41568628, 0.2627451),
             (237, 106, 67),
         ),
         (
             "base09",
             "#0086b3",
             ("00".to_string(), "86".to_string(), "b3".to_string()),
-            (0 as f32, 0.5254902 as f32, 0.7019608 as f32),
+            (0.0, 0.5254902, 0.7019608),
             (0, 134, 179),
         ),
         (
             "base0A",
             "#795da3",
             ("79".to_string(), "5d".to_string(), "a3".to_string()),
-            (0.4745098 as f32, 0.3647059 as f32, 0.6392157 as f32),
+            (0.4745098, 0.3647059, 0.6392157),
             (121, 93, 163),
         ),
         (
             "base0B",
             "#183691",
             ("18".to_string(), "36".to_string(), "91".to_string()),
-            (0.09411765 as f32, 0.21176471 as f32, 0.5686275 as f32),
+            (0.09411765, 0.21176471, 0.5686275),
             (24, 54, 145),
         ),
         (
             "base0C",
             "#183691",
             ("18".to_string(), "36".to_string(), "91".to_string()),
-            (0.09411765 as f32, 0.21176471 as f32, 0.5686275 as f32),
+            (0.09411765, 0.21176471, 0.5686275),
             (24, 54, 145),
         ),
         (
             "base0D",
             "#795da3",
             ("79".to_string(), "5d".to_string(), "a3".to_string()),
-            (0.4745098 as f32, 0.3647059 as f32, 0.6392157 as f32),
+            (0.4745098, 0.3647059, 0.6392157),
             (121, 93, 163),
         ),
         (
             "base0E",
             "#a71d5d",
             ("a7".to_string(), "1d".to_string(), "5d".to_string()),
-            (0.654902 as f32, 0.11372549 as f32, 0.3647059 as f32),
+            (0.654902, 0.11372549, 0.3647059),
             (167, 29, 93),
         ),
         (
             "base0F",
             "#333333",
             ("33".to_string(), "33".to_string(), "33".to_string()),
-            (0.2 as f32, 0.2 as f32, 0.2 as f32),
+            (0.2, 0.2, 0.2),
             (51, 51, 51),
         ),
     ];
@@ -373,10 +373,6 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
             .palette
             .get(color)
             .context(format!("color {} not found", color))?;
-        println!(
-            "{}\n({} as f32, {} as f32, {} as f32)",
-            color, palette_color.dec.0, palette_color.dec.1, palette_color.dec.2
-        );
         assert!(
             palette_color.hex_str == expected_hex_str,
             "Exoected {}.hex_str to equal {}, got {}",
@@ -427,7 +423,7 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
     );
     assert!(
         foreground == 21.246727,
-        "Expected lightness.background to be 100, got {}",
+        "Expected lightness.foreground to be 21.246727, got {}",
         foreground
     );
 
