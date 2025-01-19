@@ -407,14 +407,6 @@ pub fn get_all_scheme_file_paths(
                 // the key is the scheme's <system>-<slug> e.g. base16-github
                 return files
                     .into_iter()
-                    .filter(|f| {
-                        // Filter out any files that doesn't end with .yaml
-                        f.path()
-                            .extension()
-                            .and_then(|ext| ext.to_str())
-                            .filter(|e| e.to_string() == SCHEME_EXTENSION)
-                            .is_some()
-                    })
                     .filter_map(|file| {
                         // Map each entry into a (<String, SchemaFile) tuple that 
                         // we can collect() into this batch's HashMap<String, SchemaFile>
