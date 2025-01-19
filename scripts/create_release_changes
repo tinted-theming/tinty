@@ -63,7 +63,7 @@ bump_cargo_version() {
   fi
 
   local updated_version="$major.$minor.$patch"
-  sed -i -E "s/version = \"$version\"/version = \"$updated_version\"/" "$cargo_toml"
+  sed -i -E "s/^version = \"$version\"$/version = \"$updated_version\"/" "$cargo_toml"
 
   echo "Updated Cargo.toml to version $updated_version"
 }
