@@ -169,10 +169,7 @@ impl Lightness {
 fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
     let mut keys: Vec<String> = scheme_files.keys().cloned().collect();
     keys.sort();
-    // Create a thread-safe HashMap to collect results
-    // We could be parsing hundreds of files. Parallelize with 10 files each arm.
     let results: Vec<SchemeEntry> = keys
-        .clone()
         .into_iter()
         .filter_map(|key| {
             scheme_files

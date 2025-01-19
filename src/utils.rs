@@ -1,5 +1,5 @@
 use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
-use crate::constants::{REPO_NAME, SCHEME_EXTENSION};
+use crate::constants::REPO_NAME;
 use anyhow::{anyhow, Context, Error, Result};
 use home::home_dir;
 use rand::Rng;
