@@ -79,7 +79,7 @@ version_changelog() {
     exit 1
   fi
 
-  local current_date=$(date +"%Y-%m-%d")
+  local current_date=$(TZ=UTC date +"%Y-%m-%d")
 
   sed -i -E "s/## Unreleased/## \[$new_version\] - $current_date/" "$changelog_file"
   sed -i "/^\[$old_version\]: /i \[$new_version\]: https://github.com/tinted-theming/tinty/compare/v$old_version...v$new_version" "$changelog_file"
