@@ -182,10 +182,9 @@ fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
             chunk
                 .into_iter()
                 .filter_map(|(k, sf)| {
-                    return sf
-                        .get_scheme()
+                    sf.get_scheme()
                         .ok()
-                        .map(|scheme| (k.to_string(), SchemeEntry::from_scheme(&scheme)));
+                        .map(|scheme| (k.to_string(), SchemeEntry::from_scheme(&scheme)))
                 })
                 .collect::<HashMap<String, SchemeEntry>>()
         })
