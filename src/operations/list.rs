@@ -4,13 +4,11 @@ use crate::{
 };
 use anyhow::{anyhow, Context, Result};
 use io::Write;
-use rayon::{iter::ParallelIterator, slice::ParallelSlice};
 use serde::Serialize;
 use std::{
     collections::HashMap,
     io,
     path::Path,
-    sync::{Arc, Mutex},
 };
 use tinted_builder::{Color, Scheme, SchemeSystem, SchemeVariant};
 use tinted_builder_rust::operation_build::utils::SchemeFile;
@@ -170,26 +168,19 @@ impl Lightness {
 
 fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
     let mut keys: Vec<String> = scheme_files.keys().cloned().collect();
-    // Create a thread-safe HashMap to collect results
-    let locked_results = Arc::new(Mutex::new(HashMap::new()));
-    let mut sorted_results: Vec<SchemeEntry> = Vec::new();
-    // We could be parsing hundreds of files. Parallelize with 10 files each arm.
-    keys.par_chunks(10).try_for_each(|chunk| -> Result<()> {
-        for key in chunk {
-            if let Some(scheme) = scheme_files.get(key).and_then(|sf| sf.get_scheme().ok()) {
-                let mut results_lock = locked_results.lock().unwrap();
-                results_lock.insert(key.clone(), SchemeEntry::from_scheme(&scheme));
-            }
-        }
-        Ok(())
-    })?;
     keys.sort();
-    let results = locked_results.lock().unwrap();
-    for k in keys {
-        if let Some(v) = results.get(&k) {
-            sorted_results.push(v.clone());
-        }
-    }
+    // Create a thread-safe HashMap to collect results
+    // We could be parsing hundreds of files. Parallelize with 10 files each arm.
+    let results: Vec<SchemeEntry> = keys
+        .clone()
+        .into_iter()
+        .filter_map(|key| {
+            scheme_files
+                .get(&key)
+                .and_then(|sf| sf.get_scheme().ok())
+                .map(|s| SchemeEntry::from_scheme(&s))
+        })
+        .collect();
 
-    return Ok(serde_json::to_string(&*sorted_results)?);
+    return Ok(serde_json::to_string(&*results)?);
 }
