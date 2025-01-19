@@ -3,8 +3,6 @@ use crate::constants::REPO_NAME;
 use anyhow::{anyhow, Context, Error, Result};
 use home::home_dir;
 use rand::Rng;
-use rayon::iter::ParallelIterator;
-use rayon::slice::ParallelSlice;
 use regex::bytes::Regex;
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -12,7 +10,6 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str;
-use std::sync::{Arc, Mutex};
 use tinted_builder::SchemeSystem;
 use tinted_builder_rust::operation_build::utils::SchemeFile;
 
@@ -30,7 +27,7 @@ pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
 
 pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
     let mut file = File::create(path)
-        .map_err(Error::new)
+        .map_err(anyhow::Error::new)
         .with_context(|| format!("Unable to create file: {}", path.display()))?;
 
     file.write_all(contents.as_bytes())?;
@@ -45,7 +42,7 @@ pub fn get_shell_command_from_string(config_path: &Path, command: &str) -> Resul
         .unwrap_or_else(|| DEFAULT_CONFIG_SHELL.to_string());
     let full_command = shell.replace("{}", command);
 
-    shell_words::split(&full_command).map_err(Error::new)
+    shell_words::split(&full_command).map_err(anyhow::Error::new)
 }
 
 pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> Result<()> {
@@ -58,7 +55,7 @@ pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> R
     }
 
     let command = format!("git clone \"{}\" \"{}\"", repo_url, target_dir.display());
-    let command_vec = shell_words::split(command.as_str()).map_err(Error::new)?;
+    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
 
     Command::new(&command_vec[0])
         .args(&command_vec[1..])
@@ -297,7 +294,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
 }
 
 fn safe_command(command: String, cwd: &Path) -> Result<Command, Error> {
-    let command_vec = shell_words::split(&command).map_err(Error::new)?;
+    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
     let mut command = Command::new(&command_vec[0]);
     command.args(&command_vec[1..]).current_dir(cwd);
     Ok(command)
@@ -383,8 +380,7 @@ pub fn get_all_scheme_file_paths(
         ));
     }
 
-    // Create a thread-safe HashMap to collect results
-    let locked_map: Arc<Mutex<HashMap<String, SchemeFile>>> = Arc::new(Mutex::new(HashMap::new()));
+    let mut scheme_files: HashMap<String, SchemeFile> = HashMap::new();
 
     // For each supported scheme system, add schemes to vec
     let scheme_systems = scheme_systems_option
@@ -396,45 +392,28 @@ pub fn get_all_scheme_file_paths(
             continue;
         }
 
-        fs::read_dir(&scheme_system_dir)?
+        let files = fs::read_dir(&scheme_system_dir)?
             // Discard failed read results
             .filter_map(|o| o.ok())
             .collect::<Vec<_>>()
-            // We are reading hundreds of files. Parallelize with 10 entries each batch.
-            .par_chunks(10)
-            .map(|files| {
+            .into_iter()
+            .filter_map(|file| {
                 // Convert batch of files into a HashMap<String, SchemeFile>, where
                 // the key is the scheme's <system>-<slug> e.g. base16-github
-                return files
-                    .into_iter()
-                    .filter_map(|file| {
-                        // Map each entry into a (<String, SchemaFile) tuple that 
-                        // we can collect() into this batch's HashMap<String, SchemaFile>
-                        let name = format!(
-                            "{}-{}",
-                            scheme_system.as_str(),
-                            file.path().file_stem()?.to_str()?,
-                        );
-                        let scheme_file = SchemeFile::new(file.path().as_path()).ok()?;
-                        return Some((name, scheme_file));
-                    })
-                    .collect::<HashMap<String, SchemeFile>>();
+                // Map each entry into a (<String, SchemaFile) tuple that
+                // we can collect() into this batch's HashMap<String, SchemaFile>
+                let name = format!(
+                    "{}-{}",
+                    scheme_system.as_str(),
+                    file.path().file_stem()?.to_str()?,
+                );
+                let scheme_file = SchemeFile::new(file.path().as_path()).ok()?;
+                return Some((name, scheme_file));
             })
-            .for_each(|map| {
-                // Each batch will produce a HashMap<String, SchemaFile>
-                // Merge them into the final HashMap.
-                if let Ok(mut accum) = locked_map.lock() {
-                    accum.extend(map);
-                }
-            });
+            .collect::<HashMap<String, SchemeFile>>();
+        scheme_files.extend(files);
     }
-
-    // Unwrap the Arc<Mutex<HashMap>>
-    return match locked_map
-        .lock() {
-            Ok(h) => Ok(h.clone()),
-            Err(_) => Err(anyhow!("unable to acquire results")),
-    };
+    Ok(scheme_files)
 }
 
 pub fn replace_tilde_slash_with_home(path_str: &str) -> Result<PathBuf> {
