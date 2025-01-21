@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fixed a bug where scheme files ending in `.yml` weren't recognized.
+
 ## [0.26.0] - 2025-01-18
 
 ### Added
