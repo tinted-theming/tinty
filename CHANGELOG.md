@@ -5,6 +5,8 @@
 ### Fixed
 
 - Fixed a bug where scheme files ending in `.yml` weren't recognized.
+- Fixed a bug where `install` subcommand gives an error for older versions of
+  git
 
 ## [0.26.0] - 2025-01-18
 

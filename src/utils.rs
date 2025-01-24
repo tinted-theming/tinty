@@ -153,7 +153,8 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
                 repo_path.display()
             )
         })?;
-    return Ok(());
+
+    Ok(())
 }
 
 fn random_remote_name() -> String {
@@ -178,14 +179,14 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         .stderr(Stdio::null())
         .stdout(Stdio::piped())
         .spawn()
-        .with_context(|| format!("Failed to spawn"))?;
+        .with_context(|| "Failed to spawn".to_string())?;
 
     let stdout = child.stdout.take().expect("failed to capture stdout");
     let reader = BufReader::new(stdout);
 
     if let Some(parts) = reader
         .lines()
-        .filter_map(|line| line.ok())
+        .map_while(Result::ok)
         .map(|line| line.split("\t").map(String::from).collect::<Vec<String>>())
         .filter(|parts| parts.len() == 2)
         .find(|parts| parts[1] == expected_tag_ref)
@@ -204,7 +205,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     let expected_branch_ref = format!("refs/heads/{}", revision);
     let mut command = safe_command(
         format!(
-            "git ls-remote --quiet --branches \"{}\" \"{}\"",
+            "git ls-remote --quiet \"{}\" \"{}\"",
             remote_name, expected_branch_ref
         ),
         repo_path,
@@ -212,14 +213,14 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     let mut child = command
         .stdout(Stdio::piped())
         .spawn()
-        .with_context(|| format!("Failed to spawn"))?;
+        .with_context(|| "Failed to spawn".to_string())?;
 
     let stdout = child.stdout.take().expect("failed to capture stdout");
     let reader = BufReader::new(stdout);
 
     if let Some(parts) = reader
         .lines()
-        .filter_map(|line| line.ok())
+        .map_while(Result::ok)
         .map(|line| line.split("\t").map(String::from).collect::<Vec<String>>())
         .filter(|parts| parts.len() == 2)
         .find(|parts| parts[1] == expected_branch_ref)
@@ -268,10 +269,10 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
 
     let stdout = child.stdout.take().expect("failed to capture stdout");
     let reader = BufReader::new(stdout);
-    if let Some(_) = reader
+    if reader
         .lines()
-        .filter_map(|line| line.ok())
-        .find(|line| line.clone().starts_with(&remote_branch_prefix))
+        .map_while(Result::ok)
+        .any(|line| line.clone().starts_with(&remote_branch_prefix))
     {
         // we found a remote ref that contains the commit sha
         child.kill()?; // Abort the child process.
@@ -286,11 +287,11 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         )
     })?;
 
-    return Err(anyhow!(
+    Err(anyhow!(
         "cannot find revision {} in remote {}",
         revision,
         remote_name
-    ));
+    ))
 }
 
 fn safe_command(command: String, cwd: &Path) -> Result<Command, Error> {
@@ -408,7 +409,8 @@ pub fn get_all_scheme_file_paths(
                     file.path().file_stem()?.to_str()?,
                 );
                 let scheme_file = SchemeFile::new(file.path().as_path()).ok()?;
-                return Some((name, scheme_file));
+
+                Some((name, scheme_file))
             })
             .collect::<HashMap<String, SchemeFile>>();
         scheme_files.extend(files);
