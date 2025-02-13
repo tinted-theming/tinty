@@ -10,6 +10,14 @@ main() {
   bump_cargo_version "$level"
 
   local new_version="$(get_cargo_version)"
+
+  if [[ "$old_version" == "$new_version" ]]; then
+    echo "Version has not been bumped correctly (level: $level)"
+    echo "Old version: $old_version"
+    echo "New version: $new_version"
+    exit 1
+  fi
+
   version_changelog "$old_version" "$new_version"
 
   update_third_party_licenses
@@ -40,7 +48,7 @@ get_cargo_version() {
 # Bump version in Cargo.toml
 bump_cargo_version() {
   local level="$1"
-  local version=get_cargo_version
+  local version=$(get_cargo_version)
   local cargo_toml="./Cargo.toml"
 
   # Split version into major, minor, patch
