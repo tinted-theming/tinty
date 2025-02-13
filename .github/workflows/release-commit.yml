@@ -26,6 +26,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0 # Needed to ensure previous Release commits don't exist with `git log`
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add git tag to release
@@ -39,9 +40,11 @@ jobs:
 
       - name: Ensure this release doesn't already exist
         run: |
-          if git log --grep="Release ${{ steps.cargo_version.outputs.value }}" --quiet; then
+          if [[ -n $(git log --grep="Release ${{ steps.cargo_version.outputs.value }}") ]]; then
             echo "Release commit already exists: \"Release ${{ steps.cargo_version.outputs.value}}\""
             exit 1
+          else
+            echo "No matching release commit found, proceeding..."
           fi
 
       - name: Commit the changes
