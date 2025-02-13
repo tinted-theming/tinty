@@ -29,7 +29,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add git tag to release
-        run: ./scripts/create_release_changes ${{ github.event.inputs.text_input }}
+        run: ./scripts/create_release_changes "${{ github.event.inputs.text_input }}"
 
       - name: Get new cargo version
         id: cargo_version
