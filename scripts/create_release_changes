@@ -40,12 +40,12 @@ get_cargo_version() {
 # Bump version in Cargo.toml
 bump_cargo_version() {
   local level="$1"
-  local version=$(get_cargo_version "$level")
+  local version=get_cargo_version
   local cargo_toml="./Cargo.toml"
 
   # Split version into major, minor, patch
   IFS='.' read -r major minor patch <<< "$version"
-  echo "Current version: $version"
+  echo "Current version: $version (major: $major, minor: $minor, patch: $patch) will recieve a $level increment"
 
   # Increment based on major, minor or patch
   if [[ "$level" == "major" ]]; then
