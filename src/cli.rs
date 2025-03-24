@@ -89,6 +89,12 @@ pub fn build_cli() -> Command {
                     .value_hint(ValueHint::Other)
                 )
                 .arg(
+                    Arg::new("description")
+                    .long("description")
+                    .help("Scheme description info")
+                    .value_hint(ValueHint::Other)
+                )
+                .arg(
                     Arg::new("name")
                     .long("name")
                     .help("Scheme display name (can include spaces and capitalization). Defaults to 'Tinty Generated'")

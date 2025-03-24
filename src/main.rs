@@ -173,6 +173,9 @@ fn main() -> Result<()> {
                 .get_one::<String>("slug")
                 .unwrap_or(&slug_default);
             let name_default = "Tinty Generated".to_string();
+            let description = sub_matches
+                .get_one::<String>("description")
+                .map(String::from);
             let name = sub_matches
                 .get_one::<String>("name")
                 .unwrap_or(&name_default);
@@ -225,6 +228,7 @@ fn main() -> Result<()> {
                 image_path,
                 outfile_path_option,
                 author.to_string(),
+                description,
                 name.to_string(),
                 slug.to_string(),
                 system,

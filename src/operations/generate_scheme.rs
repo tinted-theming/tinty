@@ -10,6 +10,7 @@ pub(crate) fn generate_scheme(
     image_path: PathBuf,
     output_file_path_option: Option<PathBuf>,
     author: String,
+    description: Option<String>,
     name: String,
     slug: String,
     system: SchemeSystem,
@@ -17,7 +18,7 @@ pub(crate) fn generate_scheme(
 ) -> Result<()> {
     let params = SchemeParams {
         author,
-        description: None,
+        description,
         image_path,
         name,
         slug,
