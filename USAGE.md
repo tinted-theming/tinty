@@ -38,7 +38,7 @@ source path/to/tinty-zsh-completion.sh
 ```
 
 Completion will not appear to be working if you've aliased `tinty` as explained
-[here](#sourcing-scripts-that-set-environment-variables). In order to verify the functionality, be sure to run the actual `tinty` binary itself which is usually `~/.cargo/bin/tinty`
+[here](#sourcing-scripts-that-set-environment-variables). In order to verify the functionality, be sure to run the actual `tinty` binary (`which tinty` for information on binary location).
 
 ### Completions in the repo
 
