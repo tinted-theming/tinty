@@ -29,37 +29,37 @@ fn test_cli_generatescheme_subcommand_custom_properties() -> Result<()> {
         .as_str(),
     )?;
     let expected_output = format!(
-        r#"author: "{author}"
+        r##"author: "{author}"
 name: "{name}"
 slug: "{slug}"
 system: "{system}"
 variant: "{variant}"
 palette:
-  base00: "f7f7f7"
-  base01: "d5d9d6"
-  base02: "b3bbb6"
-  base03: "919d95"
-  base04: "707f75"
-  base05: "4e6154"
-  base06: "2c4334"
-  base07: "0b2614"
-  base08: "dd5218"
-  base09: "e29c0c"
-  base0A: "e29c0c"
-  base0B: "069f31"
-  base0C: "00fffe"
-  base0D: "045de1"
-  base0E: "8e6682"
-  base0F: "98421d"
-  base10: "aa664a"
-  base11: "ab8942"
-  base12: "ab8942"
-  base13: "2d7742"
-  base14: "41bdbd"
-  base15: "3c67a8"
-  base16: "83707d"
-  base17: "784e3c"
-"#
+  base00: "#f7f7f7"
+  base01: "#d5d9d6"
+  base02: "#b3bbb6"
+  base03: "#919d95"
+  base04: "#707f75"
+  base05: "#4e6154"
+  base06: "#2c4334"
+  base07: "#0b2614"
+  base08: "#dd5218"
+  base09: "#e29c0c"
+  base0A: "#e29c0c"
+  base0B: "#069f31"
+  base0C: "#00fffe"
+  base0D: "#045de1"
+  base0E: "#8e6682"
+  base0F: "#98421d"
+  base10: "#aa664a"
+  base11: "#ab8942"
+  base12: "#ab8942"
+  base13: "#2d7742"
+  base14: "#41bdbd"
+  base15: "#3c67a8"
+  base16: "#83707d"
+  base17: "#784e3c"
+"##
     );
 
     // ---
@@ -89,29 +89,29 @@ fn test_cli_generatescheme_subcommand_with_image() -> Result<()> {
         "test_cli_generatescheme_subcommand_with_image",
         "generate-scheme --system base16 ./tests/fixtures/assets/article-featured-image.webp",
     )?;
-    let expected_output = r#"author: "Tinty"
+    let expected_output = r##"author: "Tinty"
 name: "Tinty Generated"
 slug: "tinty-generated"
 system: "base16"
 variant: "dark"
 palette:
-  base00: "0e2d19"
-  base01: "2f4938"
-  base02: "506658"
-  base03: "718378"
-  base04: "93a097"
-  base05: "b4bdb7"
-  base06: "d5dad7"
-  base07: "f7f7f7"
-  base08: "dd5218"
-  base09: "e29c0c"
-  base0A: "e29c0c"
-  base0B: "069f31"
-  base0C: "00fffe"
-  base0D: "045de1"
-  base0E: "8e6682"
-  base0F: "98421d"
-"#;
+  base00: "#0e2d19"
+  base01: "#2f4938"
+  base02: "#506658"
+  base03: "#718378"
+  base04: "#93a097"
+  base05: "#b4bdb7"
+  base06: "#d5dad7"
+  base07: "#f7f7f7"
+  base08: "#dd5218"
+  base09: "#e29c0c"
+  base0A: "#e29c0c"
+  base0B: "#069f31"
+  base0C: "#00fffe"
+  base0D: "#045de1"
+  base0E: "#8e6682"
+  base0F: "#98421d"
+"##;
 
     // ---
     // Act
@@ -138,38 +138,39 @@ fn test_cli_generatescheme_subcommand_with_save() -> Result<()> {
     // ---
     let scheme_system = "base16";
     let scheme_slug = "test-scheme-slug";
+    let scheme_description = "Some description";
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_generatescheme_subcommand_with_save",
-        format!("generate-scheme --slug {scheme_slug} --system {scheme_system} --save ./tests/fixtures/assets/article-featured-image.webp").as_str(),
+        format!("generate-scheme --slug {scheme_slug} --system {scheme_system} --description \"{scheme_description}\" --save ./tests/fixtures/assets/article-featured-image.webp").as_str(),
     )?;
     let out_scheme_path = data_path.join(format!(
         "{CUSTOM_SCHEMES_DIR_NAME}/{scheme_system}/{scheme_slug}.yaml"
     ));
     let expected_output = format!(
-        r#"system: {scheme_system}
+        r##"system: {scheme_system}
 name: Tinty Generated
 slug: {scheme_slug}
 author: Tinty
-description: null
+description: Some description
 variant: dark
 palette:
-  base00: 0e2d19
-  base01: 2f4938
-  base02: '506658'
-  base03: '718378'
-  base04: 93a097
-  base05: b4bdb7
-  base06: d5dad7
-  base07: f7f7f7
-  base08: dd5218
-  base09: e29c0c
-  base0A: e29c0c
-  base0B: 069f31
-  base0C: 00fffe
-  base0D: 045de1
-  base0E: 8e6682
-  base0F: 98421d
-"#
+  base00: '#0e2d19'
+  base01: '#2f4938'
+  base02: '#506658'
+  base03: '#718378'
+  base04: '#93a097'
+  base05: '#b4bdb7'
+  base06: '#d5dad7'
+  base07: '#f7f7f7'
+  base08: '#dd5218'
+  base09: '#e29c0c'
+  base0A: '#e29c0c'
+  base0B: '#069f31'
+  base0C: '#00fffe'
+  base0D: '#045de1'
+  base0E: '#8e6682'
+  base0F: '#98421d'
+"##
     );
 
     // ---
@@ -177,8 +178,6 @@ palette:
     // ---
     let (stdout, stderr) = utils::run_command(command_vec).unwrap();
     let actual_output = fs::read_to_string(&out_scheme_path)?;
-
-    println!("{actual_output}");
 
     // ------
     // Assert

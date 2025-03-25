@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add option to pass in `description` as a flag for `tinty generate-scheme`
+
 ## [0.26.1] - 2025-02-13
 
 ### Fixed
