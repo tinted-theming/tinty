@@ -4,12 +4,12 @@ This page lists the licenses of the projects used in cargo-about.
     
 ## Overview of licenses
 
-- Apache License 2.0 (122)
+- Apache License 2.0 (121)
 - MIT License (33)
 - Unicode License v3 (20)
 - BSD 3-Clause &quot;New&quot; or &quot;Revised&quot; License (4)
 - BSD 2-Clause &quot;Simplified&quot; License (3)
-- Mozilla Public License 2.0 (2)
+- Mozilla Public License 2.0 (3)
 
 ## All license text
 
@@ -4427,10 +4427,9 @@ limitations under the License.
 - [half 2.4.1](https://github.com/starkat99/half-rs)
 - [profiling-procmacros 1.0.16](https://github.com/aclysma/profiling)
 - [profiling 1.0.16](https://github.com/aclysma/profiling)
-- [ribboncurls 0.2.1](https://github.com/tinted-theming/ribboncurls)
 - [siphasher 0.3.11](https://github.com/jedisct1/rust-siphash)
-- [tinted-builder-rust 0.12.1](https://github.com/tinted-theming/tinted-builder-rust)
-- [tinted-builder 0.8.0](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinted-builder-rust 0.13.1](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinted-builder 0.9.1](https://github.com/tinted-theming/tinted-builder-rust)
 - [zune-core 0.4.12](https://crates.io/crates/zune-core)
 - [zune-inflate 0.2.54](https://crates.io/crates/zune-inflate)
 - [zune-jpeg 0.4.14](https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg)
@@ -5207,7 +5206,7 @@ SOFTWARE.
 
 #### Used by
 
-- [tinty 0.26.1](https://github.com/tinted-theming/tinty)
+- [tinty 0.27.0](https://github.com/tinted-theming/tinty)
 
 ```
 MIT License
@@ -5246,11 +5245,20 @@ MIT License
 
 Copyright (c) &lt;year&gt; &lt;copyright holders&gt;
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
+associated documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including 
+without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the 
+following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial 
+portions of the Software.
 
-THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT 
+LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO 
+EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ```
 
@@ -5576,7 +5584,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 #### Used by
 
-- [tinted-scheme-extractor 0.6.0](https://github.com/tinted-theming/tinted-scheme-extractor-rs)
+- [tinted-scheme-extractor 0.6.1](https://github.com/tinted-theming/tinted-scheme-extractor-rs)
 
 ```
 Mozilla Public License Version 2.0
@@ -5960,6 +5968,7 @@ Exhibit B - &quot;Incompatible With Secondary Licenses&quot; Notice
 #### Used by
 
 - [option-ext 0.2.0](https://github.com/soc/option-ext.git)
+- [ribboncurls 0.4.1](https://github.com/tinted-theming/ribboncurls)
 
 ```
 Mozilla Public License Version 2.0
