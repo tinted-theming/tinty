@@ -68,6 +68,8 @@ pub struct Config {
     pub shell: Option<String>,
     #[serde(rename = "default-scheme")]
     pub default_scheme: Option<String>,
+    #[serde(rename = "preferred-schemes")]
+    pub preferred_schemes: Option<Vec<String>>,
     pub items: Option<Vec<ConfigItem>>,
     pub hooks: Option<Vec<String>>,
 }
@@ -177,12 +179,23 @@ impl fmt::Display for Config {
             "shell = \"{}\"",
             self.shell.as_ref().unwrap_or(&"None".to_string())
         )?;
-        if self.default_scheme.is_some() {
+
+        if let Some(default_scheme) = &self.default_scheme {
             writeln!(
                 f,
                 "default-scheme = \"{}\"",
-                self.default_scheme.as_ref().unwrap_or(&"".to_string())
+                default_scheme
             )?;
+        }
+
+        if let Some(items) = &self.preferred_schemes {
+            let preferred_schemes_text = items
+                .clone()
+                .into_iter()
+                .map(|t| format!("\"{}\"", t))
+                .collect::<Vec<String>>()
+                .join(", ");
+            writeln!(f, "preferred-schemes = [{}]", preferred_schemes_text)?;
         }
 
         if let Some(items) = &self.items {

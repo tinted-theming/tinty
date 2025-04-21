@@ -6,6 +6,7 @@ mod operations {
     pub mod build;
     pub mod config;
     pub mod current;
+    pub mod cycle;
     pub mod generate_scheme;
     pub mod info;
     pub mod init;
@@ -142,6 +143,15 @@ fn main() -> Result<()> {
                 operations::apply::apply(&config_path, &data_path, scheme_name, is_quiet, None)
                     .with_context(|| format!("Failed to apply theme \"{:?}\"", scheme_name))?;
             }
+        }
+        Some(("cycle", sub_matches)) => {
+            let is_quiet = sub_matches
+                .get_one::<bool>("quiet")
+                .map(|b| b.to_owned())
+                .unwrap_or(false);
+
+            operations::cycle::cycle(&config_path, &data_path, is_quiet, None)
+                .with_context(|| format!("Failed to cycle to your next preferred theme"))?;
         }
         Some(("install", sub_matches)) => {
             let is_quiet = sub_matches

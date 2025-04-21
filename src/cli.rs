@@ -233,6 +233,16 @@ pub fn build_cli() -> Command {
                         .action(ArgAction::SetTrue),
                 ),
         )
+        .subcommand(
+            Command::new("cycle").about("Cycle through your preferred themes")
+                .arg(
+                    Arg::new("quiet")
+                        .long("quiet")
+                        .short('q')
+                        .help("Silence stdout")
+                        .action(ArgAction::SetTrue),
+                )
+        )
 }
 
 // Parse the command line arguments with styling
