@@ -1,16 +1,17 @@
 use crate::config::Config;
 use crate::constants::{
-    ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, DEFAULT_SCHEME_SYSTEM, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME
+    ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, DEFAULT_SCHEME_SYSTEM,
+    REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME,
 };
 use crate::utils::{
     create_theme_filename_without_extension, get_all_scheme_names, get_shell_command_from_string,
     write_to_file,
 };
 use anyhow::{anyhow, Context, Result};
-use std::{fs, io};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::str::FromStr;
+use std::{fs, io};
 use tinted_builder::SchemeSystem;
 use tinted_builder_rust::operation_build::build;
 
@@ -110,7 +111,10 @@ pub fn apply(
     };
 
     generate_custom_schemes?;
-    write_to_file(&staging_data_path.join(CURRENT_SCHEME_FILE_NAME), full_scheme_name)?;
+    write_to_file(
+        &staging_data_path.join(CURRENT_SCHEME_FILE_NAME),
+        full_scheme_name,
+    )?;
 
     // Collect config items that match the provided system
     let system_items = items.iter().filter(|item| match &item.supported_systems {
@@ -177,7 +181,7 @@ pub fn apply(
                         item_name: item.name.to_string(),
                         hook_text: hook_text.to_string(),
                         operation: active_operation.unwrap_or("apply").to_string(),
-                        relative_file_path: PathBuf::from(filename)
+                        relative_file_path: PathBuf::from(filename),
                     };
                     hook_commands.push(hook_parts);
                 }
@@ -245,22 +249,39 @@ struct HookCommandParts {
     item_name: String,
     hook_text: String,
     operation: String,
-    relative_file_path: PathBuf
+    relative_file_path: PathBuf,
 }
 
 impl HookCommandParts {
-    fn run_command(&self, artifacts_path: &Path, config_path: &Path, full_scheme_name: &str) -> Result<Child, anyhow::Error> {
-        let hook_script = self.hook_text
+    fn run_command(
+        &self,
+        artifacts_path: &Path,
+        config_path: &Path,
+        full_scheme_name: &str,
+    ) -> Result<Child, anyhow::Error> {
+        let hook_script = self
+            .hook_text
             .replace("%o", self.operation.as_str())
-            .replace("%f", format!("\"{}\"", artifacts_path.join(self.relative_file_path.clone()).display()).as_str())
+            .replace(
+                "%f",
+                format!(
+                    "\"{}\"",
+                    artifacts_path
+                        .join(self.relative_file_path.clone())
+                        .display()
+                )
+                .as_str(),
+            )
             .replace("%n", full_scheme_name);
-        let command_vec =
-        get_shell_command_from_string(config_path, hook_script.as_str())?;
+        let command_vec = get_shell_command_from_string(config_path, hook_script.as_str())?;
         Command::new(&command_vec[0])
             .args(&command_vec[1..])
             .spawn()
             .with_context(|| {
-                format!("Failed to execute {} hook: {}", self.item_name, self.hook_text)
+                format!(
+                    "Failed to execute {} hook: {}",
+                    self.item_name, self.hook_text
+                )
             })
     }
 }
