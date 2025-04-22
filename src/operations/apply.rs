@@ -7,7 +7,7 @@ use crate::utils::{
     write_to_file,
 };
 use anyhow::{anyhow, Context, Result};
-use std::fs;
+use std::{fs, io};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::str::FromStr;
@@ -236,7 +236,7 @@ fn create_symlinks_for_backwards_compat(source_path: &PathBuf, target_path: &Pat
             symlink_any(&src_file, &dst_file)?;
         }
     }
-    delete_non_dirs_and_non_symlinks(target_path)?;
+    delete_non_dirs_and_broken_symlinks(target_path)?;
 
     Ok(())
 }
@@ -269,12 +269,30 @@ fn symlink_any(src: &Path, dst: &Path) -> Result<(), anyhow::Error> {
     std::os::unix::fs::symlink(src, dst)?;
     Ok(())
 }
-fn delete_non_dirs_and_non_symlinks(dir: &Path) -> Result<()> {
+
+fn delete_non_dirs_and_broken_symlinks(dir: &Path) -> Result<()> {
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
         let metadata = fs::symlink_metadata(&path)?; // Don't follow symlinks
-        if !metadata.is_dir() && !metadata.file_type().is_symlink() {
+
+        let file_type = metadata.file_type();
+
+        if file_type.is_dir() {
+            continue;
+        }
+
+        if file_type.is_symlink() {
+            // Try to follow the symlink
+            match fs::metadata(&path) {
+                Err(e) if e.kind() == io::ErrorKind::NotFound => {
+                    // Broken symlink
+                    fs::remove_file(&path)?;
+                }
+                Err(_) | Ok(_) => continue, // Valid symlink or any other error, skip
+            }
+        } else {
+            // Regular file
             fs::remove_file(&path)?;
         }
     }
