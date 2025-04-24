@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+
+## Fixed
+
+- Fix bugs caused by vestigial theme files in the data directory. They are now cleaned up during `tinty apply`.
+
+## Changed
+
+- Theme files from themeable components are now located in a new `artifacts/` in the data directory. For backwards
+compatibility, symlinks are
+created in the root of the data directory pointing to their new locations. These symlinks will go
+away in a future Tinty release.
+
 ## [0.27.0] - 2025-03-26
 
 ### Added
