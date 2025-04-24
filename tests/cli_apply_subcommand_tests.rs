@@ -34,7 +34,10 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
         "stdout does not contain the expected output"
     );
     assert!(
-        data_path.join(ARTIFACTS_DIR).join(shell_theme_filename).exists(),
+        data_path
+            .join(ARTIFACTS_DIR)
+            .join(shell_theme_filename)
+            .exists(),
         "Path does not exist"
     );
     assert_eq!(fs::read_to_string(&current_scheme_path)?, scheme_name);
