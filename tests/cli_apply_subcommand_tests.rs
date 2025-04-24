@@ -420,10 +420,7 @@ hook = "echo \"path: %f, operation: %o\""
         "stderr does not contain the expected output"
     );
 
-    assert!(
-        !vestigial_file.exists(),
-        "vestigial file not removed"
-    );
+    assert!(!vestigial_file.exists(), "vestigial file not removed");
 
     cleanup()?;
     Ok(())
@@ -473,15 +470,9 @@ hook = "echo \"path: %f, operation: %o\""
         "stderr does not contain the expected output"
     );
 
-    assert!(
-        !missing_file.exists(),
-        "file is supposed to be missing"
-    );
+    assert!(!missing_file.exists(), "file is supposed to be missing");
 
-    assert!(
-        !symlink.exists(),
-        "broken symlink wasn't deleted"
-    );
+    assert!(!symlink.exists(), "broken symlink wasn't deleted");
 
     cleanup()?;
     Ok(())
