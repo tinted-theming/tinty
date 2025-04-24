@@ -122,7 +122,7 @@ pub fn apply(
         None => false,
     });
 
-    let mut hook_commands: Vec<HookCommandParts> = Vec::new();
+    let mut hook_commands: Vec<Hook> = Vec::new();
 
     // Run through provided items in config.toml
     for item in system_items {
@@ -177,9 +177,9 @@ pub fn apply(
                 // Gather the hook commands, we will run them after we've committed all items onto
                 // the final artifacts directory.
                 if let Some(hook_text) = &item.hook {
-                    let hook_parts = HookCommandParts {
-                        item_name: item.name.to_string(),
-                        hook_text: hook_text.to_string(),
+                    let hook_parts = Hook {
+                        name: item.name.to_string(),
+                        hook_command_template: hook_text.to_string(),
                         operation: active_operation.unwrap_or("apply").to_string(),
                         relative_file_path: PathBuf::from(filename),
                     };
@@ -245,14 +245,14 @@ fn create_symlinks_for_backwards_compat(source_path: &PathBuf, target_path: &Pat
     Ok(())
 }
 
-struct HookCommandParts {
-    item_name: String,
-    hook_text: String,
+struct Hook {
+    name: String,
+    hook_command_template: String,
     operation: String,
     relative_file_path: PathBuf,
 }
 
-impl HookCommandParts {
+impl Hook {
     fn run_command(
         &self,
         artifacts_path: &Path,
@@ -260,7 +260,7 @@ impl HookCommandParts {
         full_scheme_name: &str,
     ) -> Result<Child, anyhow::Error> {
         let hook_script = self
-            .hook_text
+            .hook_command_template
             .replace("%o", self.operation.as_str())
             .replace(
                 "%f",
@@ -280,7 +280,7 @@ impl HookCommandParts {
             .with_context(|| {
                 format!(
                     "Failed to execute {} hook: {}",
-                    self.item_name, self.hook_text
+                    self.name, self.hook_command_template
                 )
             })
     }
