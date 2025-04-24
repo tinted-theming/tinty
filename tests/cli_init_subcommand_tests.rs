@@ -80,7 +80,8 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     // ------
     // Assert
     // ------
-    let expected_scheme_name = fs::read_to_string(data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME))?;
+    let expected_scheme_name =
+        fs::read_to_string(data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME))?;
     assert!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
