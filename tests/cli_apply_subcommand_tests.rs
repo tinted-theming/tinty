@@ -376,3 +376,113 @@ hook = "echo \"expected emacs output: %n\""
     cleanup()?;
     Ok(())
 }
+
+#[test]
+fn test_cli_apply_subcommand_removes_vestigial_files() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_hook_with_setup",
+        format!("apply {}", &scheme_name).as_str(),
+    )?;
+    let config_content = r##"
+[[items]]
+path = "https://github.com/tinted-theming/base16-vim"
+name = "tinted-vim"
+themes-dir = "colors"
+hook = "echo \"path: %f, operation: %o\""
+"##;
+    write_to_file(&config_path, config_content)?;
+
+    let vestigial_file = data_path.join("vestigial-file");
+    write_to_file(&vestigial_file, "hello world")?;
+
+    // ---
+    // Act
+    // ---
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert_eq!(
+        stdout,
+        format!(
+            "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
+            data_path.join("artifacts").display()
+        )
+    );
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
+    );
+
+    assert!(
+        !vestigial_file.exists(),
+        "vestigial file not removed"
+    );
+
+    cleanup()?;
+    Ok(())
+}
+
+#[test]
+fn test_cli_apply_subcommand_removes_broken_symlinks() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_hook_with_setup",
+        format!("apply {}", &scheme_name).as_str(),
+    )?;
+    let config_content = r##"
+[[items]]
+path = "https://github.com/tinted-theming/base16-vim"
+name = "tinted-vim"
+themes-dir = "colors"
+hook = "echo \"path: %f, operation: %o\""
+"##;
+    write_to_file(&config_path, config_content)?;
+
+    let missing_file = data_path.join("artifacts").join("im-no-longer-here");
+    let symlink = data_path.join("im-no-longer-here");
+    std::os::unix::fs::symlink(&missing_file, &symlink)?;
+
+    // ---
+    // Act
+    // ---
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert_eq!(
+        stdout,
+        format!(
+            "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
+            data_path.join("artifacts").display()
+        )
+    );
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
+    );
+
+    assert!(
+        !missing_file.exists(),
+        "file is supposed to be missing"
+    );
+
+    assert!(
+        !symlink.exists(),
+        "broken symlink wasn't deleted"
+    );
+
+    cleanup()?;
+    Ok(())
+}
