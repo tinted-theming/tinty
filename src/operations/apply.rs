@@ -58,7 +58,7 @@ pub fn apply(
 
     // Create a temporary data directory
     let staging_data_dir = tempfile::Builder::new()
-        .prefix("artifacts-")
+        .prefix(format!("{}-", ARTIFACTS_DIR).as_str())
         .tempdir_in(data_path)?;
     let staging_data_path = staging_data_dir.path();
 
