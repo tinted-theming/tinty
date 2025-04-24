@@ -5,6 +5,7 @@ use std::path::Path;
 
 use crate::utils::{setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME};
 use anyhow::Result;
+use utils::ARTIFACTS_DIR;
 
 #[test]
 fn test_cli_apply_subcommand_with_setup() -> Result<()> {
@@ -17,7 +18,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
         format!("apply {}", &scheme_name).as_str(),
     )?;
     let shell_theme_filename = "tinted-shell-scripts-file.sh";
-    let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
+    let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
 
     // ---
     // Act
@@ -33,7 +34,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
         "stdout does not contain the expected output"
     );
     assert!(
-        data_path.join(shell_theme_filename).exists(),
+        data_path.join(ARTIFACTS_DIR).join(shell_theme_filename).exists(),
         "Path does not exist"
     );
     assert_eq!(fs::read_to_string(&current_scheme_path)?, scheme_name);
@@ -176,7 +177,7 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
     )?;
     let custom_scheme_file_path =
         data_path.join(format!("custom-schemes/base16/{}.yaml", scheme_name));
-    let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
+    let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
     let scheme_content =
         fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
     write_to_file(&custom_scheme_file_path, &scheme_content)?;
@@ -221,7 +222,7 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
     )?;
     let custom_scheme_file_path =
         data_path.join(format!("custom-schemes/base16/{}.yaml", scheme_name));
-    let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
+    let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
     let scheme_content =
         fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
     write_to_file(&custom_scheme_file_path, &scheme_content)?;
@@ -318,7 +319,7 @@ hook = "echo \"path: %f, operation: %o\""
         stdout,
         format!(
             "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
-            data_path.display()
+            data_path.join(ARTIFACTS_DIR).display()
         )
     );
     assert!(
@@ -412,7 +413,7 @@ hook = "echo \"path: %f, operation: %o\""
         stdout,
         format!(
             "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
-            data_path.join("artifacts").display()
+            data_path.join(ARTIFACTS_DIR).display()
         )
     );
     assert!(
@@ -445,9 +446,12 @@ hook = "echo \"path: %f, operation: %o\""
 "##;
     write_to_file(&config_path, config_content)?;
 
-    let missing_file = data_path.join("artifacts").join("im-no-longer-here");
+    let missing_file = data_path.join(ARTIFACTS_DIR).join("im-no-longer-here");
+    write_to_file(&missing_file, "hello")?;
     let symlink = data_path.join("im-no-longer-here");
     std::os::unix::fs::symlink(&missing_file, &symlink)?;
+    // Regular file
+    fs::remove_file(&missing_file)?;
 
     // ---
     // Act
@@ -462,7 +466,7 @@ hook = "echo \"path: %f, operation: %o\""
         stdout,
         format!(
             "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
-            data_path.join("artifacts").display()
+            data_path.join(ARTIFACTS_DIR).display()
         )
     );
     assert!(

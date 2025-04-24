@@ -19,6 +19,8 @@ pub const REPO_DIR: &str = "repos";
 pub const SCHEMES_REPO_NAME: &str = "schemes";
 #[allow(dead_code)]
 pub const CUSTOM_SCHEMES_DIR_NAME: &str = "custom-schemes";
+#[allow(dead_code)]
+pub const ARTIFACTS_DIR: &str = "artifacts";
 
 pub fn run_command(command_vec: Vec<String>) -> Result<(String, String), Box<dyn Error>> {
     let output = Command::new(&command_vec[0])
