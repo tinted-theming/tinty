@@ -185,13 +185,10 @@ impl fmt::Display for Config {
             )?;
         }
 
-        match &self.items {
-            Some(items) => {
-                for item in items {
-                    writeln!(f, "{}", item)?;
-                }
+        if let Some(items) = &self.items {
+            for item in items {
+                writeln!(f, "{}", item)?;
             }
-            None => {}
         }
 
         Ok(())

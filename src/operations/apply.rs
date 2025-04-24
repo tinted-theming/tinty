@@ -209,7 +209,7 @@ pub fn apply(
         hook.run_command(&target_path, config_path, full_scheme_name)?;
     }
 
-    create_symlinks_for_backwards_compat(&target_path, &data_path)?;
+    create_symlinks_for_backwards_compat(&target_path, data_path)?;
 
     // Run global tinty/config.toml hooks
     if let Some(hooks_vec) = config.hooks.clone() {

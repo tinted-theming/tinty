@@ -47,14 +47,14 @@ pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
         let scheme_files = get_all_scheme_file_paths(&schemes_dir_path, None)?;
         let json = as_json(scheme_files)?;
         let mut handle = stdout.lock();
-        if let Err(_) = writeln!(handle, "{}", json) {}
+        let _ = writeln!(handle, "{}", json);
         return Ok(());
     }
 
     let scheme_vec = get_all_scheme_names(&schemes_dir_path, None)?;
     let mut handle = stdout.lock();
     for scheme in scheme_vec {
-        if let Err(_) = writeln!(handle, "{}", scheme) {
+        if writeln!(handle, "{}", scheme).is_err() {
             break;
         }
     }
@@ -92,7 +92,7 @@ impl SchemeEntry {
     pub fn from_scheme(scheme: &Scheme) -> Self {
         let slug = scheme.get_scheme_slug();
         let system = scheme.get_scheme_system();
-        return Self {
+        Self {
             id: format!("{}-{}", system, slug),
             name: scheme.get_scheme_name(),
             system,
@@ -108,18 +108,18 @@ impl SchemeEntry {
                     .collect(),
                 _ => HashMap::new(),
             },
-        };
+        }
     }
 }
 
 impl ColorOut {
     pub fn from_color(color: &Color) -> Self {
-        return Self {
+        Self {
             hex_str: format!("#{}{}{}", color.hex.0, color.hex.1, color.hex.2),
             hex: color.hex.clone(),
             rgb: color.rgb,
             dec: color.dec,
-        };
+        }
     }
 }
 
@@ -149,7 +149,7 @@ impl Lightness {
             return channel / 12.92;
         }
         let base = (channel + 0.055) / 1.055;
-        return base.powf(2.4);
+        base.powf(2.4)
     }
 
     fn luminance_to_lstar(luminance: f32) -> f32 {
@@ -157,14 +157,14 @@ impl Lightness {
             return luminance * (24389.0 / 27.0);
         }
 
-        return luminance.powf(1.0 / 3.0) * 116.0 - 16.0;
+        luminance.powf(1.0 / 3.0) * 116.0 - 16.0
     }
 
     fn luminance(color: &Color) -> f32 {
         let r = Self::gamma_corrected_to_linear(color.dec.0);
         let g = Self::gamma_corrected_to_linear(color.dec.1);
         let b = Self::gamma_corrected_to_linear(color.dec.2);
-        return (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
+        (r * 0.2126) + (g * 0.7152) + (b * 0.0722)
     }
 }
 
@@ -180,7 +180,7 @@ fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
         .par_chunks(10)
         .map(|chunk| {
             chunk
-                .into_iter()
+                .iter()
                 .filter_map(|(k, sf)| {
                     sf.get_scheme()
                         .ok()
@@ -205,5 +205,5 @@ fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
         }
     }
 
-    return Ok(serde_json::to_string(&*sorted_results)?);
+    Ok(serde_json::to_string(&*sorted_results)?)
 }
