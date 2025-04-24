@@ -9,7 +9,7 @@ use std::path::Path;
 use tinted_builder::{SchemeSystem, SchemeVariant};
 use utils::setup;
 
-const SCHEME_COUNT: usize = 438;
+const SCHEME_COUNT: usize = 447;
 
 #[test]
 fn test_cli_list_subcommand_without_setup() -> Result<()> {
