@@ -1,9 +1,6 @@
 mod utils;
 
-use std::fs;
-use std::path::Path;
-
-use crate::utils::{setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME};
+use crate::utils::{setup, write_to_file};
 use anyhow::Result;
 use utils::build_comamnd_vec;
 
@@ -82,8 +79,6 @@ preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
         data_path.as_path(),
     )?)
     .unwrap();
-
-
 
     // ------
     // Assert
@@ -164,8 +159,6 @@ preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
     )?)
     .unwrap();
 
-
-
     // ------
     // Assert
     // ------
@@ -213,8 +206,6 @@ preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
         data_path.as_path(),
     )?)
     .unwrap();
-
-
 
     // ------
     // Assert
@@ -265,8 +256,6 @@ preferred-schemes = ["base24-zenburn", "base24-ubuntu"]
     )?)
     .unwrap();
 
-
-
     // ------
     // Assert
     // ------
@@ -315,8 +304,6 @@ preferred-schemes = ["base24-zenburn", "base24-github", "base24-ubuntu"]
         data_path.as_path(),
     )?)
     .unwrap();
-
-
 
     // ------
     // Assert
