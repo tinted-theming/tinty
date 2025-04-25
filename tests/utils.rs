@@ -99,14 +99,8 @@ pub fn setup(
 )> {
     let config_path = PathBuf::from(format!("config_path_{}.toml", name).as_str());
     let data_path = PathBuf::from(format!("data_path_{}", name).as_str());
-    let command = format!(
-        "{} --config=\"{}\" --data-dir=\"{}\" {}",
-        COMMAND_NAME,
-        config_path.display(),
-        data_path.display(),
-        command
-    );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+
+    let command_vec = build_comamnd_vec(command, &config_path, &data_path)?;
 
     cleanup(&config_path, &data_path)?;
     write_to_file(&config_path, "")?;
@@ -120,6 +114,22 @@ pub fn setup(
         command_vec,
         Box::new(move || cleanup(&config_path_clone, &data_path_clone)),
     ))
+}
+
+#[allow(clippy::type_complexity)]
+pub fn build_comamnd_vec(
+    command: &str,
+    config_path: &Path,
+    data_path: &Path
+) -> Result<Vec<String>> {
+    let command = format!(
+        "{} --config=\"{}\" --data-dir=\"{}\" {}",
+        COMMAND_NAME,
+        config_path.display(),
+        data_path.display(),
+        command
+    );
+    shell_words::split(command.as_str()).map_err(anyhow::Error::new)
 }
 
 #[allow(dead_code)]
@@ -139,3 +149,4 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> 
     }
     Ok(())
 }
+
