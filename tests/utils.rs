@@ -120,7 +120,7 @@ pub fn setup(
 pub fn build_comamnd_vec(
     command: &str,
     config_path: &Path,
-    data_path: &Path
+    data_path: &Path,
 ) -> Result<Vec<String>> {
     let command = format!(
         "{} --config=\"{}\" --data-dir=\"{}\" {}",
@@ -149,4 +149,3 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> 
     }
     Ok(())
 }
-
