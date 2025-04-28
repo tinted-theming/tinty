@@ -138,7 +138,7 @@ fn test_cli_cycle_subcommand_correct_next_scheme() -> Result<()> {
     // -------
     let scheme_name = "base24-zenburn";
     let (config_path, data_path, apply_command_vec, cleanup) = setup(
-        "test_cli_cycle_subcommand_with_default_scheme_only",
+        "test_cli_cycle_subcommand_correct_next_scheme",
         format!("apply {}", &scheme_name).as_str(),
     )?;
     let config_content = r##"
