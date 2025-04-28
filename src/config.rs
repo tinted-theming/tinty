@@ -181,11 +181,7 @@ impl fmt::Display for Config {
         )?;
 
         if let Some(default_scheme) = &self.default_scheme {
-            writeln!(
-                f,
-                "default-scheme = \"{}\"",
-                default_scheme
-            )?;
+            writeln!(f, "default-scheme = \"{}\"", default_scheme)?;
         }
 
         if let Some(items) = &self.preferred_schemes {
