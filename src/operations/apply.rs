@@ -1,17 +1,17 @@
 use crate::config::Config;
 use crate::constants::{
-    CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, DEFAULT_SCHEME_SYSTEM, REPO_DIR, REPO_NAME,
-    REPO_URL, SCHEMES_REPO_NAME,
+    ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, DEFAULT_SCHEME_SYSTEM,
+    REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME,
 };
 use crate::utils::{
     create_theme_filename_without_extension, get_all_scheme_names, get_shell_command_from_string,
     write_to_file,
 };
 use anyhow::{anyhow, Context, Result};
-use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Child, Command};
 use std::str::FromStr;
+use std::{fs, io};
 use tinted_builder::SchemeSystem;
 use tinted_builder_rust::operation_build::build;
 
@@ -55,6 +55,12 @@ pub fn apply(
             full_scheme_name
         ));
     }
+
+    // Create a temporary data directory
+    let staging_data_dir = tempfile::Builder::new()
+        .prefix(format!("{}-", ARTIFACTS_DIR).as_str())
+        .tempdir_in(data_path)?;
+    let staging_data_path = staging_data_dir.path();
 
     // Go through custom schemes
     let scheme_system =
@@ -105,13 +111,18 @@ pub fn apply(
     };
 
     generate_custom_schemes?;
-    write_to_file(&data_path.join(CURRENT_SCHEME_FILE_NAME), full_scheme_name)?;
+    write_to_file(
+        &staging_data_path.join(CURRENT_SCHEME_FILE_NAME),
+        full_scheme_name,
+    )?;
 
     // Collect config items that match the provided system
     let system_items = items.iter().filter(|item| match &item.supported_systems {
         Some(supported_systems) => supported_systems.contains(&scheme_system),
         None => false,
     });
+
+    let mut hook_commands: Vec<Hook> = Vec::new();
 
     // Run through provided items in config.toml
     for item in system_items {
@@ -158,25 +169,21 @@ pub fn apply(
                     create_theme_filename_without_extension(item)?,
                     extension,
                 );
-                let data_theme_path = data_path.join(filename);
+                let data_theme_path = staging_data_path.join(&filename);
                 let theme_content = fs::read_to_string(theme_file.path())?;
 
                 write_to_file(&data_theme_path, theme_content.as_str())?;
 
-                // Run hook for item if provided
+                // Gather the hook commands, we will run them after we've committed all items onto
+                // the final artifacts directory.
                 if let Some(hook_text) = &item.hook {
-                    let hook_script = hook_text
-                        .replace("%o", active_operation.unwrap_or("apply"))
-                        .replace("%f", format!("\"{}\"", data_theme_path.display()).as_str())
-                        .replace("%n", full_scheme_name);
-                    let command_vec =
-                        get_shell_command_from_string(config_path, hook_script.as_str())?;
-                    Command::new(&command_vec[0])
-                        .args(&command_vec[1..])
-                        .spawn()
-                        .with_context(|| {
-                            format!("Failed to execute {} hook: {}", item.name, hook_text)
-                        })?;
+                    let hook_parts = Hook {
+                        name: item.name.to_string(),
+                        hook_command_template: hook_text.to_string(),
+                        operation: active_operation.unwrap_or("apply").to_string(),
+                        relative_file_path: PathBuf::from(filename),
+                    };
+                    hook_commands.push(hook_parts);
                 }
             }
             None => {
@@ -190,6 +197,20 @@ pub fn apply(
         }
     }
 
+    let target_path = data_path.join(ARTIFACTS_DIR);
+    if target_path.exists() {
+        // Replace the existing artifacts directory with the staging one.
+        fs::remove_dir_all(&target_path)?;
+    }
+    fs::rename(staging_data_path, &target_path)?;
+    std::mem::forget(staging_data_dir);
+
+    for hook in hook_commands {
+        hook.run_command(&target_path, config_path, full_scheme_name)?;
+    }
+
+    create_symlinks_for_backwards_compat(&target_path, data_path)?;
+
     // Run global tinty/config.toml hooks
     if let Some(hooks_vec) = config.hooks.clone() {
         for hook in hooks_vec.iter() {
@@ -201,5 +222,100 @@ pub fn apply(
         }
     }
 
+    Ok(())
+}
+
+fn create_symlinks_for_backwards_compat(source_path: &PathBuf, target_path: &Path) -> Result<()> {
+    for entry in fs::read_dir(source_path)? {
+        let entry = entry?;
+        let metadata = entry.metadata()?;
+        if metadata.is_file() {
+            let file_name = entry.file_name();
+            let src_file = entry.path();
+            let dst_file = target_path.join(file_name);
+            // Delete existing destination file or symlink if it exists
+            if dst_file.exists() {
+                fs::remove_file(&dst_file)?;
+            }
+            symlink_any(&src_file, &dst_file)?;
+        }
+    }
+    delete_non_dirs_and_broken_symlinks(target_path)?;
+
+    Ok(())
+}
+
+struct Hook {
+    name: String,
+    hook_command_template: String,
+    operation: String,
+    relative_file_path: PathBuf,
+}
+
+impl Hook {
+    fn run_command(
+        &self,
+        artifacts_path: &Path,
+        config_path: &Path,
+        full_scheme_name: &str,
+    ) -> Result<Child, anyhow::Error> {
+        let hook_script = self
+            .hook_command_template
+            .replace("%o", self.operation.as_str())
+            .replace(
+                "%f",
+                format!(
+                    "\"{}\"",
+                    artifacts_path
+                        .join(self.relative_file_path.clone())
+                        .display()
+                )
+                .as_str(),
+            )
+            .replace("%n", full_scheme_name);
+        let command_vec = get_shell_command_from_string(config_path, hook_script.as_str())?;
+        Command::new(&command_vec[0])
+            .args(&command_vec[1..])
+            .spawn()
+            .with_context(|| {
+                format!(
+                    "Failed to execute {} hook: {}",
+                    self.name, self.hook_command_template
+                )
+            })
+    }
+}
+
+fn symlink_any(src: &Path, dst: &Path) -> Result<(), anyhow::Error> {
+    std::os::unix::fs::symlink(src, dst)?;
+    Ok(())
+}
+
+fn delete_non_dirs_and_broken_symlinks(dir: &Path) -> Result<()> {
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        let metadata = fs::symlink_metadata(&path)?; // Don't follow symlinks
+
+        let file_type = metadata.file_type();
+
+        if file_type.is_dir() {
+            continue;
+        }
+
+        if file_type.is_symlink() {
+            // Try to follow the symlink
+            match fs::metadata(&path) {
+                Err(e) if e.kind() == io::ErrorKind::NotFound => {
+                    // Broken symlink
+                    fs::remove_file(&path)?;
+                }
+                Err(_) | Ok(_) => continue, // Valid symlink or any other error, skip
+            }
+        } else {
+            // Regular file
+            fs::remove_file(&path)?;
+        }
+    }
     Ok(())
 }

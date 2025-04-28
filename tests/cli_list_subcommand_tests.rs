@@ -9,7 +9,7 @@ use std::path::Path;
 use tinted_builder::{SchemeSystem, SchemeVariant};
 use utils::setup;
 
-const SCHEME_COUNT: usize = 438;
+const SCHEME_COUNT: usize = 447;
 
 #[test]
 fn test_cli_list_subcommand_without_setup() -> Result<()> {
@@ -233,8 +233,8 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         github.variant
     );
     assert!(
-        github.author == "Defman21",
-        "Expected wauthorname to be 'Defman21', got {}",
+        github.author == "Tinted Theming (https://github.com/tinted-theming)",
+        "Expected author to be 'Tinted Theming (https://github.com/tinted-theming)', got {}",
         github.author
     );
     assert!(
@@ -256,115 +256,115 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
     let expected_colors = vec![
         (
             "base00",
-            "#ffffff",
-            ("ff".to_string(), "ff".to_string(), "ff".to_string()),
-            (1.0, 1.0, 1.0),
-            (255, 255, 255),
+            "#eaeef2",
+            ("ea".to_string(), "ee".to_string(), "f2".to_string()),
+            (0.91764706, 0.93333334, 0.9490196),
+            (234, 238, 242),
         ),
         (
             "base01",
-            "#f5f5f5",
-            ("f5".to_string(), "f5".to_string(), "f5".to_string()),
-            (0.9607843, 0.9607843, 0.9607843),
-            (245, 245, 245),
+            "#d0d7de",
+            ("d0".to_string(), "d7".to_string(), "de".to_string()),
+            (0.8156863, 0.84313726, 0.87058824),
+            (208, 215, 222),
         ),
         (
             "base02",
-            "#c8c8fa",
-            ("c8".to_string(), "c8".to_string(), "fa".to_string()),
-            (0.78431374, 0.78431374, 0.98039216),
-            (200, 200, 250),
+            "#afb8c1",
+            ("af".to_string(), "b8".to_string(), "c1".to_string()),
+            (0.6862745, 0.72156864, 0.75686276),
+            (175, 184, 193),
         ),
         (
             "base03",
-            "#969896",
-            ("96".to_string(), "98".to_string(), "96".to_string()),
-            (0.5882353, 0.59607846, 0.5882353),
-            (150, 152, 150),
+            "#8c959f",
+            ("8c".to_string(), "95".to_string(), "9f".to_string()),
+            (0.54901963, 0.58431375, 0.62352943),
+            (140, 149, 159),
         ),
         (
             "base04",
-            "#e8e8e8",
-            ("e8".to_string(), "e8".to_string(), "e8".to_string()),
-            (0.9098039, 0.9098039, 0.9098039),
-            (232, 232, 232),
+            "#6e7781",
+            ("6e".to_string(), "77".to_string(), "81".to_string()),
+            (0.43137255, 0.46666667, 0.5058824),
+            (110, 119, 129),
         ),
         (
             "base05",
-            "#333333",
-            ("33".to_string(), "33".to_string(), "33".to_string()),
-            (0.2, 0.2, 0.2),
-            (51, 51, 51),
+            "#424a53",
+            ("42".to_string(), "4a".to_string(), "53".to_string()),
+            (0.25882354, 0.2901961, 0.3254902),
+            (66, 74, 83),
         ),
         (
             "base06",
-            "#ffffff",
-            ("ff".to_string(), "ff".to_string(), "ff".to_string()),
-            (1.0, 1.0, 1.0),
-            (255, 255, 255),
+            "#32383f",
+            ("32".to_string(), "38".to_string(), "3f".to_string()),
+            (0.19607843, 0.21960784, 0.24705882),
+            (50, 56, 63),
         ),
         (
             "base07",
-            "#ffffff",
-            ("ff".to_string(), "ff".to_string(), "ff".to_string()),
-            (1.0, 1.0, 1.0),
-            (255, 255, 255),
+            "#1f2328",
+            ("1f".to_string(), "23".to_string(), "28".to_string()),
+            (0.12156863, 0.13725491, 0.15686275),
+            (31, 35, 40),
         ),
         (
             "base08",
-            "#ed6a43",
-            ("ed".to_string(), "6a".to_string(), "43".to_string()),
-            (0.92941177, 0.41568628, 0.2627451),
-            (237, 106, 67),
+            "#fa4549",
+            ("fa".to_string(), "45".to_string(), "49".to_string()),
+            (0.98039216, 0.27058825, 0.28627452),
+            (250, 69, 73),
         ),
         (
             "base09",
-            "#0086b3",
-            ("00".to_string(), "86".to_string(), "b3".to_string()),
-            (0.0, 0.5254902, 0.7019608),
-            (0, 134, 179),
+            "#e16f24",
+            ("e1".to_string(), "6f".to_string(), "24".to_string()),
+            (0.88235295, 0.43529412, 0.14117648),
+            (225, 111, 36),
         ),
         (
             "base0A",
-            "#795da3",
-            ("79".to_string(), "5d".to_string(), "a3".to_string()),
-            (0.4745098, 0.3647059, 0.6392157),
-            (121, 93, 163),
+            "#bf8700",
+            ("bf".to_string(), "87".to_string(), "00".to_string()),
+            (0.7490196, 0.5294118, 0.0),
+            (191, 135, 0),
         ),
         (
             "base0B",
-            "#183691",
-            ("18".to_string(), "36".to_string(), "91".to_string()),
-            (0.09411765, 0.21176471, 0.5686275),
-            (24, 54, 145),
+            "#2da44e",
+            ("2d".to_string(), "a4".to_string(), "4e".to_string()),
+            (0.1764706, 0.6431373, 0.30588236),
+            (45, 164, 78),
         ),
         (
             "base0C",
-            "#183691",
-            ("18".to_string(), "36".to_string(), "91".to_string()),
-            (0.09411765, 0.21176471, 0.5686275),
-            (24, 54, 145),
+            "#339d9b",
+            ("33".to_string(), "9d".to_string(), "9b".to_string()),
+            (0.2, 0.6156863, 0.60784316),
+            (51, 157, 155),
         ),
         (
             "base0D",
-            "#795da3",
-            ("79".to_string(), "5d".to_string(), "a3".to_string()),
-            (0.4745098, 0.3647059, 0.6392157),
-            (121, 93, 163),
+            "#218bff",
+            ("21".to_string(), "8b".to_string(), "ff".to_string()),
+            (0.12941177, 0.54509807, 1.0),
+            (33, 139, 255),
         ),
         (
             "base0E",
-            "#a71d5d",
-            ("a7".to_string(), "1d".to_string(), "5d".to_string()),
-            (0.654902, 0.11372549, 0.3647059),
-            (167, 29, 93),
+            "#a475f9",
+            ("a4".to_string(), "75".to_string(), "f9".to_string()),
+            (0.6431373, 0.45882353, 0.9764706),
+            (164, 117, 249),
         ),
         (
             "base0F",
-            "#333333",
-            ("33".to_string(), "33".to_string(), "33".to_string()),
-            (0.2, 0.2, 0.2),
-            (51, 51, 51),
+            "#4d2d00",
+            ("4d".to_string(), "2d".to_string(), "00".to_string()),
+            (0.3019608, 0.1764706, 0.0),
+            (77, 45, 0),
         ),
     ];
 
@@ -417,13 +417,13 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         .unwrap();
 
     assert!(
-        background == 100.0,
-        "Expected lightness.background to be 100, got {}",
+        background == 93.90565,
+        "Expected lightness.background to be 93.90565, got {}",
         background
     );
     assert!(
-        foreground == 21.246727,
-        "Expected lightness.foreground to be 21.246727, got {}",
+        foreground == 31.067837,
+        "Expected lightness.foreground to be 31.067837, got {}",
         foreground
     );
 

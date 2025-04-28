@@ -1,6 +1,7 @@
 pub const REPO_URL: &str = env!("CARGO_PKG_HOMEPAGE");
 pub const REPO_NAME: &str = env!("CARGO_PKG_NAME");
 pub const REPO_DIR: &str = "repos";
+pub const ARTIFACTS_DIR: &str = "artifacts";
 pub const SCHEMES_REPO_URL: &str = "https://github.com/tinted-theming/schemes";
 pub const SCHEMES_REPO_NAME: &str = "schemes";
 pub const CUSTOM_SCHEMES_DIR_NAME: &str = "custom-schemes";
