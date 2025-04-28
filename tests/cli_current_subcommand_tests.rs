@@ -2,7 +2,8 @@ mod utils;
 
 use anyhow::Result;
 use utils::{
-    copy_dir_all, setup, write_to_file, ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, REPO_DIR, SCHEMES_REPO_NAME
+    copy_dir_all, setup, write_to_file, ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, REPO_DIR,
+    SCHEMES_REPO_NAME,
 };
 
 #[test]
