@@ -433,3 +433,40 @@ pub fn replace_tilde_slash_with_home(path_str: &str) -> Result<PathBuf> {
         Ok(PathBuf::from(trimmed_path_str))
     }
 }
+
+pub fn next_scheme_in_cycle(current: &String, schemes: Vec<String>) -> String {
+    let next_index = schemes
+        .iter()
+        .position(|scheme| scheme == current)
+        .map(|i| i + 1)
+        .unwrap_or(0);
+    schemes[(next_index) % schemes.len()].clone()
+}
+
+pub fn user_curated_scheme_list(config: &Config) -> Option<Vec<String>> {
+    // Return a list of preferred schemes based on presence of this value in the config, and
+    // whatever the default scheme is if specified in config also.
+    config
+        .preferred_schemes
+        .as_ref()
+        .map(|preferred| {
+            // If default scheme is defined, add it to the cycle.
+            config
+                .default_scheme
+                .as_ref()
+                .filter(|default| !preferred.contains(default))
+                .map(|default| {
+                    let mut result = vec![default.clone()];
+                    result.extend(preferred.clone());
+                    result
+                })
+                .unwrap_or_else(|| preferred.clone())
+        })
+        .or_else(|| {
+            // If default scheme is defined, use it if preferred schemes is unset.
+            config
+                .default_scheme
+                .as_ref()
+                .map(|theme| vec![theme.clone()])
+        })
+}

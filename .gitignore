@@ -18,3 +18,4 @@ Cargo.lock
 # Test generated files
 /data_path_*
 /config_path_*
+/.idea/

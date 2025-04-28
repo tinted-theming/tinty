@@ -1,15 +1,20 @@
 use crate::constants::{
-    CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME,
+    ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME,
+    SCHEMES_REPO_NAME,
 };
 use anyhow::{anyhow, Result};
 use std::fs;
 use std::path::Path;
 use tinted_builder_rust::utils::get_scheme_files;
 
+pub fn get_current_scheme_slug(data_path: &Path) -> String {
+    fs::read_to_string(data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME))
+        .unwrap_or_default()
+}
+
 /// Prints out the name of the last scheme applied
 pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
-    let current_scheme_slug =
-        fs::read_to_string(data_path.join(CURRENT_SCHEME_FILE_NAME)).unwrap_or_default();
+    let current_scheme_slug = get_current_scheme_slug(data_path);
     let schemes_path = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
 
     if current_scheme_slug.is_empty() {

@@ -168,6 +168,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | `sync`     | Installs and updates schemes and templates defined in `tinty/config.toml` | - | `tinty sync` |
 | `list`     | Lists all available themes. | Optional argument `--custom-schemes` to list saved custom theme files using `tinty generate-scheme`.<br>Optional argument `--json` to output more info about each scheme in JSON form | `tinty list` |
 | `apply`    | Applies a specific theme. | `<scheme_system>-<scheme_name>`: Name of the system and scheme to apply. | `tinty apply base16-mocha` |
+| `cycle`    | Applies the next theme among your preferred ones. See [Configuration](#configuration).  |  | `tinty cycle` |
 | `init`     | Initializes the tool with the last applied theme otherwise `default-scheme` from `config.toml`. | - | `tinty init` |
 | `current`  | Displays the currently applied theme or current theme values. | `<scheme_property_name>` (Optional argument with the following supported values: `author` \| `description` \| `name` \| `slug` \| `system` \| `variant`) | `tinty current` |
 | `config`   | Displays config related information currently in use by Tinty. Without flags it returns `config.yml` content. | - | `tinty config` |
@@ -211,6 +212,7 @@ to your preferences and environment.
 |-------------------|--------------------|----------|----------------------------------------------------------------------------------------|---------|---------|
 | `shell`           | `string`           | Optional | Specifies the shell command used to execute hooks. | `"sh -c '{}'"` | `shell = "bash -c '{}'"` |
 | `default-scheme`  | `string`           | Optional | Defines the default theme scheme to be applied if no specific scheme is set. | None | `default-scheme = "base16-mocha"` |
+| `preferred-schemes`  | `array<string>`           | Optional | A list of your favorite theme schemes you'd like to cycle through  | `[]` | `preferred-schemes = ["base16-gruvbox-dark", "base16-gruvbox-light"]` |
 | `hooks`           | `array<string>`    | Optional | A list of strings which are executed after every `tinty apply` | None | `hooks = ["echo \"The current scheme is: $(tinty current)\""]` |
 | `[[items]]`       | `array<items>`     | Required | An array of `items` configurations. Each item represents a themeable component. Detailed structure provided in the next section. | - | - |
 
@@ -287,6 +289,7 @@ multiple items along with global settings:
 # Global settings
 shell = "zsh -c '{}'"
 default-scheme = "base16-mocha"
+preferred-schemes = ["base16-gruvbox-dark", "base16-gruvbox-light", "base16-github-dark"]
 
 # Item configurations
 [[items]]

@@ -2,7 +2,8 @@ mod utils;
 
 use anyhow::Result;
 use utils::{
-    copy_dir_all, setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_DIR, SCHEMES_REPO_NAME,
+    copy_dir_all, setup, write_to_file, ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, REPO_DIR,
+    SCHEMES_REPO_NAME,
 };
 
 #[test]
@@ -13,7 +14,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     let (_, data_path, command_vec, cleanup) =
         setup("test_cli_current_subcommand_with_setup", "current")?;
     let scheme_name = "base16-oceanicnext";
-    let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
+    let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
     let schemes_dir = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
 
     write_to_file(&current_scheme_path, scheme_name)?;
@@ -107,7 +108,7 @@ where
     )?;
 
     let scheme_name = "base16-tinty-generated";
-    let current_scheme_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
+    let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
     let schemes_dir = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
 
     write_to_file(&current_scheme_path, scheme_name)?;
