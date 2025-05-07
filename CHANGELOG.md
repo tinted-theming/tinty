@@ -7,14 +7,14 @@
 - New `tinty cycle` command to cycle through a small list of schemes you curate in your config's `preferred-schemes`
 property.
 
-## Changed
+### Changed
 
 - Theme files from themeable components are now located in a new `artifacts/` in the data directory. For backwards
 compatibility, symlinks are
 created in the root of the data directory pointing to their new locations. These symlinks will go
 away in a future Tinty release.
 
-## Fixed
+### Fixed
 
 - Fix bugs caused by vestigial theme files in the data directory. They are now cleaned up during `tinty apply`.
 
