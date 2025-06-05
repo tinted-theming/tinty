@@ -555,6 +555,17 @@ Configure [delta] as your Git pager and/or difftool under the name `delta`, like
 [include]
 	path = ~/.local/share/tinted-theming/tinty/tinted-delta-configs-file.gitconfig
 ```
+
+The above configuration applies the theme to Delta's diff outputs. Delta is also capable of using [syntax-highlighting](https://github.com/dandavison/delta?tab=readme-ov-file#syntax-highlighting-themes) themes from `bat`. To apply the base16 theme from `bat`, first configure it following the [bat](#bat) documentation. Once that is done, you can use it along with `delta` as follows:
+
+```gitconfig
+[core]
+	pager = delta --syntax-theme="base16-256"
+
+[interactive]
+	diffFilter = delta --syntax-theme="base16-256" --color-only
+```
+
 [Usage section]: https://github.com/tinted-theming/tinty?tab=readme-ov-file#usage
 [README.md]: https://github.com/tinted-theming/tinty/blob/main/README.md
 [bat]: https://github.com/sharkdp/bat
