@@ -5,9 +5,9 @@
 # - ./Cargo.lock
 # - ./THIRD-PARTY-LICENSES.md
 # - ./CHANGELOG.md
-name: "Release Commit"
+name: "Create Release-Commit"
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       bump_level:
         description: "What type of release is this?"
@@ -16,6 +16,10 @@ on:
         options:
           - minor
           - patch
+    secrets:
+      BOT_ACCESS_TOKEN:
+        description: GitHub bot access token
+        required: true
 permissions:
   contents: write
 
@@ -40,7 +44,6 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
 
       - name: Install cargo about and cargo deny for create_release_changes script
         run: |

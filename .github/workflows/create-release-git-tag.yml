@@ -1,4 +1,4 @@
-name: Tag release
+name: Create Release-Commit Git Tag
 on:
   workflow_call:
     secrets:
