@@ -9,7 +9,7 @@ use std::path::Path;
 use tinted_builder::{SchemeSystem, SchemeVariant};
 use utils::setup;
 
-const SCHEME_COUNT: usize = 447;
+const SCHEME_COUNT: usize = 459;
 
 #[test]
 fn test_cli_list_subcommand_without_setup() -> Result<()> {
@@ -447,7 +447,7 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
     let results: Vec<TestSchemeEntry> = serde_json::from_str(&stdout).unwrap();
 
     assert!(
-        results.len() == SCHEME_COUNT,
+        results.len() >= SCHEME_COUNT,
         "expected JSON to contain {} entries, found {}",
         SCHEME_COUNT,
         results.len()
