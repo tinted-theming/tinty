@@ -1,6 +1,14 @@
 name: Release
 on:
   workflow_dispatch:
+    inputs:
+      bump_level:
+        description: "What type of release is this? (Probably 'minor')"
+        required: true
+        type: choice
+        options:
+          - minor
+          - patch
 env:
   CARGO_INCREMENTAL: 0
 permissions:
@@ -22,21 +30,28 @@ jobs:
     with:
       cache-key: ${{ needs.setup-environment.outputs.cargo_cache_key }}
 
-  tag-release:
+  create-release-commit:
     needs:
-      - setup-environment
       - lint
       - test
-    uses: ./.github/workflows/tag-release.yml
+    uses: ./.github/workflows/release-commit.yml
+    with:
+      bump_level: ${{ github.event.inputs.bump_level }}
+    secrets:
+      BOT_ACCESS_TOKEN: ${{ secrets.BOT_ACCESS_TOKEN }}
+
+  create-release-git-tag:
+    needs:
+      - create-release-commit
+    uses: ./.github/workflows/create-release-git-tag.yml
     with:
       git_tag_name: ${{ needs.setup-environment.outputs.git_tag_name }}
     secrets:
       RELEASE: ${{ secrets.RELEASE }}
 
-  create-release:
-    needs: 
-      - setup-environment
-      - tag-release
+  create-github-release:
+    needs:
+      - create-release-git-tag
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,10 +61,9 @@ jobs:
           changelog: CHANGELOG.md
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  release:
+  create-binaries:
     needs:
-      - setup-environment
-      - create-release
+      - create-github-release
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -82,7 +96,7 @@ jobs:
           checksum: sha256
 
   publish-crate:
-    needs: release
+    needs: create-binaries
     uses: ./.github/workflows/publish-crate.yml
     secrets:
       CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
