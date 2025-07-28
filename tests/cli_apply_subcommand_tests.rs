@@ -34,10 +34,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
         "stdout does not contain the expected output"
     );
     assert!(
-        data_path
-            .join(ARTIFACTS_DIR)
-            .join(shell_theme_filename)
-            .exists(),
+        data_path.join(ARTIFACTS_DIR).join(shell_theme_filename).exists(),
         "Path does not exist"
     );
     assert_eq!(fs::read_to_string(&current_scheme_path)?, scheme_name);
@@ -291,6 +288,40 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
 }
 
 #[test]
+fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-gruvbox-dark-hard";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_root_hooks_has_envs_with_setup",
+        format!("apply {}", &scheme_name).as_str(),
+    )?;
+    let expected_output = "gruvbox-dark-hard 1d 20 21 79.72706 11.984516\n";
+    let config_content =
+        r#"hooks = ["echo $TINTY_SCHEME_SLUG $TINTY_SCHEME_PALETTE_BASE00_HEX_R $TINTY_SCHEME_PALETTE_BASE00_HEX_G $TINTY_SCHEME_PALETTE_BASE00_HEX_B $TINTY_SCHEME_LIGHTNESS_FOREGROUND $TINTY_SCHEME_LIGHTNESS_BACKGROUND"]"#;
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert_eq!(stdout, expected_output);
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
+    );
+
+    cleanup()?;
+    Ok(())
+}
+
+#[test]
 fn test_cli_apply_subcommand_hook_with_setup() -> Result<()> {
     // -------
     // Arrange
@@ -322,6 +353,50 @@ hook = "echo \"path: %f, operation: %o\""
         stdout,
         format!(
             "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
+            data_path.join(ARTIFACTS_DIR).display()
+        )
+    );
+    assert!(
+        stderr.is_empty(),
+        "stderr does not contain the expected output"
+    );
+
+    cleanup()?;
+    Ok(())
+}
+
+#[test]
+fn test_cli_apply_subcommand_hook_with_envs_with_setup() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_hook_with_setup",
+        format!("apply {}", &scheme_name).as_str(),
+    )?;
+    let config_content = r##"
+[[items]]
+path = "https://github.com/tinted-theming/base16-vim"
+name = "tinted-vim"
+themes-dir = "colors"
+hook = "echo \"path: $TINTY_THEME_FILE_PATH, operation: $TINTY_THEME_OPERATION, scheme: $TINTY_SCHEME_SLUG, color00 hex: ${TINTY_SCHEME_PALETTE_BASE00_HEX_R}${TINTY_SCHEME_PALETTE_BASE00_HEX_G}${TINTY_SCHEME_PALETTE_BASE00_HEX_B}\""
+"##;
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    utils::run_install_command(&config_path, &data_path)?;
+    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert_eq!(
+        stdout,
+        format!(
+            "path: {}/tinted-vim-colors-file.vim, operation: apply, scheme: oceanicnext, color00 hex: 1b2b34\n",
             data_path.join(ARTIFACTS_DIR).display()
         )
     );

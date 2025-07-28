@@ -4,16 +4,18 @@ use crate::constants::{
     REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME,
 };
 use crate::utils::{
-    create_theme_filename_without_extension, get_all_scheme_names, get_shell_command_from_string,
-    write_to_file,
+    create_theme_filename_without_extension, get_all_scheme_file_paths, get_shell_command_from_string, write_to_file,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::str::FromStr;
 use std::{fs, io};
 use tinted_builder::SchemeSystem;
 use tinted_builder_rust::operation_build::build;
+use tinted_builder_rust::operation_build::utils::SchemeFile;
+
+use super::list::SchemeEntry;
 
 fn str_matches_scheme_system(value: &str) -> bool {
     match value {
@@ -66,61 +68,56 @@ pub fn apply(
     let scheme_system =
         SchemeSystem::from_str(&scheme_system_option.unwrap_or("base16".to_string()))?;
     let schemes_path = &data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
-    let schemes_vec = get_all_scheme_names(schemes_path, Some(scheme_system.clone()))?;
     let custom_schemes_path = &data_path.join(CUSTOM_SCHEMES_DIR_NAME);
-    let custom_schemes_vec = if custom_schemes_path.is_dir() {
-        get_all_scheme_names(custom_schemes_path, Some(scheme_system.clone()))?
-    } else {
-        Vec::new()
-    };
 
-    // Check theme
+    let builtin_scheme_files = get_all_scheme_file_paths(&schemes_path, None)?;
+    let custom_scheme_files = get_all_scheme_file_paths(&custom_schemes_path, None).ok();
+
     let config = Config::read(config_path)?;
-    let items = config.items.unwrap_or_default();
-    let generate_custom_schemes: Result<()> = {
-        match (
-            schemes_vec.contains(&full_scheme_name.to_string()),
-            custom_schemes_vec.contains(&full_scheme_name.to_string()),
-        ) {
-            (true, false) => Ok(()),
-            (false, true) => {
-                let config = Config::read(config_path)?;
 
-                if let Some(items) = config.items {
-                    let item_name_vec: Vec<String> = items.iter().map(|p| p.name.clone()).collect();
+    let builtin_scheme = builtin_scheme_files.get(full_scheme_name);
+    let custom_scheme = custom_scheme_files
+        .as_ref()
+        .and_then(|m| {
+            m.get(full_scheme_name)
+        });
 
-                    for item_name in item_name_vec {
-                        let item_template_path: PathBuf =
-                            data_path.join(format!("{}/{}", REPO_DIR, &item_name));
-
-                        build(&item_template_path, custom_schemes_path, true)?;
-                    }
-
-                    Ok(())
-                } else {
-                    Ok(())
-                }
-            }
-            (true, true) => {
-                let scheme_partial_name = &scheme_name_arr[1..].join("-");
-
-                Err(anyhow!("You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it: {}", format!("{}/{}.yaml", custom_schemes_path.display(), scheme_partial_name)))
-            }
-            _ => Err(anyhow!("Scheme does not exist: {}", full_scheme_name)),
+    let scheme_file = builtin_scheme.xor(custom_scheme);
+    // We expect the scheme to be a built-in scheme or a custom schemes, not both.
+    if let None = scheme_file {
+        if builtin_scheme.is_none() {
+            return Err(anyhow!("Scheme does not exist: {}", full_scheme_name));
+        } else {
+            let scheme_partial_name = &scheme_name_arr[1..].join("-");
+            return Err(anyhow!(
+                "You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it: {}",
+                format!("{}/{}.yaml", custom_schemes_path.display(), scheme_partial_name),
+            ));
         }
-    };
+    }
 
-    generate_custom_schemes?;
+    if let Some(_) = custom_scheme {
+        build_and_get_custom_scheme_file(custom_schemes_path, data_path, &config)?;
+    }
+
     write_to_file(
         &staging_data_path.join(CURRENT_SCHEME_FILE_NAME),
         full_scheme_name,
     )?;
 
-    // Collect config items that match the provided system
-    let system_items = items.iter().filter(|item| match &item.supported_systems {
-        Some(supported_systems) => supported_systems.contains(&scheme_system),
-        None => false,
-    });
+    let system_items = config
+        .items
+        .map(|f| {
+            f.into_iter()
+                .filter(|f| {
+                    f.supported_systems
+                        .clone()
+                        .map(|s| s.contains(&scheme_system))
+                        .is_some()
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
 
     let mut hook_commands: Vec<Hook> = Vec::new();
 
@@ -140,7 +137,7 @@ pub fn apply(
 
         // Find the corresponding theme file for the provided item
         let theme_dir = fs::read_dir(&themes_path)
-            .map_err(anyhow::Error::new)
+            .map_err(Error::new)
             .with_context(|| format!("Themes are missing from {}, try running `{} install` or `{} update` and try again.", item.name, REPO_NAME, REPO_NAME))?;
         let theme_option = &theme_dir.filter_map(Result::ok).find(|entry| {
             let path = entry.path();
@@ -166,7 +163,7 @@ pub fn apply(
                 };
                 let filename = format!(
                     "{}{}",
-                    create_theme_filename_without_extension(item)?,
+                    create_theme_filename_without_extension(&item)?,
                     extension,
                 );
                 let data_theme_path = staging_data_path.join(&filename);
@@ -206,7 +203,12 @@ pub fn apply(
     std::mem::forget(staging_data_dir);
 
     for hook in hook_commands {
-        hook.run_command(&target_path, config_path, full_scheme_name)?;
+        hook.run_command(
+            &target_path,
+            config_path,
+            full_scheme_name,
+            scheme_file.unwrap(),
+        )?;
     }
 
     create_symlinks_for_backwards_compat(&target_path, data_path)?;
@@ -217,11 +219,28 @@ pub fn apply(
             let hook_command_vec = get_shell_command_from_string(config_path, hook.as_str())?;
             Command::new(&hook_command_vec[0])
                 .args(&hook_command_vec[1..])
+                .envs(SchemeEntry::from_scheme(&scheme_file.unwrap().get_scheme()?).to_envs())
                 .spawn()
                 .with_context(|| format!("Failed to execute global hook: {}", hook))?;
         }
     }
 
+    Ok(())
+}
+
+fn build_and_get_custom_scheme_file(
+    custom_schemes_path: &Path,
+    data_path: &Path,
+    config: &Config,
+) -> Result<()> {
+    if let Some(items) = &config.items {
+        let item_name_vec: Vec<String> = items.iter().map(|p| p.name.clone()).collect();
+        for item_name in item_name_vec {
+            let item_template_path: PathBuf =
+                data_path.join(format!("{}/{}", REPO_DIR, &item_name));
+            build(&item_template_path, custom_schemes_path, true)?;
+        }
+    };
     Ok(())
 }
 
@@ -258,24 +277,23 @@ impl Hook {
         artifacts_path: &Path,
         config_path: &Path,
         full_scheme_name: &str,
-    ) -> Result<Child, anyhow::Error> {
+        scheme_file: &SchemeFile,
+    ) -> Result<Child, Error> {
+        let theme_file_path = artifacts_path
+            .join(self.relative_file_path.clone())
+            .display()
+            .to_string();
         let hook_script = self
             .hook_command_template
             .replace("%o", self.operation.as_str())
-            .replace(
-                "%f",
-                format!(
-                    "\"{}\"",
-                    artifacts_path
-                        .join(self.relative_file_path.clone())
-                        .display()
-                )
-                .as_str(),
-            )
+            .replace("%f", format!("\"{}\"", theme_file_path).as_str())
             .replace("%n", full_scheme_name);
         let command_vec = get_shell_command_from_string(config_path, hook_script.as_str())?;
         Command::new(&command_vec[0])
             .args(&command_vec[1..])
+            .env("TINTY_THEME_FILE_PATH", theme_file_path)
+            .env("TINTY_THEME_OPERATION", self.operation.as_str())
+            .envs(SchemeEntry::from_scheme(&scheme_file.get_scheme()?).to_envs())
             .spawn()
             .with_context(|| {
                 format!(
@@ -286,7 +304,7 @@ impl Hook {
     }
 }
 
-fn symlink_any(src: &Path, dst: &Path) -> Result<(), anyhow::Error> {
+fn symlink_any(src: &Path, dst: &Path) -> Result<(), Error> {
     std::os::unix::fs::symlink(src, dst)?;
     Ok(())
 }
