@@ -4,7 +4,8 @@ use crate::constants::{
     REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME,
 };
 use crate::utils::{
-    create_theme_filename_without_extension, get_all_scheme_file_paths, get_shell_command_from_string, write_to_file,
+    create_theme_filename_without_extension, get_all_scheme_file_paths,
+    get_shell_command_from_string, write_to_file,
 };
 use anyhow::{anyhow, Context, Error, Result};
 use std::path::{Path, PathBuf};
@@ -78,9 +79,7 @@ pub fn apply(
     let builtin_scheme = builtin_scheme_files.get(full_scheme_name);
     let custom_scheme = custom_scheme_files
         .as_ref()
-        .and_then(|m| {
-            m.get(full_scheme_name)
-        });
+        .and_then(|m| m.get(full_scheme_name));
 
     let scheme_file = builtin_scheme.xor(custom_scheme);
     // We expect the scheme to be a built-in scheme or a custom schemes, not both.

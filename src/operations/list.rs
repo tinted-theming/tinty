@@ -118,33 +118,77 @@ impl SchemeEntry {
             ("TINTY_SCHEME_SLUG".to_string(), self.slug.clone()),
             ("TINTY_SCHEME_AUTHOR".to_string(), self.author.clone()),
             ("TINTY_SCHEME_VARIANT".to_string(), self.variant.to_string()),
-        ].to_vec();
+        ]
+        .to_vec();
 
-        let lightness_info = self.lightness.clone().map(|l| {
-            [
-                ("TINTY_SCHEME_LIGHTNESS_FOREGROUND".to_string(), l.foreground.to_string()),
-                ("TINTY_SCHEME_LIGHTNESS_BACKGROUND".to_string(), l.background.to_string()),
-            ].to_vec()
-        }).unwrap_or(Vec::new());
+        let lightness_info = self
+            .lightness
+            .clone()
+            .map(|l| {
+                [
+                    (
+                        "TINTY_SCHEME_LIGHTNESS_FOREGROUND".to_string(),
+                        l.foreground.to_string(),
+                    ),
+                    (
+                        "TINTY_SCHEME_LIGHTNESS_BACKGROUND".to_string(),
+                        l.background.to_string(),
+                    ),
+                ]
+                .to_vec()
+            })
+            .unwrap_or(Vec::new());
 
         // for (key, value) in &self.palette {
         //
         // }
 
-        let color_info: Vec<(String, String)> = self.palette.clone().iter().flat_map(|(color, color_out)| {
-            let c = color.to_uppercase();
-            [
-                (format!("TINTY_SCHEME_PALETTE_{}_HEX_R", c.to_uppercase()), color_out.hex.0.clone()),
-                (format!("TINTY_SCHEME_PALETTE_{}_HEX_G", c.to_uppercase()), color_out.hex.1.clone()),
-                (format!("TINTY_SCHEME_PALETTE_{}_HEX_B", c.to_uppercase()), color_out.hex.2.clone()),
-                (format!("TINTY_SCHEME_PALETTE_{}_RGB_R", c.to_uppercase()), color_out.rgb.0.to_string()),
-                (format!("TINTY_SCHEME_PALETTE_{}_RGB_G", c.to_uppercase()), color_out.rgb.1.to_string()),
-                (format!("TINTY_SCHEME_PALETTE_{}_RGB_B", c.to_uppercase()), color_out.rgb.2.to_string()),
-                (format!("TINTY_SCHEME_PALETTE_{}_DEC_R", c.to_uppercase()), color_out.dec.0.to_string()),
-                (format!("TINTY_SCHEME_PALETTE_{}_DEC_G", c.to_uppercase()), color_out.dec.1.to_string()),
-                (format!("TINTY_SCHEME_PALETTE_{}_DEC_B", c.to_uppercase()), color_out.dec.2.to_string()),
-            ] 
-        }).collect();
+        let color_info: Vec<(String, String)> = self
+            .palette
+            .clone()
+            .iter()
+            .flat_map(|(color, color_out)| {
+                let c = color.to_uppercase();
+                [
+                    (
+                        format!("TINTY_SCHEME_PALETTE_{}_HEX_R", c.to_uppercase()),
+                        color_out.hex.0.clone(),
+                    ),
+                    (
+                        format!("TINTY_SCHEME_PALETTE_{}_HEX_G", c.to_uppercase()),
+                        color_out.hex.1.clone(),
+                    ),
+                    (
+                        format!("TINTY_SCHEME_PALETTE_{}_HEX_B", c.to_uppercase()),
+                        color_out.hex.2.clone(),
+                    ),
+                    (
+                        format!("TINTY_SCHEME_PALETTE_{}_RGB_R", c.to_uppercase()),
+                        color_out.rgb.0.to_string(),
+                    ),
+                    (
+                        format!("TINTY_SCHEME_PALETTE_{}_RGB_G", c.to_uppercase()),
+                        color_out.rgb.1.to_string(),
+                    ),
+                    (
+                        format!("TINTY_SCHEME_PALETTE_{}_RGB_B", c.to_uppercase()),
+                        color_out.rgb.2.to_string(),
+                    ),
+                    (
+                        format!("TINTY_SCHEME_PALETTE_{}_DEC_R", c.to_uppercase()),
+                        color_out.dec.0.to_string(),
+                    ),
+                    (
+                        format!("TINTY_SCHEME_PALETTE_{}_DEC_G", c.to_uppercase()),
+                        color_out.dec.1.to_string(),
+                    ),
+                    (
+                        format!("TINTY_SCHEME_PALETTE_{}_DEC_B", c.to_uppercase()),
+                        color_out.dec.2.to_string(),
+                    ),
+                ]
+            })
+            .collect();
 
         let mut envs: Vec<(String, String)> = Vec::new();
         envs.extend(basic_info);

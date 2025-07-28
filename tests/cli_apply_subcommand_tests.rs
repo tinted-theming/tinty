@@ -34,7 +34,10 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
         "stdout does not contain the expected output"
     );
     assert!(
-        data_path.join(ARTIFACTS_DIR).join(shell_theme_filename).exists(),
+        data_path
+            .join(ARTIFACTS_DIR)
+            .join(shell_theme_filename)
+            .exists(),
         "Path does not exist"
     );
     assert_eq!(fs::read_to_string(&current_scheme_path)?, scheme_name);
@@ -298,8 +301,7 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
         format!("apply {}", &scheme_name).as_str(),
     )?;
     let expected_output = "gruvbox-dark-hard 1d 20 21 79.72706 11.984516\n";
-    let config_content =
-        r#"hooks = ["echo $TINTY_SCHEME_SLUG $TINTY_SCHEME_PALETTE_BASE00_HEX_R $TINTY_SCHEME_PALETTE_BASE00_HEX_G $TINTY_SCHEME_PALETTE_BASE00_HEX_B $TINTY_SCHEME_LIGHTNESS_FOREGROUND $TINTY_SCHEME_LIGHTNESS_BACKGROUND"]"#;
+    let config_content = r#"hooks = ["echo $TINTY_SCHEME_SLUG $TINTY_SCHEME_PALETTE_BASE00_HEX_R $TINTY_SCHEME_PALETTE_BASE00_HEX_G $TINTY_SCHEME_PALETTE_BASE00_HEX_B $TINTY_SCHEME_LIGHTNESS_FOREGROUND $TINTY_SCHEME_LIGHTNESS_BACKGROUND"]"#;
     write_to_file(&config_path, config_content)?;
 
     // ---

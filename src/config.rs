@@ -202,7 +202,6 @@ impl fmt::Display for Config {
             writeln!(f, "]")?;
         }
 
-
         if let Some(items) = &self.items {
             for item in items {
                 writeln!(f, "{}", item)?;
