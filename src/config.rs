@@ -194,6 +194,15 @@ impl fmt::Display for Config {
             writeln!(f, "preferred-schemes = [{}]", preferred_schemes_text)?;
         }
 
+        if let Some(hooks) = &self.hooks {
+            writeln!(f, "hooks = [")?;
+            for hook in hooks {
+                writeln!(f, "  \"{}\"", hook)?;
+            }
+            writeln!(f, "]")?;
+        }
+
+
         if let Some(items) = &self.items {
             for item in items {
                 writeln!(f, "{}", item)?;
