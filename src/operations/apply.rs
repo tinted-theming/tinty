@@ -218,7 +218,12 @@ pub fn apply(
             let hook_command_vec = get_shell_command_from_string(config_path, hook.as_str())?;
             Command::new(&hook_command_vec[0])
                 .args(&hook_command_vec[1..])
-                .envs(SchemeEntry::from_scheme(&scheme_file.expect("scheme file missing").get_scheme()?).to_envs())
+                .envs(
+                    SchemeEntry::from_scheme(
+                        &scheme_file.expect("scheme file missing").get_scheme()?,
+                    )
+                    .to_envs(),
+                )
                 .spawn()
                 .with_context(|| format!("Failed to execute global hook: {}", hook))?;
         }
