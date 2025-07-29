@@ -116,7 +116,7 @@ impl SchemeEntry {
             ("TINTY_SCHEME_ID".to_string(), self.id.clone()),
             ("TINTY_SCHEME_NAME".to_string(), self.name.clone()),
             ("TINTY_SCHEME_SLUG".to_string(), self.slug.clone()),
-            ("TINTY_SCHEME_AUTHOR".to_string(), self.author.clone()),
+            ("TINTY_SCHEME_SYSTEM".to_string(), self.system.to_string()),
             ("TINTY_SCHEME_VARIANT".to_string(), self.variant.to_string()),
         ]
         .to_vec();
