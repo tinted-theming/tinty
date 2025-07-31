@@ -6,26 +6,58 @@ on:
         description: Release token
         required: true
     inputs:
-      git_tag_name:
-        required: true
+      ref:
         type: string
-  workflow_dispatch:
-    inputs:
-      git_tag_name:
-        description: Git version tag (eg. v0.9.0)
         required: true
+    outputs:
+      git_tag_name:
+        description: "Git release tag name"
+        value: ${{ jobs.create-release-git-tag.outputs.git_tag_name }}
 
 jobs:
-  setup-environment:
+  create-release-git-tag:
     runs-on: ubuntu-latest
+    outputs:
+      git_tag_name: ${{ steps.git_tag_name.outputs.value }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.RELEASE }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Get git_tag_name from latest Cargo.toml version
+        id: git_tag_name
+        run: |
+          VERSION=$(cargo read-manifest | jq -r ".version")
+          echo "value=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Ensure the release tag does not exist
+        run: |
+          version="${{ steps.git_tag_name.outputs.value }}"
+          if git rev-parse "$version" >/dev/null 2>&1; then
+            echo "This git tag already exists: $version"
+            exit 1
+          fi
+
+      - name: Ensure crate version doesn't already exist
+        run: |
+          crate_name="tinty"
+          version="${{ steps.git_tag_name.outputs.value }}"
+          response=$(curl -s "https://crates.io/api/v1/crates/$crate_name")
+          if echo "$response" | grep -q "\"num\":\"$version\""; then
+            echo "Version $version of $crate_name already exists."
+            exit 1
+          fi
+
+      - name: Log sha and tag
+        run: |
+          echo "Git tag: ${{ steps.git_tag_name.outputs.value }}"
+          echo "Commit sha: ${{ inputs.ref }}"
 
       - name: Add git tag to release
         run: |
-          TAG_COMMIT_HASH=$(git rev-parse HEAD)
-          git tag ${{ inputs.git_tag_name }} ${TAG_COMMIT_HASH}
-          git push origin ${{ inputs.git_tag_name }}
+          git tag ${{ steps.git_tag_name.outputs.value }} ${{ inputs.ref }}
+          git push origin "refs/tags/${{ steps.git_tag_name.outputs.value }}"

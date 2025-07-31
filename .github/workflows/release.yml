@@ -34,7 +34,7 @@ jobs:
     needs:
       - lint
       - test
-    uses: ./.github/workflows/release-commit.yml
+    uses: ./.github/workflows/create-release-commit.yml
     with:
       bump_level: ${{ github.event.inputs.bump_level }}
     secrets:
@@ -45,24 +45,29 @@ jobs:
       - create-release-commit
     uses: ./.github/workflows/create-release-git-tag.yml
     with:
-      git_tag_name: ${{ needs.setup-environment.outputs.git_tag_name }}
+      ref: ${{ needs.create-release-commit.outputs.commit_sha }}
     secrets:
       RELEASE: ${{ secrets.RELEASE }}
 
   create-github-release:
     needs:
+      - create-release-commit
       - create-release-git-tag
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: "refs/tags/${{ needs.create-release-git-tag.outputs.git_tag_name }}"
+
       - uses: taiki-e/create-gh-release-action@v1
         with:
-          ref: 'refs/tags/${{ needs.setup-environment.outputs.git_tag_name }}'
           changelog: CHANGELOG.md
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: "refs/tags/${{ needs.create-release-git-tag.outputs.git_tag_name }}" # This must be a git tag
 
   create-binaries:
     needs:
+      - create-release-git-tag
       - create-github-release
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
@@ -87,16 +92,22 @@ jobs:
             os: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: "refs/tags/${{ needs.create-release-git-tag.outputs.git_tag_name }}"
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          ref: refs/tags/${{ needs.setup-environment.outputs.git_tag_name }}
+          ref: "refs/tags/${{ needs.create-release-git-tag.outputs.git_tag_name }}"
           bin: tinty
           target: ${{ matrix.target }}
           token: ${{ secrets.GITHUB_TOKEN }}
           checksum: sha256
 
   publish-crate:
-    needs: create-binaries
+    needs:
+      - create-release-git-tag
+      - create-binaries
     uses: ./.github/workflows/publish-crate.yml
+    with:
+      ref: "refs/tags/${{ needs.create-release-git-tag.outputs.git_tag_name }}"
     secrets:
       CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}

@@ -10,31 +10,65 @@ on:
   workflow_call:
     inputs:
       bump_level:
-        description: "What type of release is this?"
+        description: "Type of release"
         required: true
-        type: choice
-        options:
-          - minor
-          - patch
+        type: string
     secrets:
       BOT_ACCESS_TOKEN:
         description: GitHub bot access token
         required: true
+    outputs:
+      commit_sha:
+        description: "SHA of the release commit"
+        value: ${{ jobs.create-release-commit.outputs.commit_sha }}
 permissions:
   contents: write
 
 jobs:
-  setup-environment:
+  create-release-commit:
     runs-on: ubuntu-latest
+    env:
+      BUMP_LEVEL: ${{ inputs.bump_level }}
+    outputs:
+      commit_sha: ${{ steps.set_commit_sha.outputs.value }}
     steps:
+      - name: Validate bump_level input
+        run: |
+          if [[ "$BUMP_LEVEL" != "minor" && "$BUMP_LEVEL" != "patch" ]]; then
+            echo "❌ Invalid bump_level: $BUMP_LEVEL. Allowed: 'minor' or 'patch'"
+            exit 1
+          fi
+          echo "✅ Valid bump_level: ${{ inputs.bump_level }}"
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Needed to ensure previous Release commits don't exist with `git log`
           token: ${{ secrets.BOT_ACCESS_TOKEN }}
 
+      - name: Get new cargo version
+        id: cargo_version
+        run: |
+          VERSION=$(cargo read-manifest | jq -r ".version")
+          echo "value=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Ensure commit doesn't already exist
+        id: search_commit
+        run: |
+          message_to_find="Release v${{ steps.cargo_version.outputs.value }}"
+          match=$(git log --grep="^$message_to_find" --oneline -n 1)
+          if [ -n "$match" ]; then
+            echo "Commit with message '$message_to_find' found: $match"
+            hash=$(echo "$match" | cut -d' ' -f1)
+            echo "hash=$hash" >> $GITHUB_OUTPUT
+          else
+            echo "Commit with message '$message_to_find' not found."
+            echo "hash=" >> $GITHUB_OUTPUT
+          fi
+
       # https://github.com/actions/cache/blob/main/examples.md#rust---cargo
       - name: Cargo cache
+        if: ${{ steps.search_commit.outputs.hash == '' }}
         uses: actions/cache@v4
         with:
           path: |
@@ -46,29 +80,18 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install cargo about and cargo deny for create_release_changes script
+        if: ${{ steps.search_commit.outputs.hash == '' }}
         run: |
-          cargo install --locked cargo-about
-          cargo install --locked cargo-deny
+          command -v cargo-about >/dev/null 2>&1 || cargo install --locked cargo-about
+          command -v cargo-deny >/dev/null 2>&1 || cargo install --locked cargo-deny
 
-      - name: Add git tag to release
-        run: ./scripts/create_release_changes "${{ github.event.inputs.bump_level }}"
-
-      - name: Get new cargo version
-        id: cargo_version
-        run: |
-          VERSION=$(cargo read-manifest | jq -r ".version")
-          echo "value=v$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Ensure this release doesn't already exist
-        run: |
-          if [[ -n $(git log --grep="Release ${{ steps.cargo_version.outputs.value }}") ]]; then
-            echo "Release commit already exists: \"Release ${{ steps.cargo_version.outputs.value}}\""
-            exit 1
-          else
-            echo "No matching release commit found, proceeding..."
-          fi
+      - name: Add release changes to CHANGELOG.md
+        if: ${{ steps.search_commit.outputs.hash == '' }}
+        run: ./scripts/create_release_changes "$BUMP_LEVEL"
 
       - name: Commit the changes
+        if: ${{ steps.search_commit.outputs.hash == '' }}
+        id: auto_commit
         uses: stefanzweifel/git-auto-commit-action@ac8823709a85c7ce090849ac3e5fe24d006f6e18 # v5.0.1
         with:
           commit_message: "Release ${{ steps.cargo_version.outputs.value }}"
@@ -76,3 +99,13 @@ jobs:
           commit_user_name: tinted-theming-bot
           commit_user_email: tintedtheming@proton.me
           commit_author: tinted-theming-bot <tintedtheming@proton.me>
+
+      - name: Set final commit_sha output
+        id: set_commit_sha
+        run: |
+          if [ -n "${{ steps.auto_commit.outputs.commit_hash }}" ]; then
+            echo "value=${{ steps.auto_commit.outputs.commit_hash }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=${{ steps.search_commit.outputs.hash }}" >> $GITHUB_OUTPUT
+          fi
+

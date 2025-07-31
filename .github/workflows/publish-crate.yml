@@ -5,13 +5,20 @@ on:
       CRATES_IO_TOKEN:
         description: crates.io token
         required: true
-  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref"
+        required: true
+        type: string
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
 
       - name: Publish to crates.io

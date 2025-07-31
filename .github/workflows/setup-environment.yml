@@ -2,9 +2,6 @@ name: Setup Environment
 on:
   workflow_call:
     outputs:
-      git_tag_name:
-        description: "Git release tag name"
-        value: ${{ jobs.setup-environment.outputs.git_tag_name }}
       cargo_cache_key:
         description: "Cargo cache key for the build"
         value: ${{ jobs.setup-environment.outputs.cargo_cache_key }}
@@ -13,13 +10,9 @@ jobs:
   setup-environment:
     runs-on: ubuntu-latest
     outputs:
-      git_tag_name: ${{ steps.git_tag_name.outputs.value }}
       cargo_cache_key: ${{ steps.cargo_cache_key.outputs.value }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          ref: ${{ inputs.git_tag_name || github.ref }}
       - uses: actions-rust-lang/setup-rust-toolchain@v1
 
       - name: Set cargo cache key
@@ -37,30 +30,6 @@ jobs:
             ~/.cargo/bin
           key: ${{ steps.cargo_cache_key.outputs.value }}
           id: cache-cargo-release
-
-      - name: Set git_tag_name from latest Cargo.toml version
-        id: git_tag_name
-        run: |
-          VERSION=$(cargo read-manifest | jq -r ".version")
-          echo "value=v$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Ensure the release tag does not exist
-        run: |
-          version="${{ steps.git_tag_name.outputs.value }}"
-          if git rev-parse "$version" >/dev/null 2>&1; then
-            echo "This git tag already exists: $version"
-            exit 1
-          fi
-
-      - name: Ensure crate version doesn't already exist
-        run: |
-          crate_name="tinty"
-          version="${{ steps.git_tag_name.outputs.value }}"
-          response=$(curl -s "https://crates.io/api/v1/crates/$crate_name")
-          if echo "$response" | grep -q "\"num\":\"$version\""; then
-            echo "Version $version of $crate_name already exists."
-            exit 1
-          fi
 
       - name: Ensure changelog entry for version exists
         run: |
