@@ -221,19 +221,19 @@ to your preferences and environment.
 **New in Tinty 0.29+**: Theme & color values are now available to hooks as environment variables:
 
 
-| Variable name | Description | Example |
-|---------------|-------------|--------|
-| `TINTY_THEME_FILE_PATH` | Path to the theme file for that `[[items]]` entry | `/home/user/.local/share/tinted-theming/tinty/tinted-alacritty-colors-file.toml` | 
-| `TINTY_THEME_OPERATION` | The command operation that is running the hook | `apply` or `init` | 
-| `TINTY_SCHEME_ID` | The unique name of the applied theme | `base16-ayu-dark` |
-| `TINTY_SCHEME_SYSTEM` | The system-part of the theme ID | `base16` or `base24` |
-| `TINTY_SCHEME_SLUG` | The slug-part of the theme ID | `ayu-dark` |
-| `TINTY_SCHEME_VARIANT` | Whether the theme is a light or dark variant | `light` or `dark` |
-| `TINTY_SCHEME_PALETTE_BASE{*}_HEX_{R,G,B}` | The R, G, or B value of the given `base*` color, in hex  | `$TINTY_SCHEME_PALETTE_BASE01_HEX_R` is the red color hex value of the applied theme's `base01` color |
-| `TINTY_SCHEME_PALETTE_BASE{*}_RGB_{R,G,B}` | The R, G, or B value of the given `base*` color, in `0-255` range  | `$TINTY_SCHEME_PALETTE_BASE08_RGB_G` is the green color `{0...255}` value of the applied theme's `base08` color |
-| `TINTY_SCHEME_PALETTE_BASE{*}_DEC_{R,G,B}` | The R, G, or B value of the given `base*` color, in `0-1.0` floating-point range  | `$TINTY_SCHEME_PALETTE_BASE0C_DEC_B` is the blue color `{0...1.0}` float value of the applied theme's `base0C` color |
-| `TINTY_SCHEME_LIGHTNESS_FOREGROUND` | The lightness value of the applied theme's foreground color  | `89.47651` |
-| `TINTY_SCHEME_LIGHTNESS_BACKGROUND` | The lightness value of the applied theme's background color  | `6.0706663` |
+| Variable name | Description |
+|---------------|-------------|
+| `TINTY_THEME_FILE_PATH` | Path to the theme file for that `[[items]]` entry<br>e.g. `/home/user/.local/share/tinted-theming/tinty/tinted-alacritty-colors-file.toml` |
+| `TINTY_THEME_OPERATION` | The command operation that is running the hook e.g. `apply` or `init`  |
+| `TINTY_SCHEME_ID` | The unique name of the applied theme e.g. `base16-ayu-dark` |
+| `TINTY_SCHEME_SYSTEM` | The system-part of the theme ID e.g. `base16` or `base24` |
+| `TINTY_SCHEME_SLUG` | The slug-part of the theme ID e.g. `ayu-dark` |
+| `TINTY_SCHEME_VARIANT` | Whether the theme is a light or dark variant e.g. `light` or `dark` |
+| `TINTY_SCHEME_PALETTE_BASE{*}_HEX_{R,G,B}` | The R, G, or B value of the given `base*` color, in hex<br>e.g. `$TINTY_SCHEME_PALETTE_BASE01_HEX_R` is the red color hex value of the applied theme's `base01` color  |
+| `TINTY_SCHEME_PALETTE_BASE{*}_RGB_{R,G,B}` | The R, G, or B value of the given `base*` color, in `0-255` range<br>e.g. `$TINTY_SCHEME_PALETTE_BASE08_RGB_G` is the green color `{0...255}` value of the applied theme's `base08` color  |
+| `TINTY_SCHEME_PALETTE_BASE{*}_DEC_{R,G,B}` | The R, G, or B value of the given `base*` color, in `0-1.0` floating-point range<br>e.g. `$TINTY_SCHEME_PALETTE_BASE0C_DEC_B` is the blue color `{0...1.0}` float value of the applied theme's `base0C` color   |
+| `TINTY_SCHEME_LIGHTNESS_FOREGROUND` | The lightness value of the applied theme's foreground color e.g. `89.47651`  |
+| `TINTY_SCHEME_LIGHTNESS_BACKGROUND` | The lightness value of the applied theme's background color e.g. `6.0706663`    |
 
 
 ##### Examples
