@@ -218,35 +218,62 @@ to your preferences and environment.
 
 #### hooks
 
-Hooks have the following template variables:
+**New in Tinty 0.29+**: Theme & color values are now available to hooks as environment variables:
 
-- `%f` - Path to the relevant `[[items]]` theme file, e.g.:
-  `/home/user/.local/share/tinted-theming/tinty/tinted-alacritty-colors-file.toml`.
 
-  This can be useful when copying an applied theme to a path on your
-  system:
+| Variable name | Description | Example |
+|---------------|-------------|--------|
+| `TINTY_THEME_FILE_PATH` | Path to the theme file for that `[[items]]` entry | `/home/user/.local/share/tinted-theming/tinty/tinted-alacritty-colors-file.toml` | 
+| `TINTY_THEME_OPERATION` | The command operation that is running the hook | `apply` or `init` | 
+| `TINTY_SCHEME_ID` | The unique name of the applied theme | `base16-ayu-dark` |
+| `TINTY_SCHEME_SYSTEM` | The system-part of the theme ID | `base16` or `base24` |
+| `TINTY_SCHEME_SLUG` | The slug-part of the theme ID | `ayu-dark` |
+| `TINTY_SCHEME_VARIANT` | Whether the theme is a light or dark variant | `light` or `dark` |
+| `TINTY_SCHEME_PALETTE_BASE{*}_HEX_{R,G,B}` | The R, G, or B value of the given `base*` color, in hex  | `$TINTY_SCHEME_PALETTE_BASE01_HEX_R` is the red color hex value of the applied theme's `base01` color |
+| `TINTY_SCHEME_PALETTE_BASE{*}_RGB_{R,G,B}` | The R, G, or B value of the given `base*` color, in `0-255` range  | `$TINTY_SCHEME_PALETTE_BASE08_RGB_G` is the green color `{0...255}` value of the applied theme's `base08` color |
+| `TINTY_SCHEME_PALETTE_BASE{*}_DEC_{R,G,B}` | The R, G, or B value of the given `base*` color, in `0-1.0` floating-point range  | `$TINTY_SCHEME_PALETTE_BASE0C_DEC_B` is the blue color `{0...1.0}` float value of the applied theme's `base0C` color |
+| `TINTY_SCHEME_LIGHTNESS_FOREGROUND` | The lightness value of the applied theme's foreground color  | `89.47651` |
+| `TINTY_SCHEME_LIGHTNESS_BACKGROUND` | The lightness value of the applied theme's background color  | `6.0706663` |
 
-  ```toml
-  hook = "cp -f %f ~/.config/alacritty/colors.yml"
-  ```
 
-- `%n` - Name of the current scheme applied, e.g.: `base16-ayu-dark`.
+##### Examples
 
-  This can be useful when triggering an external service:
-
-  ```toml
-  hook = "tinty info %n"
-  ```
-
-- `%o` - Name of the command operation that is running the hook, e.g.:
-  `apply` or `init`.
-
-  This can be useful for saving system resources and only running
-  certain hooks when they need to be run:
+Copy an applied theme to a path on your system:
 
   ```toml
-  hook = "[ \"%o\" = \"apply\" ] && cp -f %f ~/.config/alacritty/colors.yml"
+  # Copy the generated Alacritty theme file to the expected destination:
+  hook = "cp -f \"$TINTY_THEME_FILE_PATH ~/.config/alacritty/colors.yml"
   ```
+
+Send info about the applied theme somewhere:
+
+  ```toml
+  hook = "echo 'Theme $TINTY_SCHEME_ID applied' | tee -a /var/log/tinty-theme-history.log | xargs notify-send"
+  ```
+
+Conditionally run hooks based on the operation:
+
+  ```toml
+  # Only change Alacritty theme on tinty apply, not on init.
+  hook = "[ \"$TINTY_THEME_OPERATION\" = \"apply\" ] && cp -f \"$TINTY_THEME_FILE_PATH\" ~/.config/alacritty/colors.yml"
+  ```
+
+Run programs that read colorscheme info
+
+```toml
+hook = "ruby /path/to/my/tinty_hook.rb" # Reads stuff from ENV['TINTY_****']
+```
+
+#### `printf`-style formatting
+
+Only a limited set of variables are available to Tinty 0.28 & lower. They came in the form of `%` format specifiers:
+
+* `%f` - Equivalent to `$TINTY_THEME_FILE_PATH`
+* `%n` - Equivalent to `$TINTY_SCHEME_ID`
+* `%o` - Equivalent to `$TINTY_THEME_OPERATION`
+
+These still work, but are now deprecated & subject to removal in a future Tinty version.
+
 
 ### Items table `config.toml` Schema
 
@@ -264,7 +291,7 @@ themes across different applications seamlessly.
 | `path`                 | `string` | Required | The file system path or URL to the theme template repository. Paths beginning with `~/` map to home dir. | - | `path = "https://github.com/tinted-tmux"` |
 | `revision`             | `string` | Optional | The Git revision to use.<br> Accepts a branch name, a tag, or a commit SHA1 | `main` | `revision = "1.2.0"` |
 | `themes-dir`           | `string` | Required | The directory within the repository where theme files are located. | - | `themes-dir = "colors"`                    |
-| `hook`                 | `string` | Optional | A command to be executed after the theme is applied. Useful for reloading configurations. `%f` template variable maps to the path of the applied theme file. | None    | `hook = "source ~/.vimrc"` |
+| `hook`                 | `string` | Optional | A command to be executed after the theme is applied. Useful for reloading configurations. | None    | `hook = "source ~/.vimrc"` |
 | `theme-file-extension` | `string` | Optional | Define a custom theme file extension that isn't `/\.*$/`. Tinty looks for themes named `base16-uwunicorn.*` (for example), but when the theme file isn't structured that way, this option can help specify the pattern. | - | `theme-file-extension = ".module.css"` |
 | `supported-systems`    | `array<"base16" or "base24">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported-systems = ["base16", "base24"]` |
 
@@ -296,7 +323,7 @@ preferred-schemes = ["base16-gruvbox-dark", "base16-gruvbox-light", "base16-gith
 name = "tinted-shell"
 path = "https://github.com/tinted-theming/tinted-shell"
 themes-dir = "scripts"
-hook = "source %f"
+hook = "source \"$TINTY_THEME_FILE_PATH\""
 supported-systems = ["base16", "base24"]
 
 [[items]]
@@ -310,7 +337,7 @@ supported-systems = ["base16"]
 name = "tmux"
 path = "~/path/path/to/base16-tmux"
 themes-dir = "colors"
-hook = "tmux run 2> /dev/null && tmux source-file %f"
+hook = "tmux run 2> /dev/null && tmux source-file \"$TINTY_THEME_FILE_PATH\""
 supported-systems = ["base16", "base24"]
 ```
 
@@ -375,19 +402,19 @@ light = false
 path = "https://github.com/tinted-theming/tinted-alacritty"
 name = "tinted-alacritty"
 themes-dir = "colors"
-hook = "cp -f %f ~/.config/alacritty/colors.toml"
+hook = "cp -f \"$TINTY_THEME_FILE_PATH\" ~/.config/alacritty/colors.toml"
 
 [[items]]
 path = "https://github.com/tinted-theming/base16-waybar"
 name = "base16-waybar"
 themes-dir = "colors"
-hook = "cp -f %f ~/.config/waybar/colors.css"
+hook = "cp -f \"$TINTY_THEME_FILE_PATH\" ~/.config/waybar/colors.css"
 
 [[items]]
 path = "https://github.com/rkubosz/base16-sway"
 name = "base16-sway"
 themes-dir = "themes"
-hook = "cp -f %f ~/.config/sway/config.d/theme && swaymsg reload"
+hook = "cp -f \"$TINTY_THEME_FILE_PATH\" ~/.config/sway/config.d/theme && swaymsg reload"
 ```
 
 - `path`: A `path` to the repository is provided in the Tinty
@@ -397,10 +424,7 @@ hook = "cp -f %f ~/.config/sway/config.d/theme && swaymsg reload"
   repository provided in `path`
 - `name`: A unique name used to set theme filename
 - `hook`: This property exists in Flavours too, but Tinty offloads a bit
-  of work from the Rust codebase to this hook. `%f` is a template
-  variable which translates to the base16-alacritty relevant theme file.
-  So the hook does a copy of the selected theme and replaces
-  `~/.config/alacritty/colors.toml`.
+  of work from the Rust codebase to this hook.
 
 ## Debugging Tinty issues
 
