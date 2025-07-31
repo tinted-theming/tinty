@@ -8,7 +8,7 @@ fn test_cli_sync_subcommand_non_unique_config_item_name() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, _, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_sync_subcommand_non_unique_config_item_name",
         "sync",
     )?;
@@ -28,7 +28,7 @@ themes-dir = "some-dir"
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -47,7 +47,7 @@ fn test_cli_sync_subcommand_invalid_config_item_path() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, _, command_vec, cleanup) =
+    let (config_path, data_path, command_vec, cleanup) =
         setup("test_cli_sync_subcommand_invalid_config_item_path", "sync")?;
     let config_content = r##"[[items]]
 path = "/path/to/non-existant/directory"
@@ -59,7 +59,7 @@ themes-dir = "some-dir""##;
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -78,13 +78,14 @@ fn test_cli_sync_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) = setup("test_cli_sync_subcommand_without_setup", "sync")?;
+    let (_, data_path, command_vec, cleanup) =
+        setup("test_cli_sync_subcommand_without_setup", "sync")?;
     let expected_output = "tinted-shell installed";
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, false).unwrap();
 
     // ------
     // Assert
@@ -103,14 +104,15 @@ fn test_cli_sync_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) = setup("test_cli_sync_subcommand_with_setup", "sync")?;
+    let (_, data_path, command_vec, cleanup) =
+        setup("test_cli_sync_subcommand_with_setup", "sync")?;
     let expected_output = "tinted-shell already installed";
 
     // ---
     // Act
     // ---
-    utils::run_command(command_vec.clone()).unwrap();
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    utils::run_command(command_vec.clone(), &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -130,7 +132,7 @@ fn test_cli_sync_subcommand_with_setup_quiet_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_sync_subcommand_with_setup_quiet_flag",
         "sync --quiet",
     )?;
@@ -138,8 +140,8 @@ fn test_cli_sync_subcommand_with_setup_quiet_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_command(command_vec.clone()).unwrap();
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    utils::run_command(command_vec.clone(), &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert

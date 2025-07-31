@@ -22,14 +22,13 @@ default-scheme = "base16-github"
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (_, apply_stderr) = utils::run_command(apply_command_vec).unwrap();
+    let (_, apply_stderr) = utils::run_command(apply_command_vec, &data_path, true).unwrap();
 
-    let (cycle_stdout, cycle_stderr) = utils::run_command(build_comamnd_vec(
-        "cycle",
-        config_path.as_path(),
-        data_path.as_path(),
-    )?)
+    let (cycle_stdout, cycle_stderr) = utils::run_command(
+        build_comamnd_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )
     .unwrap();
 
     // ------
@@ -70,14 +69,13 @@ preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (_, apply_stderr) = utils::run_command(apply_command_vec).unwrap();
+    let (_, apply_stderr) = utils::run_command(apply_command_vec, &data_path, true).unwrap();
 
-    let (cycle1_stdout, cycle1_stderr) = utils::run_command(build_comamnd_vec(
-        "cycle",
-        config_path.as_path(),
-        data_path.as_path(),
-    )?)
+    let (cycle1_stdout, cycle1_stderr) = utils::run_command(
+        build_comamnd_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )
     .unwrap();
 
     // ------
@@ -96,11 +94,11 @@ preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
         "stderr does not contain the expected output"
     );
 
-    let (cycle2_stdout, cycle2_stderr) = utils::run_command(build_comamnd_vec(
-        "cycle",
-        config_path.as_path(),
-        data_path.as_path(),
-    )?)
+    let (cycle2_stdout, cycle2_stderr) = utils::run_command(
+        build_comamnd_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )
     .unwrap();
 
     assert_eq!(
@@ -111,11 +109,11 @@ preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
         cycle2_stderr.is_empty(),
         "stderr does not contain the expected output"
     );
-    let (cycle3_stdout, cycle3_stderr) = utils::run_command(build_comamnd_vec(
-        "cycle",
-        config_path.as_path(),
-        data_path.as_path(),
-    )?)
+    let (cycle3_stdout, cycle3_stderr) = utils::run_command(
+        build_comamnd_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )
     .unwrap();
 
     assert_eq!(
@@ -149,14 +147,13 @@ preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (_, apply_stderr) = utils::run_command(apply_command_vec).unwrap();
+    let (_, apply_stderr) = utils::run_command(apply_command_vec, &data_path, true).unwrap();
 
-    let (cycle_stdout, cycle_stderr) = utils::run_command(build_comamnd_vec(
-        "cycle",
-        config_path.as_path(),
-        data_path.as_path(),
-    )?)
+    let (cycle_stdout, cycle_stderr) = utils::run_command(
+        build_comamnd_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )
     .unwrap();
 
     // ------
@@ -197,14 +194,13 @@ preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (_, apply_stderr) = utils::run_command(apply_command_vec).unwrap();
+    let (_, apply_stderr) = utils::run_command(apply_command_vec, &data_path, true).unwrap();
 
-    let (cycle_stdout, cycle_stderr) = utils::run_command(build_comamnd_vec(
-        "cycle",
-        config_path.as_path(),
-        data_path.as_path(),
-    )?)
+    let (cycle_stdout, cycle_stderr) = utils::run_command(
+        build_comamnd_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )
     .unwrap();
 
     // ------
@@ -246,14 +242,13 @@ preferred-schemes = ["base24-zenburn", "base24-ubuntu"]
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (_, apply_stderr) = utils::run_command(apply_command_vec).unwrap();
+    let (_, apply_stderr) = utils::run_command(apply_command_vec, &data_path, true).unwrap();
 
-    let (cycle_stdout, cycle_stderr) = utils::run_command(build_comamnd_vec(
-        "cycle",
-        config_path.as_path(),
-        data_path.as_path(),
-    )?)
+    let (cycle_stdout, cycle_stderr) = utils::run_command(
+        build_comamnd_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )
     .unwrap();
 
     // ------
@@ -295,14 +290,13 @@ preferred-schemes = ["base24-zenburn", "base24-github", "base24-ubuntu"]
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (_, apply_stderr) = utils::run_command(apply_command_vec).unwrap();
+    let (_, apply_stderr) = utils::run_command(apply_command_vec, &data_path, true).unwrap();
 
-    let (cycle_stdout, cycle_stderr) = utils::run_command(build_comamnd_vec(
-        "cycle",
-        config_path.as_path(),
-        data_path.as_path(),
-    )?)
+    let (cycle_stdout, cycle_stderr) = utils::run_command(
+        build_comamnd_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )
     .unwrap();
 
     // ------
