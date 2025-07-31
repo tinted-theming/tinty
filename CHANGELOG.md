@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Tinty theme & colorscheme information is now available to hooks as environment variables e.g.
+`$TINTY_THEME_FILE_PATH`, `$TINTY_SCHEME_SLUG`, `$TINTY_SCHEME_PALETTE_BASE01_RGB_1` & more!
+
 ## [0.28.0] - 2025-07-18
 
 ### Added
