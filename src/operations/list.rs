@@ -139,10 +139,6 @@ impl SchemeEntry {
             })
             .unwrap_or(Vec::new());
 
-        // for (key, value) in &self.palette {
-        //
-        // }
-
         let color_info: Vec<(String, String)> = self
             .palette
             .clone()
