@@ -63,14 +63,16 @@ pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> R
         .status()
         .with_context(|| format!("Failed to clone repository from {}", repo_url))?;
 
-    let revision_str = revision.unwrap_or("main");
-    let result = git_to_revision(target_dir, "origin", revision_str);
-    if let Err(e) = result {
-        // Cleanup! If we cannot checkout the revision, remove the directory.
-        fs::remove_dir_all(target_dir)
-            .with_context(|| format!("Failed to remove directory {}", target_dir.display()))?;
-        return Err(e);
+    if let Some(revision_str) = revision {
+        let result = git_to_revision(target_dir, "origin", revision_str);
+        if let Err(e) = result {
+            // Cleanup! If we cannot checkout the revision, remove the directory.
+            fs::remove_dir_all(target_dir)
+                .with_context(|| format!("Failed to remove directory {}", target_dir.display()))?;
+            return Err(e);
+        }
     }
+
     Ok(())
 }
 
@@ -341,14 +343,14 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
 }
 
 pub fn git_is_working_dir_clean(target_dir: &Path) -> Result<bool> {
-    // We use the Git plumbing diff-index command to tell us of files that has changed,
+    // We use the Git plumbing `status --porcelain` command to tell us of files that has changed,
     // both staged and unstaged.
-    let status = safe_command("git diff-index --quiet HEAD --".to_string(), target_dir)?
-        .status()
+    let output = safe_command("git status --porcelain".to_string(), target_dir)?
+        .output()
         .with_context(|| format!("Failed to execute process in {}", target_dir.display()))?;
 
     // With the --quiet flag, it will return a 0 exit-code if no files has changed.
-    Ok(status.success())
+    Ok(output.stdout.is_empty())
 }
 
 pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<String> {

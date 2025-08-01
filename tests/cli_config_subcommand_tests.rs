@@ -18,12 +18,12 @@ supported-systems = ["base16"]
 themes-dir = "scripts"
 
 "#;
-    let (_, _, command_vec, cleanup) = setup("test_cli_config_without_config", "config")?;
+    let (_, data_path, command_vec, cleanup) = setup("test_cli_config_without_config", "config")?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -49,14 +49,15 @@ supported-systems = ["base16", "base24"]
 themes-dir = "colors"
 
 "#;
-    let (config_path, _, command_vec, cleanup) = setup("test_cli_config_with_config", "config")?;
+    let (config_path, data_path, command_vec, cleanup) =
+        setup("test_cli_config_with_config", "config")?;
 
     write_to_file(&config_path, config_text)?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -72,13 +73,13 @@ fn test_cli_config_with_config_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, _, command_vec, cleanup) =
+    let (config_path, data_path, command_vec, cleanup) =
         setup("test_cli_config_with_config_flag", "config --config-path")?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -103,7 +104,7 @@ fn test_cli_config_with_data_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert

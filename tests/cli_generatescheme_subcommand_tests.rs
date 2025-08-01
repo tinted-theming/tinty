@@ -16,7 +16,7 @@ fn test_cli_generatescheme_subcommand_custom_properties() -> Result<()> {
     let name = "Some custom name";
     let slug = "some-custom-slug";
     let variant = "light";
-    let (_, _, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_generatescheme_subcommand_custom_properties",
         format!(
           "generate-scheme --author \"{}\" --name \"{}\" --slug {} --system {} --variant {} ./tests/fixtures/assets/article-featured-image.webp",
@@ -65,7 +65,7 @@ palette:
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -85,7 +85,7 @@ fn test_cli_generatescheme_subcommand_with_image() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, _, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_generatescheme_subcommand_with_image",
         "generate-scheme --system base16 ./tests/fixtures/assets/article-featured-image.webp",
     )?;
@@ -116,7 +116,7 @@ palette:
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -176,7 +176,7 @@ palette:
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
     let actual_output = fs::read_to_string(&out_scheme_path)?;
 
     // ------

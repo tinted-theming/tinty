@@ -56,7 +56,7 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
             .to_str()
             .unwrap_or_default();
 
-        if current_scheme_slug.contains(file_stem) {
+        if current_scheme_slug.ends_with(file_stem) {
             if let Ok(scheme) = scheme_file.get_scheme() {
                 let scheme_slug = scheme.get_scheme_slug();
                 let system = scheme.get_scheme_system();
@@ -72,7 +72,7 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
     });
 
     if let Some(current_scheme_container) = current_scheme_container {
-        match property_name {
+        match property_name.trim() {
             "author" => {
                 println!("{}", current_scheme_container.get_scheme_author());
             }

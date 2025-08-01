@@ -8,15 +8,14 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, cleanup) =
         setup("test_cli_info_subcommand_all_with_setup", "info")?;
     let scheme_count = 250;
 
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -40,7 +39,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_info_subcommand_with_setup",
         format!("info {}", scheme_name).as_str(),
     )?;
@@ -48,8 +47,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -72,14 +70,14 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, _, command_vec, cleanup) =
+    let (config_path, data_path, command_vec, cleanup) =
         setup("test_cli_info_subcommand_without_setup", "info")?;
     write_to_file(&config_path, "")?;
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, false).unwrap();
 
     // ------
     // Assert
@@ -103,7 +101,7 @@ fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // Arrange
     // -------
     let test_name = "test_info_list_subcommand_without_setup_with_custom_schemes_flag";
-    let (_, _, command_vec, cleanup) = setup(test_name, "list --custom-schemes")?;
+    let (_, data_path, command_vec, cleanup) = setup(test_name, "list --custom-schemes")?;
     let expected_output = format!(
         "You don't have any local custom schemes at: data_path_{}/custom-schemes",
         test_name
@@ -112,7 +110,7 @@ fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -132,7 +130,7 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "mocha";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_info_subcommand_with_setup_invalid_scheme_name",
         format!("info {}", scheme_name).as_str(),
     )?;
@@ -140,8 +138,7 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert

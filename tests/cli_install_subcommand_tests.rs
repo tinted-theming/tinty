@@ -10,7 +10,7 @@ fn test_cli_install_subcommand_non_unique_config_item_name() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, _, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_install_subcommand_non_unique_config_item_name",
         "install",
     )?;
@@ -30,7 +30,7 @@ themes-dir = "some-dir"
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -49,7 +49,7 @@ fn test_cli_install_subcommand_invalid_config_item_path() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, _, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_install_subcommand_invalid_config_item_path",
         "install",
     )?;
@@ -63,7 +63,7 @@ themes-dir = "some-dir""##;
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -82,14 +82,14 @@ fn test_cli_install_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) =
+    let (_, data_path, command_vec, cleanup) =
         setup("test_cli_install_subcommand_without_setup", "install")?;
     let expected_output = "tinted-shell installed";
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, false).unwrap();
 
     // ------
     // Assert
@@ -108,14 +108,15 @@ fn test_cli_install_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) = setup("test_cli_install_subcommand_with_setup", "install")?;
+    let (_, data_path, command_vec, cleanup) =
+        setup("test_cli_install_subcommand_with_setup", "install")?;
     let expected_output = "tinted-shell already installed";
 
     // ---
     // Act
     // ---
-    utils::run_command(command_vec.clone()).unwrap();
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    utils::run_command(command_vec.clone(), &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -139,7 +140,7 @@ fn test_cli_install_subcommand_with_setup_quiet_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_install_subcommand_with_setup_quiet_flag",
         "install --quiet",
     )?;
@@ -147,8 +148,8 @@ fn test_cli_install_subcommand_with_setup_quiet_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_command(command_vec.clone()).unwrap();
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    utils::run_command(command_vec.clone(), &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -172,43 +173,41 @@ fn test_cli_install_subcommand_with_tag_revision() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, repo_path, command_vec, cleanup) =
+    let (config_path, data_path, command_vec, cleanup) =
         setup("test_cli_install_subcommand_with_tag_revision", "install")?;
-    let config_content = r##"[[items]]
-path = "https://github.com/tinted-theming/tinted-jqp"
-name = "tinted-jqp"
-themes-dir = "themes"
-revision = "tinty-test-tag-01"
-"##;
-    write_to_file(&config_path, config_content)?;
+    let commit_sha = "0e4f0d222b9013cc7e537ac6cd29bf83ba19094a";
+    let config_content = format!(
+        r##"[[items]]
+path = "https://github.com/tinted-theming/tinted-vim"
+name = "tinted-vim"
+themes-dir = "colors"
+revision = "{commit_sha}"
+"##
+    );
+    write_to_file(&config_path, &config_content)?;
 
-    let mut repo_path = repo_path.clone();
-    repo_path.push("repos");
-    repo_path.push("tinted-jqp");
+    let repo_path = data_path.join("repos/tinted-vim");
 
     // ---
     // Act
     // ---
-    let (_, _) = utils::run_command(command_vec).unwrap();
-
+    let (_, _) = utils::run_command(command_vec, &data_path, false).unwrap();
     let output = Command::new("git")
         .current_dir(repo_path)
         .args(vec!["rev-parse", "--verify", "HEAD"])
         .output()
         .expect("Failed to execute git rev-parse --verify HEAD");
-
     let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
 
     // ------
     // Assert
     // ------
-    let expected_revision = "b6c6a7803c2669022167c9cfc5efb3dc3928507d";
-    let has_match = stdout.lines().any(|line| line == expected_revision);
+    let has_match = stdout.lines().any(|line| line == commit_sha);
     cleanup()?;
     assert!(
         has_match == true,
         "Expected revision {} not found",
-        expected_revision,
+        commit_sha,
     );
 
     Ok(())
@@ -219,27 +218,27 @@ fn test_cli_install_subcommand_with_branch_revision() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, repo_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_install_subcommand_with_branch_revision",
         "install",
     )?;
-    let config_content = r##"[[items]]
+    let rev = "tinty-test-01";
+    let config_content = format!(
+        r##"[[items]]
 path = "https://github.com/tinted-theming/tinted-jqp"
 name = "tinted-jqp"
 themes-dir = "themes"
-revision = "tinty-test-01"
-"##;
-    write_to_file(&config_path, config_content)?;
+revision = "{rev}"
+"##
+    );
+    write_to_file(&config_path, &config_content)?;
 
     // ---
     // Act
     // ---
-    let (_, _) = utils::run_command(command_vec).unwrap();
+    let (_, _) = utils::run_command(command_vec, &data_path, false).unwrap();
 
-    let mut repo_path = repo_path.clone();
-    repo_path.push("repos");
-    repo_path.push("tinted-jqp");
-
+    let repo_path = data_path.join("repos/tinted-jqp");
     let output = Command::new("git")
         .current_dir(repo_path)
         .args(vec!["rev-parse", "--verify", "HEAD"])
@@ -268,27 +267,27 @@ fn test_cli_install_subcommand_with_commit_sha1_revision() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, repo_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_install_subcommand_with_commit_sha1_revision",
         "install",
     )?;
-    let config_content = r##"[[items]]
+    let commit_sha = "f998d17414a7218904bb5b4fdada5daa2b2d9d5e";
+    let config_content = format!(
+        r##"[[items]]
 path = "https://github.com/tinted-theming/tinted-jqp"
 name = "tinted-jqp"
 themes-dir = "themes"
-revision = "f998d17414a7218904bb5b4fdada5daa2b2d9d5e"
-"##;
-    write_to_file(&config_path, config_content)?;
+revision = "{commit_sha}"
+"##
+    );
+    write_to_file(&config_path, &config_content)?;
 
     // ---
     // Act
     // ---
-    let (_, _) = utils::run_command(command_vec).unwrap();
+    let (_, _) = utils::run_command(command_vec, &data_path, false).unwrap();
 
-    let mut repo_path = repo_path.clone();
-    repo_path.push("repos");
-    repo_path.push("tinted-jqp");
-
+    let repo_path = data_path.join("repos/tinted-jqp");
     let output = Command::new("git")
         .current_dir(repo_path)
         .args(vec!["rev-parse", "--verify", "HEAD"])
@@ -302,13 +301,12 @@ revision = "f998d17414a7218904bb5b4fdada5daa2b2d9d5e"
     // ------
     // This SHA1 is only reachable through the tinted-test-01 branch, but is not the tip of that
     // branch.
-    let expected_revision = "f998d17414a7218904bb5b4fdada5daa2b2d9d5e";
-    let has_match = stdout.lines().any(|line| line == expected_revision);
+    let has_match = stdout.lines().any(|line| line == commit_sha);
     cleanup()?;
     assert!(
         has_match == true,
         "Expected revision {} not found",
-        expected_revision,
+        commit_sha,
     );
 
     Ok(())
@@ -319,26 +317,27 @@ fn test_cli_install_subcommand_with_non_existent_revision() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, repo_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_install_subcommand_with_non_existent_revision",
         "install",
     )?;
-    let config_content = r##"[[items]]
+    let commit_sha = "invalid-revision";
+    let config_content = format!(
+        r##"[[items]]
 path = "https://github.com/tinted-theming/tinted-jqp"
 name = "tinted-jqp"
 themes-dir = "themes"
-revision = "invalid-revision"
-"##;
-    write_to_file(&config_path, config_content)?;
+revision = "{commit_sha}"
+"##
+    );
+    write_to_file(&config_path, &config_content)?;
 
-    let mut repo_path = repo_path.clone();
-    repo_path.push("repos");
-    repo_path.push("tinted-jqp");
+    let repo_path = data_path.join("repos/tinted-jqp");
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, false).unwrap();
 
     // ------
     // Assert
@@ -346,7 +345,7 @@ revision = "invalid-revision"
     let path_exists = repo_path.exists();
     cleanup()?;
     assert!(
-        stderr.contains("cannot resolve invalid-revision"),
+        stderr.contains(format!("cannot resolve {commit_sha}").as_str()),
         "Expected revision not found",
     );
 

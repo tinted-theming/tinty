@@ -11,7 +11,8 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) = setup("test_cli_init_subcommand_without_setup", "init")?;
+    let (_, data_path, command_vec, cleanup) =
+        setup("test_cli_init_subcommand_without_setup", "init")?;
     let expected_output = format!(
         "Failed to initialize, config files seem to be missing. Try applying a theme first with `{} apply <SCHEME_NAME>`.",
         REPO_NAME
@@ -20,7 +21,7 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -39,12 +40,13 @@ fn test_cli_init_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) = setup("test_cli_init_subcommand_with_setup", "init")?;
+    let (_, data_path, command_vec, cleanup) =
+        setup("test_cli_init_subcommand_with_setup", "init")?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -74,8 +76,7 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert

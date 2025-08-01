@@ -7,7 +7,7 @@ fn generate_shell_completion_test(shell_name: &str) -> Result<String> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_generatecompletion_subcommand",
         format!("generate-completion {shell_name}").as_str(),
     )?;
@@ -15,7 +15,7 @@ fn generate_shell_completion_test(shell_name: &str) -> Result<String> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     cleanup()?;
     Ok(stdout)
@@ -82,8 +82,6 @@ fn test_cli_generatecompletion_subcommand_fish() -> Result<()> {
     // ---
     let shell_name = "fish";
     let stdout = generate_shell_completion_test(shell_name)?;
-
-    println!("{}", stdout);
 
     // ------
     // Assert
