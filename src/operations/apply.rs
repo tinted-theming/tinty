@@ -222,7 +222,7 @@ pub fn apply(
                     )
                     .to_envs(),
                 )
-                .spawn()
+                .status()
                 .with_context(|| format!("Failed to execute global hook: {hook}"))?;
         }
     }
