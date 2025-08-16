@@ -15,7 +15,7 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
         "test_cli_install_subcommand_non_unique_config_item_name",
         "update",
     )?;
-    let expected_output = format!("tinted-shell not installed (run `{} install`)", REPO_NAME);
+    let expected_output = format!("tinted-shell not installed (run `{REPO_NAME} install`)");
 
     // ---
     // Act

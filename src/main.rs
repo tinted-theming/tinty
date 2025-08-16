@@ -33,7 +33,7 @@ use xdg::BaseDirectories;
 fn main() -> Result<()> {
     // Parse the command line arguments
     let matches = get_matches();
-    let xdg_dirs = BaseDirectories::with_prefix(format!("{}/{}", ORG_NAME, REPO_NAME)).unwrap();
+    let xdg_dirs = BaseDirectories::with_prefix(format!("{ORG_NAME}/{REPO_NAME}")).unwrap();
 
     // Other configuration paths
     let config_path_result: Result<PathBuf> =
@@ -43,8 +43,7 @@ fn main() -> Result<()> {
             xdg_dirs
                 .place_config_file(CONFIG_FILE_NAME)
                 .context(format!(
-                    "Unable to create XDG_HOME/{}/{}/{}",
-                    ORG_NAME, REPO_NAME, CONFIG_FILE_NAME
+                    "Unable to create XDG_HOME/{ORG_NAME}/{REPO_NAME}/{CONFIG_FILE_NAME}",
                 ))
         };
     let config_path = config_path_result?;
@@ -69,8 +68,7 @@ fn main() -> Result<()> {
     match matches.subcommand() {
         Some(("build", sub_matches)) => {
             if let Some(template_dir) = sub_matches.get_one::<String>("template-dir") {
-                let schemes_repo_path =
-                    data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
+                let schemes_repo_path = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
                 let template_path = PathBuf::from(template_dir);
 
                 operations::build::build(&template_path, &schemes_repo_path)?;
@@ -141,7 +139,7 @@ fn main() -> Result<()> {
 
                 let scheme_name = theme.as_str();
                 operations::apply::apply(&config_path, &data_path, scheme_name, is_quiet, None)
-                    .with_context(|| format!("Failed to apply theme \"{:?}\"", scheme_name))?;
+                    .with_context(|| format!("Failed to apply theme \"{scheme_name}\""))?;
             }
         }
         Some(("cycle", sub_matches)) => {
@@ -151,7 +149,7 @@ fn main() -> Result<()> {
                 .unwrap_or(false);
 
             operations::cycle::cycle(&config_path, &data_path, is_quiet, None)
-                .with_context(|| format!("Failed to cycle to your next preferred theme"))?;
+                .context("Failed to cycle to your next preferred theme")?;
         }
         Some(("install", sub_matches)) => {
             let is_quiet = sub_matches
@@ -226,9 +224,9 @@ fn main() -> Result<()> {
                 })?;
 
                 if *save {
-                    let filename = format!("{}.yaml", slug);
+                    let filename = format!("{slug}.yaml");
 
-                    Some(custom_scheme_path.join(format!("{}/{}", system, filename)))
+                    Some(custom_scheme_path.join(format!("{system}/{filename}")))
                 } else {
                     None
                 }

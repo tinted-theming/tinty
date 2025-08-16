@@ -38,6 +38,7 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand install 'Install the environment needed for tinty'
             cand update 'Update to the latest themes'
             cand sync 'Install missing templates in tinty/config.toml and update existing templates'
+            cand cycle 'Cycle through your preferred themes'
             cand help 'Print this message or the help of the given subcommand(s)'
         }
         &'tinty;build'= {
@@ -68,6 +69,7 @@ set edit:completion:arg-completer[tinty] = {|@words|
         }
         &'tinty;generate-scheme'= {
             cand --author 'Scheme author info (name, email, etc) to write, defaults to ''Tinty'''
+            cand --description 'Scheme description info'
             cand --name 'Scheme display name (can include spaces and capitalization). Defaults to ''Tinty Generated'''
             cand --slug 'Scheme slug (the name you specify when applying schemes). Can not contain white-space or capitalization. Defaults to ''tinty-generated'''
             cand --system 'Whether to generate a base16 or base24 scheme'
@@ -104,6 +106,7 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand -d 'Optional path to the tinty data directory'
             cand --data-dir 'Optional path to the tinty data directory'
             cand --custom-schemes 'Lists availabile custom schemes'
+            cand --json 'Output as JSON'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -157,6 +160,16 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand -h 'Print help'
             cand --help 'Print help'
         }
+        &'tinty;cycle'= {
+            cand -c 'Optional path to the tinty config.toml file'
+            cand --config 'Optional path to the tinty config.toml file'
+            cand -d 'Optional path to the tinty data directory'
+            cand --data-dir 'Optional path to the tinty data directory'
+            cand -q 'Silence stdout'
+            cand --quiet 'Silence stdout'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
         &'tinty;help'= {
             cand build 'Builds the target theme template'
             cand current 'Prints the last scheme name applied or specific values from the current scheme'
@@ -170,6 +183,7 @@ set edit:completion:arg-completer[tinty] = {|@words|
             cand install 'Install the environment needed for tinty'
             cand update 'Update to the latest themes'
             cand sync 'Install missing templates in tinty/config.toml and update existing templates'
+            cand cycle 'Cycle through your preferred themes'
             cand help 'Print this message or the help of the given subcommand(s)'
         }
         &'tinty;help;build'= {
@@ -195,6 +209,8 @@ set edit:completion:arg-completer[tinty] = {|@words|
         &'tinty;help;update'= {
         }
         &'tinty;help;sync'= {
+        }
+        &'tinty;help;cycle'= {
         }
         &'tinty;help;help'= {
         }

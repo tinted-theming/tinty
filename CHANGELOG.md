@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fix bug where global config `hooks` can be run out of list order
+
 ## [0.29.0] - 2025-07-31
 
 ### Added

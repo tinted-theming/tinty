@@ -241,7 +241,7 @@ pub fn info(data_path: &Path, scheme_name_option: Option<&String>, is_custom: bo
     let schemes_dir_path = if is_custom {
         data_path.join(CUSTOM_SCHEMES_DIR_NAME)
     } else {
-        data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME))
+        data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"))
     };
 
     match (schemes_dir_path.exists(), is_custom) {

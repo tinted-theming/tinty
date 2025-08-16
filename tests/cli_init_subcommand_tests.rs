@@ -14,8 +14,7 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     let (_, data_path, command_vec, cleanup) =
         setup("test_cli_init_subcommand_without_setup", "init")?;
     let expected_output = format!(
-        "Failed to initialize, config files seem to be missing. Try applying a theme first with `{} apply <SCHEME_NAME>`.",
-        REPO_NAME
+        "Failed to initialize, config files seem to be missing. Try applying a theme first with `{REPO_NAME} apply <SCHEME_NAME>`.",
     );
 
     // ---
@@ -70,7 +69,7 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
         "init",
     )?;
     let scheme_name = "base16-mocha";
-    let config_content = format!("default-scheme = \"{}\"", scheme_name);
+    let config_content = format!("default-scheme = \"{scheme_name}\"");
     write_to_file(&config_path, config_content.as_str())?;
 
     // ---

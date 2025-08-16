@@ -3,12 +3,12 @@ mod utils;
 use crate::utils::setup;
 use anyhow::Result;
 
-fn generate_shell_completion_test(shell_name: &str) -> Result<String> {
+fn generate_shell_completion_test(shell_name: &str, test_name: &str) -> Result<String> {
     // -------
     // Arrange
     // -------
     let (_, data_path, command_vec, cleanup) = setup(
-        "test_cli_generatecompletion_subcommand",
+        test_name,
         format!("generate-completion {shell_name}").as_str(),
     )?;
 
@@ -27,7 +27,8 @@ fn test_cli_generatecompletion_subcommand_bash() -> Result<()> {
     // Act
     // ---
     let shell_name = "bash";
-    let stdout = generate_shell_completion_test(shell_name)?;
+    let test_name = "test_cli_generatecompletion_subcommand_bash";
+    let stdout = generate_shell_completion_test(shell_name, test_name)?;
 
     // ------
     // Assert
@@ -56,7 +57,8 @@ fn test_cli_generatecompletion_subcommand_elvish() -> Result<()> {
     // Act
     // ---
     let shell_name = "elvish";
-    let stdout = generate_shell_completion_test(shell_name)?;
+    let test_name = "test_cli_generatecompletion_subcommand_elvish";
+    let stdout = generate_shell_completion_test(shell_name, test_name)?;
 
     // ------
     // Assert
@@ -81,7 +83,8 @@ fn test_cli_generatecompletion_subcommand_fish() -> Result<()> {
     // Act
     // ---
     let shell_name = "fish";
-    let stdout = generate_shell_completion_test(shell_name)?;
+    let test_name = "test_cli_generatecompletion_subcommand_fish";
+    let stdout = generate_shell_completion_test(shell_name, test_name)?;
 
     // ------
     // Assert
@@ -104,7 +107,8 @@ fn test_cli_generatecompletion_subcommand_powershell() -> Result<()> {
     // Act
     // ---
     let shell_name = "powershell";
-    let stdout = generate_shell_completion_test(shell_name)?;
+    let test_name = "test_cli_generatecompletion_subcommand_powershell";
+    let stdout = generate_shell_completion_test(shell_name, test_name)?;
 
     // ------
     // Assert
@@ -129,7 +133,8 @@ fn test_cli_generatecompletion_subcommand_zsh() -> Result<()> {
     // Act
     // ---
     let shell_name = "zsh";
-    let stdout = generate_shell_completion_test(shell_name)?;
+    let test_name = "test_cli_generatecompletion_subcommand_zsh";
+    let stdout = generate_shell_completion_test(shell_name, test_name)?;
 
     // ------
     // Assert

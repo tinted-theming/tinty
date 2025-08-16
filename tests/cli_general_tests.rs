@@ -21,7 +21,7 @@ fn test_cli_no_arguments() -> Result<()> {
     // ------
     // Assert
     // ------
-    assert!(stdout.contains(format!("Basic usage: {} apply <SCHEME_NAME>", REPO_NAME).as_str()));
+    assert!(stdout.contains(format!("Basic usage: {REPO_NAME} apply <SCHEME_NAME>").as_str()));
     assert!(stdout.contains("For more information try --help"));
 
     cleanup_setup()?;
@@ -34,15 +34,13 @@ fn test_cli_config_path_tilde_as_home() -> Result<()> {
     // Arrange
     // -------
     let name = "test_cli_config_path_tilde_as_home";
-    let config_path_name = format!("config_path_{}", name);
+    let config_path_name = format!("config_path_{name}");
     let home_path = home::home_dir().unwrap();
     let config_path = home_path.join(&config_path_name);
-    let provided_config_path = format!("~/{}", config_path_name);
-    let data_path = PathBuf::from(format!("data_path_{}", name));
+    let provided_config_path = format!("~/{config_path_name}");
+    let data_path = PathBuf::from(format!("data_path_{name}"));
     let command = format!(
-        "{} --config=\"{}\" --data-dir=\"{}\" init",
-        COMMAND_NAME,
-        provided_config_path,
+        "{COMMAND_NAME} --config=\"{provided_config_path}\" --data-dir=\"{}\" init",
         data_path.display()
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
@@ -82,30 +80,23 @@ fn test_cli_default_data_path() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = PathBuf::from(format!("{}.toml", "test_cli_default_data_path"));
+    let config_path = PathBuf::from("test_cli_default_data_path.toml");
     let scheme_name = "base16-uwunicorn";
     let init_scheme_name = "base16-mocha";
-    let xdg_dirs =
-        xdg::BaseDirectories::with_prefix(format!("{}/{}", ORG_NAME, REPO_NAME)).unwrap();
+    let xdg_dirs = xdg::BaseDirectories::with_prefix(format!("{ORG_NAME}/{REPO_NAME}")).unwrap();
     let data_path = xdg_dirs.get_data_home();
-    let init_command = format!(
-        "{} --config=\"{}\" init",
-        COMMAND_NAME,
-        config_path.display(),
-    );
+    let init_command = format!("{COMMAND_NAME} --config=\"{}\" init", config_path.display(),);
     let init_command_vec = shell_words::split(init_command.as_str()).map_err(anyhow::Error::new)?;
     let apply_command = format!(
-        "{} --config=\"{}\" apply {}",
-        COMMAND_NAME,
+        "{COMMAND_NAME} --config=\"{}\" apply {scheme_name}",
         config_path.display(),
-        &scheme_name,
     );
     let current_scheme_file_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
     let apply_command_vec =
         shell_words::split(apply_command.as_str()).map_err(anyhow::Error::new)?;
     write_to_file(
         &config_path,
-        format!("default-scheme = \"{}\"", init_scheme_name).as_str(),
+        format!("default-scheme = \"{init_scheme_name}\"").as_str(),
     )?;
     if current_scheme_file_path.exists() {
         fs::remove_file(&current_scheme_file_path)?;
@@ -157,14 +148,12 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     // -------
     let data_path_name = "test_cli_data_path_tilde_as_home";
     let home_path = home::home_dir().unwrap();
-    let config_path = PathBuf::from(format!("{}.toml", data_path_name));
+    let config_path = PathBuf::from(format!("{data_path_name}.toml"));
     let data_path = home_path.join(data_path_name);
-    let provided_data_path = format!("~/{}", data_path_name);
+    let provided_data_path = format!("~/{data_path_name}");
     let command = format!(
-        "{} --config=\"{}\" --data-dir=\"{}\" apply base16-mocha",
-        COMMAND_NAME,
+        "{COMMAND_NAME} --config=\"{}\" --data-dir=\"{provided_data_path}\" apply base16-mocha",
         config_path.display(),
-        provided_data_path
     );
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
     write_to_file(&config_path, "")?;

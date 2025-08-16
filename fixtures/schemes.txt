@@ -154,6 +154,7 @@ base16-kanagawa
 base16-katy
 base16-kimber
 base16-lime
+base16-linux-vt
 base16-macintosh
 base16-marrakesh
 base16-material-darker
@@ -295,8 +296,9 @@ base24-alien-blood
 base24-argonaut
 base24-arthur
 base24-atelier-sulphurpool
+base24-ayu-dark
 base24-ayu-light
-base24-ayu
+base24-ayu-mirage
 base24-banana-blueberry
 base24-batman
 base24-birds-of-paradise

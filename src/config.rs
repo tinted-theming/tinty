@@ -42,7 +42,7 @@ impl fmt::Display for ConfigItem {
             .clone()
             .unwrap_or(default_supported_systems)
             .into_iter()
-            .map(|system| format!("\"{}\"", system))
+            .map(|system| format!("\"{system}\""))
             .collect::<Vec<String>>()
             .join(", ");
 
@@ -98,8 +98,8 @@ impl Config {
         let contents = fs::read_to_string(path).unwrap_or(String::from(""));
         let mut config: Config = toml::from_str(contents.as_str()).with_context(|| {
             format!(
-                "Couldn't parse {} configuration file ({:?}). Check if it's syntactically correct",
-                REPO_NAME, path
+                "Couldn't parse {REPO_NAME} configuration file ({}). Check if it's syntactically correct",
+                path.display()
             )
         })?;
 
@@ -188,7 +188,7 @@ impl fmt::Display for Config {
             let preferred_schemes_text = items
                 .clone()
                 .into_iter()
-                .map(|t| format!("\"{}\"", t))
+                .map(|t| format!("\"{t}\""))
                 .collect::<Vec<String>>()
                 .join(", ");
             writeln!(f, "preferred-schemes = [{}]", preferred_schemes_text)?;

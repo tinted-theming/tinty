@@ -15,7 +15,7 @@ pub fn build_cli() -> Command {
         .arg(
             Arg::new("config")
                 .short('c')
-                .help(format!("Optional path to the {} config.toml file", REPO_NAME))
+                .help(format!("Optional path to the {REPO_NAME} config.toml file"))
                 .value_name("FILE")
                 .long("config")
                 .global(true)
@@ -24,7 +24,7 @@ pub fn build_cli() -> Command {
         .arg(
             Arg::new("data-dir")
                 .short('d')
-                .help(format!("Optional path to the {} data directory", REPO_NAME))
+                .help(format!("Optional path to the {REPO_NAME} data directory"))
                 .value_name("DIRECTORY")
                 .long("data-dir")
                 .global(true)
@@ -134,7 +134,7 @@ pub fn build_cli() -> Command {
                 )
         )
         .subcommand(
-            Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {} info base16-mocha)", REPO_NAME))
+            Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {REPO_NAME} info base16-mocha)"))
                 .arg(
                     Arg::new("scheme_name")
                         .help("The scheme you want to get information about")
@@ -174,7 +174,7 @@ pub fn build_cli() -> Command {
             Command::new("config").about("Provides config related information")
                 .arg(
                     Arg::new("config-path")
-                        .help(format!("Returns path to the {} config file", REPO_NAME))
+                        .help(format!("Returns path to the {REPO_NAME} config file"))
                         .value_name("FILE")
                         .long("config-path")
                         .conflicts_with("data-dir-path")
@@ -182,7 +182,7 @@ pub fn build_cli() -> Command {
                 )
                 .arg(
                     Arg::new("data-dir-path")
-                        .help(format!("Returns path to the {} data directory", REPO_NAME))
+                        .help(format!("Returns path to the {REPO_NAME} data directory"))
                         .value_name("DIRECTORY")
                         .long("data-dir-path")
                         .conflicts_with("config-path")
@@ -204,7 +204,7 @@ pub fn build_cli() -> Command {
             ),
         )
         .subcommand(
-            Command::new("install").about(format!("Install the environment needed for {}", REPO_NAME))
+            Command::new("install").about(format!("Install the environment needed for {REPO_NAME}"))
                 .arg(
                     Arg::new("quiet")
                         .long("quiet")

@@ -15,7 +15,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
         setup("test_cli_current_subcommand_with_setup", "current")?;
     let scheme_name = "base16-oceanicnext";
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
-    let schemes_dir = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
+    let schemes_dir = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
 
     write_to_file(&current_scheme_path, scheme_name)?;
     write_to_file(&current_scheme_path, scheme_name)?;
@@ -29,7 +29,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, format!("{}\n", scheme_name));
+    assert_eq!(stdout, format!("{scheme_name}\n"));
     assert!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
@@ -103,13 +103,13 @@ where
     // Arrange
     // -------
     let (_, data_path, command_vec, cleanup) = setup(
-        &format!("test_cli_current_subcommand_with_{}_existing", subcommand),
-        &format!("current {}", subcommand),
+        &format!("test_cli_current_subcommand_with_{subcommand}_existing"),
+        &format!("current {subcommand}"),
     )?;
 
     let scheme_name = "base16-tinty-generated";
     let current_scheme_path = data_path.join(format!("{ARTIFACTS_DIR}/{CURRENT_SCHEME_FILE_NAME}"));
-    let schemes_dir = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
+    let schemes_dir = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
 
     write_to_file(&current_scheme_path, scheme_name)?;
     copy_dir_all("./tests/fixtures/schemes", schemes_dir)?;

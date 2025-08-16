@@ -23,7 +23,7 @@ pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
     let schemes_dir_path = if is_custom {
         data_path.join(CUSTOM_SCHEMES_DIR_NAME)
     } else {
-        data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME))
+        data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"))
     };
 
     match (schemes_dir_path.exists(), is_custom) {
@@ -93,7 +93,7 @@ impl SchemeEntry {
         let slug = scheme.get_scheme_slug();
         let system = scheme.get_scheme_system();
         Self {
-            id: format!("{}-{}", system, slug),
+            id: format!("{system}-{slug}"),
             name: scheme.get_scheme_name(),
             system,
             slug,
@@ -137,7 +137,7 @@ impl SchemeEntry {
                 ]
                 .to_vec()
             })
-            .unwrap_or(Vec::new());
+            .unwrap_or_default();
 
         let color_info: Vec<(String, String)> = self
             .palette
