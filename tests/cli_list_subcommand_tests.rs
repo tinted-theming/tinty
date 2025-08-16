@@ -206,165 +206,166 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let github_json = fs::read_to_string(Path::new("fixtures/github.json"))?;
+    let scheme_json = fs::read_to_string(Path::new("fixtures/base16-dracula.json"))?;
+
     // ---
     // Act
     // ---
-    let github: TestSchemeEntry = serde_json::from_str(&github_json).unwrap();
+    let scheme_entry: TestSchemeEntry = serde_json::from_str(&scheme_json).unwrap();
 
     assert!(
-        github.name == "Github",
-        "Expected name to be Github, got {}",
-        github.name
+        scheme_entry.name == "Dracula",
+        "Expected name to be Dracula, got {}",
+        scheme_entry.name
     );
     assert!(
-        github.system == SchemeSystem::Base16,
+        scheme_entry.system == SchemeSystem::Base16,
         "Expected system to be base16, got {}",
-        github.system
+        scheme_entry.system
     );
     assert!(
-        github.variant == SchemeVariant::Light,
+        scheme_entry.variant == SchemeVariant::Dark,
         "Expected variant to be base16, got {}",
-        github.variant
+        scheme_entry.variant
     );
     assert!(
-        github.author == "Tinted Theming (https://github.com/tinted-theming)",
+        scheme_entry.author == "Jamy Golden (http://github.com/JamyGolden), based on Dracula Theme (http://github.com/dracula)",
         "Expected author to be 'Tinted Theming (https://github.com/tinted-theming)', got {}",
-        github.author
+        scheme_entry.author
     );
     assert!(
-        github.slug == "github",
-        "Expected slug to be github, got {}",
-        github.slug
+        scheme_entry.slug == "dracula",
+        "Expected slug to be dracula, got {}",
+        scheme_entry.slug
     );
     assert!(
-        github.id == "base16-github",
-        "Expected id to be base16-github, got {}",
-        github.id
+        scheme_entry.id == "base16-dracula",
+        "Expected id to be base16-dracula, got {}",
+        scheme_entry.id
     );
     assert!(
-        github.palette.len() == 16,
+        scheme_entry.palette.len() == 16,
         "Expected 16 colors in palette, got {}",
-        github.palette.len()
+        scheme_entry.palette.len()
     );
 
     let expected_colors = vec![
         (
             "base00",
-            "#eaeef2",
-            ("ea".to_string(), "ee".to_string(), "f2".to_string()),
-            (0.91764706, 0.93333334, 0.9490196),
-            (234, 238, 242),
+            "#282a36",
+            ("28".to_string(), "2a".to_string(), "36".to_string()),
+            (0.15686275, 0.16470589, 0.21176471),
+            (40, 42, 54),
         ),
         (
             "base01",
-            "#d0d7de",
-            ("d0".to_string(), "d7".to_string(), "de".to_string()),
-            (0.8156863, 0.84313726, 0.87058824),
-            (208, 215, 222),
+            "#363447",
+            ("36".to_string(), "34".to_string(), "47".to_string()),
+            (0.21176471, 0.20392157, 0.2784314),
+            (54, 52, 71),
         ),
         (
             "base02",
-            "#afb8c1",
-            ("af".to_string(), "b8".to_string(), "c1".to_string()),
-            (0.6862745, 0.72156864, 0.75686276),
-            (175, 184, 193),
+            "#44475a",
+            ("44".to_string(), "47".to_string(), "5a".to_string()),
+            (0.26666668, 0.2784314, 0.3529412),
+            (68, 71, 90),
         ),
         (
             "base03",
-            "#8c959f",
-            ("8c".to_string(), "95".to_string(), "9f".to_string()),
-            (0.54901963, 0.58431375, 0.62352943),
-            (140, 149, 159),
+            "#6272a4",
+            ("62".to_string(), "72".to_string(), "a4".to_string()),
+            (0.38431373, 0.44705883, 0.6431373),
+            (98, 114, 164),
         ),
         (
             "base04",
-            "#6e7781",
-            ("6e".to_string(), "77".to_string(), "81".to_string()),
-            (0.43137255, 0.46666667, 0.5058824),
-            (110, 119, 129),
+            "#9ea8c7",
+            ("9e".to_string(), "a8".to_string(), "c7".to_string()),
+            (0.61960787, 0.65882355, 0.78039217),
+            (158, 168, 199),
         ),
         (
             "base05",
-            "#424a53",
-            ("42".to_string(), "4a".to_string(), "53".to_string()),
-            (0.25882354, 0.2901961, 0.3254902),
-            (66, 74, 83),
+            "#f8f8f2",
+            ("f8".to_string(), "f8".to_string(), "f2".to_string()),
+            (0.972549, 0.972549, 0.9490196),
+            (248, 248, 242),
         ),
         (
             "base06",
-            "#32383f",
-            ("32".to_string(), "38".to_string(), "3f".to_string()),
-            (0.19607843, 0.21960784, 0.24705882),
-            (50, 56, 63),
+            "#f0f1f4",
+            ("f0".to_string(), "f1".to_string(), "f4".to_string()),
+            (0.9411765, 0.94509804, 0.95686275),
+            (240, 241, 244),
         ),
         (
             "base07",
-            "#1f2328",
-            ("1f".to_string(), "23".to_string(), "28".to_string()),
-            (0.12156863, 0.13725491, 0.15686275),
-            (31, 35, 40),
+            "#ffffff",
+            ("ff".to_string(), "ff".to_string(), "ff".to_string()),
+            (1.0, 1.0, 1.0),
+            (255, 255, 255),
         ),
         (
             "base08",
-            "#fa4549",
-            ("fa".to_string(), "45".to_string(), "49".to_string()),
-            (0.98039216, 0.27058825, 0.28627452),
-            (250, 69, 73),
+            "#ff5555",
+            ("ff".to_string(), "55".to_string(), "55".to_string()),
+            (1.0, 0.33333334, 0.33333334),
+            (255, 85, 85),
         ),
         (
             "base09",
-            "#e16f24",
-            ("e1".to_string(), "6f".to_string(), "24".to_string()),
-            (0.88235295, 0.43529412, 0.14117648),
-            (225, 111, 36),
+            "#ffb86c",
+            ("ff".to_string(), "b8".to_string(), "6c".to_string()),
+            (1.0, 0.72156864, 0.42352942),
+            (255, 184, 108),
         ),
         (
             "base0A",
-            "#bf8700",
-            ("bf".to_string(), "87".to_string(), "00".to_string()),
-            (0.7490196, 0.5294118, 0.0),
-            (191, 135, 0),
+            "#f1fa8c",
+            ("f1".to_string(), "fa".to_string(), "8c".to_string()),
+            (0.94509804, 0.98039216, 0.54901963),
+            (241, 250, 140),
         ),
         (
             "base0B",
-            "#2da44e",
-            ("2d".to_string(), "a4".to_string(), "4e".to_string()),
-            (0.1764706, 0.6431373, 0.30588236),
-            (45, 164, 78),
+            "#50fa7b",
+            ("50".to_string(), "fa".to_string(), "7b".to_string()),
+            (0.3137255, 0.98039216, 0.48235294),
+            (80, 250, 123),
         ),
         (
             "base0C",
-            "#339d9b",
-            ("33".to_string(), "9d".to_string(), "9b".to_string()),
-            (0.2, 0.6156863, 0.60784316),
-            (51, 157, 155),
+            "#8be9fd",
+            ("8b".to_string(), "e9".to_string(), "fd".to_string()),
+            (0.54509807, 0.9137255, 0.99215686),
+            (139, 233, 253),
         ),
         (
             "base0D",
-            "#218bff",
-            ("21".to_string(), "8b".to_string(), "ff".to_string()),
-            (0.12941177, 0.54509807, 1.0),
-            (33, 139, 255),
+            "#80bfff",
+            ("80".to_string(), "bf".to_string(), "ff".to_string()),
+            (0.5019608, 0.7490196, 1.0),
+            (128, 191, 255),
         ),
         (
             "base0E",
-            "#a475f9",
-            ("a4".to_string(), "75".to_string(), "f9".to_string()),
-            (0.6431373, 0.45882353, 0.9764706),
-            (164, 117, 249),
+            "#ff79c6",
+            ("ff".to_string(), "79".to_string(), "c6".to_string()),
+            (1.0, 0.4745098, 0.7764706),
+            (255, 121, 198),
         ),
         (
             "base0F",
-            "#4d2d00",
-            ("4d".to_string(), "2d".to_string(), "00".to_string()),
-            (0.3019608, 0.1764706, 0.0),
-            (77, 45, 0),
+            "#bd93f9",
+            ("bd".to_string(), "93".to_string(), "f9".to_string()),
+            (0.7411765, 0.5764706, 0.9764706),
+            (189, 147, 249),
         ),
     ];
 
     for (color, expected_hex_str, expected_hex, expected_dec, expected_rgb) in expected_colors {
-        let palette_color = github
+        let palette_color = scheme_entry
             .palette
             .get(color)
             .context(format!("color {color} not found"))?;
@@ -406,18 +407,18 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         );
     }
 
-    let (foreground, background) = github
+    let (foreground, background) = scheme_entry
         .lightness
         .map(|l| (l.foreground, l.background))
         .unwrap();
 
     assert!(
-        background == 93.90565,
+        background == 17.336052,
         "Expected lightness.background to be 93.90565, got {}",
         background
     );
     assert!(
-        foreground == 31.067837,
+        foreground == 97.431,
         "Expected lightness.foreground to be 31.067837, got {}",
         foreground
     );
@@ -437,7 +438,6 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
     // Act
     // ---
     let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
-
     let results: Vec<TestSchemeEntry> = serde_json::from_str(&stdout).unwrap();
 
     assert!(
@@ -450,23 +450,23 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
     let entry_map: HashMap<String, TestSchemeEntry> =
         results.into_iter().map(|e| (e.id.clone(), e)).collect();
 
-    let github = entry_map.get("base16-github").unwrap().clone();
+    let dracula = entry_map.get("base16-dracula").unwrap().clone();
     let gruvbox = entry_map
         .get("base16-gruvbox-material-dark-hard")
         .unwrap()
         .clone();
 
-    let github_json = fs::read_to_string(Path::new("fixtures/github.json"))?;
+    let dracula_json = fs::read_to_string(Path::new("fixtures/base16-dracula.json"))?;
     let gruvbox_json = fs::read_to_string(Path::new("fixtures/gruvbox-material-dark-hard.json"))?;
 
-    let expected_github: TestSchemeEntry = serde_json::from_str(&github_json).unwrap();
+    let expected_dracula: TestSchemeEntry = serde_json::from_str(&dracula_json).unwrap();
     let expected_gruvbox: TestSchemeEntry = serde_json::from_str(&gruvbox_json).unwrap();
 
     assert!(
-        expected_github == github,
+        expected_dracula == dracula,
         "{:?} does not match {:?}",
-        expected_github,
-        github
+        expected_dracula,
+        dracula
     );
     assert!(
         expected_gruvbox == gruvbox,
