@@ -13,7 +13,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_with_setup",
         format!("apply {}", &scheme_name).as_str(),
     )?;
@@ -23,8 +23,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -52,7 +51,7 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (_, _, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_without_setup",
         format!("apply {}", &scheme_name).as_str(),
     )?;
@@ -64,7 +63,7 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, false).unwrap();
 
     // ------
     // Assert
@@ -84,7 +83,7 @@ fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-invalid-scheme";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_invalid_scheme_name",
         format!("apply {}", &scheme_name).as_str(),
     )?;
@@ -93,8 +92,7 @@ fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -114,7 +112,7 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "some-invalid-scheme";
-    let (_, _, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_invalid_scheme_system",
         format!("apply {}", &scheme_name).as_str(),
     )?;
@@ -123,7 +121,7 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -143,7 +141,7 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "ocean";
-    let (_, _, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_no_scheme_system",
         format!("apply {}", &scheme_name).as_str(),
     )?;
@@ -152,7 +150,7 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -174,7 +172,7 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
     let scheme_system = "base16";
     let scheme_name = "tinty-generated";
     let scheme_name_with_system = format!("{}-{}", scheme_system, scheme_name);
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_with_custom_schemes",
         format!("apply {}", &scheme_name_with_system).as_str(),
     )?;
@@ -188,8 +186,7 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -219,7 +216,7 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
     let scheme_system = "base16";
     let scheme_name = "tinty-generated";
     let scheme_name_with_system = format!("{}-{}", scheme_system, scheme_name);
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_with_custom_schemes_quiet_flag",
         format!("apply {} --quiet", &scheme_name_with_system).as_str(),
     )?;
@@ -233,8 +230,7 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -274,8 +270,7 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -307,8 +302,7 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -335,7 +329,7 @@ fn test_cli_apply_subcommand_hook_with_setup() -> Result<()> {
     )?;
     let config_content = r##"
 [[items]]
-path = "https://github.com/tinted-theming/base16-vim"
+path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo \"path: %f, operation: %o\""
@@ -345,8 +339,7 @@ hook = "echo \"path: %f, operation: %o\""
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -374,12 +367,12 @@ fn test_cli_apply_subcommand_hook_with_envs_with_setup() -> Result<()> {
     // -------
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, command_vec, cleanup) = setup(
-        "test_cli_apply_subcommand_hook_with_setup",
+        "test_cli_apply_subcommand_hook_with_envs_with_setup",
         format!("apply {}", &scheme_name).as_str(),
     )?;
     let config_content = r##"
 [[items]]
-path = "https://github.com/tinted-theming/base16-vim"
+path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo \"path: $TINTY_THEME_FILE_PATH, operation: $TINTY_THEME_OPERATION, scheme: $TINTY_SCHEME_SLUG, color00 hex: ${TINTY_SCHEME_PALETTE_BASE00_HEX_R}${TINTY_SCHEME_PALETTE_BASE00_HEX_G}${TINTY_SCHEME_PALETTE_BASE00_HEX_B}\""
@@ -389,8 +382,7 @@ hook = "echo \"path: $TINTY_THEME_FILE_PATH, operation: $TINTY_THEME_OPERATION, 
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -418,32 +410,31 @@ fn test_cli_apply_subcommand_with_config_theme_file_extension() -> Result<()> {
     // -------
     let scheme_name = "base16-uwunicorn";
     let (config_path, data_path, command_vec, cleanup) = setup(
-        "test_cli_apply_subcommand_with_custom_schemes",
+        "test_cli_apply_subcommand_with_config_theme_file_extension",
         format!("apply {}", &scheme_name).as_str(),
     )?;
     let config_content = r#"
 [[items]]
-path = "https://github.com/tinted-theming/tinted-alacritty"
-name = "tinted-alacritty"
+path = "https://github.com/tinted-theming/tinted-vim"
+name = "tinted-vim"
 themes-dir = "colors"
-hook = "echo \"expected alacritty output: %n\""
+hook = "echo \"expected vim output: %n\""
 
 [[items]]
-name = "base16-emacs"
-path = "https://github.com/tinted-theming/base16-emacs"
-theme-file-extension="-theme.el"
-themes-dir="build"
-hook = "echo \"expected emacs output: %n\""
+name = "tinted-shell"
+path = "https://github.com/tinted-theming/tinted-shell"
+theme-file-extension=".sh"
+themes-dir="scripts"
+hook = "echo \"expected shell output: %n\""
 "#;
     let expected_output =
-        "expected alacritty output: base16-uwunicorn\nexpected emacs output: base16-uwunicorn\n";
+        "expected vim output: base16-uwunicorn\nexpected shell output: base16-uwunicorn\n";
     write_to_file(&config_path, config_content)?;
 
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -465,12 +456,12 @@ fn test_cli_apply_subcommand_removes_vestigial_files() -> Result<()> {
     // -------
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, command_vec, cleanup) = setup(
-        "test_cli_apply_subcommand_hook_with_setup",
+        "test_cli_apply_subcommand_removes_vestigial_files",
         format!("apply {}", &scheme_name).as_str(),
     )?;
     let config_content = r##"
 [[items]]
-path = "https://github.com/tinted-theming/base16-vim"
+path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo \"path: %f, operation: %o\""
@@ -483,8 +474,7 @@ hook = "echo \"path: %f, operation: %o\""
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -514,21 +504,22 @@ fn test_cli_apply_subcommand_removes_broken_symlinks() -> Result<()> {
     // -------
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, command_vec, cleanup) = setup(
-        "test_cli_apply_subcommand_hook_with_setup",
+        "test_cli_apply_subcommand_removes_broken_symlinks",
         format!("apply {}", &scheme_name).as_str(),
     )?;
     let config_content = r##"
 [[items]]
-path = "https://github.com/tinted-theming/base16-vim"
+path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo \"path: %f, operation: %o\""
 "##;
     write_to_file(&config_path, config_content)?;
 
-    let missing_file = data_path.join(ARTIFACTS_DIR).join("im-no-longer-here");
+    let symlink_name = "im-no-longer-here";
+    let missing_file = data_path.join(ARTIFACTS_DIR).join(symlink_name);
     write_to_file(&missing_file, "hello")?;
-    let symlink = data_path.join("im-no-longer-here");
+    let symlink = data_path.join(symlink_name);
     std::os::unix::fs::symlink(&missing_file, &symlink)?;
     // Regular file
     fs::remove_file(&missing_file)?;
@@ -536,8 +527,7 @@ hook = "echo \"path: %f, operation: %o\""
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert

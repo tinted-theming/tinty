@@ -16,7 +16,8 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup) = setup("test_cli_list_subcommand_without_setup", "list")?;
+    let (_, data_path, command_vec, cleanup) =
+        setup("test_cli_list_subcommand_without_setup", "list")?;
     let expected_output = format!(
         "Schemes are missing, run install and then try again: `{} install`",
         REPO_NAME
@@ -25,7 +26,7 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, false).unwrap();
 
     // ------
     // Assert
@@ -45,7 +46,7 @@ fn test_cli_list_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // Arrange
     // -------
     let test_name = "test_cli_list_subcommand_without_setup_with_custom_schemes_flag";
-    let (_, _, command_vec, cleanup) = setup(test_name, "list --custom-schemes")?;
+    let (_, data_path, command_vec, cleanup) = setup(test_name, "list --custom-schemes")?;
     let expected_output = format!(
         "You don't have any local custom schemes at: data_path_{}/custom-schemes",
         test_name
@@ -54,7 +55,7 @@ fn test_cli_list_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec).unwrap();
+    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -73,15 +74,14 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, cleanup) =
         setup("test_cli_list_subcommand_with_setup", "list")?;
     let expected_output = fs::read_to_string(Path::new("fixtures/schemes.txt"))?;
 
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -132,7 +132,7 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -435,14 +435,13 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, cleanup) =
         setup("test_cli_list_subcommand_as_json_with_setup", "list --json")?;
 
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     let results: Vec<TestSchemeEntry> = serde_json::from_str(&stdout).unwrap();
 
@@ -517,7 +516,7 @@ fn test_cli_list_subcommand_as_json_with_custom() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     let expected_json = fs::read_to_string(Path::new("fixtures/tinty-city-dark.json"))?;
     let expected_entry: TestSchemeEntry = serde_json::from_str(&expected_json).unwrap();

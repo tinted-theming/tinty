@@ -11,12 +11,12 @@ fn test_cli_no_arguments() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, _, command_vec, cleanup_setup) = setup("test_cli_no_arguments", "")?;
+    let (_, data_path, command_vec, cleanup_setup) = setup("test_cli_no_arguments", "")?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec).unwrap();
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -49,7 +49,7 @@ fn test_cli_config_path_tilde_as_home() -> Result<()> {
     let expected_stdout = "test_cli_config_path_tilde_as_home_config_output";
     let config_content = r##"default-scheme = "base16-mocha"
 [[items]]
-path = "https://github.com/tinted-theming/base16-vim"
+path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo 'test_cli_config_path_tilde_as_home_config_output'"
@@ -59,8 +59,7 @@ hook = "echo 'test_cli_config_path_tilde_as_home_config_output'"
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -115,8 +114,7 @@ fn test_cli_default_data_path() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    utils::run_command(init_command_vec.clone()).unwrap();
+    utils::run_command(init_command_vec.clone(), &data_path, true).unwrap();
 
     // This test is important to determine the config.toml is being read correctly
     assert_eq!(
@@ -124,9 +122,9 @@ fn test_cli_default_data_path() -> Result<()> {
         init_scheme_name
     );
 
-    utils::run_command(apply_command_vec.clone()).unwrap();
-    utils::run_command(init_command_vec).unwrap();
-    let (stdout, stderr) = utils::run_command(apply_command_vec).unwrap();
+    utils::run_command(apply_command_vec.clone(), &data_path, true).unwrap();
+    utils::run_command(init_command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(apply_command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
@@ -174,8 +172,7 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path)?;
-    let (stdout, stderr) = utils::run_command(command_vec).unwrap();
+    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
 
     // ------
     // Assert
