@@ -15,7 +15,7 @@ pub fn get_current_scheme_slug(data_path: &Path) -> String {
 /// Prints out the name of the last scheme applied
 pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
     let current_scheme_slug = get_current_scheme_slug(data_path);
-    let schemes_path = data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
+    let schemes_path = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
 
     if current_scheme_slug.is_empty() {
         return Err(anyhow!(
@@ -60,7 +60,7 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
             if let Ok(scheme) = scheme_file.get_scheme() {
                 let scheme_slug = scheme.get_scheme_slug();
                 let system = scheme.get_scheme_system();
-                let tinty_slug = format!("{}-{}", system, scheme_slug);
+                let tinty_slug = format!("{system}-{scheme_slug}");
 
                 if tinty_slug == current_scheme_slug {
                     return Some(scheme);

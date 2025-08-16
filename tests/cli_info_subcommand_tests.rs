@@ -41,7 +41,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_info_subcommand_with_setup",
-        format!("info {}", scheme_name).as_str(),
+        format!("info {scheme_name}").as_str(),
     )?;
 
     // ---
@@ -103,8 +103,7 @@ fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     let test_name = "test_info_list_subcommand_without_setup_with_custom_schemes_flag";
     let (_, data_path, command_vec, cleanup) = setup(test_name, "list --custom-schemes")?;
     let expected_output = format!(
-        "You don't have any local custom schemes at: data_path_{}/custom-schemes",
-        test_name
+        "You don't have any local custom schemes at: data_path_{test_name}/custom-schemes",
     );
 
     // ---
@@ -132,7 +131,7 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     let scheme_name = "mocha";
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_info_subcommand_with_setup_invalid_scheme_name",
-        format!("info {}", scheme_name).as_str(),
+        format!("info {scheme_name}").as_str(),
     )?;
 
     // ---
@@ -146,10 +145,9 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     assert!(
         stderr.contains(
             format!(
-                r##"Invalid scheme system: "{}" from scheme name "{}"
+                r##"Invalid scheme system: "{scheme_name}" from scheme name "{scheme_name}"
 Make sure to add the system prefix to the theme name. Eg: base16-oceanicnext
-Run `{} list` to get a list of scheme names"##,
-                scheme_name, scheme_name, REPO_NAME
+Run `{REPO_NAME} list` to get a list of scheme names"##,
             )
             .as_str()
         ),

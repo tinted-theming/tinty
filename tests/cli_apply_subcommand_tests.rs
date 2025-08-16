@@ -15,7 +15,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_with_setup",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let shell_theme_filename = "tinted-shell-scripts-file.sh";
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
@@ -53,12 +53,10 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_without_setup",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
-    let expected_output = format!(
-        "Schemes do not exist, run install and try again: `{} install`",
-        REPO_NAME
-    );
+    let expected_output =
+        format!("Schemes do not exist, run install and try again: `{REPO_NAME} install`",);
 
     // ---
     // Act
@@ -85,7 +83,7 @@ fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
     let scheme_name = "base16-invalid-scheme";
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_invalid_scheme_name",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let expected_output = format!("Scheme does not exist: {}", scheme_name);
 
@@ -114,7 +112,7 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
     let scheme_name = "some-invalid-scheme";
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_invalid_scheme_system",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let expected_output = format!("Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"base16\" or \"base24\"), eg: base16-{}", scheme_name);
 
@@ -143,7 +141,7 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     let scheme_name = "ocean";
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_no_scheme_system",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let expected_output = "Invalid scheme name. Make sure the scheme system is prefixed <SCHEME_SYSTEM>-<SCHEME_NAME>, eg: `base16-ayu-dark`";
 
@@ -260,7 +258,7 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_root_hooks_with_setup",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let expected_output = "This\nis\nexpected\noutput.\n";
     let config_content =
@@ -293,7 +291,7 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
     let scheme_name = "base16-gruvbox-dark-hard";
     let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_root_hooks_has_envs_with_setup",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let expected_output = "gruvbox-dark-hard 1d 20 21 79.72706 11.984516\n";
     let config_content = r#"hooks = ["echo $TINTY_SCHEME_SLUG $TINTY_SCHEME_PALETTE_BASE00_HEX_R $TINTY_SCHEME_PALETTE_BASE00_HEX_G $TINTY_SCHEME_PALETTE_BASE00_HEX_B $TINTY_SCHEME_LIGHTNESS_FOREGROUND $TINTY_SCHEME_LIGHTNESS_BACKGROUND"]"#;
@@ -325,7 +323,7 @@ fn test_cli_apply_subcommand_hook_with_setup() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_hook_with_setup",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 [[items]]
@@ -368,7 +366,7 @@ fn test_cli_apply_subcommand_hook_with_envs_with_setup() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_hook_with_envs_with_setup",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 [[items]]
@@ -411,7 +409,7 @@ fn test_cli_apply_subcommand_with_config_theme_file_extension() -> Result<()> {
     let scheme_name = "base16-uwunicorn";
     let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_with_config_theme_file_extension",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r#"
 [[items]]
@@ -457,7 +455,7 @@ fn test_cli_apply_subcommand_removes_vestigial_files() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_removes_vestigial_files",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 [[items]]
@@ -505,7 +503,7 @@ fn test_cli_apply_subcommand_removes_broken_symlinks() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_removes_broken_symlinks",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 [[items]]

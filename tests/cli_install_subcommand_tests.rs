@@ -204,11 +204,7 @@ revision = "{commit_sha}"
     // ------
     let has_match = stdout.lines().any(|line| line == commit_sha);
     cleanup()?;
-    assert!(
-        has_match == true,
-        "Expected revision {} not found",
-        commit_sha,
-    );
+    assert!(has_match, "Expected revision {} not found", commit_sha,);
 
     Ok(())
 }
@@ -254,7 +250,7 @@ revision = "{rev}"
     let has_match = stdout.lines().any(|line| line == expected_revision);
     cleanup()?;
     assert!(
-        has_match == true,
+        has_match,
         "Expected revision {} not found",
         expected_revision,
     );
@@ -303,11 +299,7 @@ revision = "{commit_sha}"
     // branch.
     let has_match = stdout.lines().any(|line| line == commit_sha);
     cleanup()?;
-    assert!(
-        has_match == true,
-        "Expected revision {} not found",
-        commit_sha,
-    );
+    assert!(has_match, "Expected revision {} not found", commit_sha,);
 
     Ok(())
 }
