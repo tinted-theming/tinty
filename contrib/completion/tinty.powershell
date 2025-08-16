@@ -41,6 +41,7 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
             [CompletionResult]::new('install', 'install', [CompletionResultType]::ParameterValue, 'Install the environment needed for tinty')
             [CompletionResult]::new('update', 'update', [CompletionResultType]::ParameterValue, 'Update to the latest themes')
             [CompletionResult]::new('sync', 'sync', [CompletionResultType]::ParameterValue, 'Install missing templates in tinty/config.toml and update existing templates')
+            [CompletionResult]::new('cycle', 'cycle', [CompletionResultType]::ParameterValue, 'Cycle through your preferred themes')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }
@@ -75,6 +76,7 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
         }
         'tinty;generate-scheme' {
             [CompletionResult]::new('--author', '--author', [CompletionResultType]::ParameterName, 'Scheme author info (name, email, etc) to write, defaults to ''Tinty''')
+            [CompletionResult]::new('--description', '--description', [CompletionResultType]::ParameterName, 'Scheme description info')
             [CompletionResult]::new('--name', '--name', [CompletionResultType]::ParameterName, 'Scheme display name (can include spaces and capitalization). Defaults to ''Tinty Generated''')
             [CompletionResult]::new('--slug', '--slug', [CompletionResultType]::ParameterName, 'Scheme slug (the name you specify when applying schemes). Can not contain white-space or capitalization. Defaults to ''tinty-generated''')
             [CompletionResult]::new('--system', '--system', [CompletionResultType]::ParameterName, 'Whether to generate a base16 or base24 scheme')
@@ -114,6 +116,7 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
             [CompletionResult]::new('-d', '-d', [CompletionResultType]::ParameterName, 'Optional path to the tinty data directory')
             [CompletionResult]::new('--data-dir', '--data-dir', [CompletionResultType]::ParameterName, 'Optional path to the tinty data directory')
             [CompletionResult]::new('--custom-schemes', '--custom-schemes', [CompletionResultType]::ParameterName, 'Lists availabile custom schemes')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Output as JSON')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -173,6 +176,17 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
+        'tinty;cycle' {
+            [CompletionResult]::new('-c', '-c', [CompletionResultType]::ParameterName, 'Optional path to the tinty config.toml file')
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Optional path to the tinty config.toml file')
+            [CompletionResult]::new('-d', '-d', [CompletionResultType]::ParameterName, 'Optional path to the tinty data directory')
+            [CompletionResult]::new('--data-dir', '--data-dir', [CompletionResultType]::ParameterName, 'Optional path to the tinty data directory')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Silence stdout')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Silence stdout')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
         'tinty;help' {
             [CompletionResult]::new('build', 'build', [CompletionResultType]::ParameterValue, 'Builds the target theme template')
             [CompletionResult]::new('current', 'current', [CompletionResultType]::ParameterValue, 'Prints the last scheme name applied or specific values from the current scheme')
@@ -186,6 +200,7 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
             [CompletionResult]::new('install', 'install', [CompletionResultType]::ParameterValue, 'Install the environment needed for tinty')
             [CompletionResult]::new('update', 'update', [CompletionResultType]::ParameterValue, 'Update to the latest themes')
             [CompletionResult]::new('sync', 'sync', [CompletionResultType]::ParameterValue, 'Install missing templates in tinty/config.toml and update existing templates')
+            [CompletionResult]::new('cycle', 'cycle', [CompletionResultType]::ParameterValue, 'Cycle through your preferred themes')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }
@@ -223,6 +238,9 @@ Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {
             break
         }
         'tinty;help;sync' {
+            break
+        }
+        'tinty;help;cycle' {
             break
         }
         'tinty;help;help' {
