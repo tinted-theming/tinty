@@ -15,14 +15,10 @@ fn update_item(
         let is_clean = git_is_working_dir_clean(item_path)?;
 
         if is_clean {
-            git_update(item_path, item_url, revision).with_context(|| {
-                format!(
-                    "Error updating {} to {}@{}",
-                    item_name,
-                    item_url,
-                    revision.unwrap_or("main")
-                )
-            })?;
+            let rev = revision.unwrap_or("main");
+
+            git_update(item_path, item_url, revision)
+                .with_context(|| format!("Error updating {item_name} to {item_url}@{rev}",))?;
 
             if !is_quiet {
                 println!("{} up to date", item_name);

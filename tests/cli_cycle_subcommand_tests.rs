@@ -12,7 +12,7 @@ fn test_cli_cycle_subcommand_with_default_scheme_only() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, apply_command_vec, cleanup) = setup(
         "test_cli_cycle_subcommand_with_default_scheme_only",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 default-scheme = "base16-github"
@@ -59,7 +59,7 @@ fn test_cli_cycle_subcommand_with_preferred_schemes() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, apply_command_vec, cleanup) = setup(
         "test_cli_cycle_subcommand_with_preferred_schemes",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
@@ -137,7 +137,7 @@ fn test_cli_cycle_subcommand_correct_next_scheme() -> Result<()> {
     let scheme_name = "base24-zenburn";
     let (config_path, data_path, apply_command_vec, cleanup) = setup(
         "test_cli_cycle_subcommand_correct_next_scheme",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
@@ -184,7 +184,7 @@ fn test_cli_cycle_subcommand_wraps_around() -> Result<()> {
     let scheme_name = "base24-ubuntu";
     let (config_path, data_path, apply_command_vec, cleanup) = setup(
         "test_cli_cycle_subcommand_wraps_around",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 preferred-schemes = ["base24-github", "base24-zenburn", "base24-ubuntu"]
@@ -231,7 +231,7 @@ fn test_cli_cycle_subcommand_default_scheme_prepended_to_cycle() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, apply_command_vec, cleanup) = setup(
         "test_cli_cycle_subcommand_default_scheme_prepended_to_cycle",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 default-scheme = "base24-github"
@@ -279,7 +279,7 @@ fn test_cli_cycle_subcommand_default_scheme_not_duplicated_in_cycle() -> Result<
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, apply_command_vec, cleanup) = setup(
         "test_cli_cycle_subcommand_default_scheme_not_duplicated_in_cycle",
-        format!("apply {}", &scheme_name).as_str(),
+        format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r##"
 default-scheme = "base24-github"

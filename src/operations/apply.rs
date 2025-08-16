@@ -61,18 +61,18 @@ pub fn apply(
 
     // Create a temporary data directory
     let staging_data_dir = tempfile::Builder::new()
-        .prefix(format!("{}-", ARTIFACTS_DIR).as_str())
+        .prefix(format!("{ARTIFACTS_DIR}-").as_str())
         .tempdir_in(data_path)?;
     let staging_data_path = staging_data_dir.path();
 
     // Go through custom schemes
     let scheme_system =
         SchemeSystem::from_str(&scheme_system_option.unwrap_or("base16".to_string()))?;
-    let schemes_path = &data_path.join(format!("{}/{}", REPO_DIR, SCHEMES_REPO_NAME));
+    let schemes_path = &data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
     let custom_schemes_path = &data_path.join(CUSTOM_SCHEMES_DIR_NAME);
 
-    let builtin_scheme_files = get_all_scheme_file_paths(&schemes_path, None)?;
-    let custom_scheme_files = get_all_scheme_file_paths(&custom_schemes_path, None).ok();
+    let builtin_scheme_files = get_all_scheme_file_paths(schemes_path, None)?;
+    let custom_scheme_files = get_all_scheme_file_paths(custom_schemes_path, None).ok();
 
     let config = Config::read(config_path)?;
 
@@ -83,19 +83,19 @@ pub fn apply(
 
     let scheme_file = builtin_scheme.xor(custom_scheme);
     // We expect the scheme to be a built-in scheme or a custom schemes, not both.
-    if let None = scheme_file {
+    if scheme_file.is_none() {
         if builtin_scheme.is_none() {
             return Err(anyhow!("Scheme does not exist: {}", full_scheme_name));
         } else {
             let scheme_partial_name = &scheme_name_arr[1..].join("-");
             return Err(anyhow!(
                 "You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it: {}",
-                format!("{}/{}.yaml", custom_schemes_path.display(), scheme_partial_name),
+                format!("{}/{scheme_partial_name}.yaml", custom_schemes_path.display()),
             ));
         }
     }
 
-    if let Some(_) = custom_scheme {
+    if custom_scheme.is_some() {
         build_and_get_custom_scheme_file(custom_schemes_path, data_path, &config)?;
     }
 
@@ -127,23 +127,22 @@ pub fn apply(
 
         if !themes_path.exists() {
             return Err(anyhow!(format!(
-                "Provided theme path for {} does not exist: {}\nTry running `{} install` or `{} update` or check your config.toml file and try again.",
+                "Provided theme path for {} does not exist: {}\nTry running `{REPO_NAME} install` or `{REPO_NAME} update` or check your config.toml file and try again.",
                 item.name,
                 themes_path.display(),
-                REPO_NAME, REPO_NAME,
             )));
         }
 
         // Find the corresponding theme file for the provided item
         let theme_dir = fs::read_dir(&themes_path)
             .map_err(Error::new)
-            .with_context(|| format!("Themes are missing from {}, try running `{} install` or `{} update` and try again.", item.name, REPO_NAME, REPO_NAME))?;
+            .with_context(|| format!("Themes are missing from {}, try running `{REPO_NAME} install` or `{REPO_NAME} update` and try again.", item.name))?;
         let theme_option = &theme_dir.filter_map(Result::ok).find(|entry| {
             let path = entry.path();
             match &item.theme_file_extension {
                 Some(extension) => {
                     let filename = path.file_name().and_then(|name| name.to_str());
-                    format!("{}{}", full_scheme_name, extension) == filename.unwrap_or_default()
+                    format!("{full_scheme_name}{extension}") == filename.unwrap_or_default()
                 }
                 None => {
                     let filename = path.file_stem().and_then(|name| name.to_str());
@@ -161,9 +160,8 @@ pub fn apply(
                     None => String::new(),
                 };
                 let filename = format!(
-                    "{}{}",
+                    "{}{extension}",
                     create_theme_filename_without_extension(&item)?,
-                    extension,
                 );
                 let data_theme_path = staging_data_path.join(&filename);
                 let theme_content = fs::read_to_string(theme_file.path())?;
@@ -225,7 +223,7 @@ pub fn apply(
                     .to_envs(),
                 )
                 .spawn()
-                .with_context(|| format!("Failed to execute global hook: {}", hook))?;
+                .with_context(|| format!("Failed to execute global hook: {hook}"))?;
         }
     }
 
@@ -240,8 +238,7 @@ fn build_and_get_custom_scheme_file(
     if let Some(items) = &config.items {
         let item_name_vec: Vec<String> = items.iter().map(|p| p.name.clone()).collect();
         for item_name in item_name_vec {
-            let item_template_path: PathBuf =
-                data_path.join(format!("{}/{}", REPO_DIR, &item_name));
+            let item_template_path: PathBuf = data_path.join(format!("{REPO_DIR}/{item_name}"));
             build(&item_template_path, custom_schemes_path, true)?;
         }
     };
@@ -290,7 +287,7 @@ impl Hook {
         let hook_script = self
             .hook_command_template
             .replace("%o", self.operation.as_str())
-            .replace("%f", format!("\"{}\"", theme_file_path).as_str())
+            .replace("%f", format!("\"{theme_file_path}\"").as_str())
             .replace("%n", full_scheme_name);
         let command_vec = get_shell_command_from_string(config_path, hook_script.as_str())?;
         Command::new(&command_vec[0])

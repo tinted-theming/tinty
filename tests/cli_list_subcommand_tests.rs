@@ -18,10 +18,8 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // -------
     let (_, data_path, command_vec, cleanup) =
         setup("test_cli_list_subcommand_without_setup", "list")?;
-    let expected_output = format!(
-        "Schemes are missing, run install and then try again: `{} install`",
-        REPO_NAME
-    );
+    let expected_output =
+        format!("Schemes are missing, run install and then try again: `{REPO_NAME} install`",);
 
     // ---
     // Act
@@ -48,8 +46,7 @@ fn test_cli_list_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     let test_name = "test_cli_list_subcommand_without_setup_with_custom_schemes_flag";
     let (_, data_path, command_vec, cleanup) = setup(test_name, "list --custom-schemes")?;
     let expected_output = format!(
-        "You don't have any local custom schemes at: data_path_{}/custom-schemes",
-        test_name
+        "You don't have any local custom schemes at: data_path_{test_name}/custom-schemes",
     );
 
     // ---
@@ -110,19 +107,17 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     let scheme_system = "base16";
     let scheme_name_one = "tinted-theming";
     let scheme_name_two = "tinty";
-    let expected_output = format!(
-        "{}-{}\n{}-{}",
-        scheme_system, scheme_name_one, scheme_system, scheme_name_two
-    );
+    let expected_output =
+        format!("{scheme_system}-{scheme_name_one}\n{scheme_system}-{scheme_name_two}",);
     let custom_scheme_path = data_path.join("custom-schemes");
 
     fs::create_dir_all(custom_scheme_path.join(scheme_system))?;
     fs::write(
-        custom_scheme_path.join(format!("{}/{}.yaml", scheme_system, scheme_name_one)),
+        custom_scheme_path.join(format!("{scheme_system}/{scheme_name_one}.yaml")),
         "",
     )?;
     fs::write(
-        custom_scheme_path.join(format!("{}/{}.yml", scheme_system, scheme_name_two)),
+        custom_scheme_path.join(format!("{scheme_system}/{scheme_name_two}.yml")),
         "",
     )?;
 
@@ -372,7 +367,7 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         let palette_color = github
             .palette
             .get(color)
-            .context(format!("color {} not found", color))?;
+            .context(format!("color {color} not found"))?;
         assert!(
             palette_color.hex_str == expected_hex_str,
             "Exoected {}.hex_str to equal {}, got {}",

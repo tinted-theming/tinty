@@ -19,12 +19,7 @@ fn test_cli_generatescheme_subcommand_custom_properties() -> Result<()> {
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_generatescheme_subcommand_custom_properties",
         format!(
-          "generate-scheme --author \"{}\" --name \"{}\" --slug {} --system {} --variant {} ./tests/fixtures/assets/article-featured-image.webp",
-          author,
-          name,
-          slug,
-          system,
-          variant,
+          "generate-scheme --author \"{author}\" --name \"{name}\" --slug {slug} --system {system} --variant {variant} ./tests/fixtures/assets/article-featured-image.webp",
         )
         .as_str(),
     )?;

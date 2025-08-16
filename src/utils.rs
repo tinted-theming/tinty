@@ -54,14 +54,14 @@ pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> R
         ));
     }
 
-    let command = format!("git clone \"{}\" \"{}\"", repo_url, target_dir.display());
+    let command = format!("git clone \"{repo_url}\" \"{}\"", target_dir.display());
     let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
 
     Command::new(&command_vec[0])
         .args(&command_vec[1..])
         .stdout(Stdio::null())
         .status()
-        .with_context(|| format!("Failed to clone repository from {}", repo_url))?;
+        .with_context(|| format!("Failed to clone repository from {repo_url}"))?;
 
     if let Some(revision_str) = revision {
         let result = git_to_revision(target_dir, "origin", revision_str);
@@ -99,7 +99,7 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
 
     // Create a temporary remote
     safe_command(
-        format!("git remote add \"{}\" \"{}\"", tmp_remote_name, repo_url),
+        format!("git remote add \"{tmp_remote_name}\" \"{repo_url}\""),
         repo_path,
     )?
     .current_dir(repo_path)
@@ -119,7 +119,7 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
 
     if let Err(e) = res {
         // Failed to switch to the desired revision. Cleanup!
-        safe_command(format!("git remote rm \"{}\"", &tmp_remote_name), repo_path)?
+        safe_command(format!("git remote rm \"{tmp_remote_name}\""), repo_path)?
             .stdout(Stdio::null())
             .status()
             .with_context(|| {
@@ -133,25 +133,23 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
     }
 
     safe_command(
-        format!("git remote set-url origin \"{}\"", repo_url),
+        format!("git remote set-url origin \"{repo_url}\""),
         repo_path,
     )?
     .stdout(Stdio::null())
     .status()
     .with_context(|| {
         format!(
-            "Failed to set origin remote to {} in {}",
-            repo_url,
+            "Failed to set origin remote to {repo_url} in {}",
             repo_path.display()
         )
     })?;
-    safe_command(format!("git remote rm \"{}\"", tmp_remote_name), repo_path)?
+    safe_command(format!("git remote rm \"{tmp_remote_name}\""), repo_path)?
         .stdout(Stdio::null())
         .status()
         .with_context(|| {
             format!(
-                "Failed to remove temporary remote {} in {}",
-                tmp_remote_name,
+                "Failed to remove temporary remote {tmp_remote_name} in {}",
                 repo_path.display()
             )
         })?;
@@ -162,19 +160,17 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
 fn random_remote_name() -> String {
     let mut rng = rand::thread_rng();
     let random_number: u32 = rng.gen();
-    format!("tinty-remote-{}", random_number)
+
+    format!("tinty-remote-{random_number}")
 }
 
 // Resolvees the SHA1 of revision at remote_name.
 // revision can be a tag, a branch, or a commit SHA1.
 fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<String> {
     // 1.) Check if its a tag.
-    let expected_tag_ref = format!("refs/tags/{}", revision);
+    let expected_tag_ref = format!("refs/tags/{revision}");
     let mut command = safe_command(
-        format!(
-            "git ls-remote --quiet --tags \"{}\" \"{}\"",
-            remote_name, expected_tag_ref
-        ),
+        format!("git ls-remote --quiet --tags \"{remote_name}\" \"{expected_tag_ref}\"",),
         repo_path,
     )?;
     let mut child = command
@@ -201,15 +197,12 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
 
     child
         .wait()
-        .with_context(|| format!("Failed to list remote tags from {}", remote_name))?;
+        .with_context(|| format!("Failed to list remote tags from {remote_name}"))?;
 
     // 2.) Check if its a branch
-    let expected_branch_ref = format!("refs/heads/{}", revision);
+    let expected_branch_ref = format!("refs/heads/{revision}");
     let mut command = safe_command(
-        format!(
-            "git ls-remote --quiet \"{}\" \"{}\"",
-            remote_name, expected_branch_ref
-        ),
+        format!("git ls-remote --quiet \"{remote_name}\" \"{expected_branch_ref}\"",),
         repo_path,
     )?;
     let mut child = command
@@ -235,7 +228,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
 
     child
         .wait()
-        .with_context(|| format!("Failed to list branches tags from {}", remote_name))?;
+        .with_context(|| format!("Failed to list branches tags from {remote_name}"))?;
 
     // We are here because revision isn't a tag or a branch.
     // First, we'll check if revision itself *could* be a SHA1.
@@ -246,27 +239,21 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         return Err(anyhow!("cannot resolve {} into a Git SHA1", revision));
     }
 
-    safe_command(format!("git fetch --quiet \"{}\"", remote_name), repo_path)?
+    safe_command(format!("git fetch --quiet \"{remote_name}\""), repo_path)?
         .stdout(Stdio::null())
         .status()
-        .with_context(|| format!("unable to fetch objects from remote {}", remote_name))?;
+        .with_context(|| format!("unable to fetch objects from remote {remote_name}"))?;
 
     // 3.) Check if any branch in remote contains the SHA1:
     // It seems that the only way to do this is to list the branches that contain the SHA1
     // and check if it belongs in the remote.
-    let remote_branch_prefix = format!("refs/remotes/{}/", remote_name);
+    let remote_branch_prefix = format!("refs/remotes/{remote_name}/");
     let mut command = safe_command(
-        format!(
-            "git branch --format=\"%(refname)\" -a --contains \"{}\"",
-            revision
-        ),
+        format!("git branch --format=\"%(refname)\" -a --contains \"{revision}\""),
         repo_path,
     )?;
     let mut child = command.stdout(Stdio::piped()).spawn().with_context(|| {
-        format!(
-            "Failed to find branches containing commit {} from {}",
-            revision, remote_name
-        )
+        format!("Failed to find branches containing commit {revision} from {remote_name}",)
     })?;
 
     let stdout = child.stdout.take().expect("failed to capture stdout");
@@ -283,16 +270,11 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     }
 
     child.wait().with_context(|| {
-        format!(
-            "Failed to list branches from {} containing SHA1 {}",
-            remote_name, revision
-        )
+        format!("Failed to list branches from {remote_name} containing SHA1 {revision}",)
     })?;
 
     Err(anyhow!(
-        "cannot find revision {} in remote {}",
-        revision,
-        remote_name
+        "cannot find revision {revision} in remote {remote_name}",
     ))
 }
 
@@ -306,14 +288,13 @@ fn safe_command(command: String, cwd: &Path) -> Result<Command, Error> {
 fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
     // Download the object from the remote
     safe_command(
-        format!("git fetch --quiet \"{}\" \"{}\"", remote_name, revision),
+        format!("git fetch --quiet \"{remote_name}\" \"{revision}\"",),
         repo_path,
     )?
     .status()
     .with_context(|| {
         format!(
-            "Error with fetching revision {} in {}",
-            revision,
+            "Error with fetching revision {revision} in {}",
             repo_path.display()
         )
     })?;
@@ -322,10 +303,7 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     let commit_sha = git_resolve_revision(repo_path, remote_name, revision)?;
 
     safe_command(
-        format!(
-            "git -c advice.detachedHead=false checkout --quiet \"{}\"",
-            commit_sha
-        ),
+        format!("git -c advice.detachedHead=false checkout --quiet \"{commit_sha}\""),
         repo_path,
     )?
     .stdout(Stdio::null())
@@ -333,8 +311,7 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     .status()
     .with_context(|| {
         format!(
-            "Failed to checkout SHA {} in {}",
-            commit_sha,
+            "Failed to checkout SHA {commit_sha} in {}",
             repo_path.display()
         )
     })?;
@@ -405,11 +382,7 @@ pub fn get_all_scheme_file_paths(
                 // the key is the scheme's <system>-<slug> e.g. base16-github
                 // Map each entry into a (<String, SchemaFile) tuple that
                 // we can collect() into this batch's HashMap<String, SchemaFile>
-                let name = format!(
-                    "{}-{}",
-                    scheme_system.as_str(),
-                    file.path().file_stem()?.to_str()?,
-                );
+                let name = format!("{scheme_system}-{}", file.path().file_stem()?.to_str()?,);
                 let scheme_file = SchemeFile::new(file.path().as_path()).ok()?;
 
                 Some((name, scheme_file))
