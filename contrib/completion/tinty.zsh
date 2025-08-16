@@ -15,10 +15,10 @@ _tinty() {
 
     local context curcontext="$curcontext" state line
     _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '-h[Print help]' \
 '--help[Print help]' \
 '-V[Print version]' \
@@ -34,23 +34,23 @@ _tinty() {
         case $line[1] in
             (build)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '-q[Silence stdout]' \
 '--quiet[Silence stdout]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':template-dir -- Local path to the theme template you want to build:' \
+':template-dir -- Local path to the theme template you want to build:_default' \
 && ret=0
 ;;
 (current)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '-h[Print help]' \
 '--help[Print help]' \
 '::property_name -- Optional field to retrieve scheme information for\: author, description, name, etc.:(author description name slug system variant)' \
@@ -58,10 +58,10 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (generate-completion)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '-h[Print help]' \
 '--help[Print help]' \
 ':shell_name -- The name of the shell you want to generate a completion script for:(bash elvish fish powershell zsh)' \
@@ -69,40 +69,40 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (generate-scheme)
 _arguments "${_arguments_options[@]}" : \
-'--author=[Scheme author info (name, email, etc) to write, defaults to '\''Tinty'\'']: :( )' \
-'--name=[Scheme display name (can include spaces and capitalization). Defaults to '\''Tinty Generated'\'']: :( )' \
-'--slug=[Scheme slug (the name you specify when applying schemes). Can not contain white-space or capitalization. Defaults to '\''tinty-generated'\'']: :( )' \
+'--author=[Scheme author info (name, email, etc) to write, defaults to '\''Tinty'\'']: :' \
+'--description=[Scheme description info]: :' \
+'--name=[Scheme display name (can include spaces and capitalization). Defaults to '\''Tinty Generated'\'']: :' \
+'--slug=[Scheme slug (the name you specify when applying schemes). Can not contain white-space or capitalization. Defaults to '\''tinty-generated'\'']: :' \
 '--system=[Whether to generate a base16 or base24 scheme]: :(base16 base24)' \
 '--variant=[Whether to generate a dark or light scheme]: :(dark light)' \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '--save[Whether to add the scheme to the installed schemes.]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ':image_path -- Which image file to use.:_files' \
-'::outfile -- Output path to save the <slug>.yaml file to. Use '\''-'\'' for stdout:_files' \
 && ret=0
 ;;
 (info)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '--custom-schemes[Lists availabile custom schemes]' \
 '-h[Print help]' \
 '--help[Print help]' \
-'::scheme_name -- The scheme you want to get information about:' \
+'::scheme_name -- The scheme you want to get information about:_default' \
 && ret=0
 ;;
 (init)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '--verbose[Print to stdout]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -110,21 +110,22 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (list)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '--custom-schemes[Lists availabile custom schemes]' \
+'--json[Output as JSON]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (config)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '(--data-dir-path)--config-path[Returns path to the tinty config file]' \
 '(--config-path)--data-dir-path[Returns path to the tinty data directory]' \
 '-h[Print help]' \
@@ -133,23 +134,23 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (apply)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '-q[Silence stdout]' \
 '--quiet[Silence stdout]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':scheme_name -- The scheme you want to apply:' \
+':scheme_name -- The scheme you want to apply:_default' \
 && ret=0
 ;;
 (install)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '-q[Silence stdout]' \
 '--quiet[Silence stdout]' \
 '-h[Print help]' \
@@ -158,10 +159,10 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (update)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '-q[Silence stdout]' \
 '--quiet[Silence stdout]' \
 '-h[Print help]' \
@@ -170,10 +171,22 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (sync)
 _arguments "${_arguments_options[@]}" : \
-'-c+[Optional path to the tinty config.toml file]:FILE: ' \
-'--config=[Optional path to the tinty config.toml file]:FILE: ' \
-'-d+[Optional path to the tinty data directory]:DIRECTORY: ' \
-'--data-dir=[Optional path to the tinty data directory]:DIRECTORY: ' \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'-q[Silence stdout]' \
+'--quiet[Silence stdout]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(cycle)
+_arguments "${_arguments_options[@]}" : \
+'-c+[Optional path to the tinty config.toml file]:FILE:_default' \
+'--config=[Optional path to the tinty config.toml file]:FILE:_default' \
+'-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '-q[Silence stdout]' \
 '--quiet[Silence stdout]' \
 '-h[Print help]' \
@@ -240,6 +253,10 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
+(cycle)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
 (help)
 _arguments "${_arguments_options[@]}" : \
 && ret=0
@@ -268,6 +285,7 @@ _tinty_commands() {
 'install:Install the environment needed for tinty' \
 'update:Update to the latest themes' \
 'sync:Install missing templates in tinty/config.toml and update existing templates' \
+'cycle:Cycle through your preferred themes' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'tinty commands' commands "$@"
@@ -291,6 +309,11 @@ _tinty__config_commands() {
 _tinty__current_commands() {
     local commands; commands=()
     _describe -t commands 'tinty current commands' commands "$@"
+}
+(( $+functions[_tinty__cycle_commands] )) ||
+_tinty__cycle_commands() {
+    local commands; commands=()
+    _describe -t commands 'tinty cycle commands' commands "$@"
 }
 (( $+functions[_tinty__generate-completion_commands] )) ||
 _tinty__generate-completion_commands() {
@@ -317,6 +340,7 @@ _tinty__help_commands() {
 'install:Install the environment needed for tinty' \
 'update:Update to the latest themes' \
 'sync:Install missing templates in tinty/config.toml and update existing templates' \
+'cycle:Cycle through your preferred themes' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'tinty help commands' commands "$@"
@@ -340,6 +364,11 @@ _tinty__help__config_commands() {
 _tinty__help__current_commands() {
     local commands; commands=()
     _describe -t commands 'tinty help current commands' commands "$@"
+}
+(( $+functions[_tinty__help__cycle_commands] )) ||
+_tinty__help__cycle_commands() {
+    local commands; commands=()
+    _describe -t commands 'tinty help cycle commands' commands "$@"
 }
 (( $+functions[_tinty__help__generate-completion_commands] )) ||
 _tinty__help__generate-completion_commands() {
