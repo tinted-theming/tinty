@@ -20,7 +20,7 @@ follows the [Base16 builder specification].
 
 To learn more about [Tinted Theming] and the base16 specification, have
 a look at our [home repository] and preview the themes supported by
-Tinty have a look at our [Base16 Gallery].
+Tinty have a look at our [Tinted Gallery].
 
 ## Table of contents
 
@@ -452,7 +452,7 @@ file for details.
 [Tinted Theming]: https://github.com/tinted-theming/home
 [Base16 builder specification]: https://github.com/tinted-theming/home/blob/main/builder.md
 [home repository]: https://github.com/tinted-theming/home
-[Base16 Gallery]: https://tinted-theming.github.io/base16-gallery
+[Tinted Gallery]: https://tinted-theming.github.io/tinted-gallery
 [tinted-shell]: https://github.com/tinted-theming/tinted-shell
 [schemes]: https://github.com/tinted-theming/schemes
 [fzf]: https://github.com/junegunn/fzf
