@@ -1,13 +1,14 @@
 use crate::config::Config;
 use crate::constants::{
     ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, DEFAULT_SCHEME_SYSTEM,
-    REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME,
+    LOCK_FILE, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME,
 };
 use crate::utils::{
     create_theme_filename_without_extension, get_all_scheme_file_paths,
     get_shell_command_from_string, write_to_file,
 };
 use anyhow::{anyhow, Context, Error, Result};
+use fs2::FileExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::str::FromStr;
@@ -191,6 +192,16 @@ pub fn apply(
         }
     }
 
+    let lock_path = data_path.join(LOCK_FILE);
+    let lock_file = fs::File::create(&lock_path).context(format!(
+        "Failed to create lock file: {}",
+        lock_path.display()
+    ))?;
+    lock_file.lock_exclusive().context(format!(
+        "Failed to acquire exclusive lock on {}",
+        lock_path.display()
+    ))?;
+
     let target_path = data_path.join(ARTIFACTS_DIR);
     if target_path.exists() {
         // Replace the existing artifacts directory with the staging one.
@@ -314,6 +325,13 @@ fn delete_non_dirs_and_broken_symlinks(dir: &Path) -> Result<()> {
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
+
+        if let Some(name) = path.file_name() {
+            if name == LOCK_FILE {
+                continue;
+            }
+        }
+
         let metadata = fs::symlink_metadata(&path)?; // Don't follow symlinks
 
         let file_type = metadata.file_type();
