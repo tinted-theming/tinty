@@ -21,8 +21,8 @@ main() {
     rm -rf "$schemes_repo_dir"
   fi
 
-  if [ -d "$fixtures_path" ]; then
-    rm -r "$fixtures_path"
+  if [ -f "$schemes_file_path" ]; then
+    rm -f "$schemes_file_path"
   fi
 
   mkdir "$fixtures_path"

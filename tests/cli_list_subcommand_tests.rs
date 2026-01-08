@@ -89,7 +89,7 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
     for line in lines {
         assert!(
             stdout.contains(line),
-            "stdout does not contain the expected output"
+            "stdout does not contain the expected output: {line}"
         );
     }
 
