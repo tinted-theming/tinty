@@ -86,7 +86,7 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
     let dir_name = scheme_path
         .parent()
         .and_then(|p| p.file_name())
-        .map_or_else(|| "".to_string(), |f| f.to_string_lossy().into_owned()); // Ensures ownership
+        .map_or_else(String::new, |f| f.to_string_lossy().into_owned()); // Ensures ownership
     let system = dir_name.as_str();
     let mut palette: Vec<String> = vec![];
     let str = fs::read_to_string(scheme_path)?;
@@ -155,16 +155,13 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
                 scheme_path.display()
             ))
         }
-    };
+    }
 
     println!(
-        "{} ({}-{}) @ {}",
-        name,
-        system,
-        slug,
+        "{name} ({system}-{slug}) @ {}",
         scheme_path.to_string_lossy()
     );
-    println!("by {}", author);
+    println!("by {author}");
 
     let reset = "\x1B[0m";
     for color in palette {
@@ -173,9 +170,8 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
         let bg_ansi = format!("\x1B[48;2;{};{};{}m", hex.r, hex.g, hex.b);
         let fg_ansi = format!("\x1B[38;2;{};{};{}m", hex.r, hex.g, hex.b);
 
-        print!("{} {} {}", bg_ansi, hex_text, reset);
-        print!("  {}{}{}", fg_ansi, hex_text, reset);
-        println!();
+        print!("{bg_ansi} {hex_text} {reset}");
+        println!("  {fg_ansi}{hex_text}{reset}");
     }
 
     println!();
@@ -183,19 +179,18 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn print_single_schemes(files: Vec<PathBuf>, scheme_name: &str) -> Result<()> {
+fn print_single_schemes(files: &[PathBuf], scheme_name: &str) -> Result<()> {
     let scheme_system_name = scheme_name.split('-').next().unwrap_or_default();
 
     if !SchemeSystem::variants()
         .iter()
-        .map(|s| s.as_str())
-        .collect::<Vec<&str>>()
-        .contains(&scheme_system_name)
+        .map(SchemeSystem::as_str)
+        .any(|x| x == scheme_system_name)
     {
         return Err(anyhow!(
-            r##"Invalid scheme system: "{}" from scheme name "{}"
+            r#"Invalid scheme system: "{}" from scheme name "{}"
 Make sure to add the system prefix to the theme name. Eg: {}-oceanicnext
-Run `{} list` to get a list of scheme names"##,
+Run `{} list` to get a list of scheme names"#,
             scheme_system_name,
             scheme_name,
             SchemeSystem::default(),
@@ -209,10 +204,11 @@ Run `{} list` to get a list of scheme names"##,
         .collect::<Vec<&str>>()
         .join("-");
 
-    match files.iter().find(|path| {
+    match files.iter().find(|path| 
+        path.parent().is_some_and(|parent_path|
         path.file_stem().unwrap_or_default().to_string_lossy() == scheme_name_without_system
-            && path.parent().unwrap().file_name().unwrap_or_default() == scheme_system_name
-    }) {
+            && parent_path.file_name().unwrap_or_default() == scheme_system_name)
+    ) {
         Some(scheme_path) => {
             print_scheme(scheme_path)?;
         }
@@ -268,7 +264,7 @@ pub fn info(data_path: &Path, scheme_name_option: Option<&String>, is_custom: bo
     let scheme_systems_without_default: Vec<&str> = SchemeSystem::variants()
         .iter()
         .filter(|s| s.as_str() != SchemeSystem::default().as_str())
-        .map(|s| s.as_str())
+        .map(SchemeSystem::as_str)
         .collect();
 
     // Add other scheme_system schemes to vec
@@ -285,7 +281,7 @@ pub fn info(data_path: &Path, scheme_name_option: Option<&String>, is_custom: bo
 
     match scheme_name_option {
         Some(scheme_name) => {
-            print_single_schemes(files, scheme_name)?;
+            print_single_schemes(&files, scheme_name)?;
         }
         None => {
             print_all_schemes(files)?;
