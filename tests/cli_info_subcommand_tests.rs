@@ -21,7 +21,7 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // Assert
     // ------
     assert!(
-        stdout.contains("OceanicNext (base16-oceanicnext)"),
+        stdout.contains("System: base16\nSlug: oceanicnext\nName: OceanicNext"),
         "stdout does not contain the expected output"
     );
     assert!(
@@ -34,13 +34,13 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
 }
 
 #[test]
-fn test_cli_info_subcommand_with_setup() -> Result<()> {
+fn test_cli_info_subcommand_with_setup_for_base16() -> Result<()> {
     // -------
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
     let (_, data_path, command_vec, cleanup) = setup(
-        "test_cli_info_subcommand_with_setup",
+        "test_cli_info_subcommand_with_setup_for_base16",
         format!("info {scheme_name}").as_str(),
     )?;
 
@@ -53,11 +53,67 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // Assert
     // ------
     assert!(
-        stdout.contains("OceanicNext (base16-oceanicnext)"),
+        stdout.contains("| Color       | Name   | Hex     | ANSI     |"),
         "stdout does not contain the expected output"
     );
     assert!(
-        stdout.contains(" #1B2B34   #1B2B34"),
+        stdout.contains("Name: OceanicNext"),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stdout.contains("System: base16"),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stdout.contains("Slug: oceanicnext"),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stdout.contains(" | base00 | #1B2B34 | 0 "),
+        "stdout does not contain the expected output"
+    );
+
+    cleanup()?;
+    Ok(())
+}
+
+#[test]
+fn test_cli_info_subcommand_with_setup_for_base24() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base24-ayu-dark";
+    let (_, data_path, command_vec, cleanup) = setup(
+        "test_cli_info_subcommand_with_setup_for_base24",
+        format!("info {scheme_name}").as_str(),
+    )?;
+
+    // ---
+    // Act
+    // ---
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert!(
+        stdout.contains("| Color       | Name   | Hex     | ANSI |"),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stdout.contains("Name: Ayu Dark"),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stdout.contains("System: base24"),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stdout.contains("Slug: ayu-dark"),
+        "stdout does not contain the expected output"
+    );
+    assert!(
+        stdout.contains(" | base12 | #f26d78 | 9 "),
         "stdout does not contain the expected output"
     );
 
