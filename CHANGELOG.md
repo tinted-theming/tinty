@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Structure and add extra color information to `info` operation
+
 ### Fixed
 
 - Fix bug where global config `hooks` can be run out of list order

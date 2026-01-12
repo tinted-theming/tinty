@@ -2,6 +2,7 @@ use crate::constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, REPO_URL, S
 use anyhow::{anyhow, Result};
 use hex_color::HexColor;
 use serde::Deserialize;
+use std::str::FromStr;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -88,7 +89,7 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
         .and_then(|p| p.file_name())
         .map_or_else(String::new, |f| f.to_string_lossy().into_owned()); // Ensures ownership
     let system = dir_name.as_str();
-    let mut palette: Vec<String> = vec![];
+    let mut palette: Vec<(String, String, String)> = vec![];
     let str = fs::read_to_string(scheme_path)?;
     let slug = scheme_path
         .file_stem()
@@ -97,81 +98,237 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
     let author;
     let name;
 
-    match system {
-        "base16" => {
-            let scheme: Base16Scheme = serde_yaml::from_str(&str)?;
-            author = scheme.author;
-            name = scheme.name;
-            palette.push(scheme.palette.base00);
-            palette.push(scheme.palette.base01);
-            palette.push(scheme.palette.base02);
-            palette.push(scheme.palette.base03);
-            palette.push(scheme.palette.base04);
-            palette.push(scheme.palette.base05);
-            palette.push(scheme.palette.base06);
-            palette.push(scheme.palette.base07);
-            palette.push(scheme.palette.base08);
-            palette.push(scheme.palette.base09);
-            palette.push(scheme.palette.base0_a);
-            palette.push(scheme.palette.base0_b);
-            palette.push(scheme.palette.base0_c);
-            palette.push(scheme.palette.base0_d);
-            palette.push(scheme.palette.base0_e);
-            palette.push(scheme.palette.base0_f);
+    // ANSI values based on base16 0.4.2 and base24 0.1.3
+    if let Ok(scheme_system) = SchemeSystem::from_str(system) {
+        match scheme_system {
+            SchemeSystem::Base16 => {
+                let scheme: Base16Scheme = serde_yaml::from_str(&str)?;
+                author = scheme.author;
+                name = scheme.name;
+                palette.push(("base00".to_string(), scheme.palette.base00, "0".to_string()));
+                palette.push((
+                    "base01".to_string(),
+                    scheme.palette.base01,
+                    "18".to_string(),
+                ));
+                palette.push((
+                    "base02".to_string(),
+                    scheme.palette.base02,
+                    "19".to_string(),
+                ));
+                palette.push(("base03".to_string(), scheme.palette.base03, "8".to_string()));
+                palette.push((
+                    "base04".to_string(),
+                    scheme.palette.base04,
+                    "20".to_string(),
+                ));
+                palette.push(("base05".to_string(), scheme.palette.base05, "7".to_string()));
+                palette.push((
+                    "base06".to_string(),
+                    scheme.palette.base06,
+                    "21".to_string(),
+                ));
+                palette.push((
+                    "base07".to_string(),
+                    scheme.palette.base07,
+                    "15".to_string(),
+                ));
+                palette.push((
+                    "base08".to_string(),
+                    scheme.palette.base08,
+                    "1 and 9".to_string(),
+                ));
+                palette.push((
+                    "base09".to_string(),
+                    scheme.palette.base09,
+                    "16".to_string(),
+                ));
+                palette.push((
+                    "base0A".to_string(),
+                    scheme.palette.base0_a,
+                    "3 and 11".to_string(),
+                ));
+                palette.push((
+                    "base0B".to_string(),
+                    scheme.palette.base0_b,
+                    "2 and 10".to_string(),
+                ));
+                palette.push((
+                    "base0C".to_string(),
+                    scheme.palette.base0_c,
+                    "6 and 14".to_string(),
+                ));
+                palette.push((
+                    "base0D".to_string(),
+                    scheme.palette.base0_d,
+                    "4 and 12".to_string(),
+                ));
+                palette.push((
+                    "base0E".to_string(),
+                    scheme.palette.base0_e,
+                    "5 and 13".to_string(),
+                ));
+                palette.push((
+                    "base0F".to_string(),
+                    scheme.palette.base0_f,
+                    "17".to_string(),
+                ));
+            }
+            SchemeSystem::Base24 => {
+                let scheme: Base24Scheme = serde_yaml::from_str(&str)?;
+                author = scheme.author;
+                name = scheme.name;
+                palette.push(("base00".to_string(), scheme.palette.base00, "0".to_string()));
+                palette.push((
+                    "base01".to_string(),
+                    scheme.palette.base01,
+                    "18".to_string(),
+                ));
+                palette.push((
+                    "base02".to_string(),
+                    scheme.palette.base02,
+                    "19".to_string(),
+                ));
+                palette.push(("base03".to_string(), scheme.palette.base03, "8".to_string()));
+                palette.push((
+                    "base04".to_string(),
+                    scheme.palette.base04,
+                    "20".to_string(),
+                ));
+                palette.push(("base05".to_string(), scheme.palette.base05, "7".to_string()));
+                palette.push((
+                    "base06".to_string(),
+                    scheme.palette.base06,
+                    "21".to_string(),
+                ));
+                palette.push((
+                    "base07".to_string(),
+                    scheme.palette.base07,
+                    "15".to_string(),
+                ));
+                palette.push(("base08".to_string(), scheme.palette.base08, "1".to_string()));
+                palette.push((
+                    "base09".to_string(),
+                    scheme.palette.base09,
+                    "16".to_string(),
+                ));
+                palette.push((
+                    "base0A".to_string(),
+                    scheme.palette.base0_a,
+                    "3".to_string(),
+                ));
+                palette.push((
+                    "base0B".to_string(),
+                    scheme.palette.base0_b,
+                    "2".to_string(),
+                ));
+                palette.push((
+                    "base0C".to_string(),
+                    scheme.palette.base0_c,
+                    "6".to_string(),
+                ));
+                palette.push((
+                    "base0D".to_string(),
+                    scheme.palette.base0_d,
+                    "4".to_string(),
+                ));
+                palette.push((
+                    "base0E".to_string(),
+                    scheme.palette.base0_e,
+                    "5".to_string(),
+                ));
+                palette.push((
+                    "base0F".to_string(),
+                    scheme.palette.base0_f,
+                    "17".to_string(),
+                ));
+                palette.push(("base10".to_string(), scheme.palette.base10, "-".to_string()));
+                palette.push(("base11".to_string(), scheme.palette.base11, "-".to_string()));
+                palette.push(("base12".to_string(), scheme.palette.base12, "9".to_string()));
+                palette.push((
+                    "base13".to_string(),
+                    scheme.palette.base13,
+                    "11".to_string(),
+                ));
+                palette.push((
+                    "base14".to_string(),
+                    scheme.palette.base14,
+                    "10".to_string(),
+                ));
+                palette.push((
+                    "base15".to_string(),
+                    scheme.palette.base15,
+                    "14".to_string(),
+                ));
+                palette.push((
+                    "base16".to_string(),
+                    scheme.palette.base16,
+                    "12".to_string(),
+                ));
+                palette.push((
+                    "base17".to_string(),
+                    scheme.palette.base17,
+                    "13".to_string(),
+                ));
+            }
+            _ => {
+                return Err(anyhow!(
+                    "Scheme system is not supported \"{}\": {}",
+                    system,
+                    scheme_path.display()
+                ))
+            }
         }
-        "base24" => {
-            let scheme: Base24Scheme = serde_yaml::from_str(&str)?;
-            author = scheme.author;
-            name = scheme.name;
-            palette.push(scheme.palette.base00);
-            palette.push(scheme.palette.base01);
-            palette.push(scheme.palette.base02);
-            palette.push(scheme.palette.base03);
-            palette.push(scheme.palette.base04);
-            palette.push(scheme.palette.base05);
-            palette.push(scheme.palette.base06);
-            palette.push(scheme.palette.base07);
-            palette.push(scheme.palette.base08);
-            palette.push(scheme.palette.base09);
-            palette.push(scheme.palette.base0_a);
-            palette.push(scheme.palette.base0_b);
-            palette.push(scheme.palette.base0_c);
-            palette.push(scheme.palette.base0_d);
-            palette.push(scheme.palette.base0_e);
-            palette.push(scheme.palette.base0_f);
-            palette.push(scheme.palette.base10);
-            palette.push(scheme.palette.base11);
-            palette.push(scheme.palette.base12);
-            palette.push(scheme.palette.base13);
-            palette.push(scheme.palette.base14);
-            palette.push(scheme.palette.base15);
-            palette.push(scheme.palette.base16);
-            palette.push(scheme.palette.base17);
-        }
-        _ => {
-            return Err(anyhow!(
-                "Scheme system is not supported \"{}\": {}",
-                system,
-                scheme_path.display()
-            ))
-        }
+    } else {
+        return Err(anyhow!(
+            "Scheme system is not supported \"{}\": {}",
+            system,
+            scheme_path.display()
+        ));
     }
 
+    let ansi_col_header_spacing: (String, String) =
+        if let Ok(scheme_system) = SchemeSystem::from_str(system) {
+            match scheme_system {
+                SchemeSystem::Base16 => ("    ".to_string(), "----".to_string()),
+                SchemeSystem::Base24 => (String::new(), String::new()),
+                _ => (String::new(), String::new()),
+            }
+        } else {
+            (String::new(), String::new())
+        };
+    println!("System: {system}",);
+    println!("Slug: {slug}",);
+    println!("Name: {name}",);
+    println!("Author: {author}");
+    println!("Scheme path: {}", scheme_path.to_string_lossy(),);
     println!(
-        "{name} ({system}-{slug}) @ {}",
-        scheme_path.to_string_lossy()
+        "| Color       | Name   | Hex     | ANSI {}|",
+        ansi_col_header_spacing.0
     );
-    println!("by {author}");
+    println!(
+        "|-------------|--------|---------|------{}|",
+        ansi_col_header_spacing.1
+    );
 
     let reset = "\x1B[0m";
-    for color in palette {
-        let hex_text = format!("#{}", color.strip_prefix('#').unwrap_or(&color));
+    for (name, hex, ansi) in palette {
+        let hex_text = format!("#{}", hex.strip_prefix('#').unwrap_or(&hex));
         let hex = HexColor::parse(&hex_text)?;
         let bg_ansi = format!("\x1B[48;2;{};{};{}m", hex.r, hex.g, hex.b);
         let fg_ansi = format!("\x1B[38;2;{};{};{}m", hex.r, hex.g, hex.b);
+        let ansi_col_whitespace: String = if let Ok(scheme_system) = SchemeSystem::from_str(system)
+        {
+            match scheme_system {
+                SchemeSystem::Base16 => (ansi.len()..8).map(|_| " ").collect(), // 4 is length of "ANSI"
+                SchemeSystem::Base24 => (ansi.len()..4).map(|_| " ").collect(), // 4 is length of "ANSI"
+                _ => String::new(),
+            }
+        } else {
+            String::new()
+        };
 
-        print!("{bg_ansi} {hex_text} {reset}");
-        println!("  {fg_ansi}{hex_text}{reset}");
+        println!("| {bg_ansi}{fg_ansi}           {reset} | {name} | {hex_text} | {ansi} {ansi_col_whitespace}|");
     }
 
     println!();
@@ -204,7 +361,7 @@ Run `{} list` to get a list of scheme names"#,
         .collect::<Vec<&str>>()
         .join("-");
 
-    match files.iter().find(|path| 
+    match files.iter().find(|path|
         path.parent().is_some_and(|parent_path|
         path.file_stem().unwrap_or_default().to_string_lossy() == scheme_name_without_system
             && parent_path.file_name().unwrap_or_default() == scheme_system_name)
