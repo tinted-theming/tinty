@@ -1,4 +1,5 @@
 use crate::constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME};
+use crate::operations::current::get_current_scheme_slug;
 use anyhow::{anyhow, Result};
 use hex_color::HexColor;
 use serde::Deserialize;
@@ -390,7 +391,12 @@ fn print_all_schemes(files: Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-pub fn info(data_path: &Path, scheme_name_option: Option<&String>, is_custom: bool) -> Result<()> {
+pub fn info(
+    data_path: &Path,
+    scheme_name_option: Option<&String>,
+    is_custom: bool,
+    exhaustive_list: bool,
+) -> Result<()> {
     let schemes_dir_path = if is_custom {
         data_path.join(CUSTOM_SCHEMES_DIR_NAME)
     } else {
@@ -436,13 +442,13 @@ pub fn info(data_path: &Path, scheme_name_option: Option<&String>, is_custom: bo
 
     files.sort();
 
-    match scheme_name_option {
-        Some(scheme_name) => {
-            print_single_schemes(&files, scheme_name)?;
-        }
-        None => {
-            print_all_schemes(files)?;
-        }
+    if scheme_name_option.is_some() || !exhaustive_list {
+        let scheme_name = scheme_name_option
+            .cloned()
+            .unwrap_or(get_current_scheme_slug(data_path));
+        print_single_schemes(&files, &scheme_name)?;
+    } else {
+        print_all_schemes(files)?;
     }
 
     Ok(())

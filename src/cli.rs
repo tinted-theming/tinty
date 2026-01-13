@@ -136,8 +136,15 @@ pub fn build_cli() -> Command {
         .subcommand(
             Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {REPO_NAME} info base16-mocha)"))
                 .arg(
-                    Arg::new("scheme_name")
+                    Arg::new("scheme-name")
                         .help("The scheme you want to get information about")
+                        .required(false),
+                )
+                .arg(
+                    Arg::new("all")
+                        .help("Lists all availabile custom schemes")
+                        .long("all")
+                        .action(ArgAction::SetTrue)
                         .required(false),
                 )
                 .arg(
@@ -145,6 +152,7 @@ pub fn build_cli() -> Command {
                         .help("Lists availabile custom schemes")
                         .long("custom-schemes")
                         .action(ArgAction::SetTrue)
+                        .required(false),
                 )
         )
         .subcommand(
@@ -191,7 +199,7 @@ pub fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("apply").about("Applies a theme based on the chosen scheme").arg(
-                Arg::new("scheme_name")
+                Arg::new("scheme-name")
                     .help("The scheme you want to apply")
                     .required(true),
             )
