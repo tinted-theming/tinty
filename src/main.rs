@@ -106,9 +106,18 @@ fn main() -> Result<()> {
                 .get_one::<bool>("custom-schemes")
                 .map(|b| b.to_owned())
                 .unwrap_or(false);
-            let scheme_name_option = sub_matches.get_one::<String>("scheme_name");
+            let is_exhaustive_list = sub_matches
+                .get_one::<bool>("all")
+                .map(|b| b.to_owned())
+                .unwrap_or(false);
+            let scheme_name_option = sub_matches.get_one::<String>("scheme-name");
 
-            operations::info::info(&data_path, scheme_name_option, is_custom)?;
+            operations::info::info(
+                &data_path,
+                scheme_name_option,
+                is_custom,
+                is_exhaustive_list,
+            )?;
         }
         Some(("init", sub_matches)) => {
             let is_verbose = sub_matches
@@ -131,7 +140,7 @@ fn main() -> Result<()> {
             operations::list::list(&data_path, is_custom, is_json)?;
         }
         Some(("apply", sub_matches)) => {
-            if let Some(theme) = sub_matches.get_one::<String>("scheme_name") {
+            if let Some(theme) = sub_matches.get_one::<String>("scheme-name") {
                 let is_quiet = sub_matches
                     .get_one::<bool>("quiet")
                     .map(|b| b.to_owned())

@@ -1,7 +1,41 @@
 mod utils;
 
-use crate::utils::{setup, write_to_file, REPO_NAME};
+use crate::utils::{setup, write_to_file, ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, REPO_NAME};
 use anyhow::Result;
+
+#[test]
+fn test_cli_info_subcommand_with_setup() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let (_, data_path, command_vec, cleanup) =
+        setup("test_cli_info_subcommand_all_with_setup", "info")?;
+    let stdout_line_count = 24;
+    let scheme_name = "base16-oceanicnext";
+    let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
+    write_to_file(&current_scheme_path, scheme_name)?;
+
+    // ---
+    // Act
+    // ---
+    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+
+    // ------
+    // Assert
+    // ------
+    assert!(
+        stdout.contains("System: base16\nSlug: oceanicnext\nName: OceanicNext"),
+        "stdout does not contain the expected output"
+    );
+
+    assert!(
+        stdout.lines().count() == stdout_line_count,
+        "stdout does not contain the expected output"
+    );
+
+    cleanup()?;
+    Ok(())
+}
 
 #[test]
 fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
@@ -9,7 +43,7 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // Arrange
     // -------
     let (_, data_path, command_vec, cleanup) =
-        setup("test_cli_info_subcommand_all_with_setup", "info")?;
+        setup("test_cli_info_subcommand_all_with_setup", "info --all")?;
     let scheme_count = 250;
 
     // ---

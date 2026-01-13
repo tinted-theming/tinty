@@ -6,6 +6,11 @@
 
 - Structure and add extra color information to `info` operation
 
+### Changed
+
+- BREAKING: `tinty info` now prints info related to the current/active scheme
+  and `tinty info --all` prints information on all schemes
+
 ### Fixed
 
 - Fix bug where global config `hooks` can be run out of list order

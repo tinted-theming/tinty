@@ -18,7 +18,6 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     let schemes_dir = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
 
     write_to_file(&current_scheme_path, scheme_name)?;
-    write_to_file(&current_scheme_path, scheme_name)?;
     copy_dir_all("./tests/fixtures/schemes", schemes_dir)?;
 
     // ---
