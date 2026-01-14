@@ -7,7 +7,7 @@ use tinted_scheme_extractor::{create_scheme_from_image, SchemeParams};
 use crate::utils::write_to_file;
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn generate_scheme(
+pub fn generate_scheme(
     image_path: PathBuf,
     output_file_path_option: Option<PathBuf>,
     author: String,
@@ -38,7 +38,7 @@ pub(crate) fn generate_scheme(
             println!("Scheme created: {}", path.display());
         }
         None => print!("{scheme}"), // Scheme .display() already ends with a newline
-    };
+    }
 
     Ok(())
 }

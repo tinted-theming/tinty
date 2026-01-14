@@ -7,6 +7,7 @@ use clap_complete::Shell;
 use crate::constants::REPO_NAME;
 
 /// Builds the command-line interface for the application.
+#[allow(clippy::too_many_lines)]
 pub fn build_cli() -> Command {
     Command::new(REPO_NAME)
         .version(env!("CARGO_PKG_VERSION"))

@@ -1,6 +1,5 @@
-use anyhow::{anyhow, Context, Error as AnyhowError, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use regex::bytes::Regex;
-use std::error::Error;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -24,10 +23,10 @@ pub const CUSTOM_SCHEMES_DIR_NAME: &str = "custom-schemes";
 pub const ARTIFACTS_DIR: &str = "artifacts";
 
 pub fn run_command(
-    command_vec: Vec<String>,
+    command_vec: &[String],
     data_path: &Path,
     cache: bool,
-) -> Result<(String, String), Box<dyn Error>> {
+) -> Result<(String, String)> {
     if cache {
         clone_test_repos(data_path)?;
     }
@@ -35,7 +34,7 @@ pub fn run_command(
     let output = Command::new(&command_vec[0])
         .args(&command_vec[1..])
         .output()
-        .expect("Failed to execute command");
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
 
     if !output.stderr.is_empty() {
         println!(
@@ -63,7 +62,7 @@ pub fn run_install_command(config_path: &Path, data_path: &Path, cache: bool) ->
             format!("--data-dir={}", data_path.display()).as_str(),
         ])
         .status()
-        .expect("Failed to execute install command");
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
 
     if output_install.success() {
         Ok(())
@@ -94,7 +93,7 @@ fn clone_test_repos(data_path: &Path) -> Result<()> {
         ),
     ] {
         let repo_path = data_path.join(format!("repos/{}", repo.0));
-        let tmp_repo_path = tmp_repos_dir.join(format!("repos/{}", repo.0));
+        let tmp_repo_path = tmp_repos_dir.join(repo.0);
 
         if !tmp_repo_path.exists() {
             git_clone(repo.1, &tmp_repo_path, repo.2)
@@ -159,7 +158,7 @@ pub fn setup(
     let config_path = PathBuf::from(format!("config_path_{name}.toml").as_str());
     let data_path = PathBuf::from(format!("data_path_{name}").as_str());
 
-    let command_vec = build_comamnd_vec(command, &config_path, &data_path)?;
+    let command_vec = build_command_vec(command, &config_path, &data_path)?;
 
     cleanup(&config_path, &data_path)?;
     write_to_file(&config_path, "")?;
@@ -176,7 +175,7 @@ pub fn setup(
 }
 
 #[allow(clippy::type_complexity)]
-pub fn build_comamnd_vec(
+pub fn build_command_vec(
     command: &str,
     config_path: &Path,
     data_path: &Path,
@@ -218,14 +217,21 @@ pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> R
         ));
     }
 
-    let command = format!("git clone \"{}\" \"{}\"", repo_url, target_dir.display());
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    let git_command = format!("git clone \"{repo_url}\" \"{}\"", target_dir.display());
+    let command_vec = shell_words::split(git_command.as_str()).map_err(anyhow::Error::new)?;
 
-    Command::new(&command_vec[0])
-        .args(&command_vec[1..])
+    let Some(command) = command_vec.first() else {
+        return Err(anyhow!("Unable to extract cli command"));
+    };
+    let Some(args) = command_vec.get(1..) else {
+        return Err(anyhow!("Unable to extract cli args"));
+    };
+
+    Command::new(command)
+        .args(args)
         .stdout(Stdio::null())
         .status()
-        .with_context(|| format!("Failed to clone repository from {}", repo_url))?;
+        .with_context(|| format!("Failed to clone repository from {repo_url}"))?;
 
     if let Some(revision_str) = revision {
         let result = git_to_revision(target_dir, "origin", revision_str);
@@ -242,14 +248,12 @@ pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> R
 
 // Resolvees the SHA1 of revision at remote_name.
 // revision can be a tag, a branch, or a commit SHA1.
+#[allow(clippy::too_many_lines)]
 fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<String> {
     // 1.) Check if its a tag.
-    let expected_tag_ref = format!("refs/tags/{}", revision);
+    let expected_tag_ref = format!("refs/tags/{revision}");
     let mut command = safe_command(
-        format!(
-            "git ls-remote --quiet --tags \"{}\" \"{}\"",
-            remote_name, expected_tag_ref
-        ),
+        format!("git ls-remote --quiet --tags \"{remote_name}\" \"{expected_tag_ref}\"").as_str(),
         repo_path,
     )?;
     let mut child = command
@@ -258,33 +262,38 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         .spawn()
         .with_context(|| "Failed to spawn".to_string())?;
 
-    let stdout = child.stdout.take().expect("failed to capture stdout");
+    let Some(stdout) = child.stdout.take() else {
+        return Err(anyhow!("failed to capture stdout"));
+    };
     let reader = BufReader::new(stdout);
 
     if let Some(parts) = reader
         .lines()
         .map_while(Result::ok)
-        .map(|line| line.split("\t").map(String::from).collect::<Vec<String>>())
+        .map(|line| line.split('\t').map(String::from).collect::<Vec<String>>())
         .filter(|parts| parts.len() == 2)
-        .find(|parts| parts[1] == expected_tag_ref)
+        .find(|parts| {
+            parts
+                .get(1)
+                .map_or_else(|| false, |second_part| *second_part == expected_tag_ref)
+        })
     {
-        // we found a tag that matches
-        child.kill()?; // Abort the child process.
-        child.wait()?; // Cleanup
-        return Ok(parts[0].to_string()); // Return early.
+        if let Some(first_part) = parts.first() {
+            // we found a tag that matches
+            child.kill()?; // Abort the child process.
+            child.wait()?; // Cleanup
+            return Ok(first_part.clone()); // Return early.
+        }
     }
 
     child
         .wait()
-        .with_context(|| format!("Failed to list remote tags from {}", remote_name))?;
+        .with_context(|| format!("Failed to list remote tags from {remote_name}"))?;
 
     // 2.) Check if its a branch
-    let expected_branch_ref = format!("refs/heads/{}", revision);
+    let expected_branch_ref = format!("refs/heads/{revision}");
     let mut command = safe_command(
-        format!(
-            "git ls-remote --quiet \"{}\" \"{}\"",
-            remote_name, expected_branch_ref
-        ),
+        format!("git ls-remote --quiet \"{remote_name}\" \"{expected_branch_ref}\"").as_str(),
         repo_path,
     )?;
     let mut child = command
@@ -292,64 +301,73 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         .spawn()
         .with_context(|| "Failed to spawn".to_string())?;
 
-    let stdout = child.stdout.take().expect("failed to capture stdout");
+    let Some(stdout) = child.stdout.take() else {
+        return Err(anyhow!("failed to capture stdout"));
+    };
     let reader = BufReader::new(stdout);
 
     if let Some(parts) = reader
         .lines()
         .map_while(Result::ok)
-        .map(|line| line.split("\t").map(String::from).collect::<Vec<String>>())
+        .map(|line| line.split('\t').map(String::from).collect::<Vec<String>>())
         .filter(|parts| parts.len() == 2)
-        .find(|parts| parts[1] == expected_branch_ref)
+        .find(|parts| {
+            parts
+                .get(1)
+                .map_or_else(|| false, |second_part| *second_part == expected_branch_ref)
+        })
     {
-        // we found a branch that matches.
-        child.kill()?; // Abort the child process.
-        child.wait()?; // Cleanup
-        return Ok(parts[0].to_string()); // Return early.
+        if let Some(first_part) = parts.first() {
+            // we found a branch that matches.
+            child.kill()?; // Abort the child process.
+            child.wait()?; // Cleanup
+            return Ok(first_part.clone()); // Return early.
+        }
     }
 
     child
         .wait()
-        .with_context(|| format!("Failed to list branches tags from {}", remote_name))?;
+        .with_context(|| format!("Failed to list branches tags from {remote_name}"))?;
 
     // We are here because revision isn't a tag or a branch.
     // First, we'll check if revision itself *could* be a SHA1.
     // If it doesn't look like one, we'll return early.
     let pattern = r"^[0-9a-f]{1,40}$";
-    let re = Regex::new(pattern).expect("Invalid regex");
+    let Ok(re) = Regex::new(pattern) else {
+        return Err(anyhow!("Invalid regex"));
+    };
     if !re.is_match(revision.as_bytes()) {
         return Err(anyhow!("cannot resolve {} into a Git SHA1", revision));
     }
 
-    safe_command(format!("git fetch --quiet \"{}\"", remote_name), repo_path)?
-        .stdout(Stdio::null())
-        .status()
-        .with_context(|| format!("unable to fetch objects from remote {}", remote_name))?;
+    safe_command(
+        format!("git fetch --quiet \"{remote_name}\"").as_str(),
+        repo_path,
+    )?
+    .stdout(Stdio::null())
+    .status()
+    .with_context(|| format!("unable to fetch objects from remote {remote_name}"))?;
 
     // 3.) Check if any branch in remote contains the SHA1:
     // It seems that the only way to do this is to list the branches that contain the SHA1
     // and check if it belongs in the remote.
-    let remote_branch_prefix = format!("refs/remotes/{}/", remote_name);
+    let remote_branch_prefix = format!("refs/remotes/{remote_name}/");
     let mut command = safe_command(
-        format!(
-            "git branch --format=\"%(refname)\" -a --contains \"{}\"",
-            revision
-        ),
+        format!("git branch --format=\"%(refname)\" -a --contains \"{revision}\"").as_str(),
         repo_path,
     )?;
     let mut child = command.stdout(Stdio::piped()).spawn().with_context(|| {
-        format!(
-            "Failed to find branches containing commit {} from {}",
-            revision, remote_name
-        )
+        format!("Failed to find branches containing commit {revision} from {remote_name}",)
     })?;
-
-    let stdout = child.stdout.take().expect("failed to capture stdout");
+    let Some(stdout) = child.stdout.take() else {
+        return Err(anyhow!("failed to capture stdout"));
+    };
     let reader = BufReader::new(stdout);
+
     if reader
         .lines()
         .map_while(Result::ok)
-        .any(|line| line.clone().starts_with(&remote_branch_prefix))
+        .any(|line| line.starts_with(&remote_branch_prefix))
     {
         // we found a remote ref that contains the commit sha
         child.kill()?; // Abort the child process.
@@ -358,37 +376,38 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     }
 
     child.wait().with_context(|| {
-        format!(
-            "Failed to list branches from {} containing SHA1 {}",
-            remote_name, revision
-        )
+        format!("Failed to list branches from {remote_name} containing SHA1 {revision}",)
     })?;
 
     Err(anyhow!(
-        "cannot find revision {} in remote {}",
-        revision,
-        remote_name
+        "cannot find revision {revision} in remote {remote_name}",
     ))
 }
 
-fn safe_command(command: String, cwd: &Path) -> Result<Command, AnyhowError> {
-    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
-    let mut command = Command::new(&command_vec[0]);
-    command.args(&command_vec[1..]).current_dir(cwd);
+fn safe_command(command_str: &str, cwd: &Path) -> Result<Command, Error> {
+    let command_vec = shell_words::split(command_str).map_err(anyhow::Error::new)?;
+    let Some(command) = command_vec.first() else {
+        return Err(anyhow!("Unable to extract cli command"));
+    };
+    let Some(args) = command_vec.get(1..) else {
+        return Err(anyhow!("Unable to extract cli args"));
+    };
+    let mut command = Command::new(command);
+
+    command.args(args).current_dir(cwd);
     Ok(command)
 }
 
 fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
     // Download the object from the remote
     safe_command(
-        format!("git fetch --quiet \"{}\" \"{}\"", remote_name, revision),
+        format!("git fetch --quiet \"{remote_name}\" \"{revision}\"").as_str(),
         repo_path,
     )?
     .status()
     .with_context(|| {
         format!(
-            "Error with fetching revision {} in {}",
-            revision,
+            "Error with fetching revision {revision} in {}",
             repo_path.display()
         )
     })?;
@@ -397,10 +416,7 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     let commit_sha = git_resolve_revision(repo_path, remote_name, revision)?;
 
     safe_command(
-        format!(
-            "git -c advice.detachedHead=false checkout --quiet \"{}\"",
-            commit_sha
-        ),
+        format!("git -c advice.detachedHead=false checkout --quiet \"{commit_sha}\"").as_str(),
         repo_path,
     )?
     .stdout(Stdio::null())
@@ -408,8 +424,7 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     .status()
     .with_context(|| {
         format!(
-            "Failed to checkout SHA {} in {}",
-            commit_sha,
+            "Failed to checkout SHA {commit_sha} in {}",
             repo_path.display()
         )
     })?;
