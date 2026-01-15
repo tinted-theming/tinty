@@ -19,11 +19,11 @@ pub fn cycle(
     // Figure out what the next theme should be given current theme & preferred schemes.
     let next_theme = user_curated_scheme_list(&config)
         .as_ref()
-        .map(|vec| next_scheme_in_cycle(&current_scheme_slug, vec.to_vec()))
+        .map(|vec| next_scheme_in_cycle(&current_scheme_slug, vec))
         .unwrap_or(current_scheme_slug);
 
     if !is_quiet {
-        println!("Applying next theme in cycle: {}", next_theme);
+        println!("Applying next theme in cycle: {next_theme}");
     }
 
     apply(

@@ -3,7 +3,7 @@ mod utils;
 use std::process::Command;
 
 use crate::utils::{setup, REPO_NAME};
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use utils::write_to_file;
 
 #[test]
@@ -20,13 +20,13 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, false)?;
 
     // ------
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stdout.contains(&expected_output),
         "stdout does not contain the expected output"
     );
@@ -46,17 +46,17 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stdout.contains(expected_output),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -77,17 +77,17 @@ fn test_cli_update_subcommand_with_setup_quiet_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -104,11 +104,11 @@ fn test_cli_update_subcommand_with_new_remote() -> Result<()> {
         setup("test_cli_update_subcommand_with_new_remote", "update")?;
     let expected_output = "tinted-vim up to date";
 
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/base16-vim"
 name = "tinted-vim"
 themes-dir = "colors"
-"##;
+"#;
 
     write_to_file(&config_path, config_content)?;
 
@@ -118,13 +118,13 @@ themes-dir = "colors"
     utils::run_install_command(&config_path, &data_path, false)?;
 
     // Replace the remote with a new one
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
-    let (stdout, _) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, false)?;
 
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")
@@ -138,17 +138,16 @@ themes-dir = "colors"
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stdout.contains(expected_output),
         "stdout does not contain the expected output"
     );
     let remote_url = "https://github.com/tinted-theming/tinted-vim";
     let has_match = remote_stdout.lines().any(|line| line == remote_url);
 
-    assert!(
+    ensure!(
         has_match,
-        "Expected origin remote to point to URL {}",
-        remote_url
+        format!("Expected origin remote to point to URL {}", remote_url)
     );
 
     Ok(())
@@ -163,11 +162,11 @@ fn test_cli_update_subcommand_with_new_revision() -> Result<()> {
         setup("test_cli_update_subcommand_with_new_revision", "update")?;
     let expected_output = "tinted-vim up to date";
     let expected_revision = "c7ab4daadd143a78d4fc561d216d83ef0188f343";
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
-"##;
+"#;
 
     write_to_file(&config_path, config_content)?;
 
@@ -176,14 +175,14 @@ themes-dir = "colors"
     utils::run_install_command(&config_path, &data_path, true)?;
 
     // Replace the remote with a new one
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 revision = "tinty-test-tag-01"
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
-    let (stdout, _) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, false)?;
 
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")
@@ -196,13 +195,12 @@ revision = "tinty-test-tag-01"
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stdout.contains(expected_output),
         "stdout does not contain expected output"
     );
-    dbg!(&rev_parse_out);
     let has_match = rev_parse_out.lines().any(|line| line == expected_revision);
-    assert!(has_match, "Expected revision {}", expected_revision);
+    ensure!(has_match, "Expected revision {}", expected_revision);
 
     Ok(())
 }
@@ -217,11 +215,11 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_tag_revision() -> Resu
         "update",
     )?;
     let expected_output = "tinted-vim up to date";
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
-"##;
+"#;
     let git_tag_name = "invalid-git-tag";
 
     write_to_file(&config_path, config_content)?;
@@ -234,15 +232,15 @@ themes-dir = "colors"
     // Replace the remote with a new one
     // tinty-test-tag-01 exist in tinted-theming but not on this one.
     let config_content = format!(
-        r##"[[items]]
+        r#"[[items]]
 path = "https://github.com/tinted-theming/base16-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 revision = "{git_tag_name}"
-"##
+"#
     );
     write_to_file(&config_path, &config_content)?;
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, false)?;
 
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")
@@ -251,24 +249,26 @@ revision = "{git_tag_name}"
         .output()?;
 
     let remote_out = String::from_utf8(output.stdout)?;
-    dbg!(&remote_out, &stdout, &stderr);
 
     // ------
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         !stdout.contains(expected_output),
         "stdout contains unexpected output"
     );
-    assert!(
+    ensure!(
         stderr.contains(format!("cannot resolve {git_tag_name}").as_str()),
         "stderr does not contain the expected output"
     );
     let expected_remote_url = "https://github.com/tinted-theming/tinted-vim";
     let has_match = remote_out.starts_with(expected_remote_url);
 
-    assert!(has_match, "Expected remote URL {}", expected_remote_url);
+    ensure!(
+        has_match,
+        format!("Expected remote URL {}", expected_remote_url)
+    );
 
     Ok(())
 }
@@ -283,11 +283,11 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_branch_revision() -> R
         "update",
     )?;
     let unexpected_output = "tinted-vim up to date";
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
-"##;
+"#;
 
     write_to_file(&config_path, config_content)?;
 
@@ -296,14 +296,14 @@ themes-dir = "colors"
     // ---
     // Replace the remote with a new one
     // tinty-test-01 exist in tinted-theming but not on this one.
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/base16-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 revision = "tinty-test-01"
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")
         .args(vec!["remote", "get-url", "origin"])
@@ -315,25 +315,27 @@ revision = "tinty-test-01"
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         !stdout.contains(unexpected_output),
         "stdout contains unexpected output"
     );
-    assert!(
+    ensure!(
         stderr.contains("cannot resolve tinty-test-01"),
         "stderr does not contain the expected output"
     );
     let expected_remote_url = "https://github.com/tinted-theming/tinted-vim";
     let has_match = remote_out.trim().starts_with(expected_remote_url);
 
-    assert!(has_match, "Expected remote URL {}", expected_remote_url);
+    ensure!(
+        has_match,
+        format!("Expected remote URL {}", expected_remote_url)
+    );
 
     Ok(())
 }
 
 #[test]
-fn test_cli_update_subcommand_with_new_remote_but_invalid_commit_sha1_revision(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn test_cli_update_subcommand_with_new_remote_but_invalid_commit_sha1_revision() -> Result<()> {
     // -------
     // Arrange
     // -------
@@ -342,11 +344,11 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_commit_sha1_revision(
         "update",
     )?;
     let expected_output = "tinted-vim up to date";
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
 
     // ---
@@ -356,15 +358,15 @@ themes-dir = "colors"
 
     // Replace the remote with a new one
     // This commit SHA only exist in tinted-theming but not on this one.
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/base16-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 revision = "43b36ed5eadad59a5027e442330d2485b8607b34"
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
 
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, false)?;
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, false)?;
 
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")
@@ -378,18 +380,21 @@ revision = "43b36ed5eadad59a5027e442330d2485b8607b34"
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         !stdout.contains(expected_output),
         "stdout contains unexpected output"
     );
-    assert!(
+    ensure!(
         stderr.contains("cannot find revision 43b36ed5eadad59a5027e442330d2485b8607b34"),
         "stderr does not contain the expected output"
     );
     let expected_remote_url = "https://github.com/tinted-theming/tinted-vim";
     let has_match = remote_out.lines().any(|line| line == expected_remote_url);
 
-    assert!(has_match, "Expected remote URL {expected_remote_url}");
+    ensure!(
+        has_match,
+        format!("Expected remote URL {expected_remote_url}")
+    );
 
     Ok(())
 }

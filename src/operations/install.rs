@@ -18,10 +18,10 @@ fn install_git_url(
         git_clone(item_git_url, data_item_path, revision)?;
 
         if !is_quiet {
-            println!("{} installed", item_name);
+            println!("{item_name} installed");
         }
     } else if !is_quiet {
-        println!("{} already installed", item_name);
+        println!("{item_name} already installed");
     }
 
     Ok(())
@@ -50,7 +50,7 @@ fn install_dir(
                     symlink(item_path, data_item_path)?;
 
                     if !is_quiet {
-                        println!("{} already installed", item_name);
+                        println!("{item_name} already installed");
                     }
                 }
             }
@@ -62,7 +62,7 @@ fn install_dir(
         symlink(item_path, data_item_path)?;
 
         if !is_quiet {
-            println!("{} installed", item_name);
+            println!("{item_name} installed");
         }
     }
 

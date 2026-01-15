@@ -52,12 +52,12 @@ impl fmt::Display for ConfigItem {
         writeln!(f, "name = \"{}\"", self.name)?;
         writeln!(f, "path = \"{}\"", self.path)?;
         if !hook.is_empty() {
-            writeln!(f, "hook = \"{}\"", hook)?;
+            writeln!(f, "hook = \"{hook}\"")?;
         }
         if !revision.is_empty() {
-            writeln!(f, "revision = \"{}\"", revision)?;
+            writeln!(f, "revision = \"{revision}\"")?;
         }
-        writeln!(f, "supported-systems = [{}]", system_text)?;
+        writeln!(f, "supported-systems = [{system_text}]")?;
         write!(f, "themes-dir = \"{}\"", self.themes_dir)
     }
 }
@@ -77,7 +77,7 @@ pub struct Config {
 fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
     let mut names = HashSet::new();
 
-    for item in items.iter() {
+    for item in items {
         if !names.insert(&item.name) {
             return Err(anyhow!("config.toml item.name should be unique values, but \"{}\" is used for more than 1 item.name. Please change this to a unique value.", item.name));
         }
@@ -87,7 +87,7 @@ fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
 }
 
 impl Config {
-    pub fn read(path: &Path) -> Result<Config> {
+    pub fn read(path: &Path) -> Result<Self> {
         if path.exists() && !path.is_file() {
             return Err(anyhow!(
                 "The provided config path is a directory and not a file: {}",
@@ -95,8 +95,8 @@ impl Config {
             ));
         }
 
-        let contents = fs::read_to_string(path).unwrap_or(String::from(""));
-        let mut config: Config = toml::from_str(contents.as_str()).with_context(|| {
+        let contents = fs::read_to_string(path).unwrap_or_default();
+        let mut config: Self = toml::from_str(contents.as_str()).with_context(|| {
             format!(
                 "Couldn't parse {REPO_NAME} configuration file ({}). Check if it's syntactically correct",
                 path.display()
@@ -174,14 +174,15 @@ impl Config {
 
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let none_value = String::from("None");
         writeln!(
             f,
             "shell = \"{}\"",
-            self.shell.as_ref().unwrap_or(&"None".to_string())
+            self.shell.as_ref().unwrap_or(&none_value)
         )?;
 
         if let Some(default_scheme) = &self.default_scheme {
-            writeln!(f, "default-scheme = \"{}\"", default_scheme)?;
+            writeln!(f, "default-scheme = \"{default_scheme}\"")?;
         }
 
         if let Some(items) = &self.preferred_schemes {
@@ -191,20 +192,20 @@ impl fmt::Display for Config {
                 .map(|t| format!("\"{t}\""))
                 .collect::<Vec<String>>()
                 .join(", ");
-            writeln!(f, "preferred-schemes = [{}]", preferred_schemes_text)?;
+            writeln!(f, "preferred-schemes = [{preferred_schemes_text}]")?;
         }
 
         if let Some(hooks) = &self.hooks {
             writeln!(f, "hooks = [")?;
             for hook in hooks {
-                writeln!(f, "  \"{}\"", hook)?;
+                writeln!(f, "  \"{hook}\"")?;
             }
             writeln!(f, "]")?;
         }
 
         if let Some(items) = &self.items {
             for item in items {
-                writeln!(f, "{}", item)?;
+                writeln!(f, "{item}")?;
             }
         }
 

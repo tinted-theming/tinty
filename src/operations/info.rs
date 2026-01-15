@@ -84,6 +84,7 @@ struct Base24Palette {
     base17: String,
 }
 
+#[allow(clippy::too_many_lines)]
 fn print_scheme(scheme_path: &Path) -> Result<()> {
     let dir_name = scheme_path
         .parent()
@@ -288,16 +289,13 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
         ));
     }
 
-    let ansi_col_header_spacing: (String, String) =
-        if let Ok(scheme_system) = SchemeSystem::from_str(system) {
-            match scheme_system {
-                SchemeSystem::Base16 => ("    ".to_string(), "----".to_string()),
-                SchemeSystem::Base24 => (String::new(), String::new()),
-                _ => (String::new(), String::new()),
-            }
-        } else {
-            (String::new(), String::new())
-        };
+    let ansi_col_header_spacing: (String, String) = SchemeSystem::from_str(system).map_or_else(
+        |_| (String::new(), String::new()),
+        |scheme_system| match scheme_system {
+            SchemeSystem::Base16 => ("    ".to_string(), "----".to_string()),
+            _ => (String::new(), String::new()),
+        },
+    );
     println!("System: {system}",);
     println!("Slug: {slug}",);
     println!("Name: {name}",);
@@ -318,16 +316,16 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
         let hex = HexColor::parse(&hex_text)?;
         let bg_ansi = format!("\x1B[48;2;{};{};{}m", hex.r, hex.g, hex.b);
         let fg_ansi = format!("\x1B[38;2;{};{};{}m", hex.r, hex.g, hex.b);
-        let ansi_col_whitespace: String = if let Ok(scheme_system) = SchemeSystem::from_str(system)
-        {
-            match scheme_system {
-                SchemeSystem::Base16 => (ansi.len()..8).map(|_| " ").collect(), // 4 is length of "ANSI"
-                SchemeSystem::Base24 => (ansi.len()..4).map(|_| " ").collect(), // 4 is length of "ANSI"
-                _ => String::new(),
-            }
-        } else {
-            String::new()
-        };
+        let ansi_col_whitespace: String = SchemeSystem::from_str(system).map_or_else(
+            |_| String::new(),
+            |scheme_system| {
+                match scheme_system {
+                    SchemeSystem::Base16 => (ansi.len()..8).map(|_| " ").collect(), // 4 is length of "ANSI"
+                    SchemeSystem::Base24 => (ansi.len()..4).map(|_| " ").collect(), // 4 is length of "ANSI"
+                    _ => String::new(),
+                }
+            },
+        );
 
         println!("| {bg_ansi}{fg_ansi}           {reset} | {name} | {hex_text} | {ansi} {ansi_col_whitespace}|");
     }
@@ -445,7 +443,7 @@ pub fn info(
     if scheme_name_option.is_some() || !exhaustive_list {
         let scheme_name = scheme_name_option
             .cloned()
-            .unwrap_or(get_current_scheme_slug(data_path));
+            .unwrap_or_else(|| get_current_scheme_slug(data_path));
         print_single_schemes(&files, &scheme_name)?;
     } else {
         print_all_schemes(files)?;

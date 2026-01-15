@@ -1,5 +1,5 @@
 # Stage 1: Build Environment
-FROM rust:1.79.0 AS base
+FROM rust:1.92.0 AS base
 WORKDIR /usr/src/tinty
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src

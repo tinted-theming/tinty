@@ -4,7 +4,7 @@ use std::fs;
 use std::path::Path;
 
 use crate::utils::{setup, write_to_file, CURRENT_SCHEME_FILE_NAME, REPO_NAME};
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use utils::ARTIFACTS_DIR;
 
 #[test]
@@ -23,23 +23,26 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         data_path
             .join(ARTIFACTS_DIR)
             .join(shell_theme_filename)
             .exists(),
         "Path does not exist"
     );
-    assert_eq!(fs::read_to_string(&current_scheme_path)?, scheme_name);
+    ensure!(
+        fs::read_to_string(&current_scheme_path)? == scheme_name,
+        "scheme_name not the same"
+    );
 
     cleanup()?;
     Ok(())
@@ -61,12 +64,12 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, false)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stderr.contains(&expected_output),
         "stderr does not contain the expected output"
     );
@@ -85,17 +88,17 @@ fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
         "test_cli_apply_subcommand_invalid_scheme_name",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let expected_output = format!("Scheme does not exist: {}", scheme_name);
+    let expected_output = format!("Scheme does not exist: {scheme_name}");
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stderr.contains(&expected_output),
         "stderr does not contain the expected output"
     );
@@ -114,18 +117,18 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
         "test_cli_apply_subcommand_invalid_scheme_system",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let expected_output = format!("Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"base16\" or \"base24\"), eg: base16-{}", scheme_name);
+    let expected_output = format!("Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"base16\" or \"base24\"), eg: base16-{scheme_name}");
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stderr.contains(&expected_output),
         "stderr does not contain the expected output"
     );
@@ -148,13 +151,13 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stderr.contains(expected_output),
         "stderr does not contain the expected output"
     );
@@ -169,13 +172,13 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
     // -------
     let scheme_system = "base16";
     let scheme_name = "tinty-generated";
-    let scheme_name_with_system = format!("{}-{}", scheme_system, scheme_name);
+    let scheme_name_with_system = format!("{scheme_system}-{scheme_name}");
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_with_custom_schemes",
-        format!("apply {}", &scheme_name_with_system).as_str(),
+        format!("apply {scheme_name_with_system}").as_str(),
     )?;
     let custom_scheme_file_path =
-        data_path.join(format!("custom-schemes/base16/{}.yaml", scheme_name));
+        data_path.join(format!("custom-schemes/base16/{scheme_name}.yaml"));
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
     let scheme_content =
         fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
@@ -184,20 +187,20 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(
-        fs::read_to_string(current_scheme_path)?,
-        scheme_name_with_system,
+    ensure!(
+        fs::read_to_string(current_scheme_path)? == scheme_name_with_system,
+        "current_scheme_path different to scheme_name_with_system"
     );
-    assert!(
+    ensure!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -213,13 +216,13 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
     // -------
     let scheme_system = "base16";
     let scheme_name = "tinty-generated";
-    let scheme_name_with_system = format!("{}-{}", scheme_system, scheme_name);
+    let scheme_name_with_system = format!("{scheme_system}-{scheme_name}");
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_with_custom_schemes_quiet_flag",
         format!("apply {} --quiet", &scheme_name_with_system).as_str(),
     )?;
     let custom_scheme_file_path =
-        data_path.join(format!("custom-schemes/base16/{}.yaml", scheme_name));
+        data_path.join(format!("custom-schemes/base16/{scheme_name}.yaml"));
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
     let scheme_content =
         fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
@@ -228,20 +231,20 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(
-        fs::read_to_string(current_scheme_path)?,
-        scheme_name_with_system,
+    ensure!(
+        fs::read_to_string(current_scheme_path)? == scheme_name_with_system,
+        "current_scheme_path different to scheme_name_with_system"
     );
-    assert!(
+    ensure!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -268,13 +271,13 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, expected_output);
-    assert!(
+    ensure!(stdout == expected_output, "stdout not as expected");
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -293,20 +296,20 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
         "test_cli_apply_subcommand_root_hooks_has_envs_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let expected_output = "gruvbox-dark-hard 1d 20 21 79.72706 11.984516\n";
+    let expected_output = "gruvbox-dark-hard 1d 20 21 79.72706 11.984515\n";
     let config_content = r#"hooks = ["echo $TINTY_SCHEME_SLUG $TINTY_SCHEME_PALETTE_BASE00_HEX_R $TINTY_SCHEME_PALETTE_BASE00_HEX_G $TINTY_SCHEME_PALETTE_BASE00_HEX_B $TINTY_SCHEME_LIGHTNESS_FOREGROUND $TINTY_SCHEME_LIGHTNESS_BACKGROUND"]"#;
     write_to_file(&config_path, config_content)?;
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, expected_output);
-    assert!(
+    ensure!(stdout == expected_output, "stdout not as expected");
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -325,31 +328,32 @@ fn test_cli_apply_subcommand_hook_with_setup() -> Result<()> {
         "test_cli_apply_subcommand_hook_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let config_content = r##"
+    let config_content = r#"
 [[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo \"path: %f, operation: %o\""
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(
-        stdout,
-        format!(
-            "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
-            data_path.join(ARTIFACTS_DIR).display()
-        )
+    ensure!(
+        stdout
+            == format!(
+                "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
+                data_path.join(ARTIFACTS_DIR).display()
+            ),
+        "stdout not as expected"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -368,31 +372,32 @@ fn test_cli_apply_subcommand_hook_with_envs_with_setup() -> Result<()> {
         "test_cli_apply_subcommand_hook_with_envs_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let config_content = r##"
+    let config_content = r#"
 [[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo \"path: $TINTY_THEME_FILE_PATH, operation: $TINTY_THEME_OPERATION, scheme: $TINTY_SCHEME_SLUG, color00 hex: ${TINTY_SCHEME_PALETTE_BASE00_HEX_R}${TINTY_SCHEME_PALETTE_BASE00_HEX_G}${TINTY_SCHEME_PALETTE_BASE00_HEX_B}\""
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(
-        stdout,
-        format!(
+    ensure!(
+        stdout
+        == format!(
             "path: {}/tinted-vim-colors-file.vim, operation: apply, scheme: oceanicnext, color00 hex: 1b2b34\n",
             data_path.join(ARTIFACTS_DIR).display()
-        )
+        ),
+        "stdout not as expected"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -432,13 +437,13 @@ hook = "echo \"expected shell output: %n\""
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, expected_output);
-    assert!(
+    ensure!(stdout == expected_output, "stdout not as expected");
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -457,13 +462,13 @@ fn test_cli_apply_subcommand_removes_vestigial_files() -> Result<()> {
         "test_cli_apply_subcommand_removes_vestigial_files",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let config_content = r##"
+    let config_content = r#"
 [[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo \"path: %f, operation: %o\""
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
 
     let vestigial_file = data_path.join("vestigial-file");
@@ -472,24 +477,25 @@ hook = "echo \"path: %f, operation: %o\""
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(
-        stdout,
-        format!(
-            "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
-            data_path.join(ARTIFACTS_DIR).display()
-        )
+    ensure!(
+        stdout
+            == format!(
+                "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
+                data_path.join(ARTIFACTS_DIR).display()
+            ),
+        "stdout not as expected"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
 
-    assert!(!vestigial_file.exists(), "vestigial file not removed");
+    ensure!(!vestigial_file.exists(), "vestigial file not removed");
 
     cleanup()?;
     Ok(())
@@ -505,13 +511,13 @@ fn test_cli_apply_subcommand_removes_broken_symlinks() -> Result<()> {
         "test_cli_apply_subcommand_removes_broken_symlinks",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let config_content = r##"
+    let config_content = r#"
 [[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo \"path: %f, operation: %o\""
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
 
     let symlink_name = "im-no-longer-here";
@@ -525,26 +531,27 @@ hook = "echo \"path: %f, operation: %o\""
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(
-        stdout,
-        format!(
-            "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
-            data_path.join(ARTIFACTS_DIR).display()
-        )
+    ensure!(
+        stdout
+            == format!(
+                "path: {}/tinted-vim-colors-file.vim, operation: apply\n",
+                data_path.join(ARTIFACTS_DIR).display()
+            ),
+        "stdout not as expected"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
 
-    assert!(!missing_file.exists(), "file is supposed to be missing");
+    ensure!(!missing_file.exists(), "file is supposed to be missing");
 
-    assert!(!symlink.exists(), "broken symlink wasn't deleted");
+    ensure!(!symlink.exists(), "broken symlink wasn't deleted");
 
     cleanup()?;
     Ok(())

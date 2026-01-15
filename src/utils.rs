@@ -1,3 +1,4 @@
+#![allow(clippy::arithmetic_side_effects)]
 use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
 use crate::constants::REPO_NAME;
 use anyhow::{anyhow, Context, Error, Result};
@@ -54,11 +55,18 @@ pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> R
         ));
     }
 
-    let command = format!("git clone \"{repo_url}\" \"{}\"", target_dir.display());
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    let git_command = format!("git clone \"{repo_url}\" \"{}\"", target_dir.display());
+    let command_vec = shell_words::split(git_command.as_str()).map_err(anyhow::Error::new)?;
 
-    Command::new(&command_vec[0])
-        .args(&command_vec[1..])
+    let Some(command) = command_vec.first() else {
+        return Err(anyhow!("Unable to extract cli command"));
+    };
+    let Some(args) = command_vec.get(1..) else {
+        return Err(anyhow!("Unable to extract cli args"));
+    };
+
+    Command::new(command)
+        .args(args)
         .stdout(Stdio::null())
         .status()
         .with_context(|| format!("Failed to clone repository from {repo_url}"))?;
@@ -99,7 +107,7 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
 
     // Create a temporary remote
     safe_command(
-        format!("git remote add \"{tmp_remote_name}\" \"{repo_url}\""),
+        format!("git remote add \"{tmp_remote_name}\" \"{repo_url}\"").as_str(),
         repo_path,
     )?
     .current_dir(repo_path)
@@ -119,21 +127,24 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
 
     if let Err(e) = res {
         // Failed to switch to the desired revision. Cleanup!
-        safe_command(format!("git remote rm \"{tmp_remote_name}\""), repo_path)?
-            .stdout(Stdio::null())
-            .status()
-            .with_context(|| {
-                format!(
-                    "Failed to remove temporary remote {} in {}",
-                    tmp_remote_name,
-                    repo_path.display()
-                )
-            })?;
+        safe_command(
+            format!("git remote rm \"{tmp_remote_name}\"").as_str(),
+            repo_path,
+        )?
+        .stdout(Stdio::null())
+        .status()
+        .with_context(|| {
+            format!(
+                "Failed to remove temporary remote {} in {}",
+                tmp_remote_name,
+                repo_path.display()
+            )
+        })?;
         return Err(e);
     }
 
     safe_command(
-        format!("git remote set-url origin \"{repo_url}\""),
+        format!("git remote set-url origin \"{repo_url}\"").as_str(),
         repo_path,
     )?
     .stdout(Stdio::null())
@@ -144,15 +155,18 @@ pub fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> R
             repo_path.display()
         )
     })?;
-    safe_command(format!("git remote rm \"{tmp_remote_name}\""), repo_path)?
-        .stdout(Stdio::null())
-        .status()
-        .with_context(|| {
-            format!(
-                "Failed to remove temporary remote {tmp_remote_name} in {}",
-                repo_path.display()
-            )
-        })?;
+    safe_command(
+        format!("git remote rm \"{tmp_remote_name}\"").as_str(),
+        repo_path,
+    )?
+    .stdout(Stdio::null())
+    .status()
+    .with_context(|| {
+        format!(
+            "Failed to remove temporary remote {tmp_remote_name} in {}",
+            repo_path.display()
+        )
+    })?;
 
     Ok(())
 }
@@ -166,11 +180,12 @@ fn random_remote_name() -> String {
 
 // Resolvees the SHA1 of revision at remote_name.
 // revision can be a tag, a branch, or a commit SHA1.
+#[allow(clippy::too_many_lines)]
 fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<String> {
     // 1.) Check if its a tag.
     let expected_tag_ref = format!("refs/tags/{revision}");
     let mut command = safe_command(
-        format!("git ls-remote --quiet --tags \"{remote_name}\" \"{expected_tag_ref}\"",),
+        format!("git ls-remote --quiet --tags \"{remote_name}\" \"{expected_tag_ref}\"").as_str(),
         repo_path,
     )?;
     let mut child = command
@@ -179,20 +194,28 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         .spawn()
         .with_context(|| "Failed to spawn".to_string())?;
 
-    let stdout = child.stdout.take().expect("failed to capture stdout");
+    let Some(stdout) = child.stdout.take() else {
+        return Err(anyhow!("failed to capture stdout"));
+    };
     let reader = BufReader::new(stdout);
 
     if let Some(parts) = reader
         .lines()
         .map_while(Result::ok)
-        .map(|line| line.split("\t").map(String::from).collect::<Vec<String>>())
+        .map(|line| line.split('\t').map(String::from).collect::<Vec<String>>())
         .filter(|parts| parts.len() == 2)
-        .find(|parts| parts[1] == expected_tag_ref)
+        .find(|parts| {
+            parts
+                .get(1)
+                .map_or_else(|| false, |second_part| *second_part == expected_tag_ref)
+        })
     {
-        // we found a tag that matches
-        child.kill()?; // Abort the child process.
-        child.wait()?; // Cleanup
-        return Ok(parts[0].to_string()); // Return early.
+        if let Some(first_part) = parts.first() {
+            // we found a tag that matches
+            child.kill()?; // Abort the child process.
+            child.wait()?; // Cleanup
+            return Ok(first_part.clone()); // Return early.
+        }
     }
 
     child
@@ -202,7 +225,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     // 2.) Check if its a branch
     let expected_branch_ref = format!("refs/heads/{revision}");
     let mut command = safe_command(
-        format!("git ls-remote --quiet \"{remote_name}\" \"{expected_branch_ref}\"",),
+        format!("git ls-remote --quiet \"{remote_name}\" \"{expected_branch_ref}\"").as_str(),
         repo_path,
     )?;
     let mut child = command
@@ -210,20 +233,28 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         .spawn()
         .with_context(|| "Failed to spawn".to_string())?;
 
-    let stdout = child.stdout.take().expect("failed to capture stdout");
+    let Some(stdout) = child.stdout.take() else {
+        return Err(anyhow!("failed to capture stdout"));
+    };
     let reader = BufReader::new(stdout);
 
     if let Some(parts) = reader
         .lines()
         .map_while(Result::ok)
-        .map(|line| line.split("\t").map(String::from).collect::<Vec<String>>())
+        .map(|line| line.split('\t').map(String::from).collect::<Vec<String>>())
         .filter(|parts| parts.len() == 2)
-        .find(|parts| parts[1] == expected_branch_ref)
+        .find(|parts| {
+            parts
+                .get(1)
+                .map_or_else(|| false, |second_part| *second_part == expected_branch_ref)
+        })
     {
-        // we found a branch that matches.
-        child.kill()?; // Abort the child process.
-        child.wait()?; // Cleanup
-        return Ok(parts[0].to_string()); // Return early.
+        if let Some(first_part) = parts.first() {
+            // we found a branch that matches.
+            child.kill()?; // Abort the child process.
+            child.wait()?; // Cleanup
+            return Ok(first_part.clone()); // Return early.
+        }
     }
 
     child
@@ -234,34 +265,41 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     // First, we'll check if revision itself *could* be a SHA1.
     // If it doesn't look like one, we'll return early.
     let pattern = r"^[0-9a-f]{1,40}$";
-    let re = Regex::new(pattern).expect("Invalid regex");
+    let Ok(re) = Regex::new(pattern) else {
+        return Err(anyhow!("Invalid regex"));
+    };
     if !re.is_match(revision.as_bytes()) {
         return Err(anyhow!("cannot resolve {} into a Git SHA1", revision));
     }
 
-    safe_command(format!("git fetch --quiet \"{remote_name}\""), repo_path)?
-        .stdout(Stdio::null())
-        .status()
-        .with_context(|| format!("unable to fetch objects from remote {remote_name}"))?;
+    safe_command(
+        format!("git fetch --quiet \"{remote_name}\"").as_str(),
+        repo_path,
+    )?
+    .stdout(Stdio::null())
+    .status()
+    .with_context(|| format!("unable to fetch objects from remote {remote_name}"))?;
 
     // 3.) Check if any branch in remote contains the SHA1:
     // It seems that the only way to do this is to list the branches that contain the SHA1
     // and check if it belongs in the remote.
     let remote_branch_prefix = format!("refs/remotes/{remote_name}/");
     let mut command = safe_command(
-        format!("git branch --format=\"%(refname)\" -a --contains \"{revision}\""),
+        format!("git branch --format=\"%(refname)\" -a --contains \"{revision}\"").as_str(),
         repo_path,
     )?;
     let mut child = command.stdout(Stdio::piped()).spawn().with_context(|| {
         format!("Failed to find branches containing commit {revision} from {remote_name}",)
     })?;
-
-    let stdout = child.stdout.take().expect("failed to capture stdout");
+    let Some(stdout) = child.stdout.take() else {
+        return Err(anyhow!("failed to capture stdout"));
+    };
     let reader = BufReader::new(stdout);
+
     if reader
         .lines()
         .map_while(Result::ok)
-        .any(|line| line.clone().starts_with(&remote_branch_prefix))
+        .any(|line| line.starts_with(&remote_branch_prefix))
     {
         // we found a remote ref that contains the commit sha
         child.kill()?; // Abort the child process.
@@ -278,17 +316,24 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     ))
 }
 
-fn safe_command(command: String, cwd: &Path) -> Result<Command, Error> {
-    let command_vec = shell_words::split(&command).map_err(anyhow::Error::new)?;
-    let mut command = Command::new(&command_vec[0]);
-    command.args(&command_vec[1..]).current_dir(cwd);
+fn safe_command(command_str: &str, cwd: &Path) -> Result<Command, Error> {
+    let command_vec = shell_words::split(command_str).map_err(anyhow::Error::new)?;
+    let Some(command) = command_vec.first() else {
+        return Err(anyhow!("Unable to extract cli command"));
+    };
+    let Some(args) = command_vec.get(1..) else {
+        return Err(anyhow!("Unable to extract cli args"));
+    };
+    let mut command = Command::new(command);
+
+    command.args(args).current_dir(cwd);
     Ok(command)
 }
 
 fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
     // Download the object from the remote
     safe_command(
-        format!("git fetch --quiet \"{remote_name}\" \"{revision}\"",),
+        format!("git fetch --quiet \"{remote_name}\" \"{revision}\"").as_str(),
         repo_path,
     )?
     .status()
@@ -303,7 +348,7 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     let commit_sha = git_resolve_revision(repo_path, remote_name, revision)?;
 
     safe_command(
-        format!("git -c advice.detachedHead=false checkout --quiet \"{commit_sha}\""),
+        format!("git -c advice.detachedHead=false checkout --quiet \"{commit_sha}\"").as_str(),
         repo_path,
     )?
     .stdout(Stdio::null())
@@ -322,7 +367,7 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
 pub fn git_is_working_dir_clean(target_dir: &Path) -> Result<bool> {
     // We use the Git plumbing `status --porcelain` command to tell us of files that has changed,
     // both staged and unstaged.
-    let output = safe_command("git status --porcelain".to_string(), target_dir)?
+    let output = safe_command("git status --porcelain", target_dir)?
         .output()
         .with_context(|| format!("Failed to execute process in {}", target_dir.display()))?;
 
@@ -330,12 +375,12 @@ pub fn git_is_working_dir_clean(target_dir: &Path) -> Result<bool> {
     Ok(output.stdout.is_empty())
 }
 
-pub fn create_theme_filename_without_extension(item: &ConfigItem) -> Result<String> {
-    Ok(format!(
+pub fn create_theme_filename_without_extension(item: &ConfigItem) -> String {
+    format!(
         "{}-{}-file",
         item.name.clone(),
         item.themes_dir.clone().replace('/', "-"), // Flatten path/to/dir to path-to-dir
-    ))
+    )
 }
 
 pub fn get_all_scheme_names(
@@ -363,9 +408,8 @@ pub fn get_all_scheme_file_paths(
     let mut scheme_files: HashMap<String, SchemeFile> = HashMap::new();
 
     // For each supported scheme system, add schemes to vec
-    let scheme_systems = scheme_systems_option
-        .map(|s| vec![s])
-        .unwrap_or(SchemeSystem::variants().to_vec());
+    let scheme_systems =
+        scheme_systems_option.map_or_else(|| SchemeSystem::variants().to_vec(), |s| vec![s]);
     for scheme_system in scheme_systems {
         let scheme_system_dir = schemes_path.join(scheme_system.as_str());
         if !scheme_system_dir.exists() {
@@ -374,7 +418,7 @@ pub fn get_all_scheme_file_paths(
 
         let files = fs::read_dir(&scheme_system_dir)?
             // Discard failed read results
-            .filter_map(|o| o.ok())
+            .filter_map(Result::ok)
             .collect::<Vec<_>>()
             .into_iter()
             .filter_map(|file| {
@@ -396,26 +440,38 @@ pub fn get_all_scheme_file_paths(
 pub fn replace_tilde_slash_with_home(path_str: &str) -> Result<PathBuf> {
     let trimmed_path_str = path_str.trim();
     if trimmed_path_str.starts_with("~/") {
-        match home_dir() {
-            Some(home_dir) => Ok(PathBuf::from(trimmed_path_str.replacen(
-                "~/",
-                format!("{}/", home_dir.display()).as_str(),
-                1,
-            ))),
-            None => Err(anyhow!("Unable to determine a home directory for \"{}\", please use an absolute path instead", trimmed_path_str))
-        }
+        home_dir().map_or_else(|| Err(anyhow!("Unable to determine a home directory for \"{}\", please use an absolute path instead", trimmed_path_str)), |home_dir| Ok(PathBuf::from(trimmed_path_str.replacen(
+                   "~/",
+                   format!("{}/", home_dir.display()).as_str(),
+                   1,
+               ))))
     } else {
         Ok(PathBuf::from(trimmed_path_str))
     }
 }
 
-pub fn next_scheme_in_cycle(current: &String, schemes: Vec<String>) -> String {
-    let next_index = schemes
+pub fn next_scheme_in_cycle(current: &String, schemes: &[String]) -> String {
+    if schemes
         .iter()
         .position(|scheme| scheme == current)
-        .map(|i| i + 1)
-        .unwrap_or(0);
-    schemes[(next_index) % schemes.len()].clone()
+        .unwrap_or(0)
+        < usize::MAX
+    {
+        let next_index = schemes
+            .iter()
+            .position(|scheme| scheme == current)
+            .map_or(0, |i| i + 1_usize);
+
+        let next_item = schemes.get((next_index) % schemes.len());
+
+        if let Some(next_item) = next_item {
+            return next_item.clone();
+        }
+
+        current.clone()
+    } else {
+        schemes.first().cloned().unwrap_or_else(|| current.clone())
+    }
 }
 
 pub fn user_curated_scheme_list(config: &Config) -> Option<Vec<String>> {
@@ -430,12 +486,14 @@ pub fn user_curated_scheme_list(config: &Config) -> Option<Vec<String>> {
                 .default_scheme
                 .as_ref()
                 .filter(|default| !preferred.contains(default))
-                .map(|default| {
-                    let mut result = vec![default.clone()];
-                    result.extend(preferred.clone());
-                    result
-                })
-                .unwrap_or_else(|| preferred.clone())
+                .map_or_else(
+                    || preferred.clone(),
+                    |default| {
+                        let mut result = vec![default.clone()];
+                        result.extend(preferred.clone());
+                        result
+                    },
+                )
         })
         .or_else(|| {
             // If default scheme is defined, use it if preferred schemes is unset.

@@ -3,7 +3,7 @@ mod utils;
 use std::fs;
 
 use crate::utils::setup;
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use utils::CUSTOM_SCHEMES_DIR_NAME;
 
 #[test]
@@ -60,13 +60,16 @@ palette:
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, expected_output);
-    assert!(
+    ensure!(
+        stdout == expected_output,
+        "stdout does not contain the expected output"
+    );
+    ensure!(
         stderr.is_empty(),
         "stdout does not contain the expected output"
     );
@@ -111,13 +114,16 @@ palette:
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, expected_output);
-    assert!(
+    ensure!(
+        stdout == expected_output,
+        "stdout does not contain the expected output"
+    );
+    ensure!(
         stderr.is_empty(),
         "stdout does not contain the expected output"
     );
@@ -142,7 +148,7 @@ fn test_cli_generatescheme_subcommand_with_save() -> Result<()> {
         "{CUSTOM_SCHEMES_DIR_NAME}/{scheme_system}/{scheme_slug}.yaml"
     ));
     let expected_output = format!(
-        r##"system: {scheme_system}
+        r"system: {scheme_system}
 name: Tinty Generated
 slug: {scheme_slug}
 author: Tinty
@@ -165,24 +171,27 @@ palette:
   base0D: '#045de1'
   base0E: '#8e6682'
   base0F: '#98421d'
-"##
+"
     );
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
     let actual_output = fs::read_to_string(&out_scheme_path)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(actual_output, expected_output);
-    assert_eq!(
-        stdout,
-        format!("Scheme created: {}\n", out_scheme_path.display())
+    ensure!(
+        actual_output == expected_output,
+        "actual_output does not contain the expected output"
     );
-    assert!(
+    ensure!(
+        stdout == format!("Scheme created: {}\n", out_scheme_path.display()),
+        "stdout does not contain the expected output"
+    );
+    ensure!(
         stderr.is_empty(),
         "stdout does not contain the expected output"
     );

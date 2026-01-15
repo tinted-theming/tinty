@@ -18,7 +18,7 @@ clap_complete = { version = "4.5.40" }
 hex_color = "3.0.0"
 serde = { version = "1.0.216", features = ["derive"] }
 serde_yaml = "0.9.33"
-serde_json = "1.0.135"
+serde_json = { version = "1.0.135", features = ["preserve_order"] }
 shell-words = "1.1.0"
 strip-ansi-escapes = "0.2.0"
 tinted-builder-rust = "0.13.1"
@@ -33,3 +33,25 @@ regex = "1.7"
 rayon = "1.10"
 tempfile = "=3.6.0"
 fs2 = "0.4.3"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
+
+# deny panics
+unwrap_used = "deny"
+expect_used = "deny"
+indexing_slicing = "deny"
+arithmetic_side_effects = "deny"
+unreachable = "deny"
+unimplemented = "deny"
+unchecked_time_subtraction = "deny"
+todo = "deny"
+string_slice = "deny"
+panic_in_result_fn = "deny"
+panic = "deny"
+exit = "deny"
+as_conversions = "deny"

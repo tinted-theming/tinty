@@ -1,3 +1,4 @@
+#![allow(clippy::suboptimal_flops)]
 use crate::{
     constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME},
     utils::{get_all_scheme_file_paths, get_all_scheme_names},
@@ -18,7 +19,7 @@ use tinted_builder_rust::operation_build::utils::SchemeFile;
 /// Lists available color schemes
 ///
 /// Lists colorschemes file which is updated via scripts/install by getting a list of schemes
-/// available in https://github.com/tinted-theming/schemes
+/// available in <https://github.com/tinted-theming/schemes>
 pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
     let schemes_dir_path = if is_custom {
         data_path.join(CUSTOM_SCHEMES_DIR_NAME)
@@ -47,14 +48,14 @@ pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
         let scheme_files = get_all_scheme_file_paths(&schemes_dir_path, None)?;
         let json = as_json(scheme_files)?;
         let mut handle = stdout.lock();
-        let _ = writeln!(handle, "{}", json);
+        let _ = writeln!(handle, "{json}");
         return Ok(());
     }
 
     let scheme_vec = get_all_scheme_names(&schemes_dir_path, None)?;
     let mut handle = stdout.lock();
     for scheme in scheme_vec {
-        if writeln!(handle, "{}", scheme).is_err() {
+        if writeln!(handle, "{scheme}").is_err() {
             break;
         }
     }
@@ -239,7 +240,7 @@ impl Lightness {
             return luminance * (24389.0 / 27.0);
         }
 
-        luminance.powf(1.0 / 3.0) * 116.0 - 16.0
+        luminance.cbrt().mul_add(116.0, -16.0)
     }
 
     fn luminance(color: &Color) -> f32 {
@@ -266,7 +267,7 @@ fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
                 .filter_map(|(k, sf)| {
                     sf.get_scheme()
                         .ok()
-                        .map(|scheme| (k.to_string(), SchemeEntry::from_scheme(&scheme)))
+                        .map(|scheme| (k.clone(), SchemeEntry::from_scheme(&scheme)))
                 })
                 .collect::<HashMap<String, SchemeEntry>>()
         })
@@ -279,7 +280,9 @@ fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
         });
 
     keys.sort();
-    let results = mutex.lock().unwrap();
+    let Ok(results) = mutex.lock() else {
+        return Err(anyhow!("Unable to unlock mutex"));
+    };
 
     for k in keys {
         if let Some(v) = results.get(&k) {

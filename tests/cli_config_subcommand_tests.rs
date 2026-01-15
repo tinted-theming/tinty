@@ -1,7 +1,7 @@
 mod utils;
 
 use crate::utils::{setup, write_to_file};
-use anyhow::Result;
+use anyhow::{ensure, Result};
 
 #[test]
 fn test_cli_config_without_config() -> Result<()> {
@@ -23,12 +23,12 @@ themes-dir = "scripts"
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, expected);
+    ensure!(stdout == expected, "std not as expected");
 
     cleanup()?;
     Ok(())
@@ -57,12 +57,12 @@ themes-dir = "colors"
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, config_text);
+    ensure!(stdout == config_text, "std not as expected");
 
     cleanup()?;
     Ok(())
@@ -79,12 +79,12 @@ fn test_cli_config_with_config_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stdout.contains(format!("{}", config_path.display()).as_str()),
         "stdout does not contain the expected output"
     );
@@ -104,12 +104,12 @@ fn test_cli_config_with_data_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stdout.contains(format!("{}", data_path.display()).as_str()),
         "stdout does not contain the expected output"
     );

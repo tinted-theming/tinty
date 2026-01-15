@@ -3,7 +3,7 @@ mod utils;
 use crate::utils::{
     cleanup, setup, write_to_file, COMMAND_NAME, CURRENT_SCHEME_FILE_NAME, ORG_NAME, REPO_NAME,
 };
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use std::{fs, path::PathBuf};
 
 #[test]
@@ -16,13 +16,13 @@ fn test_cli_no_arguments() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(stdout.contains(format!("Basic usage: {REPO_NAME} apply <SCHEME_NAME>").as_str()));
-    assert!(stdout.contains("For more information try --help"));
+    ensure!(stdout.contains(format!("Basic usage: {REPO_NAME} apply <SCHEME_NAME>").as_str()));
+    ensure!(stdout.contains("For more information try --help"));
 
     cleanup_setup()?;
     Ok(())
@@ -43,30 +43,30 @@ fn test_cli_config_path_tilde_as_home() -> Result<()> {
         "{COMMAND_NAME} --config=\"{provided_config_path}\" --data-dir=\"{}\" init",
         data_path.display()
     );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    let command_vec = shell_words::split(command.as_str())?;
     let expected_stdout = "test_cli_config_path_tilde_as_home_config_output";
-    let config_content = r##"default-scheme = "base16-mocha"
+    let config_content = r#"default-scheme = "base16-mocha"
 [[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 hook = "echo 'test_cli_config_path_tilde_as_home_config_output'"
-"##;
+"#;
     write_to_file(&config_path, config_content)?;
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stdout.contains(expected_stdout),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stdout does not contain the expected output"
     );
@@ -83,17 +83,16 @@ fn test_cli_default_data_path() -> Result<()> {
     let config_path = PathBuf::from("test_cli_default_data_path.toml");
     let scheme_name = "base16-uwunicorn";
     let init_scheme_name = "base16-mocha";
-    let xdg_dirs = xdg::BaseDirectories::with_prefix(format!("{ORG_NAME}/{REPO_NAME}")).unwrap();
+    let xdg_dirs = xdg::BaseDirectories::with_prefix(format!("{ORG_NAME}/{REPO_NAME}"))?;
     let data_path = xdg_dirs.get_data_home();
     let init_command = format!("{COMMAND_NAME} --config=\"{}\" init", config_path.display(),);
-    let init_command_vec = shell_words::split(init_command.as_str()).map_err(anyhow::Error::new)?;
+    let init_command_vec = shell_words::split(init_command.as_str())?;
     let apply_command = format!(
         "{COMMAND_NAME} --config=\"{}\" apply {scheme_name}",
         config_path.display(),
     );
     let current_scheme_file_path = data_path.join(CURRENT_SCHEME_FILE_NAME);
-    let apply_command_vec =
-        shell_words::split(apply_command.as_str()).map_err(anyhow::Error::new)?;
+    let apply_command_vec = shell_words::split(apply_command.as_str())?;
     write_to_file(
         &config_path,
         format!("default-scheme = \"{init_scheme_name}\"").as_str(),
@@ -105,35 +104,35 @@ fn test_cli_default_data_path() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_command(init_command_vec.clone(), &data_path, true).unwrap();
+    utils::run_command(&init_command_vec, &data_path, true)?;
 
     // This test is important to determine the config.toml is being read correctly
-    assert_eq!(
-        fs::read_to_string(&current_scheme_file_path)?,
-        init_scheme_name
+    ensure!(
+        fs::read_to_string(&current_scheme_file_path)? == init_scheme_name,
+        "current_scheme_file_path not as expected"
     );
 
-    utils::run_command(apply_command_vec.clone(), &data_path, true).unwrap();
-    utils::run_command(init_command_vec, &data_path, true).unwrap();
-    let (stdout, stderr) = utils::run_command(apply_command_vec, &data_path, true).unwrap();
+    utils::run_command(&apply_command_vec, &data_path, true)?;
+    utils::run_command(&init_command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
     fs::remove_file(&config_path)?; // cleanup
-    assert!(
+    ensure!(
         data_path.join("repos/tinted-shell").exists(),
         "stdout does not contain the expected output"
     );
-    assert_eq!(
-        fs::read_to_string(data_path.join(CURRENT_SCHEME_FILE_NAME))?,
-        scheme_name
+    ensure!(
+        fs::read_to_string(data_path.join(CURRENT_SCHEME_FILE_NAME))? == scheme_name,
+        "current_scheme_file_path not as expected"
     );
-    assert!(
+    ensure!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stdout does not contain the expected output"
     );
@@ -155,26 +154,26 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
         "{COMMAND_NAME} --config=\"{}\" --data-dir=\"{provided_data_path}\" apply base16-mocha",
         config_path.display(),
     );
-    let command_vec = shell_words::split(command.as_str()).map_err(anyhow::Error::new)?;
+    let command_vec = shell_words::split(command.as_str())?;
     write_to_file(&config_path, "")?;
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         data_path.join("repos/tinted-shell").exists(),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stdout does not contain the expected output"
     );

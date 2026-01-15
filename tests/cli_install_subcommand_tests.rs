@@ -3,7 +3,7 @@ mod utils;
 use std::{process::Command, str};
 
 use crate::utils::{setup, write_to_file};
-use anyhow::Result;
+use anyhow::{ensure, Result};
 
 #[test]
 fn test_cli_install_subcommand_non_unique_config_item_name() -> Result<()> {
@@ -14,7 +14,7 @@ fn test_cli_install_subcommand_non_unique_config_item_name() -> Result<()> {
         "test_cli_install_subcommand_non_unique_config_item_name",
         "install",
     )?;
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-shell"
 name = "non-unique-name"
 themes-dir = "some-dir"
@@ -23,20 +23,20 @@ themes-dir = "some-dir"
 path = "https://github.com/tinted-theming/tinted-shell"
 name = "non-unique-name"
 themes-dir = "some-dir"
-"##;
+"#;
     let expected_output = "config.toml item.name should be unique values, but \"non-unique-name\" is used for more than 1 item.name. Please change this to a unique value.";
     write_to_file(&config_path, config_content)?;
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stderr.contains(expected_output),
         "stdout does not contain the expected output"
     );
@@ -53,23 +53,23 @@ fn test_cli_install_subcommand_invalid_config_item_path() -> Result<()> {
         "test_cli_install_subcommand_invalid_config_item_path",
         "install",
     )?;
-    let config_content = r##"[[items]]
+    let config_content = r#"[[items]]
 path = "/path/to/non-existant/directory"
 name = "some-name"
-themes-dir = "some-dir""##;
+themes-dir = "some-dir""#;
     let expected_output = "One of your config.toml items has an invalid `path` value. \"/path/to/non-existant/directory\" is not a valid url and is not a path to an existing local directory";
     write_to_file(&config_path, config_content)?;
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stderr.contains(expected_output),
         "stdout does not contain the expected output"
     );
@@ -89,12 +89,12 @@ fn test_cli_install_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, false)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stdout.contains(expected_output),
         "stdout does not contain the expected output"
     );
@@ -115,18 +115,18 @@ fn test_cli_install_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_command(command_vec.clone(), &data_path, true).unwrap();
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
 
-    assert!(
+    ensure!(
         stdout.contains(expected_output),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -148,18 +148,18 @@ fn test_cli_install_subcommand_with_setup_quiet_flag() -> Result<()> {
     // ---
     // Act
     // ---
-    utils::run_command(command_vec.clone(), &data_path, true).unwrap();
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
 
-    assert!(
+    ensure!(
         stdout.is_empty(),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -177,12 +177,12 @@ fn test_cli_install_subcommand_with_tag_revision() -> Result<()> {
         setup("test_cli_install_subcommand_with_tag_revision", "install")?;
     let commit_sha = "0e4f0d222b9013cc7e537ac6cd29bf83ba19094a";
     let config_content = format!(
-        r##"[[items]]
+        r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-vim"
 name = "tinted-vim"
 themes-dir = "colors"
 revision = "{commit_sha}"
-"##
+"#
     );
     write_to_file(&config_path, &config_content)?;
 
@@ -191,7 +191,7 @@ revision = "{commit_sha}"
     // ---
     // Act
     // ---
-    let (_, _) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (_, _) = utils::run_command(&command_vec, &data_path, false)?;
     let output = Command::new("git")
         .current_dir(repo_path)
         .args(vec!["rev-parse", "--verify", "HEAD"])
@@ -204,7 +204,10 @@ revision = "{commit_sha}"
     // ------
     let has_match = stdout.lines().any(|line| line == commit_sha);
     cleanup()?;
-    assert!(has_match, "Expected revision {} not found", commit_sha,);
+    ensure!(
+        has_match,
+        format!("Expected revision {} not found", commit_sha)
+    );
 
     Ok(())
 }
@@ -220,19 +223,19 @@ fn test_cli_install_subcommand_with_branch_revision() -> Result<()> {
     )?;
     let rev = "tinty-test-01";
     let config_content = format!(
-        r##"[[items]]
+        r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-jqp"
 name = "tinted-jqp"
 themes-dir = "themes"
 revision = "{rev}"
-"##
+"#
     );
     write_to_file(&config_path, &config_content)?;
 
     // ---
     // Act
     // ---
-    let (_, _) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (_, _) = utils::run_command(&command_vec, &data_path, false)?;
 
     let repo_path = data_path.join("repos/tinted-jqp");
     let output = Command::new("git")
@@ -249,10 +252,9 @@ revision = "{rev}"
     let expected_revision = "43b36ed5eadad59a5027e442330d2485b8607b34";
     let has_match = stdout.lines().any(|line| line == expected_revision);
     cleanup()?;
-    assert!(
+    ensure!(
         has_match,
-        "Expected revision {} not found",
-        expected_revision,
+        format!("Expected revision {} not found", expected_revision)
     );
 
     Ok(())
@@ -269,19 +271,19 @@ fn test_cli_install_subcommand_with_commit_sha1_revision() -> Result<()> {
     )?;
     let commit_sha = "f998d17414a7218904bb5b4fdada5daa2b2d9d5e";
     let config_content = format!(
-        r##"[[items]]
+        r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-jqp"
 name = "tinted-jqp"
 themes-dir = "themes"
 revision = "{commit_sha}"
-"##
+"#
     );
     write_to_file(&config_path, &config_content)?;
 
     // ---
     // Act
     // ---
-    let (_, _) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (_, _) = utils::run_command(&command_vec, &data_path, false)?;
 
     let repo_path = data_path.join("repos/tinted-jqp");
     let output = Command::new("git")
@@ -299,7 +301,10 @@ revision = "{commit_sha}"
     // branch.
     let has_match = stdout.lines().any(|line| line == commit_sha);
     cleanup()?;
-    assert!(has_match, "Expected revision {} not found", commit_sha,);
+    ensure!(
+        has_match,
+        format!("Expected revision {} not found", commit_sha)
+    );
 
     Ok(())
 }
@@ -315,12 +320,12 @@ fn test_cli_install_subcommand_with_non_existent_revision() -> Result<()> {
     )?;
     let commit_sha = "invalid-revision";
     let config_content = format!(
-        r##"[[items]]
+        r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-jqp"
 name = "tinted-jqp"
 themes-dir = "themes"
 revision = "{commit_sha}"
-"##
+"#
     );
     write_to_file(&config_path, &config_content)?;
 
@@ -329,22 +334,21 @@ revision = "{commit_sha}"
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, false)?;
 
     // ------
     // Assert
     // ------
     let path_exists = repo_path.exists();
     cleanup()?;
-    assert!(
+    ensure!(
         stderr.contains(format!("cannot resolve {commit_sha}").as_str()),
         "Expected revision not found",
     );
 
-    assert!(
+    ensure!(
         !path_exists,
-        "Expected repo path {} to not exist",
-        repo_path.display(),
+        format!("Expected repo path {} to not exist", repo_path.display())
     );
 
     Ok(())
