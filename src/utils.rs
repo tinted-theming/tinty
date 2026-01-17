@@ -26,10 +26,10 @@ pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
     Ok(())
 }
 
-pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
-    let mut file = File::create(path)
+pub fn write_to_file(path: impl AsRef<Path>, contents: &str) -> Result<()> {
+    let mut file = File::create(path.as_ref())
         .map_err(anyhow::Error::new)
-        .with_context(|| format!("Unable to create file: {}", path.display()))?;
+        .with_context(|| format!("Unable to create file: {}", path.as_ref().display()))?;
 
     file.write_all(contents.as_bytes())?;
 
