@@ -33,6 +33,7 @@ regex = "1.7"
 rayon = "1.10"
 tempfile = "=3.6.0"
 fs2 = "0.4.3"
+dirs = "6.0.0"
 
 [lints.rust]
 unsafe_code = "forbid"

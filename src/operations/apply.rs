@@ -9,6 +9,8 @@ use crate::utils::{
 };
 use anyhow::{anyhow, Context, Error, Result};
 use fs2::FileExt;
+use regex::{self, Regex};
+use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::str::FromStr;
@@ -108,7 +110,7 @@ pub fn apply(
     }
 
     write_to_file(
-        &staging_data_path.join(CURRENT_SCHEME_FILE_NAME),
+        staging_data_path.join(CURRENT_SCHEME_FILE_NAME),
         full_scheme_name,
     )?;
 
@@ -185,6 +187,51 @@ pub fn apply(
                         relative_file_path: PathBuf::from(filename),
                     };
                     hook_commands.push(hook_parts);
+                }
+
+                // Run config.items.write_to_file
+                if let Some(write_to_file_vec) = item.write_to_file {
+                    match write_to_file_vec.as_slice() {
+                        [target_filepath, start_marker, end_marker] => {
+                            let expanded_filepath = expand_tilde(target_filepath);
+                            let target_content = read_to_string(&expanded_filepath)?;
+                            let rendered_content = create_file_contents_with_markers(
+                                &theme_content,
+                                &target_content,
+                                Some(start_marker),
+                                Some(end_marker),
+                            )?;
+
+                            write_to_file(&expanded_filepath, &rendered_content)?;
+
+                            Ok(())
+                        }
+                        [target_filepath, start_marker] => {
+                            let expanded_filepath = expand_tilde(target_filepath);
+                            let target_content = read_to_string(&expanded_filepath)?;
+                            let rendered_content = create_file_contents_with_markers(
+                                &theme_content,
+                                &target_content,
+                                Some(start_marker),
+                                None,
+                            )?;
+
+                            write_to_file(&expanded_filepath, &rendered_content)?;
+
+                            Ok(())
+                        }
+                        [target_filepath] => {
+                            let expanded_filepath = expand_tilde(target_filepath);
+                            dbg!(&expanded_filepath, &theme_content);
+
+                            write_to_file(&expanded_filepath, &theme_content)?;
+
+                            Ok(())
+                        }
+                        _ => Err(anyhow!(
+                            "tinty.toml requires has invalid values in `write_to_file` property"
+                        )),
+                    }?;
                 }
             }
             None => {
@@ -360,4 +407,46 @@ fn delete_non_dirs_and_broken_symlinks(dir: &Path) -> Result<()> {
         }
     }
     Ok(())
+}
+
+fn create_file_contents_with_markers(
+    source_content: &str,
+    target_content: &str,
+    start_marker: Option<&str>,
+    end_marker: Option<&str>,
+) -> Result<String> {
+    match (start_marker, end_marker) {
+        (Some(start_marker), Some(end_marker)) => {
+            let re_start = regex::escape(start_marker);
+            let re_end = regex::escape(end_marker);
+
+            let re = Regex::new(&format!(r"(?s){re_start}.*?{re_end}"))?;
+
+            Ok(re
+                .replace_all(
+                    target_content,
+                    format!("{start_marker}{source_content}{end_marker}"),
+                )
+                .to_string())
+        }
+        (Some(start_marker), None) => {
+            let re_start = regex::escape(start_marker);
+
+            let re = Regex::new(&format!(r"(?s){re_start}.*$"))?;
+
+            Ok(re
+                .replace_all(target_content, format!("{start_marker}{source_content}"))
+                .to_string())
+        }
+        _ => Err(anyhow!("Unable to get file contents")),
+    }
+}
+
+fn expand_tilde(path: impl AsRef<Path>) -> PathBuf {
+    if let Ok(stripped) = path.as_ref().strip_prefix("~/") {
+        if let Some(home) = dirs::home_dir() {
+            return home.join(stripped);
+        }
+    }
+    PathBuf::from(path.as_ref())
 }
