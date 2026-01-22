@@ -211,7 +211,7 @@ your current shell session. Have a look at [Sourcing scripts that set environmen
 
 ## Vim or Neovim
 
-There are two different ways you could have vim hooked up to Tiny:
+There are two different ways you could have vim hooked up to Tinty:
 
 1. Have base16-vim installed in your vim setup and run
    `:colorscheme <THEME_NAME>` when Tinty applies a scheme
