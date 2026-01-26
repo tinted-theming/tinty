@@ -1,7 +1,7 @@
 mod utils;
 
 use crate::utils::{setup, write_to_file, ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, REPO_NAME};
-use anyhow::Result;
+use anyhow::{ensure, Result};
 
 #[test]
 fn test_cli_info_subcommand_with_setup() -> Result<()> {
@@ -18,17 +18,17 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stdout.contains("System: base16\nSlug: oceanicnext\nName: OceanicNext"),
         "stdout does not contain the expected output"
     );
 
-    assert!(
+    ensure!(
         stdout.lines().count() == stdout_line_count,
         "stdout does not contain the expected output"
     );
@@ -49,16 +49,16 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stdout.contains("System: base16\nSlug: oceanicnext\nName: OceanicNext"),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.lines().count() > (scheme_count * 16),
         "stdout does not contain the expected output"
     );
@@ -81,28 +81,28 @@ fn test_cli_info_subcommand_with_setup_for_base16() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stdout.contains("| Color       | Name   | Hex     | ANSI     |"),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.contains("Name: OceanicNext"),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.contains("System: base16"),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.contains("Slug: oceanicnext"),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.contains(" | base00 | #1B2B34 | 0 "),
         "stdout does not contain the expected output"
     );
@@ -125,28 +125,28 @@ fn test_cli_info_subcommand_with_setup_for_base24() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stdout.contains("| Color       | Name   | Hex     | ANSI |"),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.contains("Name: Ayu Dark"),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.contains("System: base24"),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.contains("Slug: ayu-dark"),
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stdout.contains(" | base12 | #f26d78 | 9 "),
         "stdout does not contain the expected output"
     );
@@ -167,16 +167,16 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, false)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stderr.contains("Scheme repo path does not exist:"),
         "stderr does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.contains("Run `tinty install` and try again"),
         "stderr does not contain the expected output"
     );
@@ -199,12 +199,12 @@ fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stderr.contains(&expected_output),
         "stdout does not contain the expected output"
     );
@@ -227,17 +227,17 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         stderr.contains(
             format!(
-                r##"Invalid scheme system: "{scheme_name}" from scheme name "{scheme_name}"
+                r#"Invalid scheme system: "{scheme_name}" from scheme name "{scheme_name}"
 Make sure to add the system prefix to the theme name. Eg: base16-oceanicnext
-Run `{REPO_NAME} list` to get a list of scheme names"##,
+Run `{REPO_NAME} list` to get a list of scheme names"#,
             )
             .as_str()
         ),

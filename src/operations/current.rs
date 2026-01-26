@@ -24,7 +24,7 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
     }
 
     if property_name.is_empty() {
-        println!("{}", current_scheme_slug);
+        println!("{current_scheme_slug}");
 
         return Ok(());
     }
@@ -92,11 +92,11 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
                 println!("{}", current_scheme_container.get_scheme_variant());
             }
             _ => {
-                eprintln!("Unable to find property: {}", property_name);
+                eprintln!("Unable to find property: {property_name}");
             }
         }
     } else {
-        eprintln!("Unable to find property: {}", property_name);
+        eprintln!("Unable to find property: {property_name}");
     }
 
     Ok(())

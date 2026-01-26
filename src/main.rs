@@ -25,32 +25,45 @@ use config::{CONFIG_FILE_NAME, ORG_NAME};
 use constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
 use operations::generate_scheme;
 use std::path::PathBuf;
+use std::string::String;
 use tinted_builder::{SchemeSystem, SchemeVariant};
 use utils::{ensure_directory_exists, replace_tilde_slash_with_home};
 use xdg::BaseDirectories;
 
 /// Entry point of the application.
+#[allow(clippy::too_many_lines)]
 fn main() -> Result<()> {
     // Parse the command line arguments
     let matches = get_matches();
-    let xdg_dirs = BaseDirectories::with_prefix(format!("{ORG_NAME}/{REPO_NAME}")).unwrap();
 
     // Other configuration paths
-    let config_path_result: Result<PathBuf> =
-        if let Some(config_file_path) = matches.get_one::<String>("config") {
-            replace_tilde_slash_with_home(config_file_path)
-        } else {
-            xdg_dirs
-                .place_config_file(CONFIG_FILE_NAME)
-                .context(format!(
-                    "Unable to create XDG_HOME/{ORG_NAME}/{REPO_NAME}/{CONFIG_FILE_NAME}",
-                ))
-        };
+    let config_path_result: Result<PathBuf> = matches.get_one::<String>("config").map_or_else(
+        || {
+            let xdg_dirs = BaseDirectories::with_prefix(format!("{ORG_NAME}/{REPO_NAME}"));
+            xdg_dirs.map_or_else(
+                |_| Err(anyhow!("err")),
+                |xdg_dirs| {
+                    xdg_dirs
+                        .place_config_file(CONFIG_FILE_NAME)
+                        .context(format!(
+                            "Unable to create XDG_HOME/{ORG_NAME}/{REPO_NAME}/{CONFIG_FILE_NAME}",
+                        ))
+                },
+            )
+        },
+        |config_file_path| replace_tilde_slash_with_home(config_file_path),
+    );
+
     let config_path = config_path_result?;
     let data_path: PathBuf = if let Some(data_file_path) = matches.get_one::<String>("data-dir") {
         replace_tilde_slash_with_home(data_file_path)?
     } else {
-        xdg_dirs.get_data_home()
+        let xdg_dirs = BaseDirectories::with_prefix(format!("{ORG_NAME}/{REPO_NAME}"));
+        if let Ok(xdg_dirs) = xdg_dirs {
+            xdg_dirs.get_data_home()
+        } else {
+            return Err(anyhow!("err"));
+        }
     };
     let data_repo_path = data_path.join(REPO_DIR);
 
@@ -77,7 +90,7 @@ fn main() -> Result<()> {
         Some(("current", sub_matches)) => {
             let property_name = sub_matches
                 .get_one::<String>("property_name")
-                .map(|s| s.as_str())
+                .map(String::as_str)
                 .unwrap_or_default();
 
             operations::current::current(&data_path, property_name)?;
@@ -99,17 +112,15 @@ fn main() -> Result<()> {
 
                 print_completions(*generator, &mut cmd);
                 return Ok(());
-            };
+            }
         }
         Some(("info", sub_matches)) => {
             let is_custom = sub_matches
                 .get_one::<bool>("custom-schemes")
-                .map(|b| b.to_owned())
-                .unwrap_or(false);
+                .is_some_and(ToOwned::to_owned);
             let is_exhaustive_list = sub_matches
                 .get_one::<bool>("all")
-                .map(|b| b.to_owned())
-                .unwrap_or(false);
+                .is_some_and(ToOwned::to_owned);
             let scheme_name_option = sub_matches.get_one::<String>("scheme-name");
 
             operations::info::info(
@@ -122,20 +133,17 @@ fn main() -> Result<()> {
         Some(("init", sub_matches)) => {
             let is_verbose = sub_matches
                 .get_one::<bool>("verbose")
-                .map(|b| b.to_owned())
-                .unwrap_or(false);
+                .is_some_and(ToOwned::to_owned);
 
             operations::init::init(&config_path, &data_path, is_verbose)?;
         }
         Some(("list", sub_matches)) => {
             let is_custom = sub_matches
                 .get_one::<bool>("custom-schemes")
-                .map(|b| b.to_owned())
-                .unwrap_or(false);
+                .is_some_and(ToOwned::to_owned);
             let is_json = sub_matches
                 .get_one::<bool>("json")
-                .map(|b| b.to_owned())
-                .unwrap_or(false);
+                .is_some_and(ToOwned::to_owned);
 
             operations::list::list(&data_path, is_custom, is_json)?;
         }
@@ -143,8 +151,7 @@ fn main() -> Result<()> {
             if let Some(theme) = sub_matches.get_one::<String>("scheme-name") {
                 let is_quiet = sub_matches
                     .get_one::<bool>("quiet")
-                    .map(|b| b.to_owned())
-                    .unwrap_or(false);
+                    .is_some_and(ToOwned::to_owned);
 
                 let scheme_name = theme.as_str();
                 operations::apply::apply(&config_path, &data_path, scheme_name, is_quiet, None)
@@ -154,8 +161,7 @@ fn main() -> Result<()> {
         Some(("cycle", sub_matches)) => {
             let is_quiet = sub_matches
                 .get_one::<bool>("quiet")
-                .map(|b| b.to_owned())
-                .unwrap_or(false);
+                .is_some_and(ToOwned::to_owned);
 
             operations::cycle::cycle(&config_path, &data_path, is_quiet, None)
                 .context("Failed to cycle to your next preferred theme")?;
@@ -163,24 +169,21 @@ fn main() -> Result<()> {
         Some(("install", sub_matches)) => {
             let is_quiet = sub_matches
                 .get_one::<bool>("quiet")
-                .map(|b| b.to_owned())
-                .unwrap_or(false);
+                .is_some_and(ToOwned::to_owned);
 
             operations::install::install(&config_path, &data_path, is_quiet)?;
         }
         Some(("update", sub_matches)) => {
             let is_quiet = sub_matches
                 .get_one::<bool>("quiet")
-                .map(|b| b.to_owned())
-                .unwrap_or(false);
+                .is_some_and(ToOwned::to_owned);
 
             operations::update::update(&config_path, &data_path, is_quiet)?;
         }
         Some(("sync", sub_matches)) => {
             let is_quiet = sub_matches
                 .get_one::<bool>("quiet")
-                .map(|b| b.to_owned())
-                .unwrap_or(false);
+                .is_some_and(ToOwned::to_owned);
 
             operations::sync::sync(&config_path, &data_path, is_quiet)?;
         }
@@ -200,17 +203,19 @@ fn main() -> Result<()> {
             let author = sub_matches
                 .get_one::<String>("author")
                 .unwrap_or(&author_default);
-            let image_path = match sub_matches.get_one::<String>("image_path") {
-                Some(content) => PathBuf::from(content)
-                    .canonicalize()
-                    .with_context(|| "Invalid image file supplied"),
-                None => Err(anyhow!("No image file specified")),
-            }?;
-            let system = match sub_matches.get_one::<String>("system").map(|s| s.as_str()) {
+            let image_path = sub_matches.get_one::<String>("image_path").map_or_else(
+                || Err(anyhow!("No image file specified")),
+                |content| {
+                    PathBuf::from(content)
+                        .canonicalize()
+                        .with_context(|| "Invalid image file supplied")
+                },
+            )?;
+            let system = match sub_matches.get_one::<String>("system").map(String::as_str) {
                 Some("base24") => SchemeSystem::Base24,
                 _ => SchemeSystem::Base16,
             };
-            let variant = match sub_matches.get_one::<String>("variant").map(|s| s.as_str()) {
+            let variant = match sub_matches.get_one::<String>("variant").map(String::as_str) {
                 Some("light") => SchemeVariant::Light,
                 _ => SchemeVariant::Dark,
             };
@@ -244,16 +249,16 @@ fn main() -> Result<()> {
             generate_scheme::generate_scheme(
                 image_path,
                 outfile_path_option,
-                author.to_string(),
+                author.clone(),
                 description,
-                name.to_string(),
-                slug.to_string(),
+                name.clone(),
+                slug.clone(),
                 system,
                 variant,
             )?;
         }
         _ => {
-            println!("Basic usage: {} apply <SCHEME_NAME>", REPO_NAME);
+            println!("Basic usage: {REPO_NAME} apply <SCHEME_NAME>");
             println!("For more information try --help");
         }
     }

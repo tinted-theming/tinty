@@ -29,8 +29,9 @@ fn str_matches_scheme_system(value: &str) -> bool {
 
 /// Apply theme
 ///
-/// For each of the provided config items, copy the theme to the data_dir based on the provided
-/// scheme_name
+/// For each of the provided config items, copy the theme to the `data_dir` based on the provided
+/// `scheme_name`
+#[allow(clippy::too_many_lines)]
 pub fn apply(
     config_path: &Path,
     data_path: &Path,
@@ -38,8 +39,11 @@ pub fn apply(
     is_quiet: bool,
     active_operation: Option<&str>,
 ) -> Result<()> {
-    let scheme_name_arr: Vec<String> = full_scheme_name.split('-').map(|s| s.to_string()).collect();
-    let scheme_system_option = scheme_name_arr.clone().first().map(|s| s.to_string());
+    let scheme_name_arr: Vec<String> = full_scheme_name
+        .split('-')
+        .map(ToString::to_string)
+        .collect();
+    let scheme_system_option = scheme_name_arr.first().map(String::to_string);
 
     // Check provided scheme exists
     if scheme_name_arr.len() < 2 {
@@ -68,33 +72,36 @@ pub fn apply(
 
     // Go through custom schemes
     let scheme_system =
-        SchemeSystem::from_str(&scheme_system_option.unwrap_or("base16".to_string()))?;
+        SchemeSystem::from_str(&scheme_system_option.unwrap_or_else(|| "base16".to_string()))?;
     let schemes_path = &data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
     let custom_schemes_path = &data_path.join(CUSTOM_SCHEMES_DIR_NAME);
-
     let builtin_scheme_files = get_all_scheme_file_paths(schemes_path, None)?;
     let custom_scheme_files = get_all_scheme_file_paths(custom_schemes_path, None).ok();
-
     let config = Config::read(config_path)?;
-
     let builtin_scheme = builtin_scheme_files.get(full_scheme_name);
     let custom_scheme = custom_scheme_files
         .as_ref()
         .and_then(|m| m.get(full_scheme_name));
 
-    let scheme_file = builtin_scheme.xor(custom_scheme);
-    // We expect the scheme to be a built-in scheme or a custom schemes, not both.
-    if scheme_file.is_none() {
+    let Some(scheme_file) = builtin_scheme.xor(custom_scheme) else {
+        // We expect the scheme to be a built-in scheme or a custom schemes, not both.
         if builtin_scheme.is_none() {
             return Err(anyhow!("Scheme does not exist: {}", full_scheme_name));
-        } else {
-            let scheme_partial_name = &scheme_name_arr[1..].join("-");
+        }
+
+        if let Some(scheme_partial_arr) = scheme_name_arr.get(1..) {
+            let scheme_partial_name = scheme_partial_arr.join("-");
+
             return Err(anyhow!(
                 "You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it: {}",
                 format!("{}/{scheme_partial_name}.yaml", custom_schemes_path.display()),
             ));
         }
-    }
+
+        return Err(anyhow!(
+            "You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it",
+        ));
+    };
 
     if custom_scheme.is_some() {
         build_and_get_custom_scheme_file(custom_schemes_path, data_path, &config)?;
@@ -140,29 +147,28 @@ pub fn apply(
             .with_context(|| format!("Themes are missing from {}, try running `{REPO_NAME} install` or `{REPO_NAME} update` and try again.", item.name))?;
         let theme_option = &theme_dir.filter_map(Result::ok).find(|entry| {
             let path = entry.path();
-            match &item.theme_file_extension {
-                Some(extension) => {
-                    let filename = path.file_name().and_then(|name| name.to_str());
-                    format!("{full_scheme_name}{extension}") == filename.unwrap_or_default()
-                }
-                None => {
+            item.theme_file_extension.as_ref().map_or_else(
+                || {
                     let filename = path.file_stem().and_then(|name| name.to_str());
                     full_scheme_name == filename.unwrap_or_default()
-                }
-            }
+                },
+                |extension| {
+                    let filename = path.file_name().and_then(|name| name.to_str());
+                    format!("{full_scheme_name}{extension}") == filename.unwrap_or_default()
+                },
+            )
         });
 
         // Copy that theme to the data_path or log a message that it isn't found
         match theme_option {
             Some(theme_file) => {
                 let theme_file_path = &theme_file.path();
-                let extension = match theme_file_path.extension() {
-                    Some(ext) => format!(".{}", ext.to_str().unwrap_or_default()),
-                    None => String::new(),
-                };
+                let extension = theme_file_path.extension().map_or_else(String::new, |ext| {
+                    format!(".{}", ext.to_str().unwrap_or_default())
+                });
                 let filename = format!(
                     "{}{extension}",
-                    create_theme_filename_without_extension(&item)?,
+                    create_theme_filename_without_extension(&item),
                 );
                 let data_theme_path = staging_data_path.join(&filename);
                 let theme_content = fs::read_to_string(theme_file.path())?;
@@ -173,8 +179,8 @@ pub fn apply(
                 // the final artifacts directory.
                 if let Some(hook_text) = &item.hook {
                     let hook_parts = Hook {
-                        name: item.name.to_string(),
-                        hook_command_template: hook_text.to_string(),
+                        name: item.name.clone(),
+                        command_template: hook_text.clone(),
                         operation: active_operation.unwrap_or("apply").to_string(),
                         relative_file_path: PathBuf::from(filename),
                     };
@@ -184,9 +190,9 @@ pub fn apply(
             None => {
                 if !is_quiet {
                     println!(
-                        "Theme does not exists for {} in {}. Try running `{} update` or submit an issue on {}",
-                        item.name, themes_path.display(), REPO_NAME, REPO_URL
-                    )
+                        "Theme does not exists for {} in {}. Try running `{REPO_NAME} update` or submit an issue on {REPO_URL}",
+                        item.name, themes_path.display(),
+                    );
                 }
             }
         }
@@ -211,28 +217,24 @@ pub fn apply(
     std::mem::forget(staging_data_dir);
 
     for hook in hook_commands {
-        hook.run_command(
-            &target_path,
-            config_path,
-            full_scheme_name,
-            scheme_file.expect("scheme file missing"),
-        )?;
+        hook.run_command(&target_path, config_path, full_scheme_name, scheme_file)?;
     }
 
     create_symlinks_for_backwards_compat(&target_path, data_path)?;
 
     // Run global tinty/config.toml hooks
-    if let Some(hooks_vec) = config.hooks.clone() {
-        for hook in hooks_vec.iter() {
+    if let Some(hooks_vec) = config.hooks {
+        for hook in &hooks_vec {
             let hook_command_vec = get_shell_command_from_string(config_path, hook.as_str())?;
-            Command::new(&hook_command_vec[0])
-                .args(&hook_command_vec[1..])
-                .envs(
-                    SchemeEntry::from_scheme(
-                        &scheme_file.expect("scheme file missing").get_scheme()?,
-                    )
-                    .to_envs(),
-                )
+            let Some(command) = hook_command_vec.first() else {
+                return Err(anyhow!("Unable to extract cli command"));
+            };
+            let Some(args) = hook_command_vec.get(1..) else {
+                return Err(anyhow!("Unable to extract cli args"));
+            };
+            Command::new(command)
+                .args(args)
+                .envs(SchemeEntry::from_scheme(&scheme_file.get_scheme()?).to_envs())
                 .status()
                 .with_context(|| format!("Failed to execute global hook: {hook}"))?;
         }
@@ -252,7 +254,8 @@ fn build_and_get_custom_scheme_file(
             let item_template_path: PathBuf = data_path.join(format!("{REPO_DIR}/{item_name}"));
             build(&item_template_path, custom_schemes_path, true)?;
         }
-    };
+    }
+
     Ok(())
 }
 
@@ -278,7 +281,7 @@ fn create_symlinks_for_backwards_compat(source_path: &PathBuf, target_path: &Pat
 
 struct Hook {
     name: String,
-    hook_command_template: String,
+    command_template: String,
     operation: String,
     relative_file_path: PathBuf,
 }
@@ -296,13 +299,19 @@ impl Hook {
             .display()
             .to_string();
         let hook_script = self
-            .hook_command_template
+            .command_template
             .replace("%o", self.operation.as_str())
             .replace("%f", format!("\"{theme_file_path}\"").as_str())
             .replace("%n", full_scheme_name);
         let command_vec = get_shell_command_from_string(config_path, hook_script.as_str())?;
-        Command::new(&command_vec[0])
-            .args(&command_vec[1..])
+        let Some(command) = command_vec.first() else {
+            return Err(anyhow!("Unable to extract cli command"));
+        };
+        let Some(args) = command_vec.get(1..) else {
+            return Err(anyhow!("Unable to extract cli args"));
+        };
+        Command::new(command)
+            .args(args)
             .env("TINTY_THEME_FILE_PATH", theme_file_path)
             .env("TINTY_THEME_OPERATION", self.operation.as_str())
             .envs(SchemeEntry::from_scheme(&scheme_file.get_scheme()?).to_envs())
@@ -310,7 +319,7 @@ impl Hook {
             .with_context(|| {
                 format!(
                     "Failed to execute {} hook: {}",
-                    self.name, self.hook_command_template
+                    self.name, self.command_template
                 )
             })
     }
@@ -342,12 +351,8 @@ fn delete_non_dirs_and_broken_symlinks(dir: &Path) -> Result<()> {
 
         if file_type.is_symlink() {
             // Try to follow the symlink
-            match fs::metadata(&path) {
-                Err(e) if e.kind() == io::ErrorKind::NotFound => {
-                    // Broken symlink
-                    fs::remove_file(&path)?;
-                }
-                Err(_) | Ok(_) => continue, // Valid symlink or any other error, skip
+            if fs::metadata(&path).is_err_and(|e| e.kind() == io::ErrorKind::NotFound) {
+                fs::remove_file(&path)?;
             }
         } else {
             // Regular file

@@ -1,6 +1,6 @@
 mod utils;
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use utils::{
     copy_dir_all, setup, write_to_file, ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, REPO_DIR,
     SCHEMES_REPO_NAME,
@@ -23,13 +23,13 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
-    assert_eq!(stdout, format!("{scheme_name}\n"));
-    assert!(
+    ensure!(stdout == format!("{scheme_name}\n"), "std not as expected");
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );
@@ -49,13 +49,13 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(command_vec, &data_path, true).unwrap();
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
 
     // ------
     // Assert
     // ------
     cleanup()?;
-    assert!(
+    ensure!(
         stderr
             .contains("Failed to read last scheme from file. Try applying a scheme and try again."),
         "stderr does not contain the expected output"
@@ -116,16 +116,16 @@ where
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(command_vec, &data_path, false).unwrap();
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, false)?;
 
     // ------
     // Assert
     // ------
-    assert!(
+    ensure!(
         validate_output(&stdout), // Pass the actual output to the validation function
         "stdout does not contain the expected output"
     );
-    assert!(
+    ensure!(
         stderr.is_empty(),
         "stderr does not contain the expected output"
     );

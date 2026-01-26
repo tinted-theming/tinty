@@ -21,13 +21,13 @@ fn update_item(
                 .with_context(|| format!("Error updating {item_name} to {item_url}@{rev}",))?;
 
             if !is_quiet {
-                println!("{} up to date", item_name);
+                println!("{item_name} up to date");
             }
         } else if !is_quiet {
-            println!("{} contains uncommitted changes, please commit or remove and then run `{} update` again.", item_name, REPO_NAME);
+            println!("{item_name} contains uncommitted changes, please commit or remove and then run `{REPO_NAME} update` again.");
         }
     } else if !is_quiet {
-        println!("{} not installed (run `{} install`)", item_name, REPO_NAME);
+        println!("{item_name} not installed (run `{REPO_NAME} install`)");
     }
 
     Ok(())
