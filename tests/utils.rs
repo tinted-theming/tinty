@@ -34,7 +34,7 @@ pub fn run_command(
     let output = Command::new(&command_vec[0])
         .args(&command_vec[1..])
         .output()
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
 
     if !output.stderr.is_empty() {
         println!(
@@ -62,12 +62,12 @@ pub fn run_install_command(config_path: &Path, data_path: &Path, cache: bool) ->
             format!("--data-dir={}", data_path.display()).as_str(),
         ])
         .status()
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
 
     if output_install.success() {
         Ok(())
     } else {
-        Err(anyhow!("Install command stderr: {}", output_install))
+        Err(anyhow!("Install command stderr: {output_install}"))
     }
 }
 
@@ -337,7 +337,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         return Err(anyhow!("Invalid regex"));
     };
     if !re.is_match(revision.as_bytes()) {
-        return Err(anyhow!("cannot resolve {} into a Git SHA1", revision));
+        return Err(anyhow!("cannot resolve {revision} into a Git SHA1"));
     }
 
     safe_command(

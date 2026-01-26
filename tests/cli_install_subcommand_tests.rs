@@ -206,7 +206,7 @@ revision = "{commit_sha}"
     cleanup()?;
     ensure!(
         has_match,
-        format!("Expected revision {} not found", commit_sha)
+        format!("Expected revision {commit_sha} not found")
     );
 
     Ok(())
@@ -254,7 +254,7 @@ revision = "{rev}"
     cleanup()?;
     ensure!(
         has_match,
-        format!("Expected revision {} not found", expected_revision)
+        format!("Expected revision {expected_revision} not found")
     );
 
     Ok(())
@@ -303,7 +303,7 @@ revision = "{commit_sha}"
     cleanup()?;
     ensure!(
         has_match,
-        format!("Expected revision {} not found", commit_sha)
+        format!("Expected revision {commit_sha} not found")
     );
 
     Ok(())

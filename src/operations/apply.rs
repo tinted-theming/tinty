@@ -48,8 +48,7 @@ pub fn apply(
     // Check provided scheme exists
     if scheme_name_arr.len() < 2 {
         return Err(anyhow!(
-            "Invalid scheme name. Make sure the scheme system is prefixed <SCHEME_SYSTEM>-<SCHEME_NAME>, eg: `{}-ayu-dark`",
-            DEFAULT_SCHEME_SYSTEM,
+            "Invalid scheme name. Make sure the scheme system is prefixed <SCHEME_SYSTEM>-<SCHEME_NAME>, eg: `{DEFAULT_SCHEME_SYSTEM}-ayu-dark`",
         ));
     }
 
@@ -86,15 +85,15 @@ pub fn apply(
     let Some(scheme_file) = builtin_scheme.xor(custom_scheme) else {
         // We expect the scheme to be a built-in scheme or a custom schemes, not both.
         if builtin_scheme.is_none() {
-            return Err(anyhow!("Scheme does not exist: {}", full_scheme_name));
+            return Err(anyhow!("Scheme does not exist: {full_scheme_name}"));
         }
 
         if let Some(scheme_partial_arr) = scheme_name_arr.get(1..) {
             let scheme_partial_name = scheme_partial_arr.join("-");
 
             return Err(anyhow!(
-                "You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it: {}",
-                format!("{}/{scheme_partial_name}.yaml", custom_schemes_path.display()),
+                "You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it: {}/{scheme_partial_name}.yaml",
+                 custom_schemes_path.display(),
             ));
         }
 
