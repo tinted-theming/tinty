@@ -556,3 +556,37 @@ hook = "echo \"path: %f, operation: %o\""
     cleanup()?;
     Ok(())
 }
+
+#[test]
+fn test_cli_apply_subcommand_without_config_shell_required_string() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_removes_broken_symlinks",
+        format!("apply {scheme_name}").as_str(),
+    )?;
+    let config_content = "shell = \"string does not contain curcle braces\"";
+    write_to_file(&config_path, config_content)?;
+
+    let expected_stderr =
+        "The configured shell does not contain the required command placeholder '{}'. Check the default file or github for config examples.";
+
+    // ---
+    // Act
+    // ---
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+
+    // ------
+    // Assert
+    // ------
+    ensure!(stdout.is_empty(), "stdout not as expected");
+    ensure!(
+        stderr.contains(expected_stderr),
+        "stderr does not contain the expected output"
+    );
+
+    cleanup()?;
+    Ok(())
+}
