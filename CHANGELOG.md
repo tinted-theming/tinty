@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add `config.items.write-to-file` feature where a user can directly write the
+  theme content into a specified file, including between optional start and end
+  markers
+
+### Changed
+
+- BREAKING: `%f` template variable provided by tinty `config.toml` hooks now
+  does not wrap output in double quotes
+
 ## [0.30.0] - 2026-01-14
 
 ### Added
