@@ -36,8 +36,7 @@ pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
         }
         (false, false) => {
             return Err(anyhow!(
-                "Schemes are missing, run install and then try again: `{} install`",
-                REPO_NAME
+                "Schemes are missing, run install and then try again: `{REPO_NAME} install`",
             ))
         }
         _ => {}

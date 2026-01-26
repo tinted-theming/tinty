@@ -467,11 +467,11 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
 
     ensure!(
         expected_dracula == dracula,
-        format!("{:?}\ndoes not match:\n{:?}", expected_dracula, dracula)
+        format!("Actual output does not match expected")
     );
     ensure!(
         expected_gruvbox == gruvbox,
-        format!("{:?}\ndoes not match:\n{:?}", expected_gruvbox, gruvbox)
+        format!("Actual output does not match expected")
     );
 
     cleanup()?;

@@ -26,10 +26,10 @@ pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
     Ok(())
 }
 
-pub fn write_to_file(path: &Path, contents: &str) -> Result<()> {
-    let mut file = File::create(path)
+pub fn write_to_file(path: impl AsRef<Path>, contents: &str) -> Result<()> {
+    let mut file = File::create(path.as_ref())
         .map_err(anyhow::Error::new)
-        .with_context(|| format!("Unable to create file: {}", path.display()))?;
+        .with_context(|| format!("Unable to create file: {}", path.as_ref().display()))?;
 
     file.write_all(contents.as_bytes())?;
 
@@ -43,7 +43,14 @@ pub fn get_shell_command_from_string(config_path: &Path, command: &str) -> Resul
         .unwrap_or_else(|| DEFAULT_CONFIG_SHELL.to_string());
     let full_command = shell.replace("{}", command);
 
-    shell_words::split(&full_command).map_err(anyhow::Error::new)
+    if shell.contains("{}") {
+        shell_words::split(&full_command).map_err(anyhow::Error::new)
+    } else {
+        // This error is handled earlier so should never get here
+        Err(anyhow!(
+            "The configured shell property does not contain the required command placeholder '{{}}'"
+        ))
+    }
 }
 
 pub fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> Result<()> {
@@ -269,7 +276,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         return Err(anyhow!("Invalid regex"));
     };
     if !re.is_match(revision.as_bytes()) {
-        return Err(anyhow!("cannot resolve {} into a Git SHA1", revision));
+        return Err(anyhow!("cannot resolve {revision} into a Git SHA1",));
     }
 
     safe_command(
@@ -400,8 +407,7 @@ pub fn get_all_scheme_file_paths(
 ) -> Result<HashMap<String, SchemeFile>> {
     if !schemes_path.exists() {
         return Err(anyhow!(
-            "Schemes do not exist, run install and try again: `{} install`",
-            REPO_NAME
+            "Schemes do not exist, run install and try again: `{REPO_NAME} install`",
         ));
     }
 
@@ -440,7 +446,7 @@ pub fn get_all_scheme_file_paths(
 pub fn replace_tilde_slash_with_home(path_str: &str) -> Result<PathBuf> {
     let trimmed_path_str = path_str.trim();
     if trimmed_path_str.starts_with("~/") {
-        home_dir().map_or_else(|| Err(anyhow!("Unable to determine a home directory for \"{}\", please use an absolute path instead", trimmed_path_str)), |home_dir| Ok(PathBuf::from(trimmed_path_str.replacen(
+        home_dir().map_or_else(|| Err(anyhow!("Unable to determine a home directory for \"{trimmed_path_str}\", please use an absolute path instead")), |home_dir| Ok(PathBuf::from(trimmed_path_str.replacen(
                    "~/",
                    format!("{}/", home_dir.display()).as_str(),
                    1,
