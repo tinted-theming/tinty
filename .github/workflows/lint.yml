@@ -51,7 +51,7 @@ jobs:
 
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
-          rust-version: "1.84.0"
+          rust-version: "1.93.0"
 
   audit:
     runs-on: ubuntu-latest

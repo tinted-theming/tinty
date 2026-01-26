@@ -48,7 +48,7 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
     };
 
     let current_scheme_container = scheme_files.iter().find_map(|scheme_file| {
-        let path = scheme_file.get_path().unwrap_or_default();
+        let path = scheme_file.get_path();
         let file_stem = path
             .file_stem()
             .unwrap_or_default()

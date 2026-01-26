@@ -30,6 +30,8 @@ pub struct ConfigItem {
     #[serde(rename = "theme-file-extension")]
     pub theme_file_extension: Option<String>,
     pub revision: Option<String>,
+    #[serde(rename = "write-to-file")]
+    pub write_to_file: Option<Vec<String>>,
 }
 
 impl fmt::Display for ConfigItem {
@@ -116,6 +118,7 @@ impl Config {
             supported_systems: Some(vec![SchemeSystem::Base16]), // DEFAULT_SCHEME_SYSTEM
             theme_file_extension: None,
             revision: None,
+            write_to_file: None,
         };
 
         // Add default `item` if no items exist

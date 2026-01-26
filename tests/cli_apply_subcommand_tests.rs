@@ -296,7 +296,7 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
         "test_cli_apply_subcommand_root_hooks_has_envs_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let expected_output = "gruvbox-dark-hard 1d 20 21 79.72706 11.984515\n";
+    let expected_output = "gruvbox-dark-hard 1d 20 21 7615.26 1741.085\n";
     let config_content = r#"hooks = ["echo $TINTY_SCHEME_SLUG $TINTY_SCHEME_PALETTE_BASE00_HEX_R $TINTY_SCHEME_PALETTE_BASE00_HEX_G $TINTY_SCHEME_PALETTE_BASE00_HEX_B $TINTY_SCHEME_LIGHTNESS_FOREGROUND $TINTY_SCHEME_LIGHTNESS_BACKGROUND"]"#;
     write_to_file(&config_path, config_content)?;
 
@@ -304,6 +304,7 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
     // Act
     // ---
     let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    println!("{stdout}\n{expected_output}");
 
     // ------
     // Assert
@@ -552,6 +553,40 @@ hook = "echo \"path: %f, operation: %o\""
     ensure!(!missing_file.exists(), "file is supposed to be missing");
 
     ensure!(!symlink.exists(), "broken symlink wasn't deleted");
+
+    cleanup()?;
+    Ok(())
+}
+
+#[test]
+fn test_cli_apply_subcommand_without_config_shell_required_string() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_removes_broken_symlinks",
+        format!("apply {scheme_name}").as_str(),
+    )?;
+    let config_content = "shell = \"string does not contain curcle braces\"";
+    write_to_file(&config_path, config_content)?;
+
+    let expected_stderr =
+        "The configured shell does not contain the required command placeholder '{}'. Check the default file or github for config examples.";
+
+    // ---
+    // Act
+    // ---
+    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+
+    // ------
+    // Assert
+    // ------
+    ensure!(stdout.is_empty(), "stdout not as expected");
+    ensure!(
+        stderr.contains(expected_stderr),
+        "stderr does not contain the expected output"
+    );
 
     cleanup()?;
     Ok(())

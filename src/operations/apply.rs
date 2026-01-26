@@ -9,6 +9,8 @@ use crate::utils::{
 };
 use anyhow::{anyhow, Context, Error, Result};
 use fs2::FileExt;
+use regex::{self, Regex};
+use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::str::FromStr;
@@ -107,7 +109,7 @@ pub fn apply(
     }
 
     write_to_file(
-        &staging_data_path.join(CURRENT_SCHEME_FILE_NAME),
+        staging_data_path.join(CURRENT_SCHEME_FILE_NAME),
         full_scheme_name,
     )?;
 
@@ -184,6 +186,50 @@ pub fn apply(
                         relative_file_path: PathBuf::from(filename),
                     };
                     hook_commands.push(hook_parts);
+                }
+
+                // Run config.items.write_to_file
+                if let Some(write_to_file_vec) = item.write_to_file {
+                    match write_to_file_vec.as_slice() {
+                        [target_filepath, start_marker, end_marker] => {
+                            let expanded_filepath = expand_tilde(target_filepath);
+                            let target_content = read_to_string(&expanded_filepath)?;
+                            let rendered_content = generate_file_contents(
+                                &theme_content,
+                                &target_content,
+                                Some(start_marker),
+                                Some(end_marker),
+                            )?;
+
+                            write_to_file(&expanded_filepath, &rendered_content)?;
+
+                            Ok(())
+                        }
+                        [target_filepath, start_marker] => {
+                            let expanded_filepath = expand_tilde(target_filepath);
+                            let target_content = read_to_string(&expanded_filepath)?;
+                            let rendered_content = generate_file_contents(
+                                &theme_content,
+                                &target_content,
+                                Some(start_marker),
+                                None,
+                            )?;
+
+                            write_to_file(&expanded_filepath, &rendered_content)?;
+
+                            Ok(())
+                        }
+                        [target_filepath] => {
+                            let expanded_filepath = expand_tilde(target_filepath);
+
+                            write_to_file(&expanded_filepath, &theme_content)?;
+
+                            Ok(())
+                        }
+                        _ => Err(anyhow!(
+                            "tinty.toml requires has invalid values in `write_to_file` property"
+                        )),
+                    }?;
                 }
             }
             None => {
@@ -300,7 +346,7 @@ impl Hook {
         let hook_script = self
             .command_template
             .replace("%o", self.operation.as_str())
-            .replace("%f", format!("\"{theme_file_path}\"").as_str())
+            .replace("%f", theme_file_path.as_str())
             .replace("%n", full_scheme_name);
         let command_vec = get_shell_command_from_string(config_path, hook_script.as_str())?;
         let Some(command) = command_vec.first() else {
@@ -359,4 +405,269 @@ fn delete_non_dirs_and_broken_symlinks(dir: &Path) -> Result<()> {
         }
     }
     Ok(())
+}
+
+/// Replaces content between markers in a target string with new content.
+///
+/// This function finds sections delimited by `start_marker` and `end_marker` (or from
+/// `start_marker` to end of string if no end marker) and replaces the content between
+/// them with `insertion_content`. The markers themselves are preserved in the output.
+///
+/// # Arguments
+/// * `insertion_content` - The new content to insert between the markers
+/// * `target_content` - The original string containing the markers
+/// * `start_marker` - The marker indicating the start of the replaceable section (required)
+/// * `end_marker` - The marker indicating the end of the replaceable section (optional)
+///
+/// # Returns
+/// * `Ok(String)` - The target content with the marked sections replaced
+/// * `Err` - If `start_marker` is `None`
+///
+/// # Behavior
+/// - With both markers: replaces all occurrences of `start_marker...end_marker` (non-greedy)
+/// - With start marker only: replaces from `start_marker` to end of string
+/// - If markers are not found in target, returns target unchanged
+fn generate_file_contents(
+    insertion_content: &str,
+    source_content: &str,
+    start_marker: Option<&str>,
+    end_marker: Option<&str>,
+) -> Result<String> {
+    match (start_marker, end_marker) {
+        (Some(start_marker), Some(end_marker)) => {
+            let re_start = regex::escape(start_marker);
+            let re_end = regex::escape(end_marker);
+            let re = Regex::new(&format!(r"(?s){re_start}.*?{re_end}"))?;
+
+            Ok(re
+                .replace_all(
+                    source_content,
+                    format!("{start_marker}{insertion_content}{end_marker}"),
+                )
+                .to_string())
+        }
+        (Some(start_marker), None) => {
+            let re_start = regex::escape(start_marker);
+            let re = Regex::new(&format!(r"(?s){re_start}.*$"))?;
+
+            Ok(re
+                .replace_all(source_content, format!("{start_marker}{insertion_content}"))
+                .to_string())
+        }
+        _ => Err(anyhow!("Unable to get file contents")),
+    }
+}
+
+fn expand_tilde(path: impl AsRef<Path>) -> PathBuf {
+    if let Ok(stripped) = path.as_ref().strip_prefix("~/") {
+        if let Some(home) = dirs::home_dir() {
+            return home.join(stripped);
+        }
+    }
+
+    PathBuf::from(path.as_ref())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_file_contents_with_start_and_end_markers() {
+        let insertion = "new-content";
+        let source_content = "before\n<!-- START -->old<!-- END -->\nafter";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- START -->"),
+            Some("<!-- END -->"),
+        )
+        .unwrap();
+
+        assert_eq!(
+            result,
+            "before\n<!-- START -->new-content<!-- END -->\nafter"
+        );
+    }
+
+    #[test]
+    fn generate_file_contents_with_start_marker_only() {
+        let insertion = "new-content";
+        let source_content = "before\n# START\nold trailing stuff";
+        let result =
+            generate_file_contents(insertion, source_content, Some("# START\n"), None).unwrap();
+
+        assert_eq!(result, "before\n# START\nnew-content");
+    }
+
+    #[test]
+    fn generate_file_contents_with_multiline_replacement() {
+        let insertion = "line1\nline2\nline3";
+        let source_content = "header\n<!-- START -->\nold\nmulti\nline\n<!-- END -->\nfooter";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- START -->"),
+            Some("<!-- END -->"),
+        )
+        .unwrap();
+
+        assert_eq!(
+            result,
+            "header\n<!-- START -->line1\nline2\nline3<!-- END -->\nfooter"
+        );
+    }
+
+    #[test]
+    fn generate_file_contents_with_multiple_marker_pairs() {
+        let insertion = "X";
+        let source_content = "a<!-- S -->1<!-- E -->b<!-- S -->2<!-- E -->c";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- S -->"),
+            Some("<!-- E -->"),
+        )
+        .unwrap();
+
+        assert_eq!(result, "a<!-- S -->X<!-- E -->b<!-- S -->X<!-- E -->c");
+    }
+
+    #[test]
+    fn generate_file_contents_with_special_regex_chars_in_markers() {
+        let insertion = "content";
+        let source_content = "before[START]old[END]after";
+        let result =
+            generate_file_contents(insertion, source_content, Some("[START]"), Some("[END]"))
+                .unwrap();
+
+        assert_eq!(result, "before[START]content[END]after");
+    }
+
+    #[test]
+    fn generate_file_contents_no_markers_returns_error() {
+        let result = generate_file_contents("content", "source_content", None, None);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn generate_file_contents_end_marker_only_returns_error() {
+        let result =
+            generate_file_contents("content", "source_content", None, Some("<!-- END -->"));
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn generate_file_contents_markers_not_found_leaves_unchanged() {
+        let insertion = "new";
+        let source_content = "no markers here";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- START -->"),
+            Some("<!-- END -->"),
+        )
+        .unwrap();
+
+        assert_eq!(result, "no markers here");
+    }
+
+    #[test]
+    fn generate_file_contents_empty_insertion() {
+        let insertion = "";
+        let source_content = "before<!-- S -->old<!-- E -->after";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- S -->"),
+            Some("<!-- E -->"),
+        )
+        .unwrap();
+
+        assert_eq!(result, "before<!-- S --><!-- E -->after");
+    }
+
+    #[test]
+    fn generate_file_contents_insertion_contains_markers() {
+        let insertion = "theme with <!-- START --> and <!-- END --> inside";
+        let source_content = "before\n<!-- START -->old<!-- END -->\nafter";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- START -->"),
+            Some("<!-- END -->"),
+        )
+        .unwrap();
+
+        assert_eq!(
+            result,
+            "before\n<!-- START -->theme with <!-- START --> and <!-- END --> inside<!-- END -->\nafter"
+        );
+    }
+
+    #[test]
+    fn generate_file_contents_reapply_with_markers_in_content() {
+        let insertion = "new-theme";
+        let source_content =
+            "before\n<!-- START -->theme with <!-- START --> and <!-- END --> inside<!-- END -->\nafter";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- START -->"),
+            Some("<!-- END -->"),
+        )
+        .unwrap();
+
+        assert_eq!(
+            result,
+            "before\n<!-- START -->new-theme<!-- END --> inside<!-- END -->\nafter"
+        );
+    }
+
+    #[test]
+    fn generate_file_contents_whitespace_around_markers() {
+        let insertion = "content";
+        let source_content = "before  <!-- START -->  old  <!-- END -->  after";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- START -->"),
+            Some("<!-- END -->"),
+        )
+        .unwrap();
+
+        assert_eq!(result, "before  <!-- START -->content<!-- END -->  after");
+    }
+
+    #[test]
+    fn generate_file_contents_newlines_adjacent_to_markers() {
+        let insertion = "content";
+        let source_content = "before\n<!-- START -->\nold\n<!-- END -->\nafter";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- START -->"),
+            Some("<!-- END -->"),
+        )
+        .unwrap();
+
+        assert_eq!(result, "before\n<!-- START -->content<!-- END -->\nafter");
+    }
+
+    #[test]
+    fn generate_file_contents_preserves_newlines_in_insertion() {
+        let insertion = "\nline1\nline2\n";
+        let source_content = "before<!-- S -->old<!-- E -->after";
+        let result = generate_file_contents(
+            insertion,
+            source_content,
+            Some("<!-- S -->"),
+            Some("<!-- E -->"),
+        )
+        .unwrap();
+
+        assert_eq!(result, "before<!-- S -->\nline1\nline2\n<!-- E -->after");
+    }
 }
