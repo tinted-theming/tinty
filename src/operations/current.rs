@@ -31,8 +31,7 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
 
     if !schemes_path.is_dir() {
         return Err(anyhow!(
-            "No schemes exist. Run `{} sync` and try again.",
-            REPO_NAME
+            "No schemes exist. Run `{REPO_NAME} sync` and try again.",
         ));
     }
 
