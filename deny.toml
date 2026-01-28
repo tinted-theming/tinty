@@ -41,6 +41,16 @@ deny = [
     { name = "cmake" },
     { name = "windows" },
 ]
+skip = [
+    { name = "bitflags" }, # Related to `tempfile` version lock
+    { name = "linux-raw-sys" }, # Related to `tempfile` version lock
+    { name = "rustix" }, # Related to `tempfile` version lock
+    { name = "thiserror" },
+    { name = "thiserror-impl" },
+    { name = "zune-core" },
+    { name = "zune-jpeg" },
+]
+
 
 [sources]
 unknown-registry = "deny"

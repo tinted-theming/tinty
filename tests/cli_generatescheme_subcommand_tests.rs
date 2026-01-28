@@ -30,30 +30,30 @@ slug: "{slug}"
 system: "{system}"
 variant: "{variant}"
 palette:
-  base00: "#f7f7f7"
-  base01: "#d5d9d6"
-  base02: "#b3bbb6"
-  base03: "#919d95"
-  base04: "#707f75"
-  base05: "#4e6154"
-  base06: "#2c4334"
-  base07: "#0b2614"
-  base08: "#dd5218"
-  base09: "#e29c0c"
-  base0A: "#e29c0c"
-  base0B: "#069f31"
-  base0C: "#00fffe"
-  base0D: "#045de1"
-  base0E: "#8e6682"
-  base0F: "#98421d"
-  base10: "#aa664a"
-  base11: "#ab8942"
-  base12: "#ab8942"
-  base13: "#2d7742"
-  base14: "#41bdbd"
-  base15: "#3c67a8"
-  base16: "#83707d"
-  base17: "#784e3c"
+  base00: "#f7f7f8"
+  base01: "#d5d9d7"
+  base02: "#b3bbb7"
+  base03: "#929d96"
+  base04: "#707f76"
+  base05: "#4f6155"
+  base06: "#2d4335"
+  base07: "#0c2615"
+  base08: "#d45520"
+  base09: "#f0840a"
+  base0A: "#e6a343"
+  base0B: "#0d9c33"
+  base0C: "#32ebea"
+  base0D: "#075cdd"
+  base0E: "#6a2b98"
+  base0F: "#8e6880"
+  base10: "#a6674d"
+  base11: "#b58044"
+  base12: "#bc9b6c"
+  base13: "#317744"
+  base14: "#61bbbb"
+  base15: "#3d67a6"
+  base16: "#65467c"
+  base17: "#84717d"
 "##
     );
 
@@ -93,22 +93,22 @@ slug: "tinty-generated"
 system: "base16"
 variant: "dark"
 palette:
-  base00: "#0e2d19"
-  base01: "#2f4938"
-  base02: "#506658"
-  base03: "#718378"
-  base04: "#93a097"
-  base05: "#b4bdb7"
-  base06: "#d5dad7"
-  base07: "#f7f7f7"
-  base08: "#dd5218"
-  base09: "#e29c0c"
-  base0A: "#e29c0c"
-  base0B: "#069f31"
-  base0C: "#00fffe"
-  base0D: "#045de1"
-  base0E: "#8e6682"
-  base0F: "#98421d"
+  base00: "#0f2c19"
+  base01: "#304938"
+  base02: "#516658"
+  base03: "#728378"
+  base04: "#93a098"
+  base05: "#b4bdb8"
+  base06: "#d5dad8"
+  base07: "#f7f7f8"
+  base08: "#d45520"
+  base09: "#f0840a"
+  base0A: "#e6a343"
+  base0B: "#0d9c33"
+  base0C: "#32ebea"
+  base0D: "#075cdd"
+  base0E: "#6a2b98"
+  base0F: "#8e6880"
 "##;
 
     // ---
@@ -155,22 +155,22 @@ author: Tinty
 description: Some description
 variant: dark
 palette:
-  base00: '#0e2d19'
-  base01: '#2f4938'
-  base02: '#506658'
-  base03: '#718378'
-  base04: '#93a097'
-  base05: '#b4bdb7'
-  base06: '#d5dad7'
-  base07: '#f7f7f7'
-  base08: '#dd5218'
-  base09: '#e29c0c'
-  base0A: '#e29c0c'
-  base0B: '#069f31'
-  base0C: '#00fffe'
-  base0D: '#045de1'
-  base0E: '#8e6682'
-  base0F: '#98421d'
+  base00: '#0f2c19'
+  base01: '#304938'
+  base02: '#516658'
+  base03: '#728378'
+  base04: '#93a098'
+  base05: '#b4bdb8'
+  base06: '#d5dad8'
+  base07: '#f7f7f8'
+  base08: '#d45520'
+  base09: '#f0840a'
+  base0A: '#e6a343'
+  base0B: '#0d9c33'
+  base0C: '#32ebea'
+  base0D: '#075cdd'
+  base0E: '#6a2b98'
+  base0F: '#8e6880'
 "
     );
 
