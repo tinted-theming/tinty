@@ -368,7 +368,7 @@ Run `{} list` to get a list of scheme names"#,
         Some(scheme_path) => {
             print_scheme(scheme_path)?;
         }
-        None => return Err(anyhow!("Scheme file does not exist. Perhaps schemes are outdated, try running `{} update`\nIf the problem persist please create an issue at {}/issues", REPO_NAME, REPO_URL)),
+        None => return Err(anyhow!("Scheme file does not exist. Perhaps schemes are outdated, try running `{REPO_NAME} update`\nIf the problem persist please create an issue at {REPO_URL}/issues")),
     }
 
     Ok(())

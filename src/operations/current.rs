@@ -31,8 +31,7 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
 
     if !schemes_path.is_dir() {
         return Err(anyhow!(
-            "No schemes exist. Run `{} sync` and try again.",
-            REPO_NAME
+            "No schemes exist. Run `{REPO_NAME} sync` and try again.",
         ));
     }
 
@@ -49,7 +48,7 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
     };
 
     let current_scheme_container = scheme_files.iter().find_map(|scheme_file| {
-        let path = scheme_file.get_path().unwrap_or_default();
+        let path = scheme_file.get_path();
         let file_stem = path
             .file_stem()
             .unwrap_or_default()

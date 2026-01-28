@@ -147,7 +147,7 @@ themes-dir = "colors"
 
     ensure!(
         has_match,
-        format!("Expected origin remote to point to URL {}", remote_url)
+        format!("Expected origin remote to point to URL {remote_url}",)
     );
 
     Ok(())
@@ -200,7 +200,7 @@ revision = "tinty-test-tag-01"
         "stdout does not contain expected output"
     );
     let has_match = rev_parse_out.lines().any(|line| line == expected_revision);
-    ensure!(has_match, "Expected revision {}", expected_revision);
+    ensure!(has_match, "Expected revision {expected_revision}");
 
     Ok(())
 }
@@ -267,7 +267,7 @@ revision = "{git_tag_name}"
 
     ensure!(
         has_match,
-        format!("Expected remote URL {}", expected_remote_url)
+        format!("Expected remote URL {expected_remote_url}")
     );
 
     Ok(())
@@ -328,7 +328,7 @@ revision = "tinty-test-01"
 
     ensure!(
         has_match,
-        format!("Expected remote URL {}", expected_remote_url)
+        format!("Expected remote URL {expected_remote_url}")
     );
 
     Ok(())
