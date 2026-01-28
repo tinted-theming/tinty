@@ -38,12 +38,16 @@ fn test_cli_generatecompletion_subcommand_bash() -> Result<()> {
             r#"_tinty() {
     local i cur prev opts cmd
     COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    if [[ "${BASH_VERSINFO[0]}" -ge 4 ]]; then
+        cur="$2"
+    else
+        cur="${COMP_WORDS[COMP_CWORD]}"
+    fi
+    prev="$3"
     cmd=""
     opts=""
 
-    for i in ${COMP_WORDS[@]}"#
+    for i in "${COMP_WORDS[@]:0:COMP_CWORD}""#
         ),
         "stdout does not contain the expected output"
     );
