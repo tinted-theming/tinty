@@ -31,6 +31,8 @@
               pkgs
               ;
           };
+
+        homeManagerModules.default = import ./nix/home-manager.nix self;
       };
 
       perSystem = {
