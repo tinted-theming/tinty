@@ -121,6 +121,14 @@ brew install tinty
 paru -S tinty-git
 ```
 
+### Nix
+
+```sh
+nix run github:tinted-theming/tinty
+```
+
+Or add to your flake inputs and use `inputs.tinty.packages.${system}.default`.
+
 ### Binaries
 
 Download the relevant binary from the [repository releases] page.

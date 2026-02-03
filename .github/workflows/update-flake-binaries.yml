@@ -1,0 +1,30 @@
+name: "Update Nix Flake Binaries"
+on:
+  workflow_call:
+    secrets:
+      BOT_ACCESS_TOKEN:
+        description: GitHub bot access token
+        required: true
+permissions:
+  contents: write
+
+jobs:
+  update-flake-binaries:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BOT_ACCESS_TOKEN }}
+
+      - name: Run script to update flake binary paths and SHAs
+        run: ./scripts/update_nix_flake
+
+      - name: Commit the changes
+        id: auto_commit
+        uses: stefanzweifel/git-auto-commit-action@ac8823709a85c7ce090849ac3e5fe24d006f6e18 # v5.0.1
+        with:
+          commit_message: "Update flake binaries"
+          commit_user_name: tinted-theming-bot
+          commit_user_email: tintedtheming@proton.me
+          commit_author: tinted-theming-bot <tintedtheming@proton.me>
