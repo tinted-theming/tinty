@@ -95,7 +95,6 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@ac8823709a85c7ce090849ac3e5fe24d006f6e18 # v5.0.1
         with:
           commit_message: "Release ${{ steps.cargo_version.outputs.value }}"
-          branch: ${{ github.head_ref }}
           commit_user_name: tinted-theming-bot
           commit_user_email: tintedtheming@proton.me
           commit_author: tinted-theming-bot <tintedtheming@proton.me>
