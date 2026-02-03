@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO="tinted-theming/tinty"
+PACKAGE_FILE="nix/package.nix"
+
+# Get latest version
+VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | jq -r .tag_name |
+ sed 's/^v//')
+echo "Latest version: $VERSION"
+
+# Assets to fetch
+declare -A ASSETS=(
+  ["x86_64-linux"]="tinty-x86_64-unknown-linux-gnu.tar.gz"
+  ["aarch64-linux"]="tinty-aarch64-unknown-linux-gnu.tar.gz"
+  ["x86_64-darwin"]="tinty-universal-apple-darwin.tar.gz"
+  ["aarch64-darwin"]="tinty-universal-apple-darwin.tar.gz"
+)
+
+# Fetch hashes
+declare -A HASHES
+for system in "${!ASSETS[@]}"; do
+  asset="${ASSETS[$system]}"
+  url="https://github.com/$REPO/releases/download/v$VERSION/$asset"
+  echo "Fetching hash for $asset..."
+  hash=$(nix-prefetch-url "$url" 2>/dev/null)
+  sri=$(nix hash convert --hash-algo sha256 --to sri "$hash")
+  HASHES[$system]="$sri"
+  echo "  $system: $sri"
+done
+
+# Update package.nix
+sed -i "s/version = \".*\";/version = \"$VERSION\";/" "$PACKAGE_FILE"
+
+for system in "${!HASHES[@]}"; do
+  # Update hash for each system (matches the line after the system name)
+  sed -i "/$system/,/hash =/{s|hash = \".*\";|hash = \"${HASHES[$system]}\";|}" "$PACKAGE_FILE"
+done
+
+echo "Updated $PACKAGE_FILE to version $VERSION"

@@ -111,3 +111,10 @@ jobs:
       ref: "refs/tags/${{ needs.create-release-git-tag.outputs.git_tag_name }}"
     secrets:
       CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+
+  update-flake-binaries:
+    needs:
+      - publish-crate
+    uses: ./.github/workflows/update-flake-binaries.yml
+    secrets:
+      BOT_ACCESS_TOKEN: ${{ secrets.BOT_ACCESS_TOKEN }}

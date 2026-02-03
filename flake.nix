@@ -20,6 +20,19 @@
     flake-parts.lib.mkFlake {inherit inputs;} {
       systems = ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"];
 
+      flake = {
+        overlays.default = final: prev: {
+          tinty = self.lib.mkTinty {pkgs = final;};
+        };
+
+        lib.mkTinty = {pkgs}:
+          pkgs.callPackage ./nix/package.nix {
+            inherit
+              pkgs
+              ;
+          };
+      };
+
       perSystem = {
         pkgs,
         system,
@@ -29,6 +42,8 @@
           overlays = [rust-overlay.overlays.default];
           inherit system;
         };
+
+        packages.default = self.lib.mkTinty {inherit pkgs;};
 
         formatter = pkgs.alejandra;
 
