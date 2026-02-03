@@ -439,6 +439,29 @@ file is applied and the expected data directory are being used by Tinty.
 Contributions are welcome. Have a look at [CONTRIBUTING.md] for more
 information.
 
+## Development
+
+Common tasks are available via `just`:
+
+```sh
+just list          # List available `just` commands
+just lint          # Run linting checks
+just build         # Build the project
+just test          # Run all tests
+just test_docker   # Run tests in Docker
+```
+
+### Nix
+
+A [Nix] [flake][Nix flake] is, optionally, provided for development. With [direnv] installed,
+the development environment, with all necessary tooling, will be automatically
+loaded when entering the project directory. Alternatively, run the following at
+the project root:
+
+```sh
+nix develop
+```
+
 ## License
 
 Like most other [Tinted Theming] projects, Tinty falls under the MIT
@@ -467,3 +490,6 @@ file for details.
 [USAGE.md]: USAGE.md
 [tinted-builder-rust]: https://github.com/tinted-theming/tinted-builder-rust
 [LICENSES-THIRD-PARTY.md]: LICENSES-THIRD-PARTY.md
+[direnv]: https://direnv.net/
+[Nix]: https://nixos.org/download/
+[Nix flake]: https://wiki.nixos.org/wiki/Flakes
