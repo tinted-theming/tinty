@@ -2,7 +2,7 @@ test_docker: setup_tests
     @echo "-------------------"
     @echo "Running test_docker"
     @echo "-------------------"
-    docker build --no-cache --target tests -t tinty .
+    DOCKER_BUILDKIT=1 docker build -t tinty-test --target tests .
 
 test pattern: setup_tests
     @echo "------------"

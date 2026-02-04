@@ -51,8 +51,9 @@
           buildInputs = [
             pkgs.just
             pkgs.alejandra
-            pkgs.cargo-deny
             pkgs.cargo-about
+            pkgs.cargo-chef
+            pkgs.cargo-deny
             pkgs.rust-bin.stable.latest.default
           ];
         };
