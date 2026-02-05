@@ -4,6 +4,12 @@ test_docker: setup_tests
     @echo "-------------------"
     docker build --no-cache --target tests -t tinty .
 
+test_nix:
+    @echo "----------------"
+    @echo "Running Nix test"
+    @echo "----------------"
+    nix flake check ./tests/home-manager -L
+
 test pattern: setup_tests
     @echo "------------"
     @echo "Running test"

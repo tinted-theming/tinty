@@ -129,6 +129,78 @@ nix run github:tinted-theming/tinty
 
 Or add to your flake inputs and use `inputs.tinty.packages.${system}.default`.
 
+#### Home Manager Module
+
+A Home Manager module is available for declarative configuration. Add the flake
+to your inputs and import the module:
+
+```nix
+# flake.nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    tinty.url = "github:tinted-theming/tinty";
+  };
+
+  outputs = { nixpkgs, home-manager, tinty, ... }: {
+    homeConfigurations."user" = home-manager.lib.homeManagerConfiguration {
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      modules = [
+        tinty.homeManagerModules.default
+        {
+          programs.tinty = {
+            enable = true;
+            default-scheme = "base16-gruvbox-dark-medium";
+            shell = "bash -c '{}'";
+            templates = {
+              shell.enable = true;
+              tmux.enable = true;
+              fzf.enable = true;
+            };
+          };
+        }
+      ];
+    };
+  };
+}
+```
+
+##### Module Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enable` | boolean | `false` | Enable tinty |
+| `package` | package | Tinty from flake | The Tinty package to use |
+| `shell` | string | `"zsh -c '{}'"` | Shell command for hooks, e.g., `"bash -c '{}'"` |
+| `default-scheme` | string | `null` | Default scheme to apply |
+| `preferred-schemes` | list of strings | `[]` | Schemes to cycle through with `tinty cycle` |
+| `hooks` | list of strings | `[]` | Commands to run after scheme application |
+
+##### Template Modules
+
+Pre-configured templates are available:
+
+| Template | Option | Description | Requirement |
+|----------|--------|-------------|-------------|
+| Shell | `templates.shell.enable` | tinted-shell integration | - |
+| Tmux | `templates.tmux.enable` | tinted-tmux integration | Tmux must be installed through home-manager |
+| Fzf | `templates.fzf.enable` | tinted-fzf integration | - -
+| Delta | `templates.delta.enable` | tinted-delta integration | Git must be installed through home-manager |
+| Terminal | `templates.terminal.enable` | Terminal emulator themes (alacritty, rio, etc.) | - |
+
+For terminal themes, set `templates.terminal.type` to your emulator (e.g., `"alacritty"`, `"rio"`).
+
+##### Testing the Module
+
+A test flake is provided at `tests/home-manager/` to verify the module works correctly:
+
+```sh
+just test_nix
+```
+
+This runs integration tests for all template configurations.
+
 ### Binaries
 
 Download the relevant binary from the [repository releases] page.
