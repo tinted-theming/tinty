@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Create fixtures for testing
 
@@ -25,7 +25,7 @@ main() {
     rm -f "$schemes_file_path"
   fi
 
-  mkdir "$fixtures_path"
+  mkdir -p "$fixtures_path"
 
   git clone https://github.com/tinted-theming/schemes.git "$schemes_repo_dir"
 

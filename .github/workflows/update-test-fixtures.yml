@@ -1,0 +1,28 @@
+name: Update Test Scheme Fixtures
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *" # https://crontab.guru/every-day
+
+jobs:
+  create-release-git-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      git_tag_name: ${{ steps.git_tag_name.outputs.value }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BOT_ACCESS_TOKEN }}
+
+      - name: Run script to update flake binary paths and SHAs
+        run: ./scripts/create_fixtures
+
+      - name: Commit the changes
+        id: auto_commit
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
+        with:
+          commit_message: "Update test scheme fixtures"
+          commit_user_name: tinted-theming-bot
+          commit_user_email: tintedtheming@proton.me
+          commit_author: tinted-theming-bot <tintedtheming@proton.me>
