@@ -472,8 +472,8 @@ nix develop
 
 ## License
 
-Like most other [Tinted Theming] projects, Tinty falls under the MIT
-license. Have a look at the [LICENSE] document for more information.
+Tinty falls under the [GPL-3.0] license. Have a look at the [LICENSE] document
+for more information.
 
 ### Third-Party Licenses
 
@@ -501,3 +501,4 @@ file for details.
 [direnv]: https://direnv.net/
 [Nix]: https://nixos.org/download/
 [Nix flake]: https://wiki.nixos.org/wiki/Flakes
+[GPL-3.0]: https://www.gnu.org/licenses/gpl-3.0.html
