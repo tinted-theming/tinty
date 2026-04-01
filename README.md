@@ -233,6 +233,7 @@ to your preferences and environment.
 |---------------|-------------|
 | `TINTY_THEME_FILE_PATH` | Path to the theme file for that `[[items]]` entry<br>e.g. `/home/user/.local/share/tinted-theming/tinty/tinted-alacritty-colors-file.toml` |
 | `TINTY_THEME_OPERATION` | The command operation that is running the hook e.g. `apply` or `init`  |
+| `TINTY_REPO_PATH` | Path to the root of the template repository for that `[[items]]` entry<br>e.g. `/home/user/.local/share/tinted-theming/tinty/repos/tinted-terminal` |
 | `TINTY_SCHEME_ID` | The unique name of the applied theme e.g. `base16-ayu-dark` |
 | `TINTY_SCHEME_SYSTEM` | The system-part of the theme ID e.g. `base16` or `base24` |
 | `TINTY_SCHEME_SLUG` | The slug-part of the theme ID e.g. `ayu-dark` |

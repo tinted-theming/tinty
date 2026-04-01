@@ -184,6 +184,7 @@ pub fn apply(
                         command_template: hook_text.clone(),
                         operation: active_operation.unwrap_or("apply").to_string(),
                         relative_file_path: PathBuf::from(filename),
+                        repo_path: repo_path.clone(),
                     };
                     hook_commands.push(hook_parts);
                 }
@@ -329,6 +330,7 @@ struct Hook {
     command_template: String,
     operation: String,
     relative_file_path: PathBuf,
+    repo_path: PathBuf,
 }
 
 impl Hook {
@@ -359,6 +361,7 @@ impl Hook {
             .args(args)
             .env("TINTY_THEME_FILE_PATH", theme_file_path)
             .env("TINTY_THEME_OPERATION", self.operation.as_str())
+            .env("TINTY_REPO_PATH", self.repo_path.display().to_string())
             .envs(SchemeEntry::from_scheme(&scheme_file.get_scheme()?).to_envs())
             .spawn()
             .with_context(|| {
