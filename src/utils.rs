@@ -185,10 +185,25 @@ fn random_remote_name() -> String {
     format!("tinty-remote-{random_number}")
 }
 
-// Resolvees the SHA1 of revision at remote_name.
+enum RevisionType {
+    Tag,
+    Branch,
+    Sha,
+}
+
+struct ResolvedRevision {
+    sha: String,
+    kind: RevisionType,
+}
+
+// Resolves the SHA1 of revision at remote_name.
 // revision can be a tag, a branch, or a commit SHA1.
 #[allow(clippy::too_many_lines)]
-fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<String> {
+fn git_resolve_revision(
+    repo_path: &Path,
+    remote_name: &str,
+    revision: &str,
+) -> Result<ResolvedRevision> {
     // 1.) Check if its a tag.
     let expected_tag_ref = format!("refs/tags/{revision}");
     let mut command = safe_command(
@@ -221,7 +236,11 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
             // we found a tag that matches
             child.kill()?; // Abort the child process.
             child.wait()?; // Cleanup
-            return Ok(first_part.clone()); // Return early.
+
+            return Ok(ResolvedRevision {
+                sha: first_part.clone(),
+                kind: RevisionType::Tag,
+            });
         }
     }
 
@@ -260,7 +279,11 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
             // we found a branch that matches.
             child.kill()?; // Abort the child process.
             child.wait()?; // Cleanup
-            return Ok(first_part.clone()); // Return early.
+
+            return Ok(ResolvedRevision {
+                sha: first_part.clone(),
+                kind: RevisionType::Branch,
+            });
         }
     }
 
@@ -311,7 +334,11 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         // we found a remote ref that contains the commit sha
         child.kill()?; // Abort the child process.
         child.wait()?; // Cleanup
-        return Ok(revision.to_string()); // Return early.
+
+        return Ok(ResolvedRevision {
+            sha: revision.to_string(),
+            kind: RevisionType::Sha,
+        });
     }
 
     child.wait().with_context(|| {
@@ -352,21 +379,52 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     })?;
 
     // Normalize the revision into the SHA.
-    let commit_sha = git_resolve_revision(repo_path, remote_name, revision)?;
+    let resolved = git_resolve_revision(repo_path, remote_name, revision)?;
 
-    safe_command(
-        format!("git -c advice.detachedHead=false checkout --quiet \"{commit_sha}\"").as_str(),
-        repo_path,
-    )?
-    .stdout(Stdio::null())
-    .current_dir(repo_path)
-    .status()
-    .with_context(|| {
-        format!(
-            "Failed to checkout SHA {commit_sha} in {}",
-            repo_path.display()
-        )
-    })?;
+    match resolved.kind {
+        RevisionType::Branch => {
+            // Checkout the branch by name to keep HEAD attached, avoiding detached HEAD.
+            // Use -B to create or reset the local branch to the fetched SHA.
+            safe_command(
+                format!(
+                    "git checkout --quiet -B \"{revision}\" \"{}\"",
+                    resolved.sha
+                )
+                .as_str(),
+                repo_path,
+            )?
+            .stdout(Stdio::null())
+            .current_dir(repo_path)
+            .status()
+            .with_context(|| {
+                format!(
+                    "Failed to checkout branch {revision} in {}",
+                    repo_path.display()
+                )
+            })?;
+        }
+        RevisionType::Tag | RevisionType::Sha => {
+            // Tags and specific SHAs are expected to result in detached HEAD.
+            safe_command(
+                format!(
+                    "git -c advice.detachedHead=false checkout --quiet \"{}\"",
+                    resolved.sha
+                )
+                .as_str(),
+                repo_path,
+            )?
+            .stdout(Stdio::null())
+            .current_dir(repo_path)
+            .status()
+            .with_context(|| {
+                format!(
+                    "Failed to checkout {} in {}",
+                    resolved.sha,
+                    repo_path.display()
+                )
+            })?;
+        }
+    }
 
     Ok(())
 }

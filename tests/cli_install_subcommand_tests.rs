@@ -170,143 +170,40 @@ fn test_cli_install_subcommand_with_setup_quiet_flag() -> Result<()> {
 
 #[test]
 fn test_cli_install_subcommand_with_tag_revision() -> Result<()> {
-    // -------
-    // Arrange
-    // -------
-    let (config_path, data_path, command_vec, cleanup) =
-        setup("test_cli_install_subcommand_with_tag_revision", "install")?;
-    let commit_sha = "0e4f0d222b9013cc7e537ac6cd29bf83ba19094a";
-    let config_content = format!(
-        r#"[[items]]
-path = "https://github.com/tinted-theming/tinted-vim"
-name = "tinted-vim"
-themes-dir = "colors"
-revision = "{commit_sha}"
-"#
-    );
-    write_to_file(&config_path, &config_content)?;
-
-    let repo_path = data_path.join("repos/tinted-vim");
-
-    // ---
-    // Act
-    // ---
-    let (_, _) = utils::run_command(&command_vec, &data_path, false)?;
-    let output = Command::new("git")
-        .current_dir(repo_path)
-        .args(vec!["rev-parse", "--verify", "HEAD"])
-        .output()
-        .expect("Failed to execute git rev-parse --verify HEAD");
-    let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
-
-    // ------
-    // Assert
-    // ------
-    let has_match = stdout.lines().any(|line| line == commit_sha);
-    cleanup()?;
-    ensure!(
-        has_match,
-        format!("Expected revision {commit_sha} not found")
-    );
-
-    Ok(())
+    utils::test_install_with_revision(
+        "test_cli_install_subcommand_with_tag_revision",
+        "https://github.com/tinted-theming/tinted-vim",
+        "tinted-vim",
+        "colors",
+        "0e4f0d222b9013cc7e537ac6cd29bf83ba19094a",
+        "0e4f0d222b9013cc7e537ac6cd29bf83ba19094a",
+    )
 }
 
 #[test]
 fn test_cli_install_subcommand_with_branch_revision() -> Result<()> {
-    // -------
-    // Arrange
-    // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    utils::test_install_with_revision(
         "test_cli_install_subcommand_with_branch_revision",
-        "install",
-    )?;
-    let rev = "tinty-test-01";
-    let config_content = format!(
-        r#"[[items]]
-path = "https://github.com/tinted-theming/tinted-jqp"
-name = "tinted-jqp"
-themes-dir = "themes"
-revision = "{rev}"
-"#
-    );
-    write_to_file(&config_path, &config_content)?;
-
-    // ---
-    // Act
-    // ---
-    let (_, _) = utils::run_command(&command_vec, &data_path, false)?;
-
-    let repo_path = data_path.join("repos/tinted-jqp");
-    let output = Command::new("git")
-        .current_dir(repo_path)
-        .args(vec!["rev-parse", "--verify", "HEAD"])
-        .output()
-        .expect("Failed to execute git rev-parse --verify HEAD");
-
-    let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
-
-    // ------
-    // Assert
-    // ------
-    let expected_revision = "43b36ed5eadad59a5027e442330d2485b8607b34";
-    let has_match = stdout.lines().any(|line| line == expected_revision);
-    cleanup()?;
-    ensure!(
-        has_match,
-        format!("Expected revision {expected_revision} not found")
-    );
-
-    Ok(())
+        "https://github.com/tinted-theming/tinted-jqp",
+        "tinted-jqp",
+        "themes",
+        "tinty-test-01",
+        "43b36ed5eadad59a5027e442330d2485b8607b34",
+    )
 }
 
 #[test]
 fn test_cli_install_subcommand_with_commit_sha1_revision() -> Result<()> {
-    // -------
-    // Arrange
-    // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
-        "test_cli_install_subcommand_with_commit_sha1_revision",
-        "install",
-    )?;
-    let commit_sha = "f998d17414a7218904bb5b4fdada5daa2b2d9d5e";
-    let config_content = format!(
-        r#"[[items]]
-path = "https://github.com/tinted-theming/tinted-jqp"
-name = "tinted-jqp"
-themes-dir = "themes"
-revision = "{commit_sha}"
-"#
-    );
-    write_to_file(&config_path, &config_content)?;
-
-    // ---
-    // Act
-    // ---
-    let (_, _) = utils::run_command(&command_vec, &data_path, false)?;
-
-    let repo_path = data_path.join("repos/tinted-jqp");
-    let output = Command::new("git")
-        .current_dir(repo_path)
-        .args(vec!["rev-parse", "--verify", "HEAD"])
-        .output()
-        .expect("Failed to execute git rev-parse --verify HEAD");
-
-    let stdout = str::from_utf8(&output.stdout).expect("Not valid UTF-8");
-
-    // ------
-    // Assert
-    // ------
     // This SHA1 is only reachable through the tinted-test-01 branch, but is not the tip of that
     // branch.
-    let has_match = stdout.lines().any(|line| line == commit_sha);
-    cleanup()?;
-    ensure!(
-        has_match,
-        format!("Expected revision {commit_sha} not found")
-    );
-
-    Ok(())
+    utils::test_install_with_revision(
+        "test_cli_install_subcommand_with_commit_sha1_revision",
+        "https://github.com/tinted-theming/tinted-jqp",
+        "tinted-jqp",
+        "themes",
+        "f998d17414a7218904bb5b4fdada5daa2b2d9d5e",
+        "f998d17414a7218904bb5b4fdada5daa2b2d9d5e",
+    )
 }
 
 #[test]

@@ -14,6 +14,11 @@
 - **BREAKING**: `%f` template variable provided by tinty `config.toml` hooks
   now does not wrap output in double quotes
 
+### Fixed
+
+- Fix bug where synced git branches are checked to a hash after orignially
+  being on a branch
+
 ## [0.30.0] - 2026-01-14
 
 ### Added
