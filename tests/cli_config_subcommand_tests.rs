@@ -86,7 +86,8 @@ fn test_cli_config_with_config_flag() -> Result<()> {
     // ------
     ensure!(
         stdout.contains(format!("{}", config_path.display()).as_str()),
-        "stdout does not contain the expected output"
+        "Expected stdout to contain config path: {}\nGot: {stdout}",
+        config_path.display()
     );
 
     cleanup()?;
@@ -111,7 +112,8 @@ fn test_cli_config_with_data_flag() -> Result<()> {
     // ------
     ensure!(
         stdout.contains(format!("{}", data_path.display()).as_str()),
-        "stdout does not contain the expected output"
+        "Expected stdout to contain data path: {}\nGot: {stdout}",
+        data_path.display()
     );
 
     cleanup()?;

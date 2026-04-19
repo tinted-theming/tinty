@@ -64,12 +64,9 @@ hook = "echo 'test_cli_config_path_tilde_as_home_config_output'"
     // ------
     ensure!(
         stdout.contains(expected_stdout),
-        "stdout does not contain the expected output"
+        "Expected stdout to contain: {expected_stdout}\nGot: {stdout}"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup(&config_path, &data_path)?;
     Ok(())
@@ -122,20 +119,15 @@ fn test_cli_default_data_path() -> Result<()> {
     fs::remove_file(&config_path)?; // cleanup
     ensure!(
         data_path.join("repos/tinted-shell").exists(),
-        "stdout does not contain the expected output"
+        "Expected tinted-shell repo to exist at: {}",
+        data_path.join("repos/tinted-shell").display()
     );
     ensure!(
         fs::read_to_string(data_path.join(CURRENT_SCHEME_FILE_NAME))? == scheme_name,
         "current_scheme_file_path not as expected"
     );
-    ensure!(
-        stdout.is_empty(),
-        "stdout does not contain the expected output"
-    );
-    ensure!(
-        stderr.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     Ok(())
 }
@@ -167,16 +159,11 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     // ------
     ensure!(
         data_path.join("repos/tinted-shell").exists(),
-        "stdout does not contain the expected output"
+        "Expected tinted-shell repo to exist at: {}",
+        data_path.join("repos/tinted-shell").display()
     );
-    ensure!(
-        stdout.is_empty(),
-        "stdout does not contain the expected output"
-    );
-    ensure!(
-        stderr.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup(&config_path, &data_path)?;
     Ok(())

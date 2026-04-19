@@ -27,7 +27,7 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // ------
     ensure!(
         stderr.contains(&expected_output),
-        "stdout does not contain the expected output"
+        "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
     cleanup()?;
@@ -50,10 +50,7 @@ fn test_cli_init_subcommand_with_setup() -> Result<()> {
     // ------
     // Assert
     // ------
-    ensure!(
-        stdout.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
 
     cleanup()?;
     Ok(())
@@ -82,14 +79,8 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     // ------
     let expected_scheme_name =
         fs::read_to_string(data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME))?;
-    ensure!(
-        stdout.is_empty(),
-        "stdout does not contain the expected output"
-    );
-    ensure!(
-        stderr.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
     ensure!(
         scheme_name == expected_scheme_name,
         "scheme_name does not contain the expected output"
