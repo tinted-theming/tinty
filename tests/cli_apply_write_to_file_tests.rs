@@ -1,3 +1,10 @@
+//! Integration tests for the `write-to-file` config option used with `apply`.
+//!
+//! Covers: marker-based content insertion (start+end markers, start-only
+//! marker), and full file overwrite mode.
+//!
+//! Uses local fixture repos to avoid network dependency.
+
 mod utils;
 
 use anyhow::{ensure, Result};

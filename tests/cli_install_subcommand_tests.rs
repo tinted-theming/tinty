@@ -1,3 +1,11 @@
+//! Integration tests for the `install` subcommand.
+//!
+//! Covers: config validation (non-unique item names, invalid paths), fresh
+//! and repeated installs, `--quiet` flag, and revision pinning (tags,
+//! branches, commit SHAs, non-existent revisions).
+//!
+//! Requires network access on first run (repos are cached in `tmp/repos/`).
+
 mod utils;
 
 use crate::utils::{setup, write_to_file};

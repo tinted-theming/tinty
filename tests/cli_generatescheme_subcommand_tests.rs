@@ -1,3 +1,10 @@
+//! Integration tests for the `generate-scheme` subcommand.
+//!
+//! Covers: generating schemes from images with custom properties (author,
+//! name, slug, system, variant), default properties, and `--save` to disk.
+//!
+//! Uses a local fixture image — no network access required.
+
 mod utils;
 
 use std::fs;

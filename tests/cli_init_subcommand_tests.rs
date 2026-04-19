@@ -1,3 +1,10 @@
+//! Integration tests for the `init` subcommand.
+//!
+//! Covers: initialization without prior setup, with prior setup, and with
+//! a `default-scheme` config value that should be applied on init.
+//!
+//! Requires network access on first run (repos are cached in `tmp/repos/`).
+
 mod utils;
 
 use std::fs;

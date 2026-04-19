@@ -1,3 +1,11 @@
+//! Integration tests for the `info` subcommand.
+//!
+//! Covers: displaying scheme info for current/named schemes, `--all` flag,
+//! base16 and base24 systems, custom-schemes flag, and error handling for
+//! missing repos and invalid scheme names.
+//!
+//! Requires network access on first run (repos are cached in `tmp/repos/`).
+
 mod utils;
 
 use crate::utils::{setup, write_to_file, ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, REPO_NAME};

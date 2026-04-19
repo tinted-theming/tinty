@@ -1,3 +1,8 @@
+//! Integration tests for the `config` subcommand.
+//!
+//! Covers: displaying default config, custom config, `--config-path` and
+//! `--data-dir-path` flags.
+
 mod utils;
 
 use crate::utils::{setup, write_to_file};

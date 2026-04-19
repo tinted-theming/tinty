@@ -1,3 +1,21 @@
+//! Shared test utilities for tinty integration tests.
+//!
+//! # Network dependency & caching
+//! Many tests require cloning Git repositories from GitHub. To avoid redundant
+//! clones, `clone_test_repos()` maintains a shared cache in `tmp/repos/` protected
+//! by a file lock. On the first run, repos are cloned once; subsequent runs copy
+//! from the cache. Tests that pass `cache: true` to `run_command()` trigger this
+//! caching automatically.
+//!
+//! # Test isolation
+//! Each test gets its own config file (`config_path_{name}.toml`) and data
+//! directory (`data_path_{name}/`). The `setup()` function creates these and
+//! returns a cleanup closure that removes them when called.
+//!
+//! # Command timeout
+//! All commands executed via `run_command()` and `run_install_command()` are
+//! subject to a 5-minute timeout to prevent the test suite from hanging.
+
 use anyhow::{anyhow, ensure, Context, Error, Result};
 use fs2::FileExt;
 use regex::bytes::Regex;

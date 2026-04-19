@@ -1,3 +1,12 @@
+//! Integration tests for the `apply` subcommand.
+//!
+//! Covers: applying schemes (builtin and custom), hook execution (root and
+//! per-item), environment variable injection, theme file extensions,
+//! vestigial file/symlink cleanup, `--quiet` flag, and error handling for
+//! invalid scheme names, missing system prefixes, and invalid shell config.
+//!
+//! Requires network access on first run (repos are cached in `tmp/repos/`).
+
 mod utils;
 
 use std::fs;
