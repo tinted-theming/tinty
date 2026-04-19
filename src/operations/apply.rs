@@ -25,6 +25,7 @@ fn str_matches_scheme_system(value: &str) -> bool {
     match value {
         _ if value == SchemeSystem::Base16.as_str() => true,
         _ if value == SchemeSystem::Base24.as_str() => true,
+        _ if value == SchemeSystem::Tinted8.as_str() => true,
         _ => false,
     }
 }
@@ -57,9 +58,10 @@ pub fn apply(
     // Check provided scheme is valid
     if !str_matches_scheme_system(scheme_system_option.clone().unwrap_or_default().as_str()) {
         return Err(anyhow!(
-            "Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"{}\" or \"{}\"), eg: {}-{}",
+            "Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"{}\", \"{}\" or \"{}\"), eg: {}-{}",
             SchemeSystem::Base16.as_str(),
             SchemeSystem::Base24.as_str(),
+            SchemeSystem::Tinted8.as_str(),
             DEFAULT_SCHEME_SYSTEM,
             full_scheme_name
         ));

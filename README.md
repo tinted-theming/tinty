@@ -14,9 +14,9 @@
 Change the theme of your terminal, text editor and anything else with
 one command. Immediately switch between over 250 themes!
 
-Tinty is a [Base16] and [Base24] theming manager for all [Tinted
-Theming] projects including any third-party template repository that
-follows the [Base16 builder specification].
+Tinty is a [Base16], [Base24] and [Tinted8] theming manager for all [Tinted
+Theming] projects including any third-party template repository that follows
+the relevant specifications.
 
 To learn more about [Tinted Theming] and the base16 specification, have
 a look at our [home repository] and preview the themes supported by
@@ -301,16 +301,17 @@ themes across different applications seamlessly.
 | `themes-dir`           | `string` | Required | The directory within the repository where theme files are located. | - | `themes-dir = "colors"`                    |
 | `hook`                 | `string` | Optional | A command to be executed after the theme is applied. Useful for reloading configurations. | None    | `hook = "source ~/.vimrc"` |
 | `theme-file-extension` | `string` | Optional | Define a custom theme file extension that isn't `/\.*$/`. Tinty looks for themes named `base16-uwunicorn.*` (for example), but when the theme file isn't structured that way, this option can help specify the pattern. | - | `theme-file-extension = ".module.css"` |
-| `supported-systems`    | `array<"base16" or "base24">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported-systems = ["base16", "base24"]` |
+| `supported-systems`    | `array<"base16" or "base24" or "tinted8">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported-systems = ["base16", "base24"]` |
 | `write-to-file`        | `array<"target_filename", "optional_start_marker", "optional_end_marker">` | Optional | A feature where Tinty writes the theme content directly into an existing file. | None    | `write-to-file = ["~/.config/alacritty/config.toml", "# Tinty Start", "# Tinty End"]` |
 
 #### Note on `supported-systems`
 
-The `supported-systems` key within an `[[items]]` table allows for
-specifying compatibility with different theming systems. The available
-options are `"base16"` and `"base24"`, indicating support for [Base16]
-and [Base24] theming systems, respectively. If the template repository
-does not support a system, it should not be included in this property.
+The `supported-systems` key within an `[[items]]` table allows for specifying
+compatibility with different theming systems. The available options are
+`"base16"`, `"base24"`, and `"tinted8"` indicating support for [Base16],
+[Base24] and [Tinted8] theming systems, respectively. If the template
+repository does not support a system, it should not be included in this
+property.
 
 The `[[items]]` configuration allows defining multiple themeable
 components, each with its own set of configurations as described above.
@@ -490,6 +491,7 @@ file for details.
 [fzf]: https://github.com/junegunn/fzf
 [Base16]: https://github.com/tinted-theming/home/blob/main/styling.md
 [Base24]: https://github.com/tinted-theming/base24/blob/master/styling.md
+[Tinted8]: https://github.com/tinted-theming/home/blob/main/specs/tinted8/styling.md
 [Flavours]: https://github.com/Misterio77/flavours
 [builder-go]: https://github.com/tinted-theming/base16-builder-go
 [repository releases]: https://github.com/tinted-theming/tinty/releases/latest

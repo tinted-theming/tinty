@@ -117,7 +117,7 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
         "test_cli_apply_subcommand_invalid_scheme_system",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let expected_output = format!("Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"base16\" or \"base24\"), eg: base16-{scheme_name}");
+    let expected_output = format!("Invalid scheme name. Make sure your scheme is prefixed with a supprted system (\"base16\", \"base24\" or \"tinted8\"), eg: base16-{scheme_name}");
 
     // ---
     // Act

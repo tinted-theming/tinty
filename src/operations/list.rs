@@ -111,6 +111,18 @@ impl SchemeEntry {
                     .into_iter()
                     .map(|(k, v)| (k, ColorOut::from_color(&v)))
                     .collect(),
+                Scheme::Tinted8(s) => {
+                    let mut map = HashMap::new();
+                    for (color_name, color_variant) in
+                        tinted_builder::tinted8::Palette::get_color_list()
+                    {
+                        if let Some(color) = s.palette.get_color(&color_name, &color_variant) {
+                            let key = format!("{color_name}-{color_variant}");
+                            map.insert(key, ColorOut::from_color(color));
+                        }
+                    }
+                    map
+                }
                 _ => HashMap::new(),
             },
         }
@@ -220,6 +232,10 @@ impl Lightness {
             Scheme::Base24(s) => (
                 s.palette.get("base05").context("no fg color")?.clone(),
                 s.palette.get("base00").context("no bg color")?.clone(),
+            ),
+            Scheme::Tinted8(s) => (
+                s.ui.global.foreground.normal.clone(),
+                s.ui.global.background.normal.clone(),
             ),
             _ => return Err(anyhow!("no supported palette found")),
         };

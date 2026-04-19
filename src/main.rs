@@ -223,7 +223,7 @@ fn main() -> Result<()> {
                 let custom_scheme_path = data_path.join(CUSTOM_SCHEMES_DIR_NAME);
                 let save = sub_matches.get_one::<bool>("save").unwrap_or(&false);
 
-                // Ensure schemes/base16 and schemes/base24 paths exist
+                // Ensure schemes/base16, schemes/base24 and schemes/tinted8 paths exist
                 ensure_directory_exists(custom_scheme_path.join("base16")).with_context(|| {
                     format!(
                         "Failed to create custom scheme directory at {}",
@@ -231,6 +231,12 @@ fn main() -> Result<()> {
                     )
                 })?;
                 ensure_directory_exists(custom_scheme_path.join("base24")).with_context(|| {
+                    format!(
+                        "Failed to create custom scheme directory at {}",
+                        data_path.display()
+                    )
+                })?;
+                ensure_directory_exists(custom_scheme_path.join("tinted8")).with_context(|| {
                     format!(
                         "Failed to create custom scheme directory at {}",
                         data_path.display()
