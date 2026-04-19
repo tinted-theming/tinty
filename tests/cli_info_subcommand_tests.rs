@@ -90,23 +90,23 @@ fn test_cli_info_subcommand_with_setup_for_base16() -> Result<()> {
     // ------
     ensure!(
         stdout.contains("| Color       | Name   | Hex     | ANSI     |"),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
     ensure!(
         stdout.contains("Name: OceanicNext"),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
     ensure!(
         stdout.contains("System: base16"),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
     ensure!(
         stdout.contains("Slug: oceanicnext"),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
     ensure!(
         stdout.contains(" | base00 | #1B2B34 | 0 "),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
 
     cleanup()?;
@@ -134,23 +134,23 @@ fn test_cli_info_subcommand_with_setup_for_base24() -> Result<()> {
     // ------
     ensure!(
         stdout.contains("| Color       | Name   | Hex     | ANSI |"),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
     ensure!(
         stdout.contains("Name: Ayu Dark"),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
     ensure!(
         stdout.contains("System: base24"),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
     ensure!(
         stdout.contains("Slug: ayu-dark"),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
     ensure!(
         stdout.contains(" | base12 | #f26d78 | 9 "),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected info output.\nGot: {stdout}"
     );
 
     cleanup()?;
@@ -176,11 +176,11 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // ------
     ensure!(
         stderr.contains("Scheme repo path does not exist:"),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain 'Scheme repo path does not exist'.\nGot: {stderr}"
     );
     ensure!(
         stderr.contains("Run `tinty install` and try again"),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain 'Run `tinty install` and try again'.\nGot: {stderr}"
     );
 
     cleanup()?;
@@ -208,7 +208,7 @@ fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // ------
     ensure!(
         stderr.contains(&expected_output),
-        "stdout does not contain the expected output"
+        "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
     cleanup()?;
@@ -243,7 +243,7 @@ Run `{REPO_NAME} list` to get a list of scheme names"#,
             )
             .as_str()
         ),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain expected error message.\nGot: {stderr}"
     );
 
     cleanup()?;

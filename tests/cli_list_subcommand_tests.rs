@@ -32,7 +32,7 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // ------
     ensure!(
         stderr.contains(&expected_output),
-        "stdout does not contain the expected output"
+        "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
     cleanup()?;
@@ -60,7 +60,7 @@ fn test_cli_list_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // ------
     ensure!(
         stderr.contains(&expected_output),
-        "stdout does not contain the expected output"
+        "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
     cleanup()?;
@@ -139,7 +139,7 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     for line in lines {
         ensure!(
             stdout.contains(line),
-            "stdout does not contain the expected output"
+            "stdout does not contain expected scheme: {line}"
         );
     }
 
@@ -580,6 +580,46 @@ fn test_cli_list_subcommand_as_json_with_custom() -> Result<()> {
     ensure!(
         expected_entry.approx_eq(&results[0]),
         format!("{:?}\ndoes not match:\n{:?}", expected_entry, results[0])
+    );
+
+    cleanup()?;
+    Ok(())
+}
+
+#[test]
+fn test_cli_list_subcommand_with_malformed_custom_scheme() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let (_, data_path, command_vec, cleanup) = setup(
+        "test_cli_list_subcommand_with_malformed_custom_scheme",
+        "list --json",
+    )?;
+    let custom_scheme_path = data_path.join("custom-schemes/base16");
+
+    fs::create_dir_all(&custom_scheme_path)?;
+    fs::write(
+        custom_scheme_path.join("malformed.yaml"),
+        "this is not valid: yaml: [broken",
+    )?;
+
+    let mut command_vec = command_vec;
+    command_vec.push("--custom-schemes".to_string());
+
+    // ---
+    // Act
+    // ---
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+
+    // ------
+    // Assert
+    // ------
+    // Malformed YAML should be skipped gracefully, similar to empty scheme files
+    let results: Vec<TestSchemeEntry> = serde_json::from_str(&stdout).unwrap_or_default();
+    ensure!(
+        results.is_empty(),
+        "Expected malformed scheme to be skipped, got {} entries",
+        results.len()
     );
 
     cleanup()?;

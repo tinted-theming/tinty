@@ -49,7 +49,7 @@ fn test_cli_generatecompletion_subcommand_bash() -> Result<()> {
 
     for i in "${COMP_WORDS[@]:0:COMP_CWORD}""#
         ),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected shell completion output"
     );
 
     Ok(())
@@ -75,7 +75,7 @@ use str;
 
 set edit:completion:arg-completer[tinty] = {|@words|"
         ),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected shell completion output"
     );
 
     Ok(())
@@ -99,7 +99,7 @@ complete -c tinty -n "__fish_tinty_needs_command" -s c -l config -d 'Optional pa
 complete -c tinty -n "__fish_tinty_needs_command" -s d -l data-dir -d 'Optional path to the tinty data directory' -r
 complete -c tinty -n "__fish_tinty_needs_command" -s h -l help -d 'Print help'
 "#),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected shell completion output"
     );
 
     Ok(())
@@ -125,7 +125,7 @@ using namespace System.Management.Automation.Language
 
 Register-ArgumentCompleter -Native -CommandName 'tinty' -ScriptBlock {"
         ),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected shell completion output"
     );
 
     Ok(())
@@ -154,7 +154,7 @@ _tinty() {
     typeset -a _arguments_options
     local ret=1"
         ),
-        "stdout does not contain the expected output"
+        "stdout does not contain expected shell completion output"
     );
 
     Ok(())

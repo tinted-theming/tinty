@@ -29,10 +29,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     // Assert
     // ------
     ensure!(stdout == format!("{scheme_name}\n"), "std not as expected");
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())
@@ -58,7 +55,7 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     ensure!(
         stderr
             .contains("Failed to read last scheme from file. Try applying a scheme and try again."),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain 'Failed to read last scheme' message.\nGot: {stderr}"
     );
 
     Ok(())
@@ -122,13 +119,10 @@ where
     // Assert
     // ------
     ensure!(
-        validate_output(&stdout), // Pass the actual output to the validation function
-        "stdout does not contain the expected output"
+        validate_output(&stdout),
+        "stdout validation failed for subcommand '{subcommand}'.\nGot: {stdout}"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())

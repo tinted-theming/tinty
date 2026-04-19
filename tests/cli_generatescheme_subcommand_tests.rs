@@ -67,12 +67,9 @@ palette:
     // ------
     ensure!(
         stdout == expected_output,
-        "stdout does not contain the expected output"
+        "stdout does not match expected output.\nExpected:\n{expected_output}\nGot:\n{stdout}"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())
@@ -121,12 +118,9 @@ palette:
     // ------
     ensure!(
         stdout == expected_output,
-        "stdout does not contain the expected output"
+        "stdout does not match expected output.\nExpected:\n{expected_output}\nGot:\n{stdout}"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())
@@ -189,12 +183,9 @@ palette:
     );
     ensure!(
         stdout == format!("Scheme created: {}\n", out_scheme_path.display()),
-        "stdout does not contain the expected output"
+        "Expected stdout to show scheme creation path.\nGot: {stdout}"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())

@@ -92,7 +92,7 @@ fn test_cli_sync_subcommand_without_setup() -> Result<()> {
     // ------
     ensure!(
         stdout.contains(expected_output),
-        "stdout does not contain the expected output"
+        "Expected stdout to contain: {expected_output}\nGot: {stdout}"
     );
 
     cleanup()?;
@@ -120,7 +120,7 @@ fn test_cli_sync_subcommand_with_setup() -> Result<()> {
 
     ensure!(
         stdout.contains(expected_output),
-        "stdout does not contain the expected output"
+        "Expected stdout to contain: {expected_output}\nGot: {stdout}"
     );
 
     cleanup()?;
@@ -146,14 +146,8 @@ fn test_cli_sync_subcommand_with_setup_quiet_flag() -> Result<()> {
     // ------
     // Assert
     // ------
-    ensure!(
-        stdout.is_empty(),
-        "stdout does not contain the expected output"
-    );
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())

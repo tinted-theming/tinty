@@ -28,10 +28,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
     // ------
     // Assert
     // ------
-    ensure!(
-        stdout.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
     ensure!(
         data_path
             .join(ARTIFACTS_DIR)
@@ -71,7 +68,7 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
     // ------
     ensure!(
         stderr.contains(&expected_output),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
     cleanup()?;
@@ -100,7 +97,7 @@ fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
     // ------
     ensure!(
         stderr.contains(&expected_output),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
     cleanup()?;
@@ -130,7 +127,7 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
     cleanup()?;
     ensure!(
         stderr.contains(&expected_output),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
     Ok(())
@@ -159,7 +156,7 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     cleanup()?;
     ensure!(
         stderr.contains(expected_output),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
     Ok(())
@@ -199,13 +196,10 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
         fs::read_to_string(current_scheme_path)? == scheme_name_with_system,
         "current_scheme_path different to scheme_name_with_system"
     );
-    ensure!(
-        stdout.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
     ensure!(
         stderr.contains("W001"),
-        "stderr does not contain the expected output"
+        "Expected stderr containing \"W001\", got: {stderr}"
     );
 
     cleanup()?;
@@ -246,13 +240,10 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
         fs::read_to_string(current_scheme_path)? == scheme_name_with_system,
         "current_scheme_path different to scheme_name_with_system"
     );
-    ensure!(
-        stdout.is_empty(),
-        "stdout does not contain the expected output"
-    );
+    ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
     ensure!(
         stderr.contains("W001"),
-        "stderr does not contain the expected output"
+        "Expected stderr containing \"W001\", got: {stderr}"
     );
 
     cleanup()?;
@@ -283,10 +274,7 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
     // Assert
     // ------
     ensure!(stdout == expected_output, "stdout not as expected");
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())
@@ -315,10 +303,7 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
     // Assert
     // ------
     ensure!(stdout == expected_output, "stdout not as expected");
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())
@@ -359,10 +344,7 @@ hook = "echo \"path: %f, operation: %o\""
             ),
         "stdout not as expected"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())
@@ -403,10 +385,7 @@ hook = "echo \"path: $TINTY_THEME_FILE_PATH, operation: $TINTY_THEME_OPERATION, 
         ),
         "stdout not as expected"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())
@@ -449,10 +428,7 @@ hook = "echo \"expected shell output: %n\""
     // Assert
     // ------
     ensure!(stdout == expected_output, "stdout not as expected");
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     cleanup()?;
     Ok(())
@@ -496,10 +472,7 @@ hook = "echo \"path: %f, operation: %o\""
             ),
         "stdout not as expected"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     ensure!(!vestigial_file.exists(), "vestigial file not removed");
 
@@ -550,10 +523,7 @@ hook = "echo \"path: %f, operation: %o\""
             ),
         "stdout not as expected"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     ensure!(!missing_file.exists(), "file is supposed to be missing");
 
@@ -590,9 +560,67 @@ fn test_cli_apply_subcommand_without_config_shell_required_string() -> Result<()
     ensure!(stdout.is_empty(), "stdout not as expected");
     ensure!(
         stderr.contains(expected_stderr),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain: {expected_stderr}\nGot: {stderr}"
     );
 
     cleanup()?;
+    Ok(())
+}
+
+#[test]
+fn test_cli_apply_subcommand_with_failing_hook() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_with_failing_hook",
+        format!("apply {scheme_name}").as_str(),
+    )?;
+    let config_content = r#"hooks = ["nonexistent-command-that-should-fail"]"#;
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+
+    // ------
+    // Assert
+    // ------
+    cleanup()?;
+    ensure!(
+        !stderr.is_empty(),
+        "Expected stderr to report hook failure, but stderr was empty"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_apply_subcommand_with_unicode_scheme_name() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-\u{00e9}\u{00e8}\u{00ea}";
+    let (_, data_path, command_vec, cleanup) = setup(
+        "test_cli_apply_subcommand_with_unicode_scheme_name",
+        format!("apply {scheme_name}").as_str(),
+    )?;
+
+    // ---
+    // Act
+    // ---
+    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+
+    // ------
+    // Assert
+    // ------
+    cleanup()?;
+    ensure!(
+        !stderr.is_empty(),
+        "Expected error for non-existent unicode scheme name, but stderr was empty"
+    );
+
     Ok(())
 }

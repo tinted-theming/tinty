@@ -11,10 +11,8 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) = setup(
-        "test_cli_install_subcommand_non_unique_config_item_name",
-        "update",
-    )?;
+    let (_, data_path, command_vec, cleanup) =
+        setup("test_cli_update_subcommand_without_setup", "update")?;
     let expected_output = format!("tinted-shell not installed (run `{REPO_NAME} install`)");
 
     // ---
@@ -28,7 +26,7 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     cleanup()?;
     ensure!(
         stdout.contains(&expected_output),
-        "stdout does not contain the expected output"
+        "Expected stdout to contain: {expected_output}\nGot: {stdout}"
     );
 
     Ok(())
@@ -54,12 +52,9 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     cleanup()?;
     ensure!(
         stdout.contains(expected_output),
-        "stdout does not contain the expected output"
+        "Expected stdout to contain: {expected_output}\nGot: {stdout}"
     );
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     Ok(())
 }
@@ -83,14 +78,8 @@ fn test_cli_update_subcommand_with_setup_quiet_flag() -> Result<()> {
     // Assert
     // ------
     cleanup()?;
-    ensure!(
-        stdout.is_empty(),
-        "stdout does not contain the expected output"
-    );
-    ensure!(
-        stderr.is_empty(),
-        "stderr does not contain the expected output"
-    );
+    ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     Ok(())
 }
@@ -140,7 +129,7 @@ themes-dir = "colors"
     cleanup()?;
     ensure!(
         stdout.contains(expected_output),
-        "stdout does not contain the expected output"
+        "Expected stdout to contain: {expected_output}\nGot: {stdout}"
     );
     let remote_url = "https://github.com/tinted-theming/tinted-vim";
     let has_match = remote_stdout.lines().any(|line| line == remote_url);
@@ -260,7 +249,7 @@ revision = "{git_tag_name}"
     );
     ensure!(
         stderr.contains(format!("cannot resolve {git_tag_name}").as_str()),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain 'cannot resolve {git_tag_name}'\nGot: {stderr}"
     );
     let expected_remote_url = "https://github.com/tinted-theming/tinted-vim";
     let has_match = remote_out.starts_with(expected_remote_url);
@@ -321,7 +310,7 @@ revision = "tinty-test-01"
     );
     ensure!(
         stderr.contains("cannot resolve tinty-test-01"),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain 'cannot resolve tinty-test-01'\nGot: {stderr}"
     );
     let expected_remote_url = "https://github.com/tinted-theming/tinted-vim";
     let has_match = remote_out.trim().starts_with(expected_remote_url);
@@ -386,7 +375,7 @@ revision = "43b36ed5eadad59a5027e442330d2485b8607b34"
     );
     ensure!(
         stderr.contains("cannot find revision 43b36ed5eadad59a5027e442330d2485b8607b34"),
-        "stderr does not contain the expected output"
+        "Expected stderr to contain 'cannot find revision 43b36ed...'\nGot: {stderr}"
     );
     let expected_remote_url = "https://github.com/tinted-theming/tinted-vim";
     let has_match = remote_out.lines().any(|line| line == expected_remote_url);

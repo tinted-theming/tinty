@@ -35,7 +35,7 @@ default-scheme = "base16-dracula"
     // ------
     ensure!(
         apply_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {apply_stderr}"
     );
     ensure!(
         cycle_stdout == "Applying next theme in cycle: base16-dracula\n",
@@ -43,7 +43,7 @@ default-scheme = "base16-dracula"
     );
     ensure!(
         cycle_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {cycle_stderr}"
     );
 
     cleanup()?;
@@ -81,7 +81,7 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
     // ------
     ensure!(
         apply_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {apply_stderr}"
     );
     ensure!(
         cycle1_stdout == "Applying next theme in cycle: base24-dracula\n",
@@ -89,7 +89,7 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
     );
     ensure!(
         cycle1_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {cycle1_stderr}"
     );
 
     let (cycle2_stdout, cycle2_stderr) = utils::run_command(
@@ -104,7 +104,7 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
     );
     ensure!(
         cycle2_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {cycle2_stderr}"
     );
     let (cycle3_stdout, cycle3_stderr) = utils::run_command(
         &build_command_vec("cycle", config_path.as_path(), data_path.as_path())?,
@@ -118,7 +118,7 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
     );
     ensure!(
         cycle3_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {cycle3_stderr}"
     );
 
     cleanup()?;
@@ -156,7 +156,7 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
     // ------
     ensure!(
         apply_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {apply_stderr}"
     );
     ensure!(
         cycle_stdout == "Applying next theme in cycle: base24-ubuntu\n",
@@ -164,7 +164,7 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
     );
     ensure!(
         cycle_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {cycle_stderr}"
     );
 
     cleanup()?;
@@ -202,7 +202,7 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
     // ------
     ensure!(
         apply_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {apply_stderr}"
     );
     ensure!(
         cycle_stdout == "Applying next theme in cycle: base24-dracula\n",
@@ -211,7 +211,7 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
 
     ensure!(
         cycle_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {cycle_stderr}"
     );
 
     cleanup()?;
@@ -250,7 +250,7 @@ preferred-schemes = ["base24-zenburn", "base24-ubuntu"]
     // ------
     ensure!(
         apply_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {apply_stderr}"
     );
     ensure!(
         cycle_stdout == "Applying next theme in cycle: base24-dracula\n",
@@ -258,7 +258,7 @@ preferred-schemes = ["base24-zenburn", "base24-ubuntu"]
     );
     ensure!(
         cycle_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {cycle_stderr}"
     );
 
     cleanup()?;
@@ -297,7 +297,7 @@ preferred-schemes = ["base24-zenburn", "base24-dracula", "base24-ubuntu"]
     // ------
     ensure!(
         apply_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {apply_stderr}"
     );
     ensure!(
         cycle_stdout == "Applying next theme in cycle: base24-zenburn\n",
@@ -305,7 +305,7 @@ preferred-schemes = ["base24-zenburn", "base24-dracula", "base24-ubuntu"]
     );
     ensure!(
         cycle_stderr.is_empty(),
-        "stderr does not contain the expected output"
+        "Expected empty stderr, got: {cycle_stderr}"
     );
 
     cleanup()?;
