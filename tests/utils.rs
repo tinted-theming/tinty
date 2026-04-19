@@ -1,10 +1,12 @@
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{anyhow, ensure, Context, Error, Result};
+use fs2::FileExt;
 use regex::bytes::Regex;
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str;
+use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
 pub const REPO_NAME: &str = env!("CARGO_PKG_NAME");
@@ -22,6 +24,28 @@ pub const CUSTOM_SCHEMES_DIR_NAME: &str = "custom-schemes";
 #[allow(dead_code)]
 pub const ARTIFACTS_DIR: &str = "artifacts";
 
+const COMMAND_TIMEOUT: Duration = Duration::from_secs(300);
+
+fn wait_with_timeout(
+    child: &mut std::process::Child,
+    timeout: Duration,
+) -> Result<std::process::ExitStatus> {
+    let start = Instant::now();
+    loop {
+        match child.try_wait()? {
+            Some(status) => return Ok(status),
+            None => {
+                if start.elapsed() > timeout {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return Err(anyhow!("Command timed out after {timeout:?}"));
+                }
+                std::thread::sleep(Duration::from_millis(100));
+            }
+        }
+    }
+}
+
 pub fn run_command(
     command_vec: &[String],
     data_path: &Path,
@@ -31,20 +55,50 @@ pub fn run_command(
         clone_test_repos(data_path)?;
     }
 
-    let output = Command::new(&command_vec[0])
+    let mut child = Command::new(&command_vec[0])
         .args(&command_vec[1..])
-        .output()
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .map_err(|e| anyhow::anyhow!("{e}"))?;
 
-    if !output.stderr.is_empty() {
+    let stdout_pipe = child.stdout.take();
+    let stderr_pipe = child.stderr.take();
+
+    let stdout_handle = std::thread::spawn(move || -> Result<Vec<u8>> {
+        let mut buf = Vec::new();
+        if let Some(mut pipe) = stdout_pipe {
+            pipe.read_to_end(&mut buf)?;
+        }
+        Ok(buf)
+    });
+
+    let stderr_handle = std::thread::spawn(move || -> Result<Vec<u8>> {
+        let mut buf = Vec::new();
+        if let Some(mut pipe) = stderr_pipe {
+            pipe.read_to_end(&mut buf)?;
+        }
+        Ok(buf)
+    });
+
+    wait_with_timeout(&mut child, COMMAND_TIMEOUT)?;
+
+    let stdout_raw = stdout_handle
+        .join()
+        .map_err(|_| anyhow!("stdout reader thread panicked"))??;
+    let stderr_raw = stderr_handle
+        .join()
+        .map_err(|_| anyhow!("stderr reader thread panicked"))??;
+
+    if !stderr_raw.is_empty() {
         println!(
             "tests::utils::run_command stderr: {}",
-            String::from_utf8_lossy(&output.stderr)
+            String::from_utf8_lossy(&stderr_raw)
         );
     }
 
-    let stdout = strip_ansi_escapes::strip(String::from_utf8(output.stdout)?);
-    let stderr = strip_ansi_escapes::strip(String::from_utf8(output.stderr)?);
+    let stdout = strip_ansi_escapes::strip(String::from_utf8(stdout_raw)?);
+    let stderr = strip_ansi_escapes::strip(String::from_utf8(stderr_raw)?);
 
     Ok((String::from_utf8(stdout)?, String::from_utf8(stderr)?))
 }
@@ -55,26 +109,35 @@ pub fn run_install_command(config_path: &Path, data_path: &Path, cache: bool) ->
         clone_test_repos(data_path).context("Unable to clone tmp repos")?;
     }
 
-    let output_install = Command::new(COMMAND_NAME)
+    let mut child = Command::new(COMMAND_NAME)
         .args([
             "install",
             format!("--config={}", config_path.display()).as_str(),
             format!("--data-dir={}", data_path.display()).as_str(),
         ])
-        .status()
+        .spawn()
         .map_err(|e| anyhow::anyhow!("{e}"))?;
 
-    if output_install.success() {
+    let status = wait_with_timeout(&mut child, COMMAND_TIMEOUT)?;
+
+    if status.success() {
         Ok(())
     } else {
-        Err(anyhow!("Install command stderr: {output_install}"))
+        Err(anyhow!("Install command failed with status: {status}"))
     }
 }
 
 fn clone_test_repos(data_path: &Path) -> Result<()> {
     let tmp_repos_dir = Path::new("tmp/repos");
+    fs::create_dir_all(tmp_repos_dir)?;
 
-    // schemes
+    // Use a file lock to prevent concurrent clones to the shared cache
+    let lock_path = tmp_repos_dir.join(".lock");
+    let lock_file = File::create(&lock_path)?;
+    lock_file
+        .lock_exclusive()
+        .context("Failed to acquire lock on tmp/repos")?;
+
     for repo in [
         (
             "schemes",
@@ -92,13 +155,22 @@ fn clone_test_repos(data_path: &Path) -> Result<()> {
             None,
         ),
     ] {
-        let repo_path = data_path.join(format!("repos/{}", repo.0));
         let tmp_repo_path = tmp_repos_dir.join(repo.0);
 
         if !tmp_repo_path.exists() {
-            git_clone(repo.1, &tmp_repo_path, repo.2)
-                .context("Unable to clone tinted-theming/tinted-vim.git")?;
+            clone_with_retry(repo.1, &tmp_repo_path, repo.2, 2)
+                .context(format!("Unable to clone {}", repo.1))?;
         }
+    }
+
+    // Release the lock before copying (copies go to test-specific paths)
+    lock_file
+        .unlock()
+        .context("Failed to release lock on tmp/repos")?;
+
+    for repo_name in ["schemes", "tinted-shell", "tinted-vim"] {
+        let repo_path = data_path.join(format!("repos/{repo_name}"));
+        let tmp_repo_path = tmp_repos_dir.join(repo_name);
 
         if repo_path.exists() {
             fs::remove_dir_all(&repo_path)
@@ -398,6 +470,35 @@ fn safe_command(command_str: &str, cwd: &Path) -> Result<Command, Error> {
     Ok(command)
 }
 
+fn clone_with_retry(
+    repo_url: &str,
+    target_dir: &Path,
+    revision: Option<&str>,
+    max_retries: u32,
+) -> Result<()> {
+    let mut last_error = None;
+    for attempt in 0..=max_retries {
+        if attempt > 0 {
+            eprintln!(
+                "Retrying clone of {repo_url} (attempt {}/{})",
+                attempt + 1,
+                max_retries + 1
+            );
+            if target_dir.exists() {
+                let _ = fs::remove_dir_all(target_dir);
+            }
+            std::thread::sleep(Duration::from_secs(u64::from(attempt) * 2));
+        }
+        match git_clone(repo_url, target_dir, revision) {
+            Ok(()) => return Ok(()),
+            Err(e) => {
+                last_error = Some(e);
+            }
+        }
+    }
+    Err(last_error.unwrap_or_else(|| anyhow!("Clone failed after {max_retries} retries")))
+}
+
 fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
     // Download the object from the remote
     safe_command(
@@ -428,6 +529,46 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
             repo_path.display()
         )
     })?;
+
+    Ok(())
+}
+
+#[allow(dead_code)]
+pub fn test_install_with_revision(
+    test_name: &str,
+    repo_url: &str,
+    repo_name: &str,
+    themes_dir: &str,
+    revision: &str,
+    expected_sha: &str,
+) -> Result<()> {
+    let (config_path, data_path, command_vec, cleanup) = setup(test_name, "install")?;
+    let config_content = format!(
+        r#"[[items]]
+path = "{repo_url}"
+name = "{repo_name}"
+themes-dir = "{themes_dir}"
+revision = "{revision}"
+"#
+    );
+    write_to_file(&config_path, &config_content)?;
+
+    let (_, _) = run_command(&command_vec, &data_path, false)?;
+
+    let repo_path = data_path.join(format!("repos/{repo_name}"));
+    let output = Command::new("git")
+        .current_dir(&repo_path)
+        .args(["rev-parse", "--verify", "HEAD"])
+        .output()
+        .map_err(|e| anyhow!("Failed to execute git rev-parse: {e}"))?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    let has_match = stdout.lines().any(|line| line == expected_sha);
+    cleanup()?;
+    ensure!(
+        has_match,
+        "Expected revision {expected_sha} not found in HEAD, got: {stdout}"
+    );
 
     Ok(())
 }
