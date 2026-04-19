@@ -23,6 +23,7 @@ allow = [
     "MPL-2.0",
     "Unicode-3.0",
     "GPL-3.0-only",
+    "Zlib",
 ]
 exceptions = [
     { allow = [
@@ -50,6 +51,7 @@ skip = [
     { name = "thiserror-impl" },
     { name = "zune-core" },
     { name = "zune-jpeg" },
+    { name = "nom" },
 ]
 
 
