@@ -135,7 +135,7 @@ pub fn build_cli() -> Command {
                 )
         )
         .subcommand(
-            Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {REPO_NAME} info base16-mocha)"))
+            Command::new("info").about(format!("Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: {REPO_NAME} info base16-mocha or {REPO_NAME} info tinted8-mocha)"))
                 .arg(
                     Arg::new("scheme-name")
                         .help("The scheme you want to get information about")

@@ -8,7 +8,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use tinted_builder::SchemeSystem;
+use tinted_builder::{ColorName, ColorVariant, SchemeSystem};
 
 #[derive(Debug, Deserialize)]
 struct Base16Scheme {
@@ -84,6 +84,28 @@ struct Base24Palette {
     base17: String,
 }
 
+fn tinted8_ansi_value(color_name: &ColorName, color_variant: &ColorVariant) -> String {
+    match (color_name, color_variant) {
+        (ColorName::Black, ColorVariant::Normal) => "0".to_string(),
+        (ColorName::Black, ColorVariant::Bright) => "8".to_string(),
+        (ColorName::Red, ColorVariant::Normal) => "1".to_string(),
+        (ColorName::Red, ColorVariant::Bright) => "9".to_string(),
+        (ColorName::Green, ColorVariant::Normal) => "2".to_string(),
+        (ColorName::Green, ColorVariant::Bright) => "10".to_string(),
+        (ColorName::Yellow, ColorVariant::Normal) => "3".to_string(),
+        (ColorName::Yellow, ColorVariant::Bright) => "11".to_string(),
+        (ColorName::Blue, ColorVariant::Normal) => "4".to_string(),
+        (ColorName::Blue, ColorVariant::Bright) => "12".to_string(),
+        (ColorName::Magenta, ColorVariant::Normal) => "5".to_string(),
+        (ColorName::Magenta, ColorVariant::Bright) => "13".to_string(),
+        (ColorName::Cyan, ColorVariant::Normal) => "6".to_string(),
+        (ColorName::Cyan, ColorVariant::Bright) => "14".to_string(),
+        (ColorName::White, ColorVariant::Normal) => "7".to_string(),
+        (ColorName::White, ColorVariant::Bright) => "15".to_string(),
+        _ => "-".to_string(),
+    }
+}
+
 #[allow(clippy::too_many_lines)]
 fn print_scheme(scheme_path: &Path) -> Result<()> {
     let dir_name = scheme_path
@@ -100,7 +122,7 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
     let author;
     let name;
 
-    // ANSI values based on base16 0.4.2 and base24 0.1.3
+    // ANSI values based on base16 0.4.2, base24 0.1.3 and tinted8 0.2.0
     if let Ok(scheme_system) = SchemeSystem::from_str(system) {
         match scheme_system {
             SchemeSystem::Base16 => {
@@ -273,6 +295,29 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
                     "13".to_string(),
                 ));
             }
+            SchemeSystem::Tinted8 => {
+                let scheme = tinted_builder::Scheme::from_yaml(&str)
+                    .map_err(|e| anyhow!("Failed to parse tinted8 scheme: {e}"))?;
+                let tinted_builder::Scheme::Tinted8(tinted8_scheme) = scheme else {
+                    return Err(anyhow!("Expected tinted8 scheme"));
+                };
+                author = tinted8_scheme.scheme.author.clone();
+                name = tinted8_scheme.scheme.name.clone();
+
+                for (color_name, color_variant) in
+                    tinted_builder::tinted8::Palette::get_color_list()
+                {
+                    if let Some(color) = tinted8_scheme
+                        .palette
+                        .get_color(&color_name, &color_variant)
+                    {
+                        let key = format!("{color_name}-{color_variant}");
+                        let hex = color.to_hex();
+                        let ansi = tinted8_ansi_value(&color_name, &color_variant);
+                        palette.push((key, hex, ansi));
+                    }
+                }
+            }
             _ => {
                 return Err(anyhow!(
                     "Scheme system is not supported \"{}\": {}",
@@ -288,46 +333,47 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
             scheme_path.display()
         ));
     }
+    // Calculate column widths based on content
+    let color_col_width = 11; // Fixed width for the color swatch
+    let name_col_w = palette
+        .iter()
+        .map(|(n, _, _)| n.len())
+        .max()
+        .unwrap_or(4)
+        .max(4); // min "Name" header width
+    let hex_col_width = 7; // "#RRGGBB" is always 7
+    let ansi_col_width = palette
+        .iter()
+        .map(|(_, _, a)| a.len())
+        .max()
+        .unwrap_or(4)
+        .max(4); // min "ANSI" header width
 
-    let ansi_col_header_spacing: (String, String) = SchemeSystem::from_str(system).map_or_else(
-        |_| (String::new(), String::new()),
-        |scheme_system| match scheme_system {
-            SchemeSystem::Base16 => ("    ".to_string(), "----".to_string()),
-            _ => (String::new(), String::new()),
-        },
-    );
     println!("System: {system}");
     println!("Slug: {slug}");
     println!("Name: {name}");
     println!("Author: {author}");
     println!("Scheme path: {}", scheme_path.to_string_lossy());
     println!(
-        "| Color       | Name   | Hex     | ANSI {}|",
-        ansi_col_header_spacing.0
+        "| {:<color_col_width$} | {:<name_col_w$} | {:<hex_col_width$} | {:<ansi_col_width$} |",
+        "Color", "Name", "Hex", "ANSI"
     );
     println!(
-        "|-------------|--------|---------|------{}|",
-        ansi_col_header_spacing.1
+        "|-{:-<color_col_width$}-|-{:-<name_col_w$}-|-{:-<hex_col_width$}-|-{:-<ansi_col_width$}-|",
+        "", "", "", ""
     );
 
     let reset = "\x1B[0m";
-    for (name, hex, ansi) in palette {
-        let hex_text = format!("#{}", hex.strip_prefix('#').unwrap_or(&hex));
+    for (name, hex, ansi) in &palette {
+        let hex_text = format!("#{}", hex.strip_prefix('#').unwrap_or(hex));
         let hex = HexColor::parse(&hex_text)?;
         let bg_ansi = format!("\x1B[48;2;{};{};{}m", hex.r, hex.g, hex.b);
         let fg_ansi = format!("\x1B[38;2;{};{};{}m", hex.r, hex.g, hex.b);
-        let ansi_col_whitespace: String = SchemeSystem::from_str(system).map_or_else(
-            |_| String::new(),
-            |scheme_system| {
-                match scheme_system {
-                    SchemeSystem::Base16 => (ansi.len()..8).map(|_| " ").collect(), // 4 is length of "ANSI"
-                    SchemeSystem::Base24 => (ansi.len()..4).map(|_| " ").collect(), // 4 is length of "ANSI"
-                    _ => String::new(),
-                }
-            },
-        );
 
-        println!("| {bg_ansi}{fg_ansi}           {reset} | {name} | {hex_text} | {ansi} {ansi_col_whitespace}|");
+        println!(
+            "| {bg_ansi}{fg_ansi}{:<color_col_width$}{reset} | {:<name_col_w$} | {:<hex_col_width$} | {:<ansi_col_width$} |",
+            "", name, hex_text, ansi
+        );
     }
 
     println!();
