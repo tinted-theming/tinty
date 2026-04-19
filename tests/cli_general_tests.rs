@@ -1,3 +1,10 @@
+//! General CLI integration tests not specific to a single subcommand.
+//!
+//! Covers: no-arguments help output, tilde (`~`) expansion for `--config`
+//! and `--data-dir` paths, and default XDG data directory behaviour.
+//!
+//! Requires network access on first run (repos are cached in `tmp/repos/`).
+
 mod utils;
 
 use crate::utils::{

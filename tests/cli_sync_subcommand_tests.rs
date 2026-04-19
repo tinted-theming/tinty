@@ -1,3 +1,10 @@
+//! Integration tests for the `sync` subcommand.
+//!
+//! Covers: config validation (non-unique item names, invalid paths), fresh
+//! and repeated syncs, and `--quiet` flag. Sync combines install + update.
+//!
+//! Requires network access on first run (repos are cached in `tmp/repos/`).
+
 mod utils;
 
 use crate::utils::{setup, write_to_file};

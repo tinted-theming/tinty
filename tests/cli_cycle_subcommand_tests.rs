@@ -1,3 +1,11 @@
+//! Integration tests for the `cycle` subcommand.
+//!
+//! Covers: cycling through preferred schemes, default-scheme behavior,
+//! wrap-around at end of list, default-scheme prepended to cycle, and
+//! deduplication when default-scheme is already in preferred-schemes.
+//!
+//! Requires network access on first run (repos are cached in `tmp/repos/`).
+
 mod utils;
 
 use crate::utils::{setup, write_to_file};

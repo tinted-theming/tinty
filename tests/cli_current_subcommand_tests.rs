@@ -1,3 +1,10 @@
+//! Integration tests for the `current` subcommand.
+//!
+//! Covers: retrieving the current scheme name, and querying individual
+//! fields (variant, system, name, slug, author, description).
+//!
+//! Uses local fixture schemes — no network access required.
+
 mod utils;
 
 use anyhow::{ensure, Result};

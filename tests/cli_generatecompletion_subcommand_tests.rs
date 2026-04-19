@@ -1,3 +1,8 @@
+//! Integration tests for the `generate-completion` subcommand.
+//!
+//! Covers: generating shell completions for bash, elvish, fish, powershell,
+//! and zsh. No network access required.
+
 mod utils;
 
 use crate::utils::setup;

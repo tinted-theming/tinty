@@ -1,3 +1,11 @@
+//! Integration tests for the `update` subcommand.
+//!
+//! Covers: updating without prior install, with prior install, `--quiet`
+//! flag, remote URL changes, revision changes, and invalid revision
+//! handling (tags, branches, commit SHAs on wrong remote).
+//!
+//! Requires network access on first run (repos are cached in `tmp/repos/`).
+
 mod utils;
 
 use std::process::Command;
