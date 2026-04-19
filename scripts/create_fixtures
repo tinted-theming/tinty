@@ -13,7 +13,7 @@ main() {
   local script_dir=$(dirname "$script_path")
   local project_dir=$(dirname "$script_dir")
   local schemes_repo_dir="$project_dir/schemes"
-  local supported_schemes_systems="base16 base24"
+  local supported_schemes_systems="base16 base24 tinted8"
   local fixtures_path="$project_dir/fixtures"
   local schemes_file_path="$fixtures_path/schemes.txt"
 

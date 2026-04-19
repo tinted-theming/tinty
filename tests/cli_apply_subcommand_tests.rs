@@ -59,7 +59,7 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
         format!("apply {scheme_name}").as_str(),
     )?;
     let expected_output =
-        format!("Schemes do not exist, run install and try again: `{REPO_NAME} install`",);
+        format!("Schemes do not exist, run install and try again: `{REPO_NAME} install`");
 
     // ---
     // Act
@@ -170,18 +170,21 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let scheme_system = "base16";
     let scheme_name = "tinty-generated";
+    let scheme_content =
+        fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
+    let scheme_system = scheme_content
+        .lines()
+        .find_map(|line| line.strip_prefix("system: "))
+        .expect("Fixture scheme should have a 'system' field");
     let scheme_name_with_system = format!("{scheme_system}-{scheme_name}");
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_with_custom_schemes",
         format!("apply {scheme_name_with_system}").as_str(),
     )?;
     let custom_scheme_file_path =
-        data_path.join(format!("custom-schemes/base16/{scheme_name}.yaml"));
+        data_path.join(format!("custom-schemes/{scheme_system}/{scheme_name}.yaml"));
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
-    let scheme_content =
-        fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
     write_to_file(&custom_scheme_file_path, &scheme_content)?;
 
     // ---
@@ -201,7 +204,7 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
         "stdout does not contain the expected output"
     );
     ensure!(
-        stderr.is_empty(),
+        stderr.contains("W001"),
         "stderr does not contain the expected output"
     );
 
@@ -214,18 +217,21 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let scheme_system = "base16";
     let scheme_name = "tinty-generated";
+    let scheme_content =
+        fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
+    let scheme_system = scheme_content
+        .lines()
+        .find_map(|line| line.strip_prefix("system: "))
+        .expect("Fixture scheme should have a 'system' field");
     let scheme_name_with_system = format!("{scheme_system}-{scheme_name}");
     let (_, data_path, command_vec, cleanup) = setup(
         "test_cli_apply_subcommand_with_custom_schemes_quiet_flag",
         format!("apply {} --quiet", &scheme_name_with_system).as_str(),
     )?;
     let custom_scheme_file_path =
-        data_path.join(format!("custom-schemes/base16/{scheme_name}.yaml"));
+        data_path.join(format!("custom-schemes/{scheme_system}/{scheme_name}.yaml"));
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
-    let scheme_content =
-        fs::read_to_string(Path::new("./tests/fixtures/schemes/tinty-generated.yaml"))?;
     write_to_file(&custom_scheme_file_path, &scheme_content)?;
 
     // ---
@@ -245,7 +251,7 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
         "stdout does not contain the expected output"
     );
     ensure!(
-        stderr.is_empty(),
+        stderr.contains("W001"),
         "stderr does not contain the expected output"
     );
 
@@ -296,7 +302,7 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
         "test_cli_apply_subcommand_root_hooks_has_envs_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
-    let expected_output = "gruvbox-dark-hard 1d 20 21 79.72706 11.984515\n";
+    let expected_output = "gruvbox-dark-hard 1d 20 21 79.727066 11.984515\n";
     let config_content = r#"hooks = ["echo $TINTY_SCHEME_SLUG $TINTY_SCHEME_PALETTE_BASE00_HEX_R $TINTY_SCHEME_PALETTE_BASE00_HEX_G $TINTY_SCHEME_PALETTE_BASE00_HEX_B $TINTY_SCHEME_LIGHTNESS_FOREGROUND $TINTY_SCHEME_LIGHTNESS_BACKGROUND"]"#;
     write_to_file(&config_path, config_content)?;
 
@@ -564,7 +570,7 @@ fn test_cli_apply_subcommand_without_config_shell_required_string() -> Result<()
     // -------
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, command_vec, cleanup) = setup(
-        "test_cli_apply_subcommand_removes_broken_symlinks",
+        "test_cli_apply_subcommand_without_config_shell_required_string",
         format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = "shell = \"string does not contain curcle braces\"";

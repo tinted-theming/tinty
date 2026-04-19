@@ -18,7 +18,7 @@ fn update_item(
             let rev = revision.unwrap_or("main");
 
             git_update(item_path, item_url, revision)
-                .with_context(|| format!("Error updating {item_name} to {item_url}@{rev}",))?;
+                .with_context(|| format!("Error updating {item_name} to {item_url}@{rev}"))?;
 
             if !is_quiet {
                 println!("{item_name} up to date");

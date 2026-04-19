@@ -9,7 +9,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // Arrange
     // -------
     let (_, data_path, command_vec, cleanup) =
-        setup("test_cli_info_subcommand_all_with_setup", "info")?;
+        setup("test_cli_info_subcommand_with_setup", "info")?;
     let stdout_line_count = 24;
     let scheme_name = "base16-oceanicnext";
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);

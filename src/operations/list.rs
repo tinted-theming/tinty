@@ -101,7 +101,12 @@ impl SchemeEntry {
             variant: scheme.get_scheme_variant(),
             lightness: Lightness::from_color(scheme).ok(),
             palette: match scheme.clone() {
-                Scheme::Base16(s) | Scheme::Base24(s) => s
+                Scheme::Base16(s) => s
+                    .palette
+                    .into_iter()
+                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
+                    .collect(),
+                Scheme::Base24(s) => s
                     .palette
                     .into_iter()
                     .map(|(k, v)| (k, ColorOut::from_color(&v)))
@@ -208,7 +213,11 @@ impl ColorOut {
 impl Lightness {
     pub fn from_color(scheme: &Scheme) -> Result<Self> {
         let (fg, bg) = match scheme.clone() {
-            Scheme::Base16(s) | Scheme::Base24(s) => (
+            Scheme::Base16(s) => (
+                s.palette.get("base05").context("no fg color")?.clone(),
+                s.palette.get("base00").context("no bg color")?.clone(),
+            ),
+            Scheme::Base24(s) => (
                 s.palette.get("base05").context("no fg color")?.clone(),
                 s.palette.get("base00").context("no bg color")?.clone(),
             ),

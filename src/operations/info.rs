@@ -296,11 +296,11 @@ fn print_scheme(scheme_path: &Path) -> Result<()> {
             _ => (String::new(), String::new()),
         },
     );
-    println!("System: {system}",);
-    println!("Slug: {slug}",);
-    println!("Name: {name}",);
+    println!("System: {system}");
+    println!("Slug: {slug}");
+    println!("Name: {name}");
     println!("Author: {author}");
-    println!("Scheme path: {}", scheme_path.to_string_lossy(),);
+    println!("Scheme path: {}", scheme_path.to_string_lossy());
     println!(
         "| Color       | Name   | Hex     | ANSI {}|",
         ansi_col_header_spacing.0
