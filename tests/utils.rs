@@ -357,7 +357,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         repo_path,
     )?;
     let mut child = command.stdout(Stdio::piped()).spawn().with_context(|| {
-        format!("Failed to find branches containing commit {revision} from {remote_name}",)
+        format!("Failed to find branches containing commit {revision} from {remote_name}")
     })?;
     let Some(stdout) = child.stdout.take() else {
         return Err(anyhow!("failed to capture stdout"));
@@ -376,7 +376,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     }
 
     child.wait().with_context(|| {
-        format!("Failed to list branches from {remote_name} containing SHA1 {revision}",)
+        format!("Failed to list branches from {remote_name} containing SHA1 {revision}")
     })?;
 
     Err(anyhow!(

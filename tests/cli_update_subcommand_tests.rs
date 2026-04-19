@@ -147,7 +147,7 @@ themes-dir = "colors"
 
     ensure!(
         has_match,
-        format!("Expected origin remote to point to URL {remote_url}",)
+        format!("Expected origin remote to point to URL {remote_url}")
     );
 
     Ok(())

@@ -37,10 +37,10 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
 
     let custom_schemes_path = data_path.join(CUSTOM_SCHEMES_DIR_NAME);
     let scheme_files = {
-        let mut scheme_files = get_scheme_files(&schemes_path, true)?;
+        let mut scheme_files = get_scheme_files(&schemes_path, &[], true)?;
 
         if custom_schemes_path.is_dir() {
-            let custom_scheme_files = get_scheme_files(&custom_schemes_path, true)?;
+            let custom_scheme_files = get_scheme_files(&custom_schemes_path, &[], true)?;
             scheme_files.extend(custom_scheme_files);
         }
 

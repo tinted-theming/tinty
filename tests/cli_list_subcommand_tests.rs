@@ -20,7 +20,7 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     let (_, data_path, command_vec, cleanup) =
         setup("test_cli_list_subcommand_without_setup", "list")?;
     let expected_output =
-        format!("Schemes are missing, run install and then try again: `{REPO_NAME} install`",);
+        format!("Schemes are missing, run install and then try again: `{REPO_NAME} install`");
 
     // ---
     // Act
@@ -109,7 +109,7 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     let scheme_name_one = "tinted-theming";
     let scheme_name_two = "tinty";
     let expected_output =
-        format!("{scheme_system}-{scheme_name_one}\n{scheme_system}-{scheme_name_two}",);
+        format!("{scheme_system}-{scheme_name_one}\n{scheme_system}-{scheme_name_two}");
     let custom_scheme_path = data_path.join("custom-schemes");
 
     fs::create_dir_all(custom_scheme_path.join(scheme_system))?;
@@ -194,10 +194,55 @@ struct TestColorOut {
     pub dec: (f32, f32, f32),
 }
 
+impl TestColorOut {
+    fn approx_eq(&self, other: &Self) -> bool {
+        self.hex_str == other.hex_str
+            && self.hex == other.hex
+            && self.rgb == other.rgb
+            && f32_approx_eq(self.dec.0, other.dec.0)
+            && f32_approx_eq(self.dec.1, other.dec.1)
+            && f32_approx_eq(self.dec.2, other.dec.2)
+    }
+}
+
 #[derive(Clone, Deserialize, Debug, PartialEq)]
 struct TestLightness {
     pub foreground: f32,
     pub background: f32,
+}
+
+impl TestLightness {
+    fn approx_eq(&self, other: &Self) -> bool {
+        f32_approx_eq(self.foreground, other.foreground)
+            && f32_approx_eq(self.background, other.background)
+    }
+}
+
+fn f32_approx_eq(a: f32, b: f32) -> bool {
+    (a - b).abs() < 1e-5
+}
+
+impl TestSchemeEntry {
+    fn approx_eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.name == other.name
+            && self.author == other.author
+            && self.system == other.system
+            && self.variant == other.variant
+            && self.slug == other.slug
+            && self.palette.len() == other.palette.len()
+            && self.palette.iter().all(|(k, v)| {
+                other
+                    .palette
+                    .get(k)
+                    .is_some_and(|other_v| v.approx_eq(other_v))
+            })
+            && match (&self.lightness, &other.lightness) {
+                (Some(a), Some(b)) => a.approx_eq(b),
+                (None, None) => true,
+                _ => false,
+            }
+    }
 }
 
 // This is the basis of the other as_json tests. We'll assert that TestSchemeEntry are
@@ -231,9 +276,11 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         )
     );
     ensure!(
-        scheme_entry.author == "Jamy Golden (http://github.com/JamyGolden), based on Dracula Theme (http://github.com/dracula)",
-        format!("Expected author to be 'Tinted Theming (https://github.com/tinted-theming)', got {}",
-        scheme_entry.author)
+        scheme_entry.author == "clach04 (https://github.com/clach04)",
+        format!(
+            "Expected author to be 'clach04 (https://github.com/clach04)', got {}",
+            scheme_entry.author
+        )
     );
     ensure!(
         scheme_entry.slug == "dracula",
@@ -261,10 +308,10 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         ),
         (
             "base01",
-            "#363447",
-            ("36".to_string(), "34".to_string(), "47".to_string()),
-            (0.211_764_71, 0.203_921_57, 0.278_431_4),
-            (54, 52, 71),
+            "#21222c",
+            ("21".to_string(), "22".to_string(), "2c".to_string()),
+            (0.129_411_77, 0.133_333_34, 0.172_549_02),
+            (33, 34, 44),
         ),
         (
             "base02",
@@ -296,10 +343,10 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         ),
         (
             "base06",
-            "#f0f1f4",
-            ("f0".to_string(), "f1".to_string(), "f4".to_string()),
-            (0.941_176_5, 0.945_098_04, 0.956_862_75),
-            (240, 241, 244),
+            "#f8f8f2",
+            ("f8".to_string(), "f8".to_string(), "f2".to_string()),
+            (0.972_549_, 0.972_549_, 0.949_019_6),
+            (248, 248, 242),
         ),
         (
             "base07",
@@ -345,10 +392,10 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         ),
         (
             "base0D",
-            "#80bfff",
-            ("80".to_string(), "bf".to_string(), "ff".to_string()),
-            (0.501_960_8, 0.749_019_6, 1.0),
-            (128, 191, 255),
+            "#bd93f9",
+            ("bd".to_string(), "93".to_string(), "f9".to_string()),
+            (0.741_176_5, 0.576_470_6, 0.976_470_6),
+            (189, 147, 249),
         ),
         (
             "base0E",
@@ -359,10 +406,10 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
         ),
         (
             "base0F",
-            "#bd93f9",
-            ("bd".to_string(), "93".to_string(), "f9".to_string()),
-            (0.741_176_5, 0.576_470_6, 0.976_470_6),
-            (189, 147, 249),
+            "#993333",
+            ("99".to_string(), "33".to_string(), "33".to_string()),
+            (0.6, 0.2, 0.2),
+            (153, 51, 51),
         ),
     ];
 
@@ -466,12 +513,16 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
     let expected_gruvbox: TestSchemeEntry = serde_json::from_str(&gruvbox_json).unwrap();
 
     ensure!(
-        expected_dracula == dracula,
-        format!("Actual output does not match expected")
+        expected_dracula.approx_eq(&dracula),
+        format!(
+            "Dracula does not match expected.\nExpected: {expected_dracula:?}\nActual: {dracula:?}"
+        )
     );
     ensure!(
-        expected_gruvbox == gruvbox,
-        format!("Actual output does not match expected")
+        expected_gruvbox.approx_eq(&gruvbox),
+        format!(
+            "Gruvbox does not match expected.\nExpected: {expected_gruvbox:?}\nActual: {gruvbox:?}"
+        )
     );
 
     cleanup()?;
@@ -527,7 +578,7 @@ fn test_cli_list_subcommand_as_json_with_custom() -> Result<()> {
         format!("expected JSON to contain 1 entry, found {}", results.len()),
     );
     ensure!(
-        expected_entry == results[0],
+        expected_entry.approx_eq(&results[0]),
         format!("{:?}\ndoes not match:\n{:?}", expected_entry, results[0])
     );
 

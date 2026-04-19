@@ -85,7 +85,7 @@ fn test_cli_default_data_path() -> Result<()> {
     let init_scheme_name = "base16-mocha";
     let xdg_dirs = xdg::BaseDirectories::with_prefix(format!("{ORG_NAME}/{REPO_NAME}"))?;
     let data_path = xdg_dirs.get_data_home();
-    let init_command = format!("{COMMAND_NAME} --config=\"{}\" init", config_path.display(),);
+    let init_command = format!("{COMMAND_NAME} --config=\"{}\" init", config_path.display());
     let init_command_vec = shell_words::split(init_command.as_str())?;
     let apply_command = format!(
         "{COMMAND_NAME} --config=\"{}\" apply {scheme_name}",

@@ -276,7 +276,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         return Err(anyhow!("Invalid regex"));
     };
     if !re.is_match(revision.as_bytes()) {
-        return Err(anyhow!("cannot resolve {revision} into a Git SHA1",));
+        return Err(anyhow!("cannot resolve {revision} into a Git SHA1"));
     }
 
     safe_command(
@@ -296,7 +296,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
         repo_path,
     )?;
     let mut child = command.stdout(Stdio::piped()).spawn().with_context(|| {
-        format!("Failed to find branches containing commit {revision} from {remote_name}",)
+        format!("Failed to find branches containing commit {revision} from {remote_name}")
     })?;
     let Some(stdout) = child.stdout.take() else {
         return Err(anyhow!("failed to capture stdout"));
@@ -315,7 +315,7 @@ fn git_resolve_revision(repo_path: &Path, remote_name: &str, revision: &str) -> 
     }
 
     child.wait().with_context(|| {
-        format!("Failed to list branches from {remote_name} containing SHA1 {revision}",)
+        format!("Failed to list branches from {remote_name} containing SHA1 {revision}")
     })?;
 
     Err(anyhow!(
@@ -432,7 +432,7 @@ pub fn get_all_scheme_file_paths(
                 // the key is the scheme's <system>-<slug> e.g. base16-github
                 // Map each entry into a (<String, SchemaFile) tuple that
                 // we can collect() into this batch's HashMap<String, SchemaFile>
-                let name = format!("{scheme_system}-{}", file.path().file_stem()?.to_str()?,);
+                let name = format!("{scheme_system}-{}", file.path().file_stem()?.to_str()?);
                 let scheme_file = SchemeFile::new(file.path().as_path()).ok()?;
 
                 Some((name, scheme_file))

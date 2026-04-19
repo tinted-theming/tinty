@@ -297,7 +297,7 @@ fn build_and_get_custom_scheme_file(
         let item_name_vec: Vec<String> = items.iter().map(|p| p.name.clone()).collect();
         for item_name in item_name_vec {
             let item_template_path: PathBuf = data_path.join(format!("{REPO_DIR}/{item_name}"));
-            build(&item_template_path, custom_schemes_path, true)?;
+            build(&item_template_path, custom_schemes_path, &[], true)?;
         }
     }
 
