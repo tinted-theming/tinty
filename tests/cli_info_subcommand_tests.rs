@@ -16,7 +16,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_info_subcommand_with_setup", "info")?;
     let scheme_name = "base16-oceanicnext";
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
@@ -42,7 +42,6 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
         "Expected at least 20 lines of info output, got {line_count}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -51,7 +50,7 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_info_subcommand_all_with_setup", "info --all")?;
     // ---
     // Act
@@ -73,7 +72,6 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
         "Expected info --all to produce at least 4000 lines, got {line_count}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -83,7 +81,7 @@ fn test_cli_info_subcommand_with_setup_for_base16() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_info_subcommand_with_setup_for_base16",
         format!("info {scheme_name}").as_str(),
     )?;
@@ -117,7 +115,6 @@ fn test_cli_info_subcommand_with_setup_for_base16() -> Result<()> {
         "stdout does not contain expected info output.\nGot: {stdout}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -127,7 +124,7 @@ fn test_cli_info_subcommand_with_setup_for_base24() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base24-ayu-dark";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_info_subcommand_with_setup_for_base24",
         format!("info {scheme_name}").as_str(),
     )?;
@@ -161,7 +158,6 @@ fn test_cli_info_subcommand_with_setup_for_base24() -> Result<()> {
         "stdout does not contain expected info output.\nGot: {stdout}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -170,7 +166,7 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) =
+    let (config_path, data_path, command_vec, _temp_dir) =
         setup("test_cli_info_subcommand_without_setup", "info")?;
     write_to_file(&config_path, "")?;
 
@@ -191,7 +187,6 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
         "Expected stderr to contain 'Run `tinty install` and try again'.\nGot: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -201,9 +196,10 @@ fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // Arrange
     // -------
     let test_name = "test_info_list_subcommand_without_setup_with_custom_schemes_flag";
-    let (_, data_path, command_vec, cleanup) = setup(test_name, "list --custom-schemes")?;
+    let (_, data_path, command_vec, _temp_dir) = setup(test_name, "list --custom-schemes")?;
     let expected_output = format!(
-        "You don't have any local custom schemes at: data_path_{test_name}/custom-schemes",
+        "You don't have any local custom schemes at: {}/custom-schemes",
+        data_path.display(),
     );
 
     // ---
@@ -219,7 +215,6 @@ fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
         "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -229,7 +224,7 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "mocha";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_info_subcommand_with_setup_invalid_scheme_name",
         format!("info {scheme_name}").as_str(),
     )?;
@@ -254,6 +249,5 @@ Run `{REPO_NAME} list` to get a list of scheme names"#,
         "Expected stderr to contain expected error message.\nGot: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }

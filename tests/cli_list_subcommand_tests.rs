@@ -17,7 +17,7 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_list_subcommand_without_setup", "list")?;
     let expected_output =
         format!("Schemes are missing, run install and then try again: `{REPO_NAME} install`");
@@ -35,7 +35,6 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
         "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -45,9 +44,10 @@ fn test_cli_list_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // Arrange
     // -------
     let test_name = "test_cli_list_subcommand_without_setup_with_custom_schemes_flag";
-    let (_, data_path, command_vec, cleanup) = setup(test_name, "list --custom-schemes")?;
+    let (_, data_path, command_vec, _temp_dir) = setup(test_name, "list --custom-schemes")?;
     let expected_output = format!(
-        "You don't have any local custom schemes at: data_path_{test_name}/custom-schemes",
+        "You don't have any local custom schemes at: {}/custom-schemes",
+        data_path.display(),
     );
 
     // ---
@@ -63,7 +63,6 @@ fn test_cli_list_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
         "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -72,7 +71,7 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_list_subcommand_with_setup", "list")?;
     let expected_output = fs::read_to_string(Path::new("fixtures/schemes.txt"))?;
 
@@ -94,7 +93,6 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
         );
     }
 
-    cleanup()?;
     Ok(())
 }
 
@@ -103,7 +101,7 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_list_subcommand_with_custom", "list")?;
     let scheme_system = "base16";
     let scheme_name_one = "tinted-theming";
@@ -143,7 +141,6 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
         );
     }
 
-    cleanup()?;
     Ok(())
 }
 
@@ -480,7 +477,7 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_list_subcommand_as_json_with_setup", "list --json")?;
 
     // ---
@@ -525,7 +522,6 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
         )
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -534,7 +530,7 @@ fn test_cli_list_subcommand_as_json_with_custom() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_list_subcommand_as_json_with_custom",
         "list --json",
     )?;
@@ -582,7 +578,6 @@ fn test_cli_list_subcommand_as_json_with_custom() -> Result<()> {
         format!("{:?}\ndoes not match:\n{:?}", expected_entry, results[0])
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -591,7 +586,7 @@ fn test_cli_list_subcommand_with_malformed_custom_scheme() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_list_subcommand_with_malformed_custom_scheme",
         "list --json",
     )?;
@@ -622,6 +617,5 @@ fn test_cli_list_subcommand_with_malformed_custom_scheme() -> Result<()> {
         results.len()
     );
 
-    cleanup()?;
     Ok(())
 }

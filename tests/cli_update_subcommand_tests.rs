@@ -19,7 +19,7 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_update_subcommand_without_setup", "update")?;
     let expected_output = format!("tinted-shell not installed (run `{REPO_NAME} install`)");
 
@@ -31,7 +31,6 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stdout.contains(&expected_output),
         "Expected stdout to contain: {expected_output}\nGot: {stdout}"
@@ -45,7 +44,7 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_update_subcommand_with_setup", "update")?;
     let expected_output = "tinted-shell up to date";
 
@@ -57,7 +56,6 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stdout.contains(expected_output),
         "Expected stdout to contain: {expected_output}\nGot: {stdout}"
@@ -72,7 +70,7 @@ fn test_cli_update_subcommand_with_setup_quiet_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_update_subcommand_with_setup_quiet_flag",
         "update --quiet",
     )?;
@@ -85,7 +83,6 @@ fn test_cli_update_subcommand_with_setup_quiet_flag() -> Result<()> {
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
@@ -97,7 +94,7 @@ fn test_cli_update_subcommand_with_new_remote() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) =
+    let (config_path, data_path, command_vec, _temp_dir) =
         setup("test_cli_update_subcommand_with_new_remote", "update")?;
     let expected_output = "tinted-vim up to date";
 
@@ -134,7 +131,6 @@ themes-dir = "colors"
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stdout.contains(expected_output),
         "Expected stdout to contain: {expected_output}\nGot: {stdout}"
@@ -155,7 +151,7 @@ fn test_cli_update_subcommand_with_new_revision() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) =
+    let (config_path, data_path, command_vec, _temp_dir) =
         setup("test_cli_update_subcommand_with_new_revision", "update")?;
     let expected_output = "tinted-vim up to date";
     let expected_revision = "c7ab4daadd143a78d4fc561d216d83ef0188f343";
@@ -191,7 +187,6 @@ revision = "tinty-test-tag-01"
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stdout.contains(expected_output),
         "stdout does not contain expected output"
@@ -207,7 +202,7 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_tag_revision() -> Resu
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_update_subcommand_with_new_remote_but_invalid_tag_revision",
         "update",
     )?;
@@ -250,7 +245,6 @@ revision = "{git_tag_name}"
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         !stdout.contains(expected_output),
         "stdout contains unexpected output"
@@ -275,7 +269,7 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_branch_revision() -> R
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_update_subcommand_with_new_remote_but_invalid_branch_revision",
         "update",
     )?;
@@ -311,7 +305,6 @@ revision = "tinty-test-01"
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         !stdout.contains(unexpected_output),
         "stdout contains unexpected output"
@@ -336,7 +329,7 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_commit_sha1_revision()
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_update_subcommand_with_new_remote_but_commit_sha1_revision",
         "update",
     )?;
@@ -376,7 +369,6 @@ revision = "43b36ed5eadad59a5027e442330d2485b8607b34"
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         !stdout.contains(expected_output),
         "stdout contains unexpected output"

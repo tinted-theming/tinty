@@ -16,7 +16,7 @@ fn test_cli_install_subcommand_non_unique_config_item_name() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_install_subcommand_non_unique_config_item_name",
         "install",
     )?;
@@ -41,7 +41,6 @@ themes-dir = "some-dir"
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stderr.contains(expected_output),
         "stdout does not contain the expected output"
@@ -55,7 +54,7 @@ fn test_cli_install_subcommand_invalid_config_item_path() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_install_subcommand_invalid_config_item_path",
         "install",
     )?;
@@ -74,7 +73,6 @@ themes-dir = "some-dir""#;
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stderr.contains(expected_output),
         "stdout does not contain the expected output"
@@ -88,7 +86,7 @@ fn test_cli_install_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_install_subcommand_without_setup", "install")?;
     let expected_output = "tinted-shell installed";
 
@@ -105,7 +103,6 @@ fn test_cli_install_subcommand_without_setup() -> Result<()> {
         "Expected stdout to contain: {expected_output}\nGot: {stdout}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -114,7 +111,7 @@ fn test_cli_install_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_install_subcommand_with_setup", "install")?;
     let expected_output = "tinted-shell already installed";
 
@@ -134,7 +131,6 @@ fn test_cli_install_subcommand_with_setup() -> Result<()> {
     );
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -143,7 +139,7 @@ fn test_cli_install_subcommand_with_setup_quiet_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_install_subcommand_with_setup_quiet_flag",
         "install --quiet",
     )?;
@@ -161,7 +157,6 @@ fn test_cli_install_subcommand_with_setup_quiet_flag() -> Result<()> {
     ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -208,7 +203,7 @@ fn test_cli_install_subcommand_with_non_existent_revision() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_install_subcommand_with_non_existent_revision",
         "install",
     )?;
@@ -234,7 +229,6 @@ revision = "{commit_sha}"
     // Assert
     // ------
     let path_exists = repo_path.exists();
-    cleanup()?;
     ensure!(
         stderr.contains(format!("cannot resolve {commit_sha}").as_str()),
         "Expected revision not found",

@@ -15,7 +15,7 @@ fn test_cli_sync_subcommand_non_unique_config_item_name() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_sync_subcommand_non_unique_config_item_name",
         "sync",
     )?;
@@ -40,7 +40,6 @@ themes-dir = "some-dir"
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stderr.contains(expected_output),
         "stdout does not contain the expected output"
@@ -54,7 +53,7 @@ fn test_cli_sync_subcommand_invalid_config_item_path() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) =
+    let (config_path, data_path, command_vec, _temp_dir) =
         setup("test_cli_sync_subcommand_invalid_config_item_path", "sync")?;
     let config_content = r#"[[items]]
 path = "/path/to/non-existant/directory"
@@ -71,7 +70,6 @@ themes-dir = "some-dir""#;
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stderr.contains(expected_output),
         "stdout does not contain the expected output"
@@ -85,7 +83,7 @@ fn test_cli_sync_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_sync_subcommand_without_setup", "sync")?;
     let expected_output = "tinted-shell installed";
 
@@ -102,7 +100,6 @@ fn test_cli_sync_subcommand_without_setup() -> Result<()> {
         "Expected stdout to contain: {expected_output}\nGot: {stdout}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -111,7 +108,7 @@ fn test_cli_sync_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_sync_subcommand_with_setup", "sync")?;
     let expected_output = "tinted-shell already installed";
 
@@ -130,7 +127,6 @@ fn test_cli_sync_subcommand_with_setup() -> Result<()> {
         "Expected stdout to contain: {expected_output}\nGot: {stdout}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -139,7 +135,7 @@ fn test_cli_sync_subcommand_with_setup_quiet_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_sync_subcommand_with_setup_quiet_flag",
         "sync --quiet",
     )?;
@@ -156,6 +152,5 @@ fn test_cli_sync_subcommand_with_setup_quiet_flag() -> Result<()> {
     ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }

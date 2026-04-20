@@ -55,7 +55,7 @@ fn test_cli_apply_write_to_file_with_start_and_end_markers() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-tinty-generated";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_write_to_file_with_start_and_end_markers",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -112,7 +112,6 @@ write-to-file = ["{}", "{start_marker}", "{end_marker}"]
         "target still contains old contents"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -122,7 +121,7 @@ fn test_cli_apply_write_to_file_with_start_marker_only() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-tinty-generated";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_write_to_file_with_start_marker_only",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -171,7 +170,6 @@ write-to-file = ["{}", "{}"]
         "target still contains old trailing content"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -181,7 +179,7 @@ fn test_cli_apply_write_to_file_overwrite_full_file() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-tinty-generated";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_write_to_file_overwrite_full_file",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -217,6 +215,5 @@ write-to-file = ["{}"]
         "file contents not overwritten"
     );
 
-    cleanup()?;
     Ok(())
 }
