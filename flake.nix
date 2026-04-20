@@ -54,6 +54,7 @@
             pkgs.cargo-about
             pkgs.cargo-chef
             pkgs.cargo-deny
+            pkgs.jq
             pkgs.rust-bin.stable.latest.default
           ];
         };

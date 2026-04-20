@@ -17,6 +17,9 @@ jobs:
         with:
           token: ${{ secrets.BOT_ACCESS_TOKEN }}
 
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
       - name: Run script to update flake binary paths and SHAs
         run: ./scripts/update_nix_flake
 
