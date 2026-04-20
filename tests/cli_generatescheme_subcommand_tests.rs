@@ -23,7 +23,7 @@ fn test_cli_generatescheme_subcommand_custom_properties() -> Result<()> {
     let name = "Some custom name";
     let slug = "some-custom-slug";
     let variant = "light";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_generatescheme_subcommand_custom_properties",
         format!(
           "generate-scheme --author \"{author}\" --name \"{name}\" --slug {slug} --system {system} --variant {variant} ./tests/fixtures/assets/article-featured-image.webp",
@@ -78,7 +78,6 @@ palette:
     );
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -87,7 +86,7 @@ fn test_cli_generatescheme_subcommand_with_image() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_generatescheme_subcommand_with_image",
         "generate-scheme --system base16 ./tests/fixtures/assets/article-featured-image.webp",
     )?;
@@ -129,7 +128,6 @@ palette:
     );
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -141,7 +139,7 @@ fn test_cli_generatescheme_subcommand_with_save() -> Result<()> {
     let scheme_system = "base16";
     let scheme_slug = "test-scheme-slug";
     let scheme_description = "Some description";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_generatescheme_subcommand_with_save",
         format!("generate-scheme --slug {scheme_slug} --system {scheme_system} --description \"{scheme_description}\" --save ./tests/fixtures/assets/article-featured-image.webp").as_str(),
     )?;
@@ -194,6 +192,5 @@ palette:
     );
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }

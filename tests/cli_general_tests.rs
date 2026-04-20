@@ -18,7 +18,7 @@ fn test_cli_no_arguments() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup_setup) = setup("test_cli_no_arguments", "")?;
+    let (_, data_path, command_vec, _temp_dir) = setup("test_cli_no_arguments", "")?;
 
     // ---
     // Act
@@ -31,7 +31,6 @@ fn test_cli_no_arguments() -> Result<()> {
     ensure!(stdout.contains(format!("Basic usage: {REPO_NAME} apply <SCHEME_NAME>").as_str()));
     ensure!(stdout.contains("For more information try --help"));
 
-    cleanup_setup()?;
     Ok(())
 }
 

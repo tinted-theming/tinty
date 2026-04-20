@@ -18,7 +18,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_current_subcommand_with_setup", "current")?;
     let scheme_name = "base16-oceanicnext";
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
@@ -38,7 +38,6 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     ensure!(stdout == format!("{scheme_name}\n"), "std not as expected");
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -47,7 +46,7 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_current_subcommand_without_setup", "current")?;
 
     // ---
@@ -58,7 +57,6 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stderr
             .contains("Failed to read last scheme from file. Try applying a scheme and try again."),
@@ -105,7 +103,7 @@ where
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         &format!("test_cli_current_subcommand_with_{subcommand}_existing"),
         &format!("current {subcommand}"),
     )?;
@@ -131,6 +129,5 @@ where
     );
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }

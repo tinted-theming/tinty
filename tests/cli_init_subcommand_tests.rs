@@ -18,7 +18,7 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_init_subcommand_without_setup", "init")?;
     let expected_output = format!(
         "Failed to initialize, config files seem to be missing. Try applying a theme first with `{REPO_NAME} apply <SCHEME_NAME>`.",
@@ -37,7 +37,6 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
         "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -46,7 +45,7 @@ fn test_cli_init_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, cleanup) =
+    let (_, data_path, command_vec, _temp_dir) =
         setup("test_cli_init_subcommand_with_setup", "init")?;
 
     // ---
@@ -59,7 +58,6 @@ fn test_cli_init_subcommand_with_setup() -> Result<()> {
     // ------
     ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -68,7 +66,7 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_init_subcommand_with_config_default_scheme",
         "init",
     )?;
@@ -93,6 +91,5 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
         "scheme_name does not contain the expected output"
     );
 
-    cleanup()?;
     Ok(())
 }

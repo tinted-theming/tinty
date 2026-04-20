@@ -18,7 +18,7 @@ fn test_cli_cycle_subcommand_with_default_scheme_only() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, apply_command_vec, cleanup) = setup(
+    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
         "test_cli_cycle_subcommand_with_default_scheme_only",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -54,7 +54,6 @@ default-scheme = "base16-dracula"
         "Expected empty stderr, got: {cycle_stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -64,7 +63,7 @@ fn test_cli_cycle_subcommand_with_preferred_schemes() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, apply_command_vec, cleanup) = setup(
+    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
         "test_cli_cycle_subcommand_with_preferred_schemes",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -129,7 +128,6 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
         "Expected empty stderr, got: {cycle3_stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -139,7 +137,7 @@ fn test_cli_cycle_subcommand_correct_next_scheme() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base24-zenburn";
-    let (config_path, data_path, apply_command_vec, cleanup) = setup(
+    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
         "test_cli_cycle_subcommand_correct_next_scheme",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -175,7 +173,6 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
         "Expected empty stderr, got: {cycle_stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -185,7 +182,7 @@ fn test_cli_cycle_subcommand_wraps_around() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base24-ubuntu";
-    let (config_path, data_path, apply_command_vec, cleanup) = setup(
+    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
         "test_cli_cycle_subcommand_wraps_around",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -222,7 +219,6 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
         "Expected empty stderr, got: {cycle_stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -232,7 +228,7 @@ fn test_cli_cycle_subcommand_default_scheme_prepended_to_cycle() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, apply_command_vec, cleanup) = setup(
+    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
         "test_cli_cycle_subcommand_default_scheme_prepended_to_cycle",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -269,7 +265,6 @@ preferred-schemes = ["base24-zenburn", "base24-ubuntu"]
         "Expected empty stderr, got: {cycle_stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -279,7 +274,7 @@ fn test_cli_cycle_subcommand_default_scheme_not_duplicated_in_cycle() -> Result<
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, apply_command_vec, cleanup) = setup(
+    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
         "test_cli_cycle_subcommand_default_scheme_not_duplicated_in_cycle",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -316,6 +311,5 @@ preferred-schemes = ["base24-zenburn", "base24-dracula", "base24-ubuntu"]
         "Expected empty stderr, got: {cycle_stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }

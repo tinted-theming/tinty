@@ -2,15 +2,15 @@
 //!
 //! # Network dependency & caching
 //! Many tests require cloning Git repositories from GitHub. To avoid redundant
-//! clones, `clone_test_repos()` maintains a shared cache in `tmp/repos/` protected
-//! by a file lock. On the first run, repos are cloned once; subsequent runs copy
-//! from the cache. Tests that pass `cache: true` to `run_command()` trigger this
-//! caching automatically.
+//! clones, `clone_test_repos()` maintains a shared cache in a system temp
+//! directory protected by a file lock. On the first run, repos are cloned once;
+//! subsequent runs copy from the cache. Tests that pass `cache: true` to
+//! `run_command()` trigger this caching automatically.
 //!
 //! # Test isolation
-//! Each test gets its own config file (`config_path_{name}.toml`) and data
-//! directory (`data_path_{name}/`). The `setup()` function creates these and
-//! returns a cleanup closure that removes them when called.
+//! Each test gets its own `tempfile::TempDir` containing a config file and data
+//! directory. The `setup()` function creates these and returns the `TempDir`
+//! guard — cleanup happens automatically when the guard is dropped.
 //!
 //! # Command timeout
 //! All commands executed via `run_command()` and `run_install_command()` are
@@ -146,8 +146,8 @@ pub fn run_install_command(config_path: &Path, data_path: &Path, cache: bool) ->
 }
 
 fn clone_test_repos(data_path: &Path) -> Result<()> {
-    let tmp_repos_dir = Path::new("tmp/repos");
-    fs::create_dir_all(tmp_repos_dir)?;
+    let tmp_repos_dir = std::env::temp_dir().join("tinty-test-repos");
+    fs::create_dir_all(&tmp_repos_dir)?;
 
     // Use a file lock to prevent concurrent clones to the shared cache
     let lock_path = tmp_repos_dir.join(".lock");
@@ -207,6 +207,7 @@ fn clone_test_repos(data_path: &Path) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn cleanup(config_path: impl AsRef<Path>, data_path: impl AsRef<Path>) -> Result<()> {
     if config_path.as_ref().is_file() {
         fs::remove_file(config_path)?;
@@ -235,33 +236,21 @@ pub fn write_to_file(path: impl AsRef<Path>, contents: &str) -> Result<()> {
     Ok(())
 }
 
-#[allow(clippy::type_complexity)]
 pub fn setup(
     name: &str,
     command: &str,
-) -> Result<(
-    PathBuf,
-    PathBuf,
-    Vec<String>,
-    Box<dyn FnOnce() -> Result<()>>,
-)> {
-    let config_path = PathBuf::from(format!("config_path_{name}.toml").as_str());
-    let data_path = PathBuf::from(format!("data_path_{name}").as_str());
+) -> Result<(PathBuf, PathBuf, Vec<String>, tempfile::TempDir)> {
+    let temp_dir = tempfile::Builder::new()
+        .prefix(&format!("tinty-test-{name}-"))
+        .tempdir()?;
+
+    let config_path = temp_dir.path().join("config.toml");
+    let data_path = temp_dir.path().join("data");
 
     let command_vec = build_command_vec(command, &config_path, &data_path)?;
-
-    cleanup(&config_path, &data_path)?;
     write_to_file(&config_path, "")?;
 
-    let config_path_clone = config_path.clone();
-    let data_path_clone = data_path.clone();
-
-    Ok((
-        config_path,
-        data_path,
-        command_vec,
-        Box::new(move || cleanup(&config_path_clone, &data_path_clone)),
-    ))
+    Ok((config_path, data_path, command_vec, temp_dir))
 }
 
 #[allow(clippy::type_complexity)]
@@ -560,7 +549,7 @@ pub fn test_install_with_revision(
     revision: &str,
     expected_sha: &str,
 ) -> Result<()> {
-    let (config_path, data_path, command_vec, cleanup) = setup(test_name, "install")?;
+    let (config_path, data_path, command_vec, _temp_dir) = setup(test_name, "install")?;
     let config_content = format!(
         r#"[[items]]
 path = "{repo_url}"
@@ -582,7 +571,6 @@ revision = "{revision}"
     let stdout = String::from_utf8(output.stdout)?;
 
     let has_match = stdout.lines().any(|line| line == expected_sha);
-    cleanup()?;
     ensure!(
         has_match,
         "Expected revision {expected_sha} not found in HEAD, got: {stdout}"

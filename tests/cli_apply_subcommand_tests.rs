@@ -22,7 +22,7 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -50,7 +50,6 @@ fn test_cli_apply_subcommand_with_setup() -> Result<()> {
         "scheme_name not the same"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -60,7 +59,7 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_without_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -80,7 +79,6 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
         "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -90,7 +88,7 @@ fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-invalid-scheme";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_invalid_scheme_name",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -109,7 +107,6 @@ fn test_cli_apply_subcommand_invalid_scheme_name() -> Result<()> {
         "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -119,7 +116,7 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "some-invalid-scheme";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_invalid_scheme_system",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -133,7 +130,6 @@ fn test_cli_apply_subcommand_invalid_scheme_system() -> Result<()> {
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stderr.contains(&expected_output),
         "Expected stderr to contain: {expected_output}\nGot: {stderr}"
@@ -148,7 +144,7 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "ocean";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_no_scheme_system",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -162,7 +158,6 @@ fn test_cli_apply_subcommand_no_scheme_system() -> Result<()> {
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         stderr.contains(expected_output),
         "Expected stderr to contain: {expected_output}\nGot: {stderr}"
@@ -184,7 +179,7 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
         .find_map(|line| line.strip_prefix("system: "))
         .expect("Fixture scheme should have a 'system' field");
     let scheme_name_with_system = format!("{scheme_system}-{scheme_name}");
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_with_custom_schemes",
         format!("apply {scheme_name_with_system}").as_str(),
     )?;
@@ -211,7 +206,6 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
         "Expected stderr containing \"W001\", got: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -228,7 +222,7 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
         .find_map(|line| line.strip_prefix("system: "))
         .expect("Fixture scheme should have a 'system' field");
     let scheme_name_with_system = format!("{scheme_system}-{scheme_name}");
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_with_custom_schemes_quiet_flag",
         format!("apply {} --quiet", &scheme_name_with_system).as_str(),
     )?;
@@ -255,7 +249,6 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
         "Expected stderr containing \"W001\", got: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -265,7 +258,7 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_root_hooks_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -285,7 +278,6 @@ fn test_cli_apply_subcommand_root_hooks_with_setup() -> Result<()> {
     ensure!(stdout == expected_output, "stdout not as expected");
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -295,7 +287,7 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-gruvbox-dark-hard";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_root_hooks_has_envs_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -314,7 +306,6 @@ fn test_cli_apply_subcommand_root_hooks_has_envs_with_setup() -> Result<()> {
     ensure!(stdout == expected_output, "stdout not as expected");
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -324,7 +315,7 @@ fn test_cli_apply_subcommand_hook_with_setup() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_hook_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -355,7 +346,6 @@ hook = "echo \"path: %f, operation: %o\""
     );
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -365,7 +355,7 @@ fn test_cli_apply_subcommand_hook_with_envs_with_setup() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_hook_with_envs_with_setup",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -396,7 +386,6 @@ hook = "echo \"path: $TINTY_THEME_FILE_PATH, operation: $TINTY_THEME_OPERATION, 
     );
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -406,7 +395,7 @@ fn test_cli_apply_subcommand_with_config_theme_file_extension() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-uwunicorn";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_with_config_theme_file_extension",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -439,7 +428,6 @@ hook = "echo \"expected shell output: %n\""
     ensure!(stdout == expected_output, "stdout not as expected");
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -449,7 +437,7 @@ fn test_cli_apply_subcommand_removes_vestigial_files() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_removes_vestigial_files",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -485,7 +473,6 @@ hook = "echo \"path: %f, operation: %o\""
 
     ensure!(!vestigial_file.exists(), "vestigial file not removed");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -495,7 +482,7 @@ fn test_cli_apply_subcommand_removes_broken_symlinks() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_removes_broken_symlinks",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -538,7 +525,6 @@ hook = "echo \"path: %f, operation: %o\""
 
     ensure!(!symlink.exists(), "broken symlink wasn't deleted");
 
-    cleanup()?;
     Ok(())
 }
 
@@ -548,7 +534,7 @@ fn test_cli_apply_subcommand_without_config_shell_required_string() -> Result<()
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_without_config_shell_required_string",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -572,7 +558,6 @@ fn test_cli_apply_subcommand_without_config_shell_required_string() -> Result<()
         "Expected stderr to contain: {expected_stderr}\nGot: {stderr}"
     );
 
-    cleanup()?;
     Ok(())
 }
 
@@ -582,7 +567,7 @@ fn test_cli_apply_subcommand_with_failing_hook() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, command_vec, cleanup) = setup(
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_with_failing_hook",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -597,7 +582,6 @@ fn test_cli_apply_subcommand_with_failing_hook() -> Result<()> {
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         !stderr.is_empty(),
         "Expected stderr to report hook failure, but stderr was empty"
@@ -612,7 +596,7 @@ fn test_cli_apply_subcommand_with_unicode_scheme_name() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-\u{00e9}\u{00e8}\u{00ea}";
-    let (_, data_path, command_vec, cleanup) = setup(
+    let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_subcommand_with_unicode_scheme_name",
         format!("apply {scheme_name}").as_str(),
     )?;
@@ -625,7 +609,6 @@ fn test_cli_apply_subcommand_with_unicode_scheme_name() -> Result<()> {
     // ------
     // Assert
     // ------
-    cleanup()?;
     ensure!(
         !stderr.is_empty(),
         "Expected error for non-existent unicode scheme name, but stderr was empty"
