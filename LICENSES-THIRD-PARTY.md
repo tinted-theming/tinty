@@ -4,13 +4,14 @@ This page lists the licenses of the projects used in cargo-about.
     
 ## Overview of licenses
 
-- Apache License 2.0 (135)
-- MIT License (36)
+- Apache License 2.0 (131)
+- MIT License (41)
 - Unicode License v3 (19)
 - BSD 3-Clause &quot;New&quot; or &quot;Revised&quot; License (4)
+- zlib License (4)
 - BSD 2-Clause &quot;Simplified&quot; License (3)
+- GNU General Public License v3.0 only (3)
 - Mozilla Public License 2.0 (3)
-- GNU General Public License v3.0 only (1)
 
 ## All license text
 
@@ -18,8 +19,7 @@ This page lists the licenses of the projects used in cargo-about.
 
 #### Used by
 
-- [env_home 0.1.0](https://github.com/notpeter/env-home)
-- [tinyvec 1.10.0](https://github.com/Lokathor/tinyvec)
+- [tinyvec 1.11.0](https://github.com/Lokathor/tinyvec)
 - [utf8_iter 1.0.4](https://github.com/hsivonen/utf8_iter)
 
 ```
@@ -656,8 +656,8 @@ This page lists the licenses of the projects used in cargo-about.
 
 #### Used by
 
-- [zerocopy-derive 0.8.35](https://github.com/google/zerocopy)
-- [zerocopy 0.8.35](https://github.com/google/zerocopy)
+- [zerocopy-derive 0.8.47](https://github.com/google/zerocopy)
+- [zerocopy 0.8.47](https://github.com/google/zerocopy)
 
 ```
                                  Apache License
@@ -869,8 +869,8 @@ This page lists the licenses of the projects used in cargo-about.
 
 #### Used by
 
-- [moxcms 0.7.11](https://github.com/awxkee/moxcms.git)
-- [pxfm 0.1.27](https://github.com/awxkee/pxfm)
+- [moxcms 0.8.1](https://github.com/awxkee/moxcms.git)
+- [pxfm 0.1.29](https://github.com/awxkee/pxfm)
 
 ```
                                  Apache License
@@ -1083,7 +1083,7 @@ This page lists the licenses of the projects used in cargo-about.
 
 - [imgref 1.12.0](https://github.com/kornelski/imgref)
 - [zune-core 0.5.1](https://github.com/etemesi254/zune-image)
-- [zune-jpeg 0.5.11](https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg)
+- [zune-jpeg 0.5.15](https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg)
 
 ```
                                  Apache License
@@ -1515,9 +1515,9 @@ This page lists the licenses of the projects used in cargo-about.
 - [clap_derive 4.5.55](https://github.com/clap-rs/clap)
 - [clap_lex 0.7.7](https://github.com/clap-rs/clap)
 - [colorchoice 1.0.4](https://github.com/rust-cli/anstyle.git)
-- [core2 0.4.0](https://github.com/bbqsrc/core2)
 - [crc32fast 1.5.0](https://github.com/srijs/rust-crc32fast)
 - [is_terminal_polyfill 1.70.2](https://github.com/polyfill-rs/is_terminal_polyfill)
+- [no_std_io2 0.9.3](https://github.com/wcampbell0x2a/no-std-io2)
 - [quick-error 2.0.1](http://github.com/tailhook/quick-error)
 - [serde_spanned 0.6.9](https://github.com/toml-rs/toml)
 - [toml 0.8.23](https://github.com/toml-rs/toml)
@@ -2368,7 +2368,7 @@ limitations under the License.
 
 #### Used by
 
-- [gif 0.14.1](https://github.com/image-rs/image-gif)
+- [gif 0.14.2](https://github.com/image-rs/image-gif)
 - [weezl 0.1.12](https://github.com/image-rs/weezl)
 
 ```
@@ -2585,7 +2585,7 @@ limitations under the License.
 - [autocfg 1.5.0](https://github.com/cuviper/autocfg)
 - [bitflags 1.3.2](https://github.com/bitflags/bitflags)
 - [bitflags 2.10.0](https://github.com/bitflags/bitflags)
-- [bitstream-io 4.9.0](https://github.com/tuffy/bitstream-io)
+- [bitstream-io 4.10.0](https://github.com/tuffy/bitstream-io)
 - [by_address 1.2.1](https://github.com/mbrubeck/by_address)
 - [cfg-if 1.0.4](https://github.com/rust-lang/cfg-if)
 - [crossbeam-deque 0.8.6](https://github.com/crossbeam-rs/crossbeam)
@@ -2596,7 +2596,7 @@ limitations under the License.
 - [equivalent 1.0.2](https://github.com/indexmap-rs/equivalent)
 - [errno 0.3.14](https://github.com/lambda-fairy/rust-errno)
 - [fastrand 1.9.0](https://github.com/smol-rs/fastrand)
-- [flate2 1.1.8](https://github.com/rust-lang/flate2-rs)
+- [flate2 1.1.9](https://github.com/rust-lang/flate2-rs)
 - [form_urlencoded 1.2.2](https://github.com/servo/rust-url)
 - [fs2 0.4.3](https://github.com/danburkert/fs2-rs)
 - [hashbrown 0.16.1](https://github.com/rust-lang/hashbrown)
@@ -2606,7 +2606,6 @@ limitations under the License.
 - [indexmap 2.13.0](https://github.com/indexmap-rs/indexmap)
 - [io-lifetimes 1.0.11](https://github.com/sunfishcode/io-lifetimes)
 - [itertools 0.14.0](https://github.com/rust-itertools/itertools)
-- [linux-raw-sys 0.11.0](https://github.com/sunfishcode/linux-raw-sys)
 - [linux-raw-sys 0.3.8](https://github.com/sunfishcode/linux-raw-sys)
 - [log 0.4.29](https://github.com/rust-lang/log)
 - [num-bigint 0.4.6](https://github.com/rust-num/num-bigint)
@@ -2617,19 +2616,19 @@ limitations under the License.
 - [palette 0.7.6](https://github.com/Ogeon/palette)
 - [palette_derive 0.7.6](https://github.com/Ogeon/palette)
 - [percent-encoding 2.3.2](https://github.com/servo/rust-url/)
-- [png 0.18.0](https://github.com/image-rs/image-png)
+- [png 0.18.1](https://github.com/image-rs/image-png)
 - [rayon-core 1.13.0](https://github.com/rayon-rs/rayon)
 - [rayon 1.11.0](https://github.com/rayon-rs/rayon)
 - [regex-automata 0.4.13](https://github.com/rust-lang/regex)
 - [regex-syntax 0.8.8](https://github.com/rust-lang/regex)
 - [regex 1.12.2](https://github.com/rust-lang/regex)
 - [rustix 0.37.28](https://github.com/bytecodealliance/rustix)
-- [rustix 1.1.3](https://github.com/bytecodealliance/rustix)
 - [smallvec 1.15.1](https://github.com/servo/rust-smallvec)
 - [stable_deref_trait 1.2.1](https://github.com/storyyeller/stable_deref_trait)
 - [strip-ansi-escapes 0.2.1](https://github.com/luser/strip-ansi-escapes)
 - [tempfile 3.6.0](https://github.com/Stebalien/tempfile)
 - [unicode-normalization 0.1.25](https://github.com/unicode-rs/unicode-normalization)
+- [unicode-xid 0.2.6](https://github.com/unicode-rs/unicode-xid)
 - [url 2.5.8](https://github.com/servo/rust-url)
 - [xdg 2.5.2](https://github.com/whitequark/rust-xdg)
 
@@ -2842,6 +2841,7 @@ limitations under the License.
 
 #### Used by
 
+- [minimal-lexical 0.2.1](https://github.com/Alexhuszagh/minimal-lexical)
 - [qoi 0.4.1](https://github.com/aldanor/qoi-rust)
 
 ```
@@ -3884,7 +3884,7 @@ limitations under the License.
 
 #### Used by
 
-- [bytemuck 1.24.0](https://github.com/Lokathor/bytemuck)
+- [bytemuck 1.25.0](https://github.com/Lokathor/bytemuck)
 
 ```
 Apache License
@@ -3961,37 +3961,34 @@ limitations under the License.
 - [fdeflate 0.3.7](https://github.com/image-rs/fdeflate)
 - [half 2.7.1](https://github.com/VoidStarKat/half-rs)
 - [image-webp 0.2.4](https://github.com/image-rs/image-webp)
-- [image 0.25.9](https://github.com/image-rs/image)
+- [image 0.25.10](https://github.com/image-rs/image)
 - [itoa 1.0.17](https://github.com/dtolnay/itoa)
-- [libc 0.2.180](https://github.com/rust-lang/libc)
+- [libc 0.2.184](https://github.com/rust-lang/libc)
 - [miniz_oxide 0.8.9](https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide)
 - [paste 1.0.15](https://github.com/dtolnay/paste)
 - [pastey 0.1.1](https://github.com/as1100k/pastey)
 - [proc-macro2 1.0.106](https://github.com/dtolnay/proc-macro2)
 - [profiling-procmacros 1.0.17](https://github.com/aclysma/profiling)
 - [profiling 1.0.17](https://github.com/aclysma/profiling)
-- [quote 1.0.44](https://github.com/dtolnay/quote)
-- [rand 0.8.5](https://github.com/rust-random/rand)
+- [quote 1.0.45](https://github.com/dtolnay/quote)
+- [rand 0.8.6](https://github.com/rust-random/rand)
 - [ryu 1.0.22](https://github.com/dtolnay/ryu)
+- [semver 1.0.28](https://github.com/dtolnay/semver)
 - [serde 1.0.228](https://github.com/serde-rs/serde)
 - [serde_core 1.0.228](https://github.com/serde-rs/serde)
 - [serde_derive 1.0.228](https://github.com/serde-rs/serde)
 - [serde_json 1.0.149](https://github.com/serde-rs/json)
 - [serde_yaml 0.9.34+deprecated](https://github.com/dtolnay/serde-yaml)
 - [siphasher 1.0.2](https://github.com/jedisct1/rust-siphash)
-- [syn 2.0.114](https://github.com/dtolnay/syn)
+- [syn 2.0.117](https://github.com/dtolnay/syn)
 - [thiserror-impl 1.0.69](https://github.com/dtolnay/thiserror)
 - [thiserror-impl 2.0.18](https://github.com/dtolnay/thiserror)
 - [thiserror 1.0.69](https://github.com/dtolnay/thiserror)
 - [thiserror 2.0.18](https://github.com/dtolnay/thiserror)
-- [tinted-builder-rust 0.14.1](https://github.com/tinted-theming/tinted-builder-rust)
-- [tinted-builder 0.10.1](https://github.com/tinted-theming/tinted-builder-rust)
-- [unicode-ident 1.0.22](https://github.com/dtolnay/unicode-ident)
+- [unicode-ident 1.0.24](https://github.com/dtolnay/unicode-ident)
 - [utf8parse 0.2.2](https://github.com/alacritty/vte)
 - [vte 0.14.1](https://github.com/alacritty/vte)
-- [zune-core 0.4.12](https://crates.io/crates/zune-core)
 - [zune-inflate 0.2.54](https://crates.io/crates/zune-inflate)
-- [zune-jpeg 0.4.21](https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg)
 
 ```
 Apache License
@@ -4179,7 +4176,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #### Used by
 
-- [avif-serialize 0.8.6](https://github.com/kornelski/avif-serialize)
+- [avif-serialize 0.8.8](https://github.com/kornelski/avif-serialize)
 
 ```
 BSD 3-Clause License
@@ -4218,7 +4215,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #### Used by
 
-- [ravif 0.12.0](https://github.com/kornelski/cavif-rs)
+- [ravif 0.13.0](https://github.com/kornelski/cavif-rs)
 
 ```
 BSD 3-Clause License
@@ -4314,7 +4311,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&
 
 #### Used by
 
-- [tinty 0.30.0](https://github.com/tinted-theming/tinty)
+- [tinty 0.31.0](https://github.com/tinted-theming/tinty)
+- [tinted-builder-rust 0.17.0](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinted-builder 0.13.0](https://github.com/tinted-theming/tinted-builder-rust)
 
 ```
 GNU GENERAL PUBLIC LICENSE
@@ -4556,6 +4555,7 @@ The GNU General Public License does not permit incorporating your program into p
 
 #### Used by
 
+- [nom 7.1.3](https://github.com/Geal/nom)
 - [nom 8.0.0](https://github.com/rust-bakery/nom)
 
 ```
@@ -4621,7 +4621,7 @@ DEALINGS IN THE SOFTWARE.
 
 #### Used by
 
-- [which 8.0.0](https://github.com/harryfei/which-rs.git)
+- [which 8.0.2](https://github.com/harryfei/which-rs.git)
 
 ```
 Copyright (c) 2015 fangyuanziti
@@ -4729,7 +4729,7 @@ SOFTWARE.
 
 #### Used by
 
-- [tiff 0.10.3](https://github.com/image-rs/image-tiff)
+- [tiff 0.11.3](https://github.com/image-rs/image-tiff)
 
 ```
 MIT License
@@ -4760,7 +4760,7 @@ SOFTWARE.
 
 #### Used by
 
-- [rgb 0.8.52](https://github.com/kornelski/rust-rgb)
+- [rgb 0.8.53](https://github.com/kornelski/rust-rgb)
 
 ```
 MIT License
@@ -5009,7 +5009,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #### Used by
 
-- [simd-adler32 0.3.8](https://github.com/mcountryman/simd-adler32)
+- [simd-adler32 0.3.9](https://github.com/mcountryman/simd-adler32)
 
 ```
 MIT License
@@ -5138,6 +5138,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 - [aho-corasick 1.1.4](https://github.com/BurntSushi/aho-corasick)
 - [byteorder-lite 0.1.0](https://github.com/image-rs/byteorder-lite)
 - [memchr 2.7.6](https://github.com/BurntSushi/memchr)
+- [walkdir 2.5.0](https://github.com/BurntSushi/walkdir)
 
 ```
 The MIT License (MIT)
@@ -5264,6 +5265,37 @@ SOFTWARE.
 
 #### Used by
 
+- [same-file 1.0.6](https://github.com/BurntSushi/same-file)
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2017 Andrew Gallant
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+```
+
+### MIT License
+
+#### Used by
+
 - [color-thief 0.2.2](https://github.com/RazrFalcon/color-thief-rs)
 
 ```
@@ -5288,6 +5320,36 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+```
+
+### MIT License
+
+#### Used by
+
+- [pori 0.0.0](https://github.com/olson-sean-k/pori)
+- [wax 0.7.0](https://github.com/olson-sean-k/wax)
+
+```
+The MIT License (MIT)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 
 ```
 
@@ -5345,7 +5407,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 #### Used by
 
-- [tinted-scheme-extractor 0.8.0](https://github.com/tinted-theming/tinted-scheme-extractor-rs)
+- [tinted-scheme-extractor 0.11.0](https://github.com/tinted-theming/tinted-scheme-extractor-rs)
 
 ```
 Mozilla Public License Version 2.0
@@ -6112,7 +6174,7 @@ Exhibit B - &quot;Incompatible With Secondary Licenses&quot; Notice
 
 #### Used by
 
-- [unicode-ident 1.0.22](https://github.com/dtolnay/unicode-ident)
+- [unicode-ident 1.0.24](https://github.com/dtolnay/unicode-ident)
 
 ```
 UNICODE LICENSE V3
@@ -6229,4 +6291,59 @@ Portions of ICU4X may have been adapted from ICU4C and/or ICU4J.
 ICU 1.8.1 to ICU 57.1 © 1995-2016 International Business Machines Corporation and others.
 
 ```
+
+### zlib License
+
+#### Used by
+
+- [const_format 0.2.36](https://github.com/rodrimati1992/const_format_crates/)
+- [const_format_proc_macros 0.2.34](https://github.com/rodrimati1992/const_format_crates/)
+
+```
+Copyright (c) 2020 Matias Rodriguez.
+
+This software is provided &#x27;as-is&#x27;, without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+```
+
+### zlib License
+
+#### Used by
+
+- [konst 0.2.20](https://github.com/rodrimati1992/konst/)
+- [konst_macro_rules 0.2.19](https://github.com/rodrimati1992/konst/)
+
+```
+Copyright (c) 2021 Matias Rodriguez.
+
+This software is provided &#x27;as-is&#x27;, without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+```
+
 

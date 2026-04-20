@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.31.0] - 2026-04-20
 
 ### Added
 
@@ -332,6 +332,7 @@ away in a future Tinty release.
 
 - Initial release
 
+[0.31.0]: https://github.com/tinted-theming/tinty/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/tinted-theming/tinty/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/tinted-theming/tinty/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/tinted-theming/tinty/compare/v0.27.0...v0.28.0
