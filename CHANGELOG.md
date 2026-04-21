@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Removed
+
+- Remove universal darwin binary since this causes build issues and isn't
+  strictly needed
+
 ## [0.31.0] - 2026-04-20
 
 ### Added
