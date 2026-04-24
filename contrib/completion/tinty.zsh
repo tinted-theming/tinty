@@ -91,10 +91,11 @@ _arguments "${_arguments_options[@]}" : \
 '--config=[Optional path to the tinty config.toml file]:FILE:_default' \
 '-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
 '--data-dir=[Optional path to the tinty data directory]:DIRECTORY:_default' \
+'--all[Lists all availabile custom schemes]' \
 '--custom-schemes[Lists availabile custom schemes]' \
 '-h[Print help]' \
 '--help[Print help]' \
-'::scheme_name -- The scheme you want to get information about:_default' \
+'::scheme-name -- The scheme you want to get information about:_default' \
 && ret=0
 ;;
 (init)
@@ -142,7 +143,7 @@ _arguments "${_arguments_options[@]}" : \
 '--quiet[Silence stdout]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':scheme_name -- The scheme you want to apply:_default' \
+':scheme-name -- The scheme you want to apply:_default' \
 && ret=0
 ;;
 (install)
@@ -183,6 +184,7 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (cycle)
 _arguments "${_arguments_options[@]}" : \
+'--ring=[Name of the configured ring to cycle through]:RING:_default' \
 '-c+[Optional path to the tinty config.toml file]:FILE:_default' \
 '--config=[Optional path to the tinty config.toml file]:FILE:_default' \
 '-d+[Optional path to the tinty data directory]:DIRECTORY:_default' \
@@ -277,7 +279,7 @@ _tinty_commands() {
 'current:Prints the last scheme name applied or specific values from the current scheme' \
 'generate-completion:Generates a shell completion script' \
 'generate-scheme:Generates a scheme based on an image' \
-'info:Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg\: tinty info base16-mocha)' \
+'info:Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg\: tinty info base16-mocha or tinty info tinted8-mocha)' \
 'init:Initializes with the exising config. Used to Initialize exising theme for when your shell starts up' \
 'list:Lists available schemes' \
 'config:Provides config related information' \
@@ -285,7 +287,7 @@ _tinty_commands() {
 'install:Install the environment needed for tinty' \
 'update:Update to the latest themes' \
 'sync:Install missing templates in tinty/config.toml and update existing templates' \
-'cycle:Cycle through your preferred themes' \
+'cycle:Cycle through a configured ring of schemes' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'tinty commands' commands "$@"
@@ -332,7 +334,7 @@ _tinty__help_commands() {
 'current:Prints the last scheme name applied or specific values from the current scheme' \
 'generate-completion:Generates a shell completion script' \
 'generate-scheme:Generates a scheme based on an image' \
-'info:Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg\: tinty info base16-mocha)' \
+'info:Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg\: tinty info base16-mocha or tinty info tinted8-mocha)' \
 'init:Initializes with the exising config. Used to Initialize exising theme for when your shell starts up' \
 'list:Lists available schemes' \
 'config:Provides config related information' \
@@ -340,7 +342,7 @@ _tinty__help_commands() {
 'install:Install the environment needed for tinty' \
 'update:Update to the latest themes' \
 'sync:Install missing templates in tinty/config.toml and update existing templates' \
-'cycle:Cycle through your preferred themes' \
+'cycle:Cycle through a configured ring of schemes' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'tinty help commands' commands "$@"

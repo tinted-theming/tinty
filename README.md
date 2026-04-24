@@ -177,7 +177,7 @@ The following is a table of the available subcommands for the CLI tool (Tinty), 
 | `list`     | Lists all available themes. | Optional argument `--custom-schemes` to list saved custom theme files using `tinty generate-scheme`.<br>Optional argument `--json` to output more info about each scheme in JSON form | `tinty list` |
 | `gallery`  | Opens an interactive browser gallery for available themes. | Optional argument `--dump <DIR>` to write a static site artifact suitable for GitHub Pages.<br>Optional argument `--custom-schemes` to use saved custom theme files.<br>Optional argument `--no-open` to skip opening a browser. | `tinty gallery` |
 | `apply`    | Applies a specific theme. | `<scheme_system>-<scheme_name>`: Name of the system and scheme to apply. | `tinty apply base16-mocha` |
-| `cycle`    | Applies the next theme among your preferred ones. See [Configuration](#configuration).  |  | `tinty cycle` |
+| `cycle`    | Applies the next theme in a configured ring. See [Configuration](#configuration).  | Optional `--ring <name>` to choose a specific ring. | `tinty cycle --ring dark` |
 | `init`     | Initializes the tool with the last applied theme otherwise `default-scheme` from `config.toml`. | - | `tinty init` |
 | `current`  | Displays the currently applied theme or current theme values. | `<scheme_property_name>` (Optional argument with the following supported values: `author` \| `description` \| `name` \| `slug` \| `system` \| `variant`) | `tinty current` |
 | `config`   | Displays config related information currently in use by Tinty. Without flags it returns `config.yml` content. | - | `tinty config` |
@@ -223,9 +223,18 @@ to your preferences and environment.
 |-------------------|--------------------|----------|----------------------------------------------------------------------------------------|---------|---------|
 | `shell`           | `string`           | Optional | Specifies the shell command used to execute hooks. | `"sh -c '{}'"` | `shell = "bash -c '{}'"` |
 | `default-scheme`  | `string`           | Optional | Defines the default theme scheme to be applied if no specific scheme is set. | None | `default-scheme = "base16-mocha"` |
-| `preferred-schemes`  | `array<string>`           | Optional | A list of your favorite theme schemes you'd like to cycle through  | `[]` | `preferred-schemes = ["base16-gruvbox-dark", "base16-gruvbox-light"]` |
+| `default-cycle-ring` | `string`           | Optional | The configured ring used by `tinty cycle` when `--ring` is not provided. | None | `default-cycle-ring = "default"` |
+| `[[rings]]`       | `array<rings>`     | Optional | Named scheme cycles used by `tinty cycle`. | - | See below |
 | `hooks`           | `array<string>`    | Optional | A list of strings which are executed after every `tinty apply` | None | `hooks = ["echo \"The current scheme is: $(tinty current)\""]` |
 | `[[items]]`       | `array<items>`     | Required | An array of `items` configurations. Each item represents a themeable component. Detailed structure provided in the next section. | - | - |
+
+```toml
+default-cycle-ring = "default"
+
+[[rings]]
+name = "default"
+schemes = ["base16-gruvbox-dark", "base16-gruvbox-light"]
+```
 
 #### hooks
 
@@ -329,7 +338,15 @@ multiple items along with global settings:
 # Global settings
 shell = "zsh -c '{}'"
 default-scheme = "base16-mocha"
-preferred-schemes = ["base16-gruvbox-dark", "base16-gruvbox-light", "base16-github-dark"]
+default-cycle-ring = "default"
+
+[[rings]]
+name = "default"
+schemes = ["base16-gruvbox-dark", "base16-gruvbox-light", "base16-github-dark"]
+
+[[rings]]
+name = "dark"
+schemes = ["base16-gruvbox-dark", "base16-github-dark"]
 
 # Item configurations
 [[items]]

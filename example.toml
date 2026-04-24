@@ -18,6 +18,16 @@
 # # Default scheme to apply if a previously set scheme doesn't exist.
 # # Used specifically in the `tinty init` subcommand.
 # default-scheme = "base16-mocha"
+# # Default ring to use when running `tinty cycle` without `--ring`.
+# default-cycle-ring = "default"
+#
+# [[rings]]
+# name = "default"
+# schemes = ["base16-mocha", "base16-gruvbox-dark"]
+#
+# [[rings]]
+# name = "light"
+# schemes = ["base16-gruvbox-light", "base16-github"]
 #
 # [[items]]
 # # Path to template repository. Can be a URL, absolute path or path
@@ -39,6 +49,11 @@
 
 # shell = "zsh -c '{}'"
 # default-scheme = "base16-oceanicnext"
+# default-cycle-ring = "default"
+#
+# [[rings]]
+# name = "default"
+# schemes = ["base16-oceanicnext", "base16-gruvbox-dark", "base16-github-dark"]
 #
 # [[items]]
 # path = "https://github.com/tinted-theming/tinted-shell"
