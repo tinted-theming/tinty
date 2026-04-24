@@ -7,6 +7,7 @@ mod operations {
     pub mod config;
     pub mod current;
     pub mod cycle;
+    pub mod gallery;
     pub mod generate_scheme;
     pub mod info;
     pub mod init;
@@ -113,6 +114,17 @@ fn main() -> Result<()> {
                 print_completions(*generator, &mut cmd);
                 return Ok(());
             }
+        }
+        Some(("gallery", sub_matches)) => {
+            let is_custom = sub_matches
+                .get_one::<bool>("custom-schemes")
+                .is_some_and(ToOwned::to_owned);
+            let should_open = !sub_matches
+                .get_one::<bool>("no-open")
+                .is_some_and(ToOwned::to_owned);
+            let dump_dir = sub_matches.get_one::<String>("dump").map(String::as_str);
+
+            operations::gallery::gallery(&data_path, is_custom, dump_dir, should_open)?;
         }
         Some(("info", sub_matches)) => {
             let is_custom = sub_matches
