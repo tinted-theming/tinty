@@ -187,6 +187,26 @@ Sort themes by background color, from darkest to lightest:
 tinty list --json | jq 'sort_by(.lightness.background)' -r
 ```
 
+## Gallery
+
+`tinty gallery` builds an interactive static gallery from the available
+schemes and opens it in your browser:
+
+```sh
+tinty gallery
+```
+
+To write a hostable static site artifact, use `--dump`:
+
+```sh
+tinty gallery --dump ./public
+```
+
+The dumped directory contains `index.html` and static assets, so it can
+be published with GitHub Pages. Use `--no-open` to generate the files
+without launching a browser, and `--custom-schemes` to build the gallery
+from saved custom schemes.
+
 ## Shell
 
 When Tinty does not have any `[[items]]` set up in `config.toml`, Tinty
