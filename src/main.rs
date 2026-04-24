@@ -174,8 +174,9 @@ fn main() -> Result<()> {
             let is_quiet = sub_matches
                 .get_one::<bool>("quiet")
                 .is_some_and(ToOwned::to_owned);
+            let ring_name = sub_matches.get_one::<String>("ring").map(String::as_str);
 
-            operations::cycle::cycle(&config_path, &data_path, is_quiet, None)
+            operations::cycle::cycle(&config_path, &data_path, is_quiet, ring_name, None)
                 .context("Failed to cycle to your next preferred theme")?;
         }
         Some(("install", sub_matches)) => {

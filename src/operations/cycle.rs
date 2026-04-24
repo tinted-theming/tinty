@@ -1,26 +1,24 @@
 use crate::config::Config;
 use crate::operations::apply::apply;
 use crate::operations::current::get_current_scheme_slug;
-use crate::utils::{next_scheme_in_cycle, user_curated_scheme_list};
+use crate::utils::{cycle_scheme_list, next_scheme_in_cycle};
 use anyhow::Result;
 use std::path::Path;
 
-/// Cycle to next preferred scheme
+/// Cycle to next scheme in a configured ring.
 pub fn cycle(
     config_path: &Path,
     data_path: &Path,
     is_quiet: bool,
+    ring_name: Option<&str>,
     active_operation: Option<&str>,
 ) -> Result<()> {
     let config = Config::read(config_path)?;
 
     let current_scheme_slug = get_current_scheme_slug(data_path);
 
-    // Figure out what the next theme should be given current theme & preferred schemes.
-    let next_theme = user_curated_scheme_list(&config)
-        .as_ref()
-        .map(|vec| next_scheme_in_cycle(&current_scheme_slug, vec))
-        .unwrap_or(current_scheme_slug);
+    let schemes = cycle_scheme_list(&config, ring_name)?;
+    let next_theme = next_scheme_in_cycle(&current_scheme_slug, &schemes);
 
     if !is_quiet {
         println!("Applying next theme in cycle: {next_theme}");

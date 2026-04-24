@@ -64,6 +64,29 @@ impl fmt::Display for ConfigItem {
     }
 }
 
+/// Structure for configuration cycle rings
+#[derive(Deserialize, Debug)]
+pub struct ConfigRing {
+    pub name: String,
+    pub schemes: Vec<String>,
+}
+
+impl fmt::Display for ConfigRing {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let schemes_text = self
+            .schemes
+            .iter()
+            .map(|scheme| format!("\"{scheme}\""))
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        writeln!(f)?;
+        writeln!(f, "[[rings]]")?;
+        writeln!(f, "name = \"{}\"", self.name)?;
+        write!(f, "schemes = [{schemes_text}]")
+    }
+}
+
 /// Structure for configuration
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -72,6 +95,9 @@ pub struct Config {
     pub default_scheme: Option<String>,
     #[serde(rename = "preferred-schemes")]
     pub preferred_schemes: Option<Vec<String>>,
+    pub rings: Option<Vec<ConfigRing>>,
+    #[serde(rename = "default-cycle-ring")]
+    pub default_cycle_ring: Option<String>,
     pub items: Option<Vec<ConfigItem>>,
     pub hooks: Option<Vec<String>>,
 }
@@ -82,6 +108,22 @@ fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
     for item in items {
         if !names.insert(&item.name) {
             return Err(anyhow!("config.toml item.name should be unique values, but \"{}\" is used for more than 1 item.name. Please change this to a unique value.", item.name));
+        }
+    }
+
+    Ok(())
+}
+
+fn ensure_ring_names_are_valid(rings: &[ConfigRing]) -> Result<()> {
+    let mut names = HashSet::new();
+
+    for ring in rings {
+        if ring.name.trim().is_empty() {
+            return Err(anyhow!("config.toml rings.name should not be empty"));
+        }
+
+        if !names.insert(&ring.name) {
+            return Err(anyhow!("config.toml rings.name should be unique values, but \"{}\" is used for more than 1 rings.name. Please change this to a unique value.", ring.name));
         }
     }
 
@@ -129,6 +171,22 @@ impl Config {
             None => {
                 config.items = Some(vec![base16_shell_config_item]);
             }
+        }
+
+        if let Some(rings) = config.rings.as_ref() {
+            ensure_ring_names_are_valid(rings)?;
+
+            if let Some(default_cycle_ring) = config.default_cycle_ring.as_ref() {
+                if !rings.iter().any(|ring| ring.name == *default_cycle_ring) {
+                    return Err(anyhow!(
+                        "config.toml default-cycle-ring is set to \"{default_cycle_ring}\", but no ring with that name exists"
+                    ));
+                }
+            }
+        } else if let Some(default_cycle_ring) = config.default_cycle_ring.as_ref() {
+            return Err(anyhow!(
+                "config.toml default-cycle-ring is set to \"{default_cycle_ring}\", but no rings are configured"
+            ));
         }
 
         // Set default `system` property for missing systems
@@ -188,6 +246,10 @@ impl fmt::Display for Config {
             writeln!(f, "default-scheme = \"{default_scheme}\"")?;
         }
 
+        if let Some(default_cycle_ring) = &self.default_cycle_ring {
+            writeln!(f, "default-cycle-ring = \"{default_cycle_ring}\"")?;
+        }
+
         if let Some(items) = &self.preferred_schemes {
             let preferred_schemes_text = items
                 .clone()
@@ -204,6 +266,12 @@ impl fmt::Display for Config {
                 writeln!(f, "  \"{hook}\"")?;
             }
             writeln!(f, "]")?;
+        }
+
+        if let Some(rings) = &self.rings {
+            for ring in rings {
+                writeln!(f, "{ring}")?;
+            }
         }
 
         if let Some(items) = &self.items {

@@ -267,7 +267,14 @@ pub fn build_cli() -> Command {
                 ),
         )
         .subcommand(
-            Command::new("cycle").about("Cycle through your preferred themes")
+            Command::new("cycle").about("Cycle through a configured ring of schemes")
+                .arg(
+                    Arg::new("ring")
+                        .long("ring")
+                        .help("Name of the configured ring to cycle through")
+                        .value_name("RING")
+                        .action(ArgAction::Set),
+                )
                 .arg(
                     Arg::new("quiet")
                         .long("quiet")
