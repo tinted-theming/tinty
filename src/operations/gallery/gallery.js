@@ -1,0 +1,388 @@
+const SCHEMES = __TINTY_SCHEMES__;
+
+const state = {
+  search: "",
+  system: "all",
+  appearance: "all",
+  pageTheme: "system",
+};
+let currentSheetId = null;
+let tooltipTimeoutId = null;
+
+const fallbackPalette = {
+  base00: "#101418",
+  base03: "#5f6b76",
+  base05: "#d8dee9",
+  base08: "#d35f5f",
+  base09: "#d08f4f",
+  base0A: "#c6a84f",
+  base0B: "#72a65a",
+  base0C: "#5aa6a6",
+  base0D: "#5f8fd3",
+  base0E: "#9f7ad3",
+};
+
+SCHEMES.sort((a, b) => a.id.localeCompare(b.id));
+
+const previewSnippets = {
+  rust: `<span class="comment">// preview.rs</span>
+<span class="keyword">fn</span> <span class="function">render_scheme</span>() {
+    <span class="keyword">let</span> name = <span class="string">"tinty"</span>;
+    <span class="keyword">let</span> colors = <span class="number">16</span>;
+    <span class="function">apply</span>(name, colors);
+}`,
+  kotlin: `<span class="comment">// Preview.kt</span>
+<span class="keyword">fun</span> <span class="function">renderScheme</span>() {
+    <span class="keyword">val</span> name = <span class="string">"tinty"</span>
+    <span class="keyword">val</span> colors = <span class="number">16</span>
+    <span class="function">apply</span>(name, colors)
+}`,
+  javascript: `<span class="comment">// preview.js</span>
+<span class="keyword">function</span> <span class="function">renderScheme</span>() {
+  <span class="keyword">const</span> name = <span class="string">"tinty"</span>;
+  <span class="keyword">const</span> colors = <span class="number">16</span>;
+  <span class="function">apply</span>(name, colors);
+}`,
+  lisp: `<span class="comment">;; preview.lisp</span>
+(<span class="keyword">defun</span> <span class="function">render-scheme</span> ()
+  (<span class="keyword">let</span> ((name <span class="string">"tinty"</span>)
+        (colors <span class="number">16</span>))
+    (<span class="function">apply</span> name colors)))`,
+  zsh: `<span class="comment"># preview.zsh</span>
+<span class="keyword">function</span> <span class="function">render_scheme</span>() {
+  <span class="keyword">local</span> name=<span class="string">"tinty"</span>
+  <span class="keyword">local</span> colors=<span class="number">16</span>
+  <span class="function">apply</span> <span class="string">"$name"</span> <span class="string">"$colors"</span>
+}`,
+};
+
+function color(scheme, key) {
+  return scheme.palette[key]?.hex_str || fallbackPalette[key] || fallbackPalette.base05;
+}
+
+function appearance(scheme) {
+  const background = scheme.lightness?.background;
+  if (typeof background !== "number") {
+    return String(scheme.variant || "unknown").toLowerCase();
+  }
+  return background >= 50 ? "light" : "dark";
+}
+
+function searchableText(scheme) {
+  return [
+    scheme.id,
+    scheme.name,
+    scheme.slug,
+    scheme.author,
+    scheme.system,
+    scheme.variant,
+    appearance(scheme),
+  ].join(" ").toLowerCase();
+}
+
+function matchesFilters(scheme) {
+  if (state.system !== "all" && String(scheme.system).toLowerCase() !== state.system) {
+    return false;
+  }
+
+  if (state.appearance !== "all" && appearance(scheme) !== state.appearance) {
+    return false;
+  }
+
+  return searchableText(scheme).includes(state.search);
+}
+
+function setPreviewColors(card, scheme) {
+  card.style.setProperty("--preview-bg", color(scheme, "base00"));
+  card.style.setProperty("--preview-fg", color(scheme, "base05"));
+  card.style.setProperty("--preview-muted", color(scheme, "base04"));
+  card.style.setProperty("--preview-comment", color(scheme, "base03"));
+  card.style.setProperty("--preview-keyword", color(scheme, "base0E"));
+  card.style.setProperty("--preview-function", color(scheme, "base0D"));
+  card.style.setProperty("--preview-string", color(scheme, "base0B"));
+  card.style.setProperty("--preview-number", color(scheme, "base09"));
+}
+
+function setPreviewLanguage(language) {
+  document.getElementById("sheet-code").innerHTML = previewSnippets[language] || previewSnippets.rust;
+  document
+    .querySelectorAll("[data-preview-language]")
+    .forEach((candidate) => candidate.classList.toggle("active", candidate.dataset.previewLanguage === language));
+}
+
+function metadataItem(label, value) {
+  const fragment = document.createDocumentFragment();
+  const dt = document.createElement("dt");
+  const dd = document.createElement("dd");
+  dt.textContent = label;
+  dd.textContent = value || "n/a";
+  fragment.append(dt, dd);
+  return fragment;
+}
+
+function renderPalette(container, scheme) {
+  container.textContent = "";
+
+  Object.entries(scheme.palette)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([name, value]) => {
+      const swatch = document.createElement("div");
+      const block = document.createElement("div");
+      const label = document.createElement("div");
+      const hex = document.createElement("span");
+
+      swatch.className = "swatch";
+      block.className = "swatch-color";
+      label.className = "swatch-label";
+      block.style.background = value.hex_str;
+      label.textContent = name;
+      hex.textContent = value.hex_str;
+
+      label.append(hex);
+      swatch.append(block, label);
+      container.append(swatch);
+    });
+}
+
+function transitionLayout(callback) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    callback();
+    return;
+  }
+
+  if (document.startViewTransition) {
+    document.startViewTransition(callback);
+    return;
+  }
+
+  callback();
+}
+
+function sheetLinkForId(id) {
+  const url = new URL(window.location.href);
+  url.hash = id;
+  return url.toString();
+}
+
+function schemeForHash() {
+  const targetId = window.location.hash.replace(/^#/, "");
+  if (!targetId) {
+    return null;
+  }
+
+  return SCHEMES.find((candidate) => candidate.id === targetId) || null;
+}
+
+function setSheetHash(id) {
+  const url = new URL(window.location.href);
+  url.hash = id;
+  window.history.replaceState(null, "", url);
+}
+
+function clearSheetHash() {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  window.history.replaceState(null, "", url);
+}
+
+function showButtonTooltip(button, message) {
+  button.dataset.tooltip = message;
+  button.classList.add("show-tooltip");
+
+  if (tooltipTimeoutId) {
+    window.clearTimeout(tooltipTimeoutId);
+  }
+
+  tooltipTimeoutId = window.setTimeout(() => {
+    button.classList.remove("show-tooltip");
+  }, 1100);
+}
+
+function openSheet(scheme, updateHash = true) {
+  const sheet = document.getElementById("detail-sheet");
+  const backdrop = document.getElementById("sheet-backdrop");
+  const command = `tinty apply ${scheme.id}`;
+
+  currentSheetId = scheme.id;
+  setPreviewColors(sheet, scheme);
+  setPreviewLanguage("rust");
+  document.getElementById("sheet-title").textContent = scheme.name;
+  document.getElementById("sheet-command").textContent = command;
+  document.getElementById("copy-command").dataset.command = command;
+  document.getElementById("copy-command").dataset.tooltip = "Copy command";
+  document.getElementById("copy-link").dataset.link = sheetLinkForId(scheme.id);
+  document.getElementById("copy-link").dataset.tooltip = "Copy link";
+
+  const metadata = document.getElementById("sheet-metadata");
+  metadata.textContent = "";
+  metadata.append(
+    metadataItem("ID", scheme.id),
+    metadataItem("Author", scheme.author),
+    metadataItem("System", scheme.system),
+    metadataItem("Variant", scheme.variant),
+    metadataItem("Appearance", appearance(scheme)),
+    metadataItem("Background L*", scheme.lightness?.background?.toFixed(2)),
+    metadataItem("Foreground L*", scheme.lightness?.foreground?.toFixed(2)),
+  );
+  renderPalette(document.getElementById("sheet-palette"), scheme);
+
+  if (updateHash) {
+    setSheetHash(scheme.id);
+  }
+
+  backdrop.hidden = false;
+  document.body.classList.add("sheet-open");
+  requestAnimationFrame(() => {
+    backdrop.classList.add("open");
+    sheet.classList.add("open");
+    sheet.setAttribute("aria-hidden", "false");
+  });
+}
+
+function closeSheet(updateHash = true) {
+  const sheet = document.getElementById("detail-sheet");
+  const backdrop = document.getElementById("sheet-backdrop");
+
+  currentSheetId = null;
+  if (updateHash) {
+    clearSheetHash();
+  }
+  document.body.classList.remove("sheet-open");
+  sheet.classList.remove("open");
+  backdrop.classList.remove("open");
+  sheet.setAttribute("aria-hidden", "true");
+  window.setTimeout(() => {
+    if (!sheet.classList.contains("open")) {
+      backdrop.hidden = true;
+    }
+  }, 220);
+}
+
+function createCard(scheme) {
+  const template = document.getElementById("card-template");
+  const card = template.content.firstElementChild.cloneNode(true);
+
+  setPreviewColors(card, scheme);
+  card.querySelector("h2").textContent = scheme.slug;
+  card.querySelector(".card-title p").textContent = scheme.name;
+  card.querySelector(".scheme-system span").textContent = scheme.system;
+  card.querySelector(".scheme-appearance span").textContent = appearance(scheme);
+
+  card.querySelector(".preview-button").addEventListener("click", () => {
+    openSheet(scheme);
+  });
+
+  return card;
+}
+
+function syncSheetToHash() {
+  const scheme = schemeForHash();
+  if (!scheme) {
+    closeSheet(false);
+    return;
+  }
+
+  if (currentSheetId !== scheme.id) {
+    openSheet(scheme, false);
+  }
+}
+
+function render() {
+  const gallery = document.getElementById("gallery");
+  const empty = document.getElementById("empty");
+  const count = document.getElementById("result-count");
+  const fragment = document.createDocumentFragment();
+  const visible = SCHEMES.filter(matchesFilters);
+
+  gallery.textContent = "";
+  visible.forEach((scheme) => fragment.append(createCard(scheme)));
+  gallery.append(fragment);
+
+  empty.hidden = visible.length !== 0;
+  count.textContent = `${visible.length} of ${SCHEMES.length} schemes`;
+}
+
+function setFilter(group, value) {
+  state[group] = value;
+  document
+    .querySelectorAll(`[data-filter="${group}"]`)
+    .forEach((candidate) => candidate.classList.toggle("active", candidate.dataset.value === value));
+}
+
+function setPageTheme(theme) {
+  state.pageTheme = theme;
+  document.documentElement.dataset.theme = theme === "system" ? "" : theme;
+  if (theme === "system") {
+    document.documentElement.removeAttribute("data-theme");
+    setFilter("appearance", "all");
+  } else {
+    setFilter("appearance", theme);
+  }
+
+  document
+    .querySelectorAll("[data-page-theme]")
+    .forEach((candidate) => candidate.classList.toggle("active", candidate.dataset.pageTheme === theme));
+
+  render();
+}
+
+document.getElementById("search").addEventListener("input", (event) => {
+  state.search = event.target.value.trim().toLowerCase();
+  render();
+});
+
+document.querySelectorAll("[data-filter]").forEach((button) => {
+  button.addEventListener("click", () => {
+    transitionLayout(() => {
+      setFilter(button.dataset.filter, button.dataset.value);
+      render();
+    });
+  });
+});
+
+document.querySelectorAll("[data-page-theme]").forEach((button) => {
+  button.addEventListener("click", () => {
+    transitionLayout(() => setPageTheme(button.dataset.pageTheme));
+  });
+});
+
+document.querySelectorAll("[data-preview-language]").forEach((button) => {
+  button.addEventListener("click", () => {
+    setPreviewLanguage(button.dataset.previewLanguage);
+  });
+});
+
+document.getElementById("sheet-close").addEventListener("click", closeSheet);
+document.getElementById("sheet-backdrop").addEventListener("click", closeSheet);
+document.getElementById("copy-command").addEventListener("click", async (event) => {
+  const button = event.currentTarget;
+
+  try {
+    await navigator.clipboard.writeText(button.dataset.command);
+    showButtonTooltip(button, "Copied");
+  } catch (_error) {
+    showButtonTooltip(button, "Copy failed");
+  }
+});
+
+document.getElementById("copy-link").addEventListener("click", async (event) => {
+  const button = event.currentTarget;
+
+  try {
+    await navigator.clipboard.writeText(button.dataset.link);
+    showButtonTooltip(button, "Copied");
+  } catch (_error) {
+    showButtonTooltip(button, "Copy failed");
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeSheet();
+  }
+});
+
+window.addEventListener("hashchange", syncSheetToHash);
+
+syncSheetToHash();
+render();
