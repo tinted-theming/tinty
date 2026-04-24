@@ -1,8 +1,7 @@
 //! Integration tests for the `cycle` subcommand.
 //!
-//! Covers: cycling through preferred schemes, default-scheme behavior,
-//! wrap-around at end of list, default-scheme prepended to cycle, and
-//! deduplication when default-scheme is already in preferred-schemes.
+//! Covers cycling through configured rings, default-cycle-ring behavior,
+//! wrap-around at end of list, and legacy preferred-schemes migration errors.
 //!
 //! Requires network access on first run (repos are cached in `tmp/repos/`).
 
@@ -10,43 +9,45 @@ mod utils;
 
 use crate::utils::{setup, write_to_file};
 use anyhow::{ensure, Result};
+use std::fs;
 use utils::build_command_vec;
 
 #[test]
-fn test_cli_cycle_subcommand_with_default_scheme_only() -> Result<()> {
-    // -------
-    // Arrange
-    // -------
+fn test_cli_cycle_subcommand_with_explicit_ring() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
-        "test_cli_cycle_subcommand_with_default_scheme_only",
+        "test_cli_cycle_subcommand_with_explicit_ring",
         format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r#"
-default-scheme = "base16-dracula"
+[[rings]]
+name = "dark"
+schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
+
+[[rings]]
+name = "light"
+schemes = ["base16-github", "base16-gruvbox-material-light-soft"]
 "#;
     write_to_file(&config_path, config_content)?;
 
-    // ---
-    // Act
-    // ---
     let (_, apply_stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
 
     let (cycle_stdout, cycle_stderr) = utils::run_command(
-        &build_command_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &build_command_vec(
+            "cycle --ring dark",
+            config_path.as_path(),
+            data_path.as_path(),
+        )?,
         &data_path,
         true,
     )?;
 
-    // ------
-    // Assert
-    // ------
     ensure!(
         apply_stderr.is_empty(),
         "Expected empty stderr, got: {apply_stderr}"
     );
     ensure!(
-        cycle_stdout == "Applying next theme in cycle: base16-dracula\n",
+        cycle_stdout == "Applying next theme in cycle: base24-dracula\n",
         "cycle_stdout not as expected"
     );
     ensure!(
@@ -58,97 +59,21 @@ default-scheme = "base16-dracula"
 }
 
 #[test]
-fn test_cli_cycle_subcommand_with_preferred_schemes() -> Result<()> {
-    // -------
-    // Arrange
-    // -------
+fn test_cli_cycle_subcommand_uses_default_cycle_ring() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
-        "test_cli_cycle_subcommand_with_preferred_schemes",
+        "test_cli_cycle_subcommand_uses_default_cycle_ring",
         format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r#"
-preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
+default-cycle-ring = "dark"
+
+[[rings]]
+name = "dark"
+schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
 "#;
     write_to_file(&config_path, config_content)?;
 
-    // ---
-    // Act
-    // ---
-    let (_, apply_stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
-
-    let (cycle1_stdout, cycle1_stderr) = utils::run_command(
-        &build_command_vec("cycle", config_path.as_path(), data_path.as_path())?,
-        &data_path,
-        true,
-    )?;
-
-    // ------
-    // Assert
-    // ------
-    ensure!(
-        apply_stderr.is_empty(),
-        "Expected empty stderr, got: {apply_stderr}"
-    );
-    ensure!(
-        cycle1_stdout == "Applying next theme in cycle: base24-dracula\n",
-        "cycle1_stdout not as expected"
-    );
-    ensure!(
-        cycle1_stderr.is_empty(),
-        "Expected empty stderr, got: {cycle1_stderr}"
-    );
-
-    let (cycle2_stdout, cycle2_stderr) = utils::run_command(
-        &build_command_vec("cycle", config_path.as_path(), data_path.as_path())?,
-        &data_path,
-        true,
-    )?;
-
-    ensure!(
-        cycle2_stdout == "Applying next theme in cycle: base24-zenburn\n",
-        "cycle2_stdout not as expected"
-    );
-    ensure!(
-        cycle2_stderr.is_empty(),
-        "Expected empty stderr, got: {cycle2_stderr}"
-    );
-    let (cycle3_stdout, cycle3_stderr) = utils::run_command(
-        &build_command_vec("cycle", config_path.as_path(), data_path.as_path())?,
-        &data_path,
-        true,
-    )?;
-
-    ensure!(
-        cycle3_stdout == "Applying next theme in cycle: base24-ubuntu\n",
-        "cycle3 stdout not as expected"
-    );
-    ensure!(
-        cycle3_stderr.is_empty(),
-        "Expected empty stderr, got: {cycle3_stderr}"
-    );
-
-    Ok(())
-}
-
-#[test]
-fn test_cli_cycle_subcommand_correct_next_scheme() -> Result<()> {
-    // -------
-    // Arrange
-    // -------
-    let scheme_name = "base24-zenburn";
-    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
-        "test_cli_cycle_subcommand_correct_next_scheme",
-        format!("apply {scheme_name}").as_str(),
-    )?;
-    let config_content = r#"
-preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
-"#;
-    write_to_file(&config_path, config_content)?;
-
-    // ---
-    // Act
-    // ---
     let (_, apply_stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
 
     let (cycle_stdout, cycle_stderr) = utils::run_command(
@@ -157,9 +82,46 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
         true,
     )?;
 
-    // ------
-    // Assert
-    // ------
+    ensure!(
+        apply_stderr.is_empty(),
+        "Expected empty stderr, got: {apply_stderr}"
+    );
+    ensure!(
+        cycle_stdout == "Applying next theme in cycle: base24-dracula\n",
+        "cycle_stdout not as expected"
+    );
+    ensure!(
+        cycle_stderr.is_empty(),
+        "Expected empty stderr, got: {cycle_stderr}"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_cycle_subcommand_correct_next_scheme_in_ring() -> Result<()> {
+    let scheme_name = "base24-zenburn";
+    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
+        "test_cli_cycle_subcommand_correct_next_scheme_in_ring",
+        format!("apply {scheme_name}").as_str(),
+    )?;
+    let config_content = r#"
+default-cycle-ring = "default"
+
+[[rings]]
+name = "default"
+schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
+"#;
+    write_to_file(&config_path, config_content)?;
+
+    let (_, apply_stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
+
+    let (cycle_stdout, cycle_stderr) = utils::run_command(
+        &build_command_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )?;
+
     ensure!(
         apply_stderr.is_empty(),
         "Expected empty stderr, got: {apply_stderr}"
@@ -177,23 +139,21 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
 }
 
 #[test]
-fn test_cli_cycle_subcommand_wraps_around() -> Result<()> {
-    // -------
-    // Arrange
-    // -------
+fn test_cli_cycle_subcommand_wraps_around_ring() -> Result<()> {
     let scheme_name = "base24-ubuntu";
     let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
-        "test_cli_cycle_subcommand_wraps_around",
+        "test_cli_cycle_subcommand_wraps_around_ring",
         format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r#"
-preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
+default-cycle-ring = "default"
+
+[[rings]]
+name = "default"
+schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
 "#;
     write_to_file(&config_path, config_content)?;
 
-    // ---
-    // Act
-    // ---
     let (_, apply_stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
 
     let (cycle_stdout, cycle_stderr) = utils::run_command(
@@ -202,56 +162,6 @@ preferred-schemes = ["base24-dracula", "base24-zenburn", "base24-ubuntu"]
         true,
     )?;
 
-    // ------
-    // Assert
-    // ------
-    ensure!(
-        apply_stderr.is_empty(),
-        "Expected empty stderr, got: {apply_stderr}"
-    );
-    ensure!(
-        cycle_stdout == "Applying next theme in cycle: base24-dracula\n",
-        "cycle_stdout not as expected"
-    );
-
-    ensure!(
-        cycle_stderr.is_empty(),
-        "Expected empty stderr, got: {cycle_stderr}"
-    );
-
-    Ok(())
-}
-
-#[test]
-fn test_cli_cycle_subcommand_default_scheme_prepended_to_cycle() -> Result<()> {
-    // -------
-    // Arrange
-    // -------
-    let scheme_name = "base16-oceanicnext";
-    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
-        "test_cli_cycle_subcommand_default_scheme_prepended_to_cycle",
-        format!("apply {scheme_name}").as_str(),
-    )?;
-    let config_content = r#"
-default-scheme = "base24-dracula"
-preferred-schemes = ["base24-zenburn", "base24-ubuntu"]
-"#;
-    write_to_file(&config_path, config_content)?;
-
-    // ---
-    // Act
-    // ---
-    let (_, apply_stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
-
-    let (cycle_stdout, cycle_stderr) = utils::run_command(
-        &build_command_vec("cycle", config_path.as_path(), data_path.as_path())?,
-        &data_path,
-        true,
-    )?;
-
-    // ------
-    // Assert
-    // ------
     ensure!(
         apply_stderr.is_empty(),
         "Expected empty stderr, got: {apply_stderr}"
@@ -269,24 +179,21 @@ preferred-schemes = ["base24-zenburn", "base24-ubuntu"]
 }
 
 #[test]
-fn test_cli_cycle_subcommand_default_scheme_not_duplicated_in_cycle() -> Result<()> {
-    // -------
-    // Arrange
-    // -------
+fn test_cli_cycle_subcommand_errors_for_empty_ring() -> Result<()> {
     let scheme_name = "base16-oceanicnext";
     let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
-        "test_cli_cycle_subcommand_default_scheme_not_duplicated_in_cycle",
+        "test_cli_cycle_subcommand_errors_for_empty_ring",
         format!("apply {scheme_name}").as_str(),
     )?;
     let config_content = r#"
-default-scheme = "base24-dracula"
-preferred-schemes = ["base24-zenburn", "base24-dracula", "base24-ubuntu"]
+default-cycle-ring = "default"
+
+[[rings]]
+name = "default"
+schemes = []
 "#;
     write_to_file(&config_path, config_content)?;
 
-    // ---
-    // Act
-    // ---
     let (_, apply_stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
 
     let (cycle_stdout, cycle_stderr) = utils::run_command(
@@ -295,20 +202,139 @@ preferred-schemes = ["base24-zenburn", "base24-dracula", "base24-ubuntu"]
         true,
     )?;
 
-    // ------
-    // Assert
-    // ------
+    let current_scheme = fs::read_to_string(data_path.join("current_scheme"))?;
+
     ensure!(
         apply_stderr.is_empty(),
         "Expected empty stderr, got: {apply_stderr}"
     );
+    ensure!(cycle_stdout.is_empty(), "Expected empty stdout");
     ensure!(
-        cycle_stdout == "Applying next theme in cycle: base24-zenburn\n",
-        "cycle_stdout not as expected"
+        cycle_stderr.contains("Ring \"default\" does not contain any schemes and cannot be cycled"),
+        "cycle_stderr not as expected: {cycle_stderr}"
     );
     ensure!(
-        cycle_stderr.is_empty(),
-        "Expected empty stderr, got: {cycle_stderr}"
+        current_scheme == scheme_name,
+        "Expected current scheme to remain unchanged"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_cycle_subcommand_errors_for_missing_ring() -> Result<()> {
+    let (config_path, data_path, _apply_command_vec, _temp_dir) = setup(
+        "test_cli_cycle_subcommand_errors_for_missing_ring",
+        "cycle --ring dark",
+    )?;
+    let config_content = r#"
+[[rings]]
+name = "light"
+schemes = ["base16-github"]
+"#;
+    write_to_file(&config_path, config_content)?;
+
+    let (cycle_stdout, cycle_stderr) = utils::run_command(
+        &build_command_vec(
+            "cycle --ring dark",
+            config_path.as_path(),
+            data_path.as_path(),
+        )?,
+        &data_path,
+        false,
+    )?;
+
+    ensure!(cycle_stdout.is_empty(), "Expected empty stdout");
+    ensure!(
+        cycle_stderr.contains("No ring named \"dark\" exists. Available rings: light"),
+        "cycle_stderr not as expected: {cycle_stderr}"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_cycle_subcommand_errors_for_duplicate_ring_names() -> Result<()> {
+    let (config_path, data_path, _apply_command_vec, _temp_dir) = setup(
+        "test_cli_cycle_subcommand_errors_for_duplicate_ring_names",
+        "cycle",
+    )?;
+    let config_content = r#"
+default-cycle-ring = "default"
+
+[[rings]]
+name = "default"
+schemes = ["base16-github"]
+
+[[rings]]
+name = "default"
+schemes = ["base16-dracula"]
+"#;
+    write_to_file(&config_path, config_content)?;
+
+    let (cycle_stdout, cycle_stderr) = utils::run_command(
+        &build_command_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        false,
+    )?;
+
+    ensure!(cycle_stdout.is_empty(), "Expected empty stdout");
+    ensure!(
+        cycle_stderr.contains("config.toml rings.name should be unique values"),
+        "cycle_stderr not as expected: {cycle_stderr}"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_cycle_subcommand_errors_for_preferred_schemes_with_migration() -> Result<()> {
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, data_path, apply_command_vec, _temp_dir) = setup(
+        "test_cli_cycle_subcommand_errors_for_preferred_schemes_with_migration",
+        format!("apply {scheme_name}").as_str(),
+    )?;
+    let config_content = r#"
+default-scheme = "base24-ubuntu"
+preferred-schemes = ["base24-dracula", "base24-zenburn"]
+"#;
+    write_to_file(&config_path, config_content)?;
+
+    let (_, apply_stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
+
+    let (cycle_stdout, cycle_stderr) = utils::run_command(
+        &build_command_vec("cycle", config_path.as_path(), data_path.as_path())?,
+        &data_path,
+        true,
+    )?;
+
+    let current_scheme = fs::read_to_string(data_path.join("current_scheme"))?;
+
+    ensure!(
+        apply_stderr.is_empty(),
+        "Expected empty stderr, got: {apply_stderr}"
+    );
+    ensure!(cycle_stdout.is_empty(), "Expected empty stdout");
+    ensure!(
+        cycle_stderr.contains("`preferred-schemes` is no longer supported by `tinty cycle`"),
+        "cycle_stderr did not include deprecation message: {cycle_stderr}"
+    );
+    ensure!(
+        cycle_stderr
+            .contains("schemes = [\"base24-ubuntu\", \"base24-dracula\", \"base24-zenburn\"]"),
+        "cycle_stderr did not include migration snippet: {cycle_stderr}"
+    );
+    ensure!(
+        cycle_stderr.contains("default-cycle-ring = \"default\""),
+        "cycle_stderr did not include default-cycle-ring: {cycle_stderr}"
+    );
+    ensure!(
+        cycle_stderr.find("default-cycle-ring = \"default\"") < cycle_stderr.find("[[rings]]"),
+        "default-cycle-ring should appear before [[rings]] in migration snippet: {cycle_stderr}"
+    );
+    ensure!(
+        current_scheme == scheme_name,
+        "Expected current scheme to remain unchanged"
     );
 
     Ok(())
