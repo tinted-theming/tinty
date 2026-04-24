@@ -5,11 +5,15 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use std::{
+    fs::File,
+    io::Write,
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
 
 const GALLERY_DIR_NAME: &str = "gallery";
+const LOGO_BYTES: &[u8] = include_bytes!("../../assets/tinted-theming-logo.png");
+const FAVICON_BYTES: &[u8] = include_bytes!("../../assets/favicon.png");
 
 pub fn gallery(
     data_path: &Path,
@@ -46,6 +50,18 @@ fn write_gallery_files(output_dir: &Path, schemes_json: &str) -> Result<()> {
     write_to_file(assets_dir.join("gallery.css"), GALLERY_CSS)?;
     let gallery_js = format!("const SCHEMES = {schemes_json};\n\n{GALLERY_JS}");
     write_to_file(assets_dir.join("gallery.js"), &gallery_js)?;
+    write_binary_file(assets_dir.join("tinted-theming-logo.png"), LOGO_BYTES)?;
+    write_binary_file(assets_dir.join("favicon.png"), FAVICON_BYTES)?;
+
+    Ok(())
+}
+
+fn write_binary_file(path: impl AsRef<Path>, contents: &[u8]) -> Result<()> {
+    let mut file = File::create(path.as_ref())
+        .map_err(anyhow::Error::new)
+        .with_context(|| format!("Unable to create file: {}", path.as_ref().display()))?;
+
+    file.write_all(contents)?;
 
     Ok(())
 }
@@ -99,11 +115,13 @@ const INDEX_HTML: &str = r#"<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tinty Gallery</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
   <link rel="stylesheet" href="assets/gallery.css">
 </head>
 <body>
   <header class="topbar">
-    <div>
+    <div class="brand">
+      <img class="brand-logo" src="assets/tinted-theming-logo.png" alt="Tinted Theming">
       <h1>Tinty Gallery</h1>
     </div>
     <div class="topbar-actions">
@@ -169,6 +187,51 @@ const INDEX_HTML: &str = r#"<!doctype html>
     <p id="empty" class="empty" hidden>No matching schemes.</p>
   </main>
 
+  <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+  <aside id="detail-sheet" class="detail-sheet" aria-hidden="true" aria-labelledby="sheet-title">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <header class="sheet-header">
+      <div class="sheet-title-group">
+        <span class="sheet-title-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24"><path d="m12 3 8 4.5-8 4.5-8-4.5Z"></path><path d="m4 12 8 4.5 8-4.5"></path><path d="m4 16.5 8 4.5 8-4.5"></path></svg>
+        </span>
+        <h2 id="sheet-title"></h2>
+      </div>
+      <button type="button" id="sheet-close" class="icon-button" aria-label="Close details">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    </header>
+    <section id="sheet-preview" class="sheet-preview" aria-label="Code preview">
+      <div class="section-label">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 18 6-6-6-6"></path><path d="m8 6-6 6 6 6"></path></svg>
+        Preview
+      </div>
+      <div class="preview-toolbar" aria-label="Preview language">
+        <button type="button" class="chip active" data-preview-language="rust"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7Z"></path><path d="M12 8v8"></path><path d="M8 12h8"></path></svg> Rust</button>
+        <button type="button" class="chip" data-preview-language="kotlin"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16L4 20Z"></path><path d="M4 4v16l8-8Z"></path></svg> Kotlin</button>
+        <button type="button" class="chip" data-preview-language="javascript"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M9 15c.5 1 1.2 1.5 2.2 1.5 1.2 0 1.8-.7 1.8-1.7V9"></path><path d="M15 15.5c.5.7 1.1 1 1.8 1 .8 0 1.2-.4 1.2-.9 0-.6-.5-.8-1.4-1.1-1-.3-1.6-.8-1.6-1.8 0-1 .8-1.7 2-1.7.8 0 1.4.2 1.9.7"></path></svg> JavaScript</button>
+        <button type="button" class="chip" data-preview-language="lisp"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5c-3 2-4.5 4.4-4.5 7S6 17 9 19"></path><path d="M15 5c3 2 4.5 4.4 4.5 7S18 17 15 19"></path><circle cx="12" cy="12" r="1.5"></circle></svg> Lisp</button>
+        <button type="button" class="chip" data-preview-language="zsh"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 7 5 5-5 5"></path><path d="M11 17h9"></path></svg> Zsh</button>
+      </div>
+      <pre class="code-preview sheet-code-preview"><code id="sheet-code"></code></pre>
+    </section>
+    <div class="command-row">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m8 9 3 3-3 3"></path><path d="M13 15h3"></path></svg>
+      <code id="sheet-command"></code>
+      <button type="button" id="copy-command" class="chip"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg> Copy</button>
+    </div>
+    <div class="section-label">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path><path d="M8 7v10"></path></svg>
+      Properties
+    </div>
+    <dl id="sheet-metadata" class="metadata"></dl>
+    <div class="section-label">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="13.5" r="2.5"></circle><circle cx="8.5" cy="14.5" r="2.5"></circle><path d="M11.3 8.3 9.7 12.3"></path><path d="m15.5 8.7 1.1 2.4"></path></svg>
+      Palette
+    </div>
+    <div id="sheet-palette" class="palette"></div>
+  </aside>
+
   <template id="card-template">
     <article class="card">
       <button type="button" class="preview-button">
@@ -193,10 +256,6 @@ const INDEX_HTML: &str = r#"<!doctype html>
           <p></p>
         </div>
       </button>
-      <div class="details" aria-hidden="true">
-        <dl class="metadata"></dl>
-        <div class="palette"></div>
-      </div>
     </article>
   </template>
 
@@ -241,16 +300,24 @@ main {
   padding: 30px 0 20px;
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-logo {
+  width: clamp(42px, 5vw, 68px);
+  height: clamp(42px, 5vw, 68px);
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
 .topbar-actions {
   display: flex;
   align-items: end;
   flex-direction: column;
   gap: 10px;
-}
-
-.theme-switcher {
-  display: flex;
-  gap: 8px;
 }
 
 .icon {
@@ -266,7 +333,11 @@ main {
 
 .chip,
 .search span,
-.meta-pill {
+.meta-pill,
+.icon-button,
+.command-row,
+.sheet-title-group,
+.section-label {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -320,16 +391,24 @@ h1 {
   font: inherit;
 }
 
-.filter-group {
+.filter-group,
+.theme-switcher,
+.preview-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  overflow: hidden;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--panel) 88%, var(--ink));
 }
 
 .chip {
   min-height: 40px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: 0;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
   padding: 8px 11px;
   background: transparent;
   color: inherit;
@@ -338,28 +417,27 @@ h1 {
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
 }
 
+.chip:first-child {
+  border-left: 0;
+}
+
 .chip:hover {
-  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .chip.active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   color: var(--accent);
 }
 
 .gallery {
-  column-count: 4;
-  column-gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
   padding: 20px 0 40px;
 }
 
 .card {
-  display: inline-block;
-  width: 100%;
-  margin: 0 0 16px;
-  break-inside: avoid;
-  page-break-inside: avoid;
   overflow: hidden;
   background: var(--panel);
   border: 1px solid var(--border);
@@ -369,7 +447,7 @@ h1 {
 }
 
 .card:hover,
-.card.expanded {
+.card:focus-within {
   border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
   box-shadow: 0 12px 30px rgb(0 0 0 / 10%);
 }
@@ -439,28 +517,17 @@ h1 {
   letter-spacing: 0;
 }
 
-.details {
-  max-height: 0;
-  overflow: hidden;
-  border-top: 0 solid transparent;
-  padding: 0 16px;
-  opacity: 0;
-  transition: max-height 190ms cubic-bezier(.2, .8, .2, 1), opacity 120ms ease, padding 190ms cubic-bezier(.2, .8, .2, 1), border-color 160ms ease;
-}
-
-.card.expanded .details {
-  border-top-width: 1px;
-  border-top-color: var(--border);
-  padding: 14px 16px 16px;
-  opacity: 1;
-}
-
 .metadata {
   display: grid;
   grid-template-columns: max-content 1fr;
   gap: 6px 12px;
   margin: 0 0 14px;
   font-size: 13px;
+}
+
+.metadata dt {
+  color: var(--ink);
+  font-weight: 760;
 }
 
 .metadata dd {
@@ -504,6 +571,138 @@ h1 {
   text-align: center;
 }
 
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgb(0 0 0 / 26%);
+  backdrop-filter: blur(8px) saturate(110%);
+  opacity: 0;
+  transition: opacity 170ms ease;
+}
+
+.sheet-backdrop.open {
+  opacity: 1;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .sheet-backdrop {
+    background: rgb(0 0 0 / 42%);
+  }
+}
+
+.detail-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 21;
+  width: min(920px, calc(100% - 24px));
+  max-height: calc(100vh - 18px);
+  overflow: auto;
+  padding: 10px 20px 22px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -18px 48px rgb(0 0 0 / 20%);
+  transform: translate(-50%, calc(100% + 18px));
+  transition: transform 220ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.detail-sheet.open {
+  transform: translate(-50%, 0);
+}
+
+.sheet-handle {
+  width: 48px;
+  height: 4px;
+  margin: 0 auto 14px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.sheet-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.sheet-header h2 {
+  overflow-wrap: anywhere;
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 760;
+  line-height: 1.05;
+}
+
+.sheet-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.icon-button {
+  min-width: 40px;
+  min-height: 40px;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.command-row {
+  justify-content: start;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--panel) 86%, var(--ink));
+}
+
+.command-row code {
+  flex: 1 1 auto;
+  overflow: auto;
+  font: 12px/1.35 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+}
+
+.command-row .chip {
+  min-height: 30px;
+  padding: 4px 9px;
+}
+
+.sheet-preview {
+  margin-bottom: 10px;
+}
+
+.section-label {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.preview-toolbar {
+  margin-bottom: 0;
+  border-radius: 8px 8px 0 0;
+}
+
+.sheet-code-preview {
+  min-height: 210px;
+  border-radius: 0 0 8px 8px;
+}
+
 @media (max-width: 860px) {
   .topbar,
   main {
@@ -515,6 +714,10 @@ h1 {
     flex-direction: column;
   }
 
+  .brand {
+    gap: 10px;
+  }
+
   .topbar-actions {
     align-items: start;
   }
@@ -523,14 +726,31 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .filter-group,
+  .theme-switcher,
+  .preview-toolbar {
+    width: 100%;
+  }
+
+  .chip {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
   .gallery {
-    column-count: 2;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+
+  .detail-sheet {
+    width: 100%;
+    max-height: calc(100vh - 8px);
+    padding-inline: 14px;
   }
 }
 
 @media (max-width: 560px) {
   .gallery {
-    column-count: 1;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -602,6 +822,40 @@ const fallbackPalette = {
   base0E: "#9f7ad3",
 };
 
+SCHEMES.sort((a, b) => a.id.localeCompare(b.id));
+
+const previewSnippets = {
+  rust: `<span class="comment">// preview.rs</span>
+<span class="keyword">fn</span> <span class="function">render_scheme</span>() {
+    <span class="keyword">let</span> name = <span class="string">"tinty"</span>;
+    <span class="keyword">let</span> colors = <span class="number">16</span>;
+    <span class="function">apply</span>(name, colors);
+}`,
+  kotlin: `<span class="comment">// Preview.kt</span>
+<span class="keyword">fun</span> <span class="function">renderScheme</span>() {
+    <span class="keyword">val</span> name = <span class="string">"tinty"</span>
+    <span class="keyword">val</span> colors = <span class="number">16</span>
+    <span class="function">apply</span>(name, colors)
+}`,
+  javascript: `<span class="comment">// preview.js</span>
+<span class="keyword">function</span> <span class="function">renderScheme</span>() {
+  <span class="keyword">const</span> name = <span class="string">"tinty"</span>;
+  <span class="keyword">const</span> colors = <span class="number">16</span>;
+  <span class="function">apply</span>(name, colors);
+}`,
+  lisp: `<span class="comment">;; preview.lisp</span>
+(<span class="keyword">defun</span> <span class="function">render-scheme</span> ()
+  (<span class="keyword">let</span> ((name <span class="string">"tinty"</span>)
+        (colors <span class="number">16</span>))
+    (<span class="function">apply</span> name colors)))`,
+  zsh: `<span class="comment"># preview.zsh</span>
+<span class="keyword">function</span> <span class="function">render_scheme</span>() {
+  <span class="keyword">local</span> name=<span class="string">"tinty"</span>
+  <span class="keyword">local</span> colors=<span class="number">16</span>
+  <span class="function">apply</span> <span class="string">"$name"</span> <span class="string">"$colors"</span>
+}`,
+};
+
 function color(scheme, key) {
   return scheme.palette[key]?.hex_str || fallbackPalette[key] || fallbackPalette.base05;
 }
@@ -647,6 +901,13 @@ function setPreviewColors(card, scheme) {
   card.style.setProperty("--preview-function", color(scheme, "base0D"));
   card.style.setProperty("--preview-string", color(scheme, "base0B"));
   card.style.setProperty("--preview-number", color(scheme, "base09"));
+}
+
+function setPreviewLanguage(language) {
+  document.getElementById("sheet-code").innerHTML = previewSnippets[language] || previewSnippets.rust;
+  document
+    .querySelectorAll("[data-preview-language]")
+    .forEach((candidate) => candidate.classList.toggle("active", candidate.dataset.previewLanguage === language));
 }
 
 function metadataItem(label, value) {
@@ -697,37 +958,64 @@ function transitionLayout(callback) {
   callback();
 }
 
-function setExpanded(card, details, expanded) {
-  card.classList.toggle("expanded", expanded);
-  details.setAttribute("aria-hidden", String(!expanded));
-  details.style.maxHeight = expanded ? `${details.scrollHeight}px` : "0px";
-}
+function openSheet(scheme) {
+  const sheet = document.getElementById("detail-sheet");
+  const backdrop = document.getElementById("sheet-backdrop");
+  const command = `tinty apply ${scheme.id}`;
 
-function createCard(scheme) {
-  const template = document.getElementById("card-template");
-  const card = template.content.firstElementChild.cloneNode(true);
-  const details = card.querySelector(".details");
-  const metadata = card.querySelector(".metadata");
+  setPreviewColors(sheet, scheme);
+  setPreviewLanguage("rust");
+  document.getElementById("sheet-title").textContent = scheme.name;
+  document.getElementById("sheet-command").textContent = command;
+  document.getElementById("copy-command").dataset.command = command;
 
-  setPreviewColors(card, scheme);
-  card.querySelector("h2").textContent = scheme.name;
-  card.querySelector(".card-title p").textContent = scheme.id;
-  card.querySelector(".scheme-system span").textContent = scheme.system;
-  card.querySelector(".scheme-appearance span").textContent = appearance(scheme);
-
+  const metadata = document.getElementById("sheet-metadata");
+  metadata.textContent = "";
   metadata.append(
     metadataItem("ID", scheme.id),
     metadataItem("Author", scheme.author),
     metadataItem("System", scheme.system),
     metadataItem("Variant", scheme.variant),
+    metadataItem("Appearance", appearance(scheme)),
     metadataItem("Background L*", scheme.lightness?.background?.toFixed(2)),
     metadataItem("Foreground L*", scheme.lightness?.foreground?.toFixed(2)),
   );
-  renderPalette(card.querySelector(".palette"), scheme);
+  renderPalette(document.getElementById("sheet-palette"), scheme);
+
+  backdrop.hidden = false;
+  requestAnimationFrame(() => {
+    backdrop.classList.add("open");
+    sheet.classList.add("open");
+    sheet.setAttribute("aria-hidden", "false");
+  });
+}
+
+function closeSheet() {
+  const sheet = document.getElementById("detail-sheet");
+  const backdrop = document.getElementById("sheet-backdrop");
+
+  sheet.classList.remove("open");
+  backdrop.classList.remove("open");
+  sheet.setAttribute("aria-hidden", "true");
+  window.setTimeout(() => {
+    if (!sheet.classList.contains("open")) {
+      backdrop.hidden = true;
+    }
+  }, 220);
+}
+
+function createCard(scheme) {
+  const template = document.getElementById("card-template");
+  const card = template.content.firstElementChild.cloneNode(true);
+
+  setPreviewColors(card, scheme);
+  card.querySelector("h2").textContent = scheme.slug;
+  card.querySelector(".card-title p").textContent = scheme.name;
+  card.querySelector(".scheme-system span").textContent = scheme.system;
+  card.querySelector(".scheme-appearance span").textContent = appearance(scheme);
 
   card.querySelector(".preview-button").addEventListener("click", () => {
-    const expanded = !card.classList.contains("expanded");
-    transitionLayout(() => setExpanded(card, details, expanded));
+    openSheet(scheme);
   });
 
   return card;
@@ -790,6 +1078,38 @@ document.querySelectorAll("[data-page-theme]").forEach((button) => {
   button.addEventListener("click", () => {
     transitionLayout(() => setPageTheme(button.dataset.pageTheme));
   });
+});
+
+document.querySelectorAll("[data-preview-language]").forEach((button) => {
+  button.addEventListener("click", () => {
+    setPreviewLanguage(button.dataset.previewLanguage);
+  });
+});
+
+document.getElementById("sheet-close").addEventListener("click", closeSheet);
+document.getElementById("sheet-backdrop").addEventListener("click", closeSheet);
+document.getElementById("copy-command").addEventListener("click", async (event) => {
+  const button = event.currentTarget;
+  const originalText = button.textContent;
+
+  try {
+    await navigator.clipboard.writeText(button.dataset.command);
+    button.textContent = "Copied";
+    window.setTimeout(() => {
+      button.textContent = originalText;
+    }, 1100);
+  } catch (_error) {
+    button.textContent = "Copy failed";
+    window.setTimeout(() => {
+      button.textContent = originalText;
+    }, 1400);
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeSheet();
+  }
 });
 
 render();
