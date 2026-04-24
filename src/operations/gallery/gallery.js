@@ -8,6 +8,7 @@ const state = {
 };
 let currentSheetId = null;
 let tooltipTimeoutId = null;
+const PAGE_THEME_STORAGE_KEY = "tinty-gallery-page-theme";
 
 const fallbackPalette = {
   base00: "#101418",
@@ -311,6 +312,7 @@ function setFilter(group, value) {
 
 function setPageTheme(theme) {
   state.pageTheme = theme;
+  window.localStorage.setItem(PAGE_THEME_STORAGE_KEY, theme);
   document.documentElement.dataset.theme = theme === "system" ? "" : theme;
   if (theme === "system") {
     document.documentElement.removeAttribute("data-theme");
@@ -324,6 +326,18 @@ function setPageTheme(theme) {
     .forEach((candidate) => candidate.classList.toggle("active", candidate.dataset.pageTheme === theme));
 
   render();
+}
+
+function loadSavedPageTheme() {
+  const savedTheme = window.localStorage.getItem(PAGE_THEME_STORAGE_KEY);
+  const validThemes = new Set(["system", "dark", "light"]);
+
+  if (savedTheme && validThemes.has(savedTheme)) {
+    setPageTheme(savedTheme);
+    return;
+  }
+
+  setPageTheme("system");
 }
 
 document.getElementById("search").addEventListener("input", (event) => {
@@ -384,5 +398,6 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("hashchange", syncSheetToHash);
 
+loadSavedPageTheme();
 syncSheetToHash();
 render();
