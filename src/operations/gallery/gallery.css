@@ -381,6 +381,10 @@ h1 {
   transition: border-color 160ms ease, box-shadow 200ms ease, transform 200ms ease;
 }
 
+.card.is-sheet-source {
+  visibility: hidden;
+}
+
 .card:hover,
 .card:focus-within {
   border-color: color-mix(in oklab, var(--accent) 35%, var(--border));

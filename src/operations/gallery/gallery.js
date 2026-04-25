@@ -266,6 +266,11 @@ function applySheetState(scheme, updateHash) {
   const command = `tinty apply ${scheme.id}`;
 
   currentSheetId = scheme.id;
+  document
+    .querySelectorAll(".card.is-sheet-source")
+    .forEach((c) => c.classList.remove("is-sheet-source"));
+  const matchingCard = document.querySelector(`.card[data-scheme-id="${CSS.escape(scheme.id)}"]`);
+  if (matchingCard) matchingCard.classList.add("is-sheet-source");
   setPreviewColors(sheet, scheme);
   setPreviewLanguage(state.language);
   document.getElementById("sheet-title").textContent = scheme.name;
@@ -307,6 +312,9 @@ function clearSheetState(updateHash) {
   const backdrop = document.getElementById("sheet-backdrop");
 
   currentSheetId = null;
+  document
+    .querySelectorAll(".card.is-sheet-source")
+    .forEach((c) => c.classList.remove("is-sheet-source"));
   if (updateHash) {
     clearSheetHash();
   }
@@ -381,6 +389,10 @@ function createCard(scheme) {
   card.querySelector(".preview-button").addEventListener("click", () => {
     openSheet(scheme, true, card);
   });
+
+  if (scheme.id === currentSheetId) {
+    card.classList.add("is-sheet-source");
+  }
 
   return card;
 }
