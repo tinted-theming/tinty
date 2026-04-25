@@ -74,10 +74,6 @@ function searchableText(scheme) {
     scheme.id,
     scheme.name,
     scheme.slug,
-    scheme.author,
-    scheme.system,
-    scheme.variant,
-    appearance(scheme),
   ].join(" ").toLowerCase();
 }
 
