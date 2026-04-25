@@ -159,12 +159,6 @@ function transitionLayout(callback) {
   callback();
 }
 
-function sheetLinkForId(id) {
-  const url = new URL(window.location.href);
-  url.hash = id;
-  return url.toString();
-}
-
 function schemeForHash() {
   const targetId = window.location.hash.replace(/^#/, "");
   if (!targetId) {
@@ -199,7 +193,10 @@ function showButtonTooltip(button, message) {
   }, 1100);
 }
 
-function openSheet(scheme, updateHash = true) {
+const SHARED_TRANSITION_NAME = "scheme-shared";
+let originCard = null;
+
+function applySheetState(scheme, updateHash) {
   const sheet = document.getElementById("detail-sheet");
   const backdrop = document.getElementById("sheet-backdrop");
   const command = `tinty apply ${scheme.id}`;
@@ -208,11 +205,11 @@ function openSheet(scheme, updateHash = true) {
   setPreviewColors(sheet, scheme);
   setPreviewLanguage("rust");
   document.getElementById("sheet-title").textContent = scheme.name;
+  document.querySelector("#sheet-system span").textContent = scheme.system;
+  document.querySelector("#sheet-appearance span").textContent = appearance(scheme);
   document.getElementById("sheet-command").textContent = command;
   document.getElementById("copy-command").dataset.command = command;
   document.getElementById("copy-command").dataset.tooltip = "Copy command";
-  document.getElementById("copy-link").dataset.link = sheetLinkForId(scheme.id);
-  document.getElementById("copy-link").dataset.tooltip = "Copy link";
 
   const metadata = document.getElementById("sheet-metadata");
   metadata.textContent = "";
@@ -233,14 +230,15 @@ function openSheet(scheme, updateHash = true) {
 
   backdrop.hidden = false;
   document.body.classList.add("sheet-open");
-  requestAnimationFrame(() => {
-    backdrop.classList.add("open");
-    sheet.classList.add("open");
-    sheet.setAttribute("aria-hidden", "false");
-  });
+  // Force layout flush so the opacity transition plays from the pre-`.open` state
+  // when no view transition is running.
+  void backdrop.offsetWidth;
+  backdrop.classList.add("open");
+  sheet.classList.add("open");
+  sheet.setAttribute("aria-hidden", "false");
 }
 
-function closeSheet(updateHash = true) {
+function clearSheetState(updateHash) {
   const sheet = document.getElementById("detail-sheet");
   const backdrop = document.getElementById("sheet-backdrop");
 
@@ -252,6 +250,51 @@ function closeSheet(updateHash = true) {
   sheet.classList.remove("open");
   backdrop.classList.remove("open");
   sheet.setAttribute("aria-hidden", "true");
+}
+
+function openSheet(scheme, updateHash = true, sourceCard = null) {
+  const sheet = document.getElementById("detail-sheet");
+
+  if (sourceCard && document.startViewTransition) {
+    sourceCard.style.viewTransitionName = SHARED_TRANSITION_NAME;
+    const transition = document.startViewTransition(() => {
+      sourceCard.style.viewTransitionName = "";
+      sheet.style.viewTransitionName = SHARED_TRANSITION_NAME;
+      applySheetState(scheme, updateHash);
+    });
+    originCard = sourceCard;
+    transition.finished.finally(() => {
+      sheet.style.viewTransitionName = "";
+    });
+    return;
+  }
+
+  originCard = sourceCard;
+  applySheetState(scheme, updateHash);
+}
+
+function closeSheet(updateHash = true) {
+  const sheet = document.getElementById("detail-sheet");
+  const backdrop = document.getElementById("sheet-backdrop");
+  const card = originCard;
+
+  if (card && document.body.contains(card) && document.startViewTransition) {
+    sheet.style.viewTransitionName = SHARED_TRANSITION_NAME;
+    const transition = document.startViewTransition(() => {
+      sheet.style.viewTransitionName = "";
+      card.style.viewTransitionName = SHARED_TRANSITION_NAME;
+      clearSheetState(updateHash);
+    });
+    transition.finished.finally(() => {
+      card.style.viewTransitionName = "";
+      backdrop.hidden = true;
+    });
+    originCard = null;
+    return;
+  }
+
+  clearSheetState(updateHash);
+  originCard = null;
   window.setTimeout(() => {
     if (!sheet.classList.contains("open")) {
       backdrop.hidden = true;
@@ -264,13 +307,14 @@ function createCard(scheme) {
   const card = template.content.firstElementChild.cloneNode(true);
 
   setPreviewColors(card, scheme);
+  card.dataset.schemeId = scheme.id;
   card.querySelector("h2").textContent = scheme.slug;
   card.querySelector(".card-title p").textContent = scheme.name;
   card.querySelector(".scheme-system span").textContent = scheme.system;
   card.querySelector(".scheme-appearance span").textContent = appearance(scheme);
 
   card.querySelector(".preview-button").addEventListener("click", () => {
-    openSheet(scheme);
+    openSheet(scheme, true, card);
   });
 
   return card;
@@ -373,17 +417,6 @@ document.getElementById("copy-command").addEventListener("click", async (event) 
 
   try {
     await navigator.clipboard.writeText(button.dataset.command);
-    showButtonTooltip(button, "Copied");
-  } catch (_error) {
-    showButtonTooltip(button, "Copy failed");
-  }
-});
-
-document.getElementById("copy-link").addEventListener("click", async (event) => {
-  const button = event.currentTarget;
-
-  try {
-    await navigator.clipboard.writeText(button.dataset.link);
     showButtonTooltip(button, "Copied");
   } catch (_error) {
     showButtonTooltip(button, "Copy failed");
