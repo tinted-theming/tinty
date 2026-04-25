@@ -1147,6 +1147,67 @@ h1 {
   }
 }
 
+@keyframes sheet-panel-reveal {
+  from {
+    clip-path: inset(0 0 100% 0 round var(--radius-lg));
+    backdrop-filter: blur(0) saturate(100%);
+    -webkit-backdrop-filter: blur(0) saturate(100%);
+    background: color-mix(in oklab, var(--surface) 24%, transparent);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round var(--radius-lg));
+  }
+}
+
+@keyframes sheet-pill-pop {
+  from {
+    opacity: 0;
+    transform: scale(.7) translateY(6px);
+  }
+  60% {
+    transform: scale(1.06) translateY(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sheet-title-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    letter-spacing: .04em;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: -.02em;
+    filter: blur(0);
+  }
+}
+
+.detail-sheet.open .sheet-glass-panel {
+  animation: sheet-panel-reveal 380ms cubic-bezier(.22, .8, .28, 1) 160ms both;
+}
+
+.detail-sheet.open .sheet-main-header h2 {
+  animation: sheet-title-rise 520ms cubic-bezier(.22, .6, .25, 1) 220ms both;
+}
+
+.detail-sheet.open .sheet-title-meta .meta-pill {
+  animation: sheet-pill-pop 260ms cubic-bezier(.22, .8, .28, 1) both;
+}
+
+.detail-sheet.open .sheet-title-meta .meta-pill:nth-child(1) {
+  animation-delay: 380ms;
+}
+
+.detail-sheet.open .sheet-title-meta .meta-pill:nth-child(2) {
+  animation-delay: 460ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
