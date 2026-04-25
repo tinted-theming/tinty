@@ -28,62 +28,43 @@ const fallbackPalette = {
 SCHEMES.sort((a, b) => a.id.localeCompare(b.id));
 
 const previewSnippets = {
-  rust: `<span class="keyword">use</span> tinty::{Scheme, Theme};
+  rust: `<span class="keyword">use</span> tinty::{<span class="type">Scheme</span>, <span class="type">Theme</span>};
 
 <span class="comment">// load and apply a color scheme</span>
-<span class="keyword">fn</span> <span class="function">apply</span>(name: &amp;str) -&gt; Option&lt;Theme&gt; {
-    <span class="keyword">let</span> scheme = Scheme::<span class="function">load</span>(name)?;
+<span class="keyword">fn</span> <span class="function">apply</span>(<span class="parameter">name</span>: &amp;<span class="type">str</span>) -&gt; <span class="type">Option</span>&lt;<span class="type">Theme</span>&gt; {
+    <span class="keyword">let</span> scheme = <span class="type">Scheme</span>::<span class="function">load</span>(<span class="parameter">name</span>)?;
     <span class="keyword">let</span> theme = scheme.<span class="function">with_base</span>(<span class="number">16</span>).<span class="function">build</span>();
     theme.<span class="function">apply</span>();
-    <span class="function">println!</span>(<span class="string">"applied: {}"</span>, theme.<span class="function">name</span>());
-    <span class="keyword">Some</span>(theme)
+    <span class="builtin">println!</span>(<span class="string">"applied: {}"</span>, theme.<span class="function">name</span>());
+    <span class="type">Some</span>(theme)
 }`,
-  kotlin: `<span class="keyword">import</span> tinty.Scheme
+  kotlin: `<span class="keyword">import</span> tinty.<span class="type">Scheme</span>
 
 <span class="comment">// load and apply a color scheme</span>
-<span class="keyword">fun</span> <span class="function">apply</span>(name: String) = <span class="function">runCatching</span> {
-    <span class="keyword">val</span> theme = Scheme.<span class="function">load</span>(name)
+<span class="keyword">fun</span> <span class="function">apply</span>(<span class="parameter">name</span>: <span class="type">String</span>) = <span class="builtin">runCatching</span> {
+    <span class="keyword">val</span> theme = <span class="type">Scheme</span>.<span class="function">load</span>(<span class="parameter">name</span>)
         .<span class="function">withBase</span>(<span class="number">16</span>)
         .<span class="function">build</span>()
     theme.<span class="function">apply</span>()
-    <span class="function">println</span>(<span class="string">"applied: \${theme.name}"</span>)
+    <span class="builtin">println</span>(<span class="string">"applied: \${theme.name}"</span>)
 }`,
-  javascript: `<span class="keyword">import</span> { Scheme } <span class="keyword">from</span> <span class="string">"tinty"</span>;
-
-<span class="comment">// load and apply a color scheme</span>
-<span class="keyword">async</span> <span class="keyword">function</span> <span class="function">apply</span>(name) {
-  <span class="keyword">const</span> theme = <span class="keyword">await</span> Scheme.<span class="function">load</span>(name)
-    .<span class="function">withBase</span>(<span class="number">16</span>)
-    .<span class="function">build</span>();
-  theme.<span class="function">apply</span>();
-  console.<span class="function">log</span>(<span class="string">\`applied: \${theme.name}\`</span>);
-}`,
-  lisp: `<span class="comment">;; load and apply a color scheme</span>
+  lisp:`<span class="comment">;; load and apply a color scheme</span>
 (<span class="keyword">defpackage</span> <span class="string">:tinty</span> (:use :cl))
 
-(<span class="keyword">defun</span> <span class="function">apply-scheme</span> (name)
-  (<span class="keyword">let*</span> ((scheme (<span class="function">scheme:load</span> name))
+(<span class="keyword">defun</span> <span class="function">apply-scheme</span> (<span class="parameter">name</span>)
+  (<span class="keyword">let*</span> ((scheme (<span class="function">scheme:load</span> <span class="parameter">name</span>))
          (theme (<span class="function">scheme:build</span> scheme :base <span class="number">16</span>)))
     (<span class="function">theme:apply</span> theme)
-    (<span class="function">format</span> t <span class="string">"applied: ~a~%"</span>
+    (<span class="builtin">format</span> t <span class="string">"applied: ~a~%"</span>
       (<span class="function">theme:name</span> theme))))`,
-  zsh: `<span class="comment">#!/usr/bin/env zsh</span>
-<span class="keyword">source</span> <span class="string">"\${TINTY_DIR}/init.zsh"</span>
-
-<span class="comment"># load and apply a color scheme</span>
-<span class="keyword">function</span> <span class="function">apply_scheme</span>() {
-  <span class="keyword">local</span> name=<span class="string">"\${1:?}"</span>
-  <span class="keyword">local</span> base=<span class="number">16</span>
-  tinty <span class="function">apply</span> <span class="string">"$name"</span> --base <span class="string">"$base"</span>
-}`,
-  elixir: `<span class="keyword">defmodule</span> Tinty <span class="keyword">do</span>
+  elixir:`<span class="keyword">defmodule</span> <span class="type">Tinty</span> <span class="keyword">do</span>
   <span class="comment"># load and apply a color scheme</span>
-  <span class="keyword">def</span> <span class="function">apply</span>(name) <span class="keyword">do</span>
+  <span class="keyword">def</span> <span class="function">apply</span>(<span class="parameter">name</span>) <span class="keyword">do</span>
     {<span class="string">:ok</span>, theme} =
-      name
-      |&gt; Scheme.<span class="function">load</span>()
-      |&gt; Theme.<span class="function">build</span>(base: <span class="number">16</span>)
-    IO.<span class="function">puts</span>(<span class="string">"applied: #{theme.name}"</span>)
+      <span class="parameter">name</span>
+      |&gt; <span class="type">Scheme</span>.<span class="function">load</span>()
+      |&gt; <span class="type">Theme</span>.<span class="function">build</span>(base: <span class="number">16</span>)
+    <span class="type">IO</span>.<span class="builtin">puts</span>(<span class="string">"applied: #{theme.name}"</span>)
     theme
   <span class="keyword">end</span>
 <span class="keyword">end</span>`,
@@ -95,15 +76,30 @@ const previewSnippets = {
 +    let colors = 16;
 +    println!("applying: {name}");</span>     scheme.apply(colors);
  }`,
-  haskell: `<span class="keyword">import</span> Tinty (Scheme, Theme)
+  haskell: `<span class="keyword">import</span> <span class="type">Tinty</span> (<span class="type">Scheme</span>, <span class="type">Theme</span>)
 
 <span class="comment">-- load and apply a color scheme</span>
-<span class="function">apply</span> :: String -&gt; IO ()
-<span class="function">apply</span> name = <span class="keyword">do</span>
-  scheme &lt;- <span class="function">loadScheme</span> name
+<span class="function">apply</span> :: <span class="type">String</span> -&gt; <span class="type">IO</span> ()
+<span class="function">apply</span> <span class="parameter">name</span> = <span class="keyword">do</span>
+  scheme &lt;- <span class="function">loadScheme</span> <span class="parameter">name</span>
   <span class="keyword">let</span> theme = <span class="function">buildWith</span> scheme <span class="number">16</span>
   <span class="function">applyTheme</span> theme
-  <span class="function">putStrLn</span> (<span class="string">"applied: "</span> ++ <span class="function">themeName</span> theme)`,
+  <span class="builtin">putStrLn</span> (<span class="string">"applied: "</span> ++ <span class="function">themeName</span> theme)`,
+  terminal: `<span class="ansi-bright-green">user@host</span> <span class="ansi-bright-blue">~/dev/scheme</span>  <span class="ansi-bright-magenta">main</span><span class="ansi-bright-white">$</span> ls <span class="ansi-cyan">-F</span>
+Cargo.toml  README.md  <span class="ansi-bright-cyan">current@</span>  <span class="ansi-blue">drafts/</span>  <span class="ansi-blue">scripts/</span>  <span class="ansi-blue">src/</span>
+
+<span class="ansi-bright-green">user@host</span> <span class="ansi-bright-blue">~/dev/scheme</span>  <span class="ansi-bright-magenta">main</span><span class="ansi-bright-white">$</span> tree <span class="ansi-cyan">-L</span> <span class="ansi-bright-yellow">2</span> <span class="ansi-blue">src/</span>
+<span class="ansi-blue">src/</span>
+<span class="ansi-bright-black">├──</span> lib.rs
+<span class="ansi-bright-black">├──</span> <span class="ansi-blue">scheme/</span>
+<span class="ansi-bright-black">│   ├──</span> base16.rs
+<span class="ansi-bright-black">│   └──</span> tinted8.rs
+<span class="ansi-bright-black">└──</span> <span class="ansi-blue">templates/</span>
+<span class="ansi-bright-black">    ├──</span> <span class="ansi-yellow">alacritty.tpl</span>
+<span class="ansi-bright-black">    └──</span> <span class="ansi-yellow">kitty.tpl</span>
+
+<span class="ansi-bright-green">user@host</span> <span class="ansi-bright-blue">~/dev/scheme</span>  <span class="ansi-bright-magenta">main</span><span class="ansi-bright-white">$</span> grep <span class="ansi-cyan">-rn</span> <span class="ansi-green">"TODO"</span> <span class="ansi-blue">src/</span>
+<span class="ansi-magenta">src/scheme/tinted8.rs</span><span class="ansi-cyan">:</span><span class="ansi-green">42</span><span class="ansi-cyan">:</span> // <span class="ansi-bright-red">TODO</span>: validate non-standard variants`,
 };
 
 function color(scheme, key) {
@@ -122,6 +118,33 @@ const PREVIEW_ROLE_KEYS = {
     number: "base09",
     deleted: "base08",
     added: "base0B",
+    type: "base0A",
+    builtin: "base0D",
+    parameter: "base0C",
+    "ansi-black": "base00",
+    "ansi-red": "base08",
+    "ansi-green": "base0B",
+    "ansi-yellow": "base0A",
+    "ansi-blue": "base0D",
+    "ansi-magenta": "base0E",
+    "ansi-cyan": "base0C",
+    "ansi-white": "base05",
+    "ansi-bright-black": "base03",
+    "ansi-bright-red": "base08",
+    "ansi-bright-green": "base0B",
+    "ansi-bright-yellow": "base0A",
+    "ansi-bright-blue": "base0D",
+    "ansi-bright-magenta": "base0E",
+    "ansi-bright-cyan": "base0C",
+    "ansi-bright-white": "base07",
+  },
+  base24: {
+    "ansi-bright-red": "base12",
+    "ansi-bright-yellow": "base13",
+    "ansi-bright-green": "base14",
+    "ansi-bright-cyan": "base15",
+    "ansi-bright-blue": "base16",
+    "ansi-bright-magenta": "base17",
   },
   tinted8: {
     dark: {
@@ -142,15 +165,49 @@ const PREVIEW_ROLE_KEYS = {
       number: "orange-normal",
       deleted: "red-bright",
       added: "green-bright",
+      type: "yellow-normal",
+      builtin: "blue-bright",
+      parameter: "cyan-bright",
+      "ansi-black": "black-normal",
+      "ansi-red": "red-normal",
+      "ansi-green": "green-normal",
+      "ansi-yellow": "yellow-normal",
+      "ansi-blue": "blue-normal",
+      "ansi-magenta": "magenta-normal",
+      "ansi-cyan": "cyan-normal",
+      "ansi-white": "white-normal",
+      "ansi-bright-black": "black-bright",
+      "ansi-bright-red": "red-bright",
+      "ansi-bright-green": "green-bright",
+      "ansi-bright-yellow": "yellow-bright",
+      "ansi-bright-blue": "blue-bright",
+      "ansi-bright-magenta": "magenta-bright",
+      "ansi-bright-cyan": "cyan-bright",
+      "ansi-bright-white": "white-bright",
     },
   },
 };
 
+const PREVIEW_ROLES = [
+  "bg", "fg", "muted",
+  "comment", "keyword", "function", "string", "number",
+  "deleted", "added",
+  "type", "builtin", "parameter",
+  "ansi-black", "ansi-red", "ansi-green", "ansi-yellow",
+  "ansi-blue", "ansi-magenta", "ansi-cyan", "ansi-white",
+  "ansi-bright-black", "ansi-bright-red", "ansi-bright-green", "ansi-bright-yellow",
+  "ansi-bright-blue", "ansi-bright-magenta", "ansi-bright-cyan", "ansi-bright-white",
+];
+
 function previewKey(scheme, role) {
-  if (String(scheme.system).toLowerCase() === "tinted8") {
+  const system = String(scheme.system).toLowerCase();
+  if (system === "tinted8") {
     const variant = String(scheme.variant || "").toLowerCase() === "light" ? "light" : "dark";
     const t8 = PREVIEW_ROLE_KEYS.tinted8;
     return t8[variant][role] ?? t8.shared[role];
+  }
+  if (system === "base24") {
+    return PREVIEW_ROLE_KEYS.base24[role] ?? PREVIEW_ROLE_KEYS.base16[role];
   }
   return PREVIEW_ROLE_KEYS.base16[role];
 }
@@ -184,10 +241,9 @@ function matchesFilters(scheme) {
 }
 
 function setPreviewColors(card, scheme) {
-  ["bg", "fg", "muted", "comment", "keyword", "function", "string", "number", "deleted", "added"]
-    .forEach((role) => {
-      card.style.setProperty(`--preview-${role}`, color(scheme, previewKey(scheme, role)));
-    });
+  PREVIEW_ROLES.forEach((role) => {
+    card.style.setProperty(`--preview-${role}`, color(scheme, previewKey(scheme, role)));
+  });
 }
 
 function setPreviewLanguage(language) {

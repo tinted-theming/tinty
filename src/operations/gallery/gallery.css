@@ -487,6 +487,39 @@ h1 {
   color: var(--preview-number);
 }
 
+.type {
+  color: var(--preview-type);
+}
+
+.builtin {
+  color: var(--preview-builtin);
+}
+
+.parameter {
+  color: var(--preview-parameter);
+  font-style: italic;
+}
+
+.ansi-black { color: var(--preview-ansi-black); }
+.ansi-red { color: var(--preview-ansi-red); }
+.ansi-green { color: var(--preview-ansi-green); }
+.ansi-yellow { color: var(--preview-ansi-yellow); }
+.ansi-blue { color: var(--preview-ansi-blue); }
+.ansi-magenta { color: var(--preview-ansi-magenta); }
+.ansi-cyan { color: var(--preview-ansi-cyan); }
+.ansi-white { color: var(--preview-ansi-white); }
+.ansi-bright-black { color: var(--preview-ansi-bright-black); }
+.ansi-bright-red { color: var(--preview-ansi-bright-red); }
+.ansi-bright-green { color: var(--preview-ansi-bright-green); }
+.ansi-bright-yellow { color: var(--preview-ansi-bright-yellow); }
+.ansi-bright-blue { color: var(--preview-ansi-bright-blue); }
+.ansi-bright-magenta { color: var(--preview-ansi-bright-magenta); }
+.ansi-bright-cyan { color: var(--preview-ansi-bright-cyan); }
+.ansi-bright-white {
+  color: var(--preview-ansi-bright-white);
+  font-weight: 500;
+}
+
 .card-title {
   padding: 16px 18px 18px;
   border-top: 1px solid var(--border);
