@@ -9,6 +9,7 @@ const state = {
 };
 let currentSheetId = null;
 let tooltipTimeoutId = null;
+let isFirstRender = true;
 const PAGE_THEME_STORAGE_KEY = "tinty-gallery-page-theme";
 const LANGUAGE_STORAGE_KEY = "tinty-gallery-preview-language";
 
@@ -527,12 +528,28 @@ function render() {
   const fragment = document.createDocumentFragment();
   const visible = SCHEMES.filter(matchesFilters);
 
+  gallery.classList.toggle("is-first-render", isFirstRender);
   gallery.textContent = "";
   visible.forEach((scheme) => fragment.append(createCard(scheme)));
   gallery.append(fragment);
 
+  if (isFirstRender) {
+    let rowIndex = -1;
+    let lastTop = null;
+    Array.from(gallery.children).forEach((card) => {
+      const top = card.getBoundingClientRect().top;
+      if (lastTop === null || Math.abs(top - lastTop) > 4) {
+        rowIndex++;
+        lastTop = top;
+      }
+      card.style.setProperty("--enter-delay", `${Math.min(rowIndex * 70, 700)}ms`);
+    });
+  }
+
   empty.hidden = visible.length !== 0;
   count.textContent = `${visible.length} of ${SCHEMES.length} schemes`;
+
+  isFirstRender = false;
 }
 
 function setFilter(group, value) {
@@ -624,4 +641,3 @@ window.addEventListener("hashchange", syncSheetToHash);
 loadSavedLanguage();
 loadSavedPageTheme();
 syncSheetToHash();
-render();

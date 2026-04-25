@@ -116,14 +116,12 @@ body::before {
 .page-scene {
   transform-origin: center top;
   transform: translateY(0) scale(1);
-  transition: transform 160ms cubic-bezier(.2, .8, .2, 1), opacity 130ms ease, filter 160ms ease;
-  will-change: transform;
+  transition: transform 160ms cubic-bezier(.2, .8, .2, 1), opacity 130ms ease;
 }
 
 body.sheet-open .page-scene {
   transform: translateY(-8px) scale(.985);
   opacity: .92;
-  filter: saturate(.92) blur(.6px);
 }
 
 body.sheet-open {
@@ -616,21 +614,24 @@ h1 {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgb(0 0 0 / 26%);
-  backdrop-filter: blur(8px) saturate(110%);
-  -webkit-backdrop-filter: blur(8px) saturate(110%);
+  background: rgb(0 0 0 / 32%);
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity 120ms ease, backdrop-filter 220ms ease, -webkit-backdrop-filter 220ms ease;
 }
 
 .sheet-backdrop.open {
   opacity: 1;
 }
 
-@supports not (backdrop-filter: blur(1px)) {
-  .sheet-backdrop {
-    background: rgb(0 0 0 / 42%);
-  }
+body.sheet-open .sheet-backdrop {
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  transition:
+    opacity 120ms ease,
+    backdrop-filter 280ms ease 260ms,
+    -webkit-backdrop-filter 280ms ease 260ms;
 }
 
 .detail-sheet {
@@ -1147,15 +1148,41 @@ h1 {
   }
 }
 
-@keyframes sheet-panel-reveal {
+@keyframes card-fade-in {
   from {
-    clip-path: inset(0 0 100% 0 round var(--radius-lg));
-    backdrop-filter: blur(0) saturate(100%);
-    -webkit-backdrop-filter: blur(0) saturate(100%);
-    background: color-mix(in oklab, var(--surface) 24%, transparent);
+    opacity: 0;
   }
   to {
-    clip-path: inset(0 0 0 0 round var(--radius-lg));
+    opacity: 1;
+  }
+}
+
+@keyframes card-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.card {
+  animation: card-fade-in 140ms ease-out both;
+}
+
+.gallery.is-first-render .card {
+  animation: card-rise-in 420ms cubic-bezier(.22, .8, .28, 1) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+
+@keyframes sheet-panel-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -1178,34 +1205,35 @@ h1 {
     opacity: 0;
     transform: translateY(10px);
     letter-spacing: .04em;
-    filter: blur(6px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
     letter-spacing: -.02em;
-    filter: blur(0);
   }
 }
 
 .detail-sheet.open .sheet-glass-panel {
-  animation: sheet-panel-reveal 380ms cubic-bezier(.22, .8, .28, 1) 160ms both;
+  animation: sheet-panel-reveal 380ms cubic-bezier(.22, .8, .28, 1) 460ms both;
+  will-change: opacity;
 }
 
 .detail-sheet.open .sheet-main-header h2 {
-  animation: sheet-title-rise 520ms cubic-bezier(.22, .6, .25, 1) 220ms both;
+  animation: sheet-title-rise 520ms cubic-bezier(.22, .6, .25, 1) 280ms both;
+  will-change: transform, opacity;
 }
 
 .detail-sheet.open .sheet-title-meta .meta-pill {
   animation: sheet-pill-pop 260ms cubic-bezier(.22, .8, .28, 1) both;
+  will-change: transform, opacity;
 }
 
 .detail-sheet.open .sheet-title-meta .meta-pill:nth-child(1) {
-  animation-delay: 380ms;
+  animation-delay: 480ms;
 }
 
 .detail-sheet.open .sheet-title-meta .meta-pill:nth-child(2) {
-  animation-delay: 460ms;
+  animation-delay: 560ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
