@@ -93,50 +93,43 @@
 
   <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
   <aside id="detail-sheet" class="detail-sheet" aria-hidden="true" aria-labelledby="sheet-title">
-    <header class="sheet-header">
-      <div class="sheet-title-block">
-        <h2 id="sheet-title"></h2>
-        <div class="sheet-title-meta">
-          <span id="sheet-system" class="meta-pill">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5Z"></path><path d="m4 12 8 4.5 8-4.5"></path></svg>
-            <span></span>
-          </span>
-          <span id="sheet-appearance" class="meta-pill">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18"></path></svg>
-            <span></span>
-          </span>
+    <button type="button" id="sheet-close" class="icon-button" aria-label="Close details">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+    </button>
+    <div class="sheet-layout">
+      <div class="sheet-main">
+        <div class="sheet-main-header">
+          <div class="sheet-title-block">
+            <h2 id="sheet-title"></h2>
+            <div class="sheet-title-meta">
+              <span id="sheet-system" class="meta-pill">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5Z"></path><path d="m4 12 8 4.5 8-4.5"></path></svg>
+                <span></span>
+              </span>
+              <span id="sheet-appearance" class="meta-pill">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18"></path></svg>
+                <span></span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-code-area">
+          <pre class="code-preview sheet-code-preview"><code id="sheet-code"></code></pre>
+        </div>
+        <div class="sheet-lang-row">
+          <div class="preview-toolbar" aria-label="Preview language">
+            <button type="button" class="chip active" data-preview-language="rust">Rust</button>
+            <button type="button" class="chip" data-preview-language="kotlin">Kotlin</button>
+            <button type="button" class="chip" data-preview-language="javascript">JavaScript</button>
+            <button type="button" class="chip" data-preview-language="lisp">Lisp</button>
+            <button type="button" class="chip" data-preview-language="zsh">Zsh</button>
+            <button type="button" class="chip" data-preview-language="elixir">Elixir</button>
+            <button type="button" class="chip" data-preview-language="haskell">Haskell</button>
+            <button type="button" class="chip" data-preview-language="diff">Diff</button>
+          </div>
         </div>
       </div>
-      <button type="button" id="sheet-close" class="icon-button" aria-label="Close details">
-        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-      </button>
-    </header>
-    <div class="sheet-body">
-      <section id="sheet-preview" class="sheet-preview" aria-label="Code preview">
-        <div class="section-label">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 18 6-6-6-6"></path><path d="m8 6-6 6 6 6"></path></svg>
-          Preview
-        </div>
-        <div class="preview-toolbar" aria-label="Preview language">
-          <button type="button" class="chip active" data-preview-language="rust">Rust</button>
-          <button type="button" class="chip" data-preview-language="kotlin">Kotlin</button>
-          <button type="button" class="chip" data-preview-language="javascript">JavaScript</button>
-          <button type="button" class="chip" data-preview-language="lisp">Lisp</button>
-          <button type="button" class="chip" data-preview-language="zsh">Zsh</button>
-          <button type="button" class="chip" data-preview-language="elixir">Elixir</button>
-          <button type="button" class="chip" data-preview-language="haskell">Haskell</button>
-          <button type="button" class="chip" data-preview-language="diff">Diff</button>
-        </div>
-        <pre class="code-preview sheet-code-preview"><code id="sheet-code"></code></pre>
-        <div class="command-row">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m8 9 3 3-3 3"></path><path d="M13 15h3"></path></svg>
-          <code id="sheet-command"></code>
-          <button type="button" id="copy-command" class="icon-button" aria-label="Copy apply command">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg>
-          </button>
-        </div>
-      </section>
-      <div class="sheet-details">
+      <div class="sheet-glass-panel">
         <section aria-label="Properties">
           <div class="section-label">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path><path d="M8 7v10"></path></svg>
@@ -151,6 +144,15 @@
           </div>
           <div id="sheet-palette" class="palette"></div>
         </section>
+      </div>
+      <div class="sheet-main-footer">
+        <div class="command-row">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m8 9 3 3-3 3"></path><path d="M13 15h3"></path></svg>
+          <code id="sheet-command"></code>
+          <button type="button" id="copy-command" class="icon-button" aria-label="Copy apply command">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
       </div>
     </div>
   </aside>
