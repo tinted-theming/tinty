@@ -260,6 +260,13 @@ function showButtonTooltip(button, message) {
 const SHARED_TRANSITION_NAME = "scheme-shared";
 let originCard = null;
 
+function effectivePageTheme() {
+  if (state.pageTheme === "dark" || state.pageTheme === "light") {
+    return state.pageTheme;
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 function applySheetState(scheme, updateHash) {
   const sheet = document.getElementById("detail-sheet");
   const backdrop = document.getElementById("sheet-backdrop");
@@ -271,6 +278,14 @@ function applySheetState(scheme, updateHash) {
     .forEach((c) => c.classList.remove("is-sheet-source"));
   const matchingCard = document.querySelector(`.card[data-scheme-id="${CSS.escape(scheme.id)}"]`);
   if (matchingCard) matchingCard.classList.add("is-sheet-source");
+
+  const schemeAppearance = appearance(scheme);
+  const themeAppearance = effectivePageTheme();
+  sheet.dataset.contrastMismatch =
+    (schemeAppearance === "light" || schemeAppearance === "dark") &&
+    schemeAppearance !== themeAppearance
+      ? "true"
+      : "false";
   setPreviewColors(sheet, scheme);
   setPreviewLanguage(state.language);
   document.getElementById("sheet-title").textContent = scheme.name;

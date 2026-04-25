@@ -722,6 +722,15 @@ h1 {
   overflow-y: auto;
 }
 
+.detail-sheet[data-contrast-mismatch="true"] {
+  border-color: color-mix(in oklab, var(--preview-fg, var(--border)) 14%, transparent);
+}
+
+.detail-sheet[data-contrast-mismatch="true"] .sheet-glass-panel {
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  border-color: color-mix(in oklab, var(--preview-fg, #fff) 18%, transparent);
+}
+
 @supports not (backdrop-filter: blur(1px)) {
   .sheet-glass-panel {
     background: color-mix(in oklab, var(--surface) 96%, transparent);
