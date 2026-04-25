@@ -718,6 +718,30 @@ h1 {
   transform: scale(.97);
 }
 
+.theme-switcher .chip {
+  padding: 4px 8px;
+}
+
+#sheet-close {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--surface) 55%, transparent);
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink-3);
+}
+
+#sheet-close:hover {
+  background: color-mix(in oklab, var(--surface) 80%, transparent);
+  border-color: var(--border-strong);
+  color: var(--ink-1);
+}
+
 .icon-button[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
