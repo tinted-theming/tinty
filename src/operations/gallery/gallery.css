@@ -43,7 +43,7 @@
   --ink-4: #9aa2ad;
   --border: #e6e5e0;
   --border-strong: #d6d4cd;
-  --accent: #0d7680;
+  --accent: #c95c17;
   --accent-ink: #ffffff;
   --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
   --accent-softer: color-mix(in oklab, var(--accent) 7%, transparent);
@@ -954,7 +954,7 @@ h1 {
     --ink-4: #5c6473;
     --border: #242935;
     --border-strong: #2f3544;
-    --accent: #5dc7bd;
+    --accent: #e87a35;
     --accent-ink: #0b0d12;
     --accent-soft: color-mix(in oklab, var(--accent) 18%, transparent);
     --accent-softer: color-mix(in oklab, var(--accent) 10%, transparent);
@@ -1016,7 +1016,7 @@ h1 {
   --ink-4: #9aa2ad;
   --border: #e6e5e0;
   --border-strong: #d6d4cd;
-  --accent: #0d7680;
+  --accent: #c95c17;
   --accent-ink: #ffffff;
   --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
   --accent-softer: color-mix(in oklab, var(--accent) 7%, transparent);
@@ -1045,7 +1045,7 @@ h1 {
   --ink-4: #5c6473;
   --border: #242935;
   --border-strong: #2f3544;
-  --accent: #5dc7bd;
+  --accent: #e87a35;
   --accent-ink: #0b0d12;
   --accent-soft: color-mix(in oklab, var(--accent) 18%, transparent);
   --accent-softer: color-mix(in oklab, var(--accent) 10%, transparent);
