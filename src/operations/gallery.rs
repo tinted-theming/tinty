@@ -17,6 +17,10 @@ const GALLERY_CSS: &str = include_str!("gallery/gallery.css");
 const GALLERY_JS: &str = include_str!("gallery/gallery.js");
 const LOGO_BYTES: &[u8] = include_bytes!("../../assets/tinted-theming-logo.png");
 const FAVICON_BYTES: &[u8] = include_bytes!("../../assets/favicon.png");
+const FONT_DM_SERIF_400: &[u8] = include_bytes!("gallery/fonts/dm-serif-display-400.woff2");
+const FONT_DM_SERIF_400_ITALIC: &[u8] = include_bytes!("gallery/fonts/dm-serif-display-400-italic.woff2");
+const FONT_IBM_PLEX_MONO_400: &[u8] = include_bytes!("gallery/fonts/ibm-plex-mono-400.woff2");
+const FONT_IBM_PLEX_MONO_500: &[u8] = include_bytes!("gallery/fonts/ibm-plex-mono-500.woff2");
 
 pub fn gallery(
     data_path: &Path,
@@ -45,9 +49,11 @@ pub fn gallery(
 
 fn write_gallery_files(output_dir: &Path, schemes_json: &str) -> Result<()> {
     let assets_dir = output_dir.join("assets");
+    let fonts_dir = assets_dir.join("fonts");
 
     ensure_directory_exists(output_dir)?;
     ensure_directory_exists(&assets_dir)?;
+    ensure_directory_exists(&fonts_dir)?;
 
     write_to_file(output_dir.join("index.html"), INDEX_HTML)?;
     write_to_file(assets_dir.join("gallery.css"), GALLERY_CSS)?;
@@ -55,6 +61,10 @@ fn write_gallery_files(output_dir: &Path, schemes_json: &str) -> Result<()> {
     write_to_file(assets_dir.join("gallery.js"), &gallery_js)?;
     write_binary_file(assets_dir.join("tinted-theming-logo.png"), LOGO_BYTES)?;
     write_binary_file(assets_dir.join("favicon.png"), FAVICON_BYTES)?;
+    write_binary_file(fonts_dir.join("dm-serif-display-400.woff2"), FONT_DM_SERIF_400)?;
+    write_binary_file(fonts_dir.join("dm-serif-display-400-italic.woff2"), FONT_DM_SERIF_400_ITALIC)?;
+    write_binary_file(fonts_dir.join("ibm-plex-mono-400.woff2"), FONT_IBM_PLEX_MONO_400)?;
+    write_binary_file(fonts_dir.join("ibm-plex-mono-500.woff2"), FONT_IBM_PLEX_MONO_500)?;
 
     Ok(())
 }
