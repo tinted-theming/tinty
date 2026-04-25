@@ -110,6 +110,51 @@ function color(scheme, key) {
   return scheme.palette[key]?.hex_str || fallbackPalette[key] || fallbackPalette.base05;
 }
 
+const PREVIEW_ROLE_KEYS = {
+  base16: {
+    bg: "base00",
+    fg: "base05",
+    muted: "base04",
+    comment: "base03",
+    keyword: "base0E",
+    function: "base0D",
+    string: "base0B",
+    number: "base09",
+    deleted: "base08",
+    added: "base0B",
+  },
+  tinted8: {
+    dark: {
+      bg: "black-normal",
+      fg: "white-normal",
+      muted: "white-dim",
+    },
+    light: {
+      bg: "white-normal",
+      fg: "black-normal",
+      muted: "black-dim",
+    },
+    shared: {
+      comment: "gray-dim",
+      keyword: "magenta-normal",
+      function: "blue-normal",
+      string: "green-normal",
+      number: "orange-normal",
+      deleted: "red-bright",
+      added: "green-bright",
+    },
+  },
+};
+
+function previewKey(scheme, role) {
+  if (String(scheme.system).toLowerCase() === "tinted8") {
+    const variant = String(scheme.variant || "").toLowerCase() === "light" ? "light" : "dark";
+    const t8 = PREVIEW_ROLE_KEYS.tinted8;
+    return t8[variant][role] ?? t8.shared[role];
+  }
+  return PREVIEW_ROLE_KEYS.base16[role];
+}
+
 function appearance(scheme) {
   const background = scheme.lightness?.background;
   if (typeof background !== "number") {
@@ -139,15 +184,10 @@ function matchesFilters(scheme) {
 }
 
 function setPreviewColors(card, scheme) {
-  card.style.setProperty("--preview-bg", color(scheme, "base00"));
-  card.style.setProperty("--preview-fg", color(scheme, "base05"));
-  card.style.setProperty("--preview-muted", color(scheme, "base04"));
-  card.style.setProperty("--preview-comment", color(scheme, "base03"));
-  card.style.setProperty("--preview-keyword", color(scheme, "base0E"));
-  card.style.setProperty("--preview-function", color(scheme, "base0D"));
-  card.style.setProperty("--preview-string", color(scheme, "base0B"));
-  card.style.setProperty("--preview-number", color(scheme, "base09"));
-  card.style.setProperty("--preview-deleted", color(scheme, "base08"));
+  ["bg", "fg", "muted", "comment", "keyword", "function", "string", "number", "deleted", "added"]
+    .forEach((role) => {
+      card.style.setProperty(`--preview-${role}`, color(scheme, previewKey(scheme, role)));
+    });
 }
 
 function setPreviewLanguage(language) {

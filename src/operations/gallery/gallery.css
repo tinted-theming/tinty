@@ -473,8 +473,8 @@ h1 {
 
 .diff-add {
   display: block;
-  color: var(--preview-string);
-  background: color-mix(in oklab, var(--preview-string) 14%, transparent);
+  color: var(--preview-added);
+  background: color-mix(in oklab, var(--preview-added) 14%, transparent);
 }
 
 .diff-del {
