@@ -395,8 +395,8 @@ function createCard(scheme) {
 
   setPreviewColors(card, scheme);
   card.dataset.schemeId = scheme.id;
-  card.querySelector("h2").textContent = scheme.slug;
-  card.querySelector(".card-title p").textContent = scheme.name;
+  card.querySelector("h2").textContent = scheme.name;
+  card.querySelector(".card-title p").textContent = scheme.id;
   card.querySelector(".scheme-system span").textContent = scheme.system;
   card.querySelector(".scheme-appearance span").textContent = appearance(scheme);
   card.querySelector(".code-preview code").innerHTML = previewSnippets[state.language] || previewSnippets.rust;

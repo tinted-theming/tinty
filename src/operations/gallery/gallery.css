@@ -488,23 +488,24 @@ h1 {
 }
 
 .card-title {
-  padding: 14px 16px 16px;
+  padding: 16px 18px 18px;
   border-top: 1px solid var(--border);
   background: var(--surface);
 }
 
 .card-title h2 {
   overflow-wrap: anywhere;
-  font-size: 15px;
-  font-weight: 650;
-  line-height: 1.25;
-  letter-spacing: -.005em;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 1.9vw, 24px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -.015em;
   color: var(--ink-1);
 }
 
 .card-title p {
-  margin-top: 2px;
-  font-size: 12.5px;
+  margin-top: 6px;
+  font: 12px/1.4 var(--font-mono);
   color: var(--ink-3);
 }
 
