@@ -19,6 +19,19 @@
       </div>
       <div class="topbar-actions">
         <output id="result-count" aria-live="polite"></output>
+        <div class="language-select-wrapper">
+          <select id="language-select" class="language-select" aria-label="Preview language">
+            <option value="rust">Rust</option>
+            <option value="kotlin">Kotlin</option>
+            <option value="javascript">JavaScript</option>
+            <option value="lisp">Lisp</option>
+            <option value="zsh">Zsh</option>
+            <option value="elixir">Elixir</option>
+            <option value="haskell">Haskell</option>
+            <option value="diff">Diff</option>
+          </select>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
         <div class="theme-switcher" aria-label="Page theme">
           <button type="button" class="chip active" data-page-theme="system">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"></rect><path d="M8 21h8"></path><path d="M12 17v4"></path></svg>
@@ -113,6 +126,9 @@
           <button type="button" class="chip" data-preview-language="javascript">JavaScript</button>
           <button type="button" class="chip" data-preview-language="lisp">Lisp</button>
           <button type="button" class="chip" data-preview-language="zsh">Zsh</button>
+          <button type="button" class="chip" data-preview-language="elixir">Elixir</button>
+          <button type="button" class="chip" data-preview-language="haskell">Haskell</button>
+          <button type="button" class="chip" data-preview-language="diff">Diff</button>
         </div>
         <pre class="code-preview sheet-code-preview"><code id="sheet-code"></code></pre>
         <div class="command-row">
@@ -155,11 +171,15 @@
             <span></span>
           </span>
         </div>
-        <pre class="code-preview"><code><span class="comment">// preview.rs</span>
-<span class="keyword">fn</span> <span class="function">render_scheme</span>() {
-    <span class="keyword">let</span> name = <span class="string">"tinty"</span>;
-    <span class="keyword">let</span> colors = <span class="number">16</span>;
-    <span class="function">apply</span>(name, colors);
+        <pre class="code-preview"><code><span class="keyword">use</span> tinty::{Scheme, Theme};
+
+<span class="comment">// load and apply a color scheme</span>
+<span class="keyword">fn</span> <span class="function">apply</span>(name: &amp;str) -&gt; Option&lt;Theme&gt; {
+    <span class="keyword">let</span> scheme = Scheme::<span class="function">load</span>(name)?;
+    <span class="keyword">let</span> theme = scheme.<span class="function">with_base</span>(<span class="number">16</span>).<span class="function">build</span>();
+    theme.<span class="function">apply</span>();
+    <span class="function">println!</span>(<span class="string">"applied: {}"</span>, theme.<span class="function">name</span>());
+    <span class="keyword">Some</span>(theme)
 }</code></pre>
         <div class="card-title">
           <h2></h2>

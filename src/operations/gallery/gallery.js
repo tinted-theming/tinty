@@ -5,10 +5,12 @@ const state = {
   system: "all",
   appearance: "all",
   pageTheme: "system",
+  language: "rust",
 };
 let currentSheetId = null;
 let tooltipTimeoutId = null;
 const PAGE_THEME_STORAGE_KEY = "tinty-gallery-page-theme";
+const LANGUAGE_STORAGE_KEY = "tinty-gallery-preview-language";
 
 const fallbackPalette = {
   base00: "#101418",
@@ -26,35 +28,82 @@ const fallbackPalette = {
 SCHEMES.sort((a, b) => a.id.localeCompare(b.id));
 
 const previewSnippets = {
-  rust: `<span class="comment">// preview.rs</span>
-<span class="keyword">fn</span> <span class="function">render_scheme</span>() {
-    <span class="keyword">let</span> name = <span class="string">"tinty"</span>;
-    <span class="keyword">let</span> colors = <span class="number">16</span>;
-    <span class="function">apply</span>(name, colors);
+  rust: `<span class="keyword">use</span> tinty::{Scheme, Theme};
+
+<span class="comment">// load and apply a color scheme</span>
+<span class="keyword">fn</span> <span class="function">apply</span>(name: &amp;str) -&gt; Option&lt;Theme&gt; {
+    <span class="keyword">let</span> scheme = Scheme::<span class="function">load</span>(name)?;
+    <span class="keyword">let</span> theme = scheme.<span class="function">with_base</span>(<span class="number">16</span>).<span class="function">build</span>();
+    theme.<span class="function">apply</span>();
+    <span class="function">println!</span>(<span class="string">"applied: {}"</span>, theme.<span class="function">name</span>());
+    <span class="keyword">Some</span>(theme)
 }`,
-  kotlin: `<span class="comment">// Preview.kt</span>
-<span class="keyword">fun</span> <span class="function">renderScheme</span>() {
-    <span class="keyword">val</span> name = <span class="string">"tinty"</span>
-    <span class="keyword">val</span> colors = <span class="number">16</span>
-    <span class="function">apply</span>(name, colors)
+  kotlin: `<span class="keyword">import</span> tinty.Scheme
+
+<span class="comment">// load and apply a color scheme</span>
+<span class="keyword">fun</span> <span class="function">apply</span>(name: String) = <span class="function">runCatching</span> {
+    <span class="keyword">val</span> theme = Scheme.<span class="function">load</span>(name)
+        .<span class="function">withBase</span>(<span class="number">16</span>)
+        .<span class="function">build</span>()
+    theme.<span class="function">apply</span>()
+    <span class="function">println</span>(<span class="string">"applied: \${theme.name}"</span>)
 }`,
-  javascript: `<span class="comment">// preview.js</span>
-<span class="keyword">function</span> <span class="function">renderScheme</span>() {
-  <span class="keyword">const</span> name = <span class="string">"tinty"</span>;
-  <span class="keyword">const</span> colors = <span class="number">16</span>;
-  <span class="function">apply</span>(name, colors);
+  javascript: `<span class="keyword">import</span> { Scheme } <span class="keyword">from</span> <span class="string">"tinty"</span>;
+
+<span class="comment">// load and apply a color scheme</span>
+<span class="keyword">async</span> <span class="keyword">function</span> <span class="function">apply</span>(name) {
+  <span class="keyword">const</span> theme = <span class="keyword">await</span> Scheme.<span class="function">load</span>(name)
+    .<span class="function">withBase</span>(<span class="number">16</span>)
+    .<span class="function">build</span>();
+  theme.<span class="function">apply</span>();
+  console.<span class="function">log</span>(<span class="string">\`applied: \${theme.name}\`</span>);
 }`,
-  lisp: `<span class="comment">;; preview.lisp</span>
-(<span class="keyword">defun</span> <span class="function">render-scheme</span> ()
-  (<span class="keyword">let</span> ((name <span class="string">"tinty"</span>)
-        (colors <span class="number">16</span>))
-    (<span class="function">apply</span> name colors)))`,
-  zsh: `<span class="comment"># preview.zsh</span>
-<span class="keyword">function</span> <span class="function">render_scheme</span>() {
-  <span class="keyword">local</span> name=<span class="string">"tinty"</span>
-  <span class="keyword">local</span> colors=<span class="number">16</span>
-  <span class="function">apply</span> <span class="string">"$name"</span> <span class="string">"$colors"</span>
+  lisp: `<span class="comment">;; load and apply a color scheme</span>
+(<span class="keyword">defpackage</span> <span class="string">:tinty</span> (:use :cl))
+
+(<span class="keyword">defun</span> <span class="function">apply-scheme</span> (name)
+  (<span class="keyword">let*</span> ((scheme (<span class="function">scheme:load</span> name))
+         (theme (<span class="function">scheme:build</span> scheme :base <span class="number">16</span>)))
+    (<span class="function">theme:apply</span> theme)
+    (<span class="function">format</span> t <span class="string">"applied: ~a~%"</span>
+      (<span class="function">theme:name</span> theme))))`,
+  zsh: `<span class="comment">#!/usr/bin/env zsh</span>
+<span class="keyword">source</span> <span class="string">"\${TINTY_DIR}/init.zsh"</span>
+
+<span class="comment"># load and apply a color scheme</span>
+<span class="keyword">function</span> <span class="function">apply_scheme</span>() {
+  <span class="keyword">local</span> name=<span class="string">"\${1:?}"</span>
+  <span class="keyword">local</span> base=<span class="number">16</span>
+  tinty <span class="function">apply</span> <span class="string">"$name"</span> --base <span class="string">"$base"</span>
 }`,
+  elixir: `<span class="keyword">defmodule</span> Tinty <span class="keyword">do</span>
+  <span class="comment"># load and apply a color scheme</span>
+  <span class="keyword">def</span> <span class="function">apply</span>(name) <span class="keyword">do</span>
+    {<span class="string">:ok</span>, theme} =
+      name
+      |&gt; Scheme.<span class="function">load</span>()
+      |&gt; Theme.<span class="function">build</span>(base: <span class="number">16</span>)
+    IO.<span class="function">puts</span>(<span class="string">"applied: #{theme.name}"</span>)
+    theme
+  <span class="keyword">end</span>
+<span class="keyword">end</span>`,
+  diff: `<span class="comment">diff --git a/apply.rs b/apply.rs</span>
+<span class="diff-del">--- a/apply.rs</span><span class="diff-add">+++ b/apply.rs</span><span class="function">@@ -3,7 +3,9 @@ use tinty;</span>
+
+<span class="diff-del">-fn apply(name: &amp;str) {
+-    let colors = 8;</span><span class="diff-add">+fn apply(name: &amp;str) -&gt; Theme {
++    let colors = 16;
++    println!("applying: {name}");</span>     scheme.apply(colors);
+ }`,
+  haskell: `<span class="keyword">import</span> Tinty (Scheme, Theme)
+
+<span class="comment">-- load and apply a color scheme</span>
+<span class="function">apply</span> :: String -&gt; IO ()
+<span class="function">apply</span> name = <span class="keyword">do</span>
+  scheme &lt;- <span class="function">loadScheme</span> name
+  <span class="keyword">let</span> theme = <span class="function">buildWith</span> scheme <span class="number">16</span>
+  <span class="function">applyTheme</span> theme
+  <span class="function">putStrLn</span> (<span class="string">"applied: "</span> ++ <span class="function">themeName</span> theme)`,
 };
 
 function color(scheme, key) {
@@ -98,6 +147,7 @@ function setPreviewColors(card, scheme) {
   card.style.setProperty("--preview-function", color(scheme, "base0D"));
   card.style.setProperty("--preview-string", color(scheme, "base0B"));
   card.style.setProperty("--preview-number", color(scheme, "base09"));
+  card.style.setProperty("--preview-deleted", color(scheme, "base08"));
 }
 
 function setPreviewLanguage(language) {
@@ -105,6 +155,24 @@ function setPreviewLanguage(language) {
   document
     .querySelectorAll("[data-preview-language]")
     .forEach((candidate) => candidate.classList.toggle("active", candidate.dataset.previewLanguage === language));
+}
+
+function setLanguage(lang) {
+  state.language = lang;
+  window.localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+  document.getElementById("language-select").value = lang;
+  setPreviewLanguage(lang);
+  document.querySelectorAll(".card .code-preview code").forEach((el) => {
+    el.innerHTML = previewSnippets[lang] || previewSnippets.rust;
+  });
+}
+
+function loadSavedLanguage() {
+  const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (saved && previewSnippets[saved]) {
+    state.language = saved;
+    document.getElementById("language-select").value = saved;
+  }
 }
 
 function metadataItem(label, value) {
@@ -199,7 +267,7 @@ function applySheetState(scheme, updateHash) {
 
   currentSheetId = scheme.id;
   setPreviewColors(sheet, scheme);
-  setPreviewLanguage("rust");
+  setPreviewLanguage(state.language);
   document.getElementById("sheet-title").textContent = scheme.name;
   document.querySelector("#sheet-system span").textContent = scheme.system;
   document.querySelector("#sheet-appearance span").textContent = appearance(scheme);
@@ -308,6 +376,7 @@ function createCard(scheme) {
   card.querySelector(".card-title p").textContent = scheme.name;
   card.querySelector(".scheme-system span").textContent = scheme.system;
   card.querySelector(".scheme-appearance span").textContent = appearance(scheme);
+  card.querySelector(".code-preview code").innerHTML = previewSnippets[state.language] || previewSnippets.rust;
 
   card.querySelector(".preview-button").addEventListener("click", () => {
     openSheet(scheme, true, card);
@@ -400,9 +469,13 @@ document.querySelectorAll("[data-page-theme]").forEach((button) => {
   });
 });
 
+document.getElementById("language-select").addEventListener("change", (event) => {
+  setLanguage(event.target.value);
+});
+
 document.querySelectorAll("[data-preview-language]").forEach((button) => {
   button.addEventListener("click", () => {
-    setPreviewLanguage(button.dataset.previewLanguage);
+    setLanguage(button.dataset.previewLanguage);
   });
 });
 
@@ -427,6 +500,7 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("hashchange", syncSheetToHash);
 
+loadSavedLanguage();
 loadSavedPageTheme();
 syncSheetToHash();
 render();

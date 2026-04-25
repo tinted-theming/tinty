@@ -381,6 +381,13 @@ h1 {
   box-shadow: 0 0 0 1px color-mix(in oklab, var(--preview-fg, #000) 12%, transparent);
 }
 
+.card-header .meta-pill {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--preview-fg, #000) 12%, transparent),
+    0 0 0 4px color-mix(in oklab, var(--preview-bg) 90%, transparent),
+    0 0 10px 4px color-mix(in oklab, var(--preview-bg) 60%, transparent);
+}
+
 .meta-pill .icon {
   width: 11px;
   height: 11px;
@@ -413,6 +420,18 @@ h1 {
 
 .string {
   color: var(--preview-string);
+}
+
+.diff-add {
+  display: block;
+  color: var(--preview-string);
+  background: color-mix(in oklab, var(--preview-string) 14%, transparent);
+}
+
+.diff-del {
+  display: block;
+  color: var(--preview-deleted);
+  background: color-mix(in oklab, var(--preview-deleted) 14%, transparent);
 }
 
 .number {
@@ -563,6 +582,48 @@ h1 {
   align-items: start;
   justify-content: space-between;
   gap: 16px;
+}
+
+.language-select-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.language-select-wrapper .icon {
+  position: absolute;
+  right: 8px;
+  width: 14px;
+  height: 14px;
+  flex-basis: 14px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.language-select {
+  height: 36px;
+  padding: 0 30px 0 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--ink-1);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.language-select:hover {
+  border-color: var(--border-strong);
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--border));
+  box-shadow: 0 0 0 4px var(--accent-ring);
 }
 
 .sheet-header h2 {
