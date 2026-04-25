@@ -60,8 +60,8 @@
 
   --paper-wash-start: rgb(255 255 255 / .45);
   --paper-wash-end: rgb(18 20 27 / .02);
-  --grain-opacity: .07;
-  --grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  --grain-opacity: .12;
+  --grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.40' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
 
   --radius-xs: 6px;
   --radius-sm: 8px;
@@ -107,7 +107,7 @@ body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.40' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 200px 200px;
   opacity: var(--grain-opacity);
@@ -971,6 +971,10 @@ h1 {
     --shadow-md: 0 10px 30px -10px rgb(0 0 0 / 50%), 0 4px 10px -4px rgb(0 0 0 / 30%);
     --shadow-lg: 0 30px 70px -20px rgb(0 0 0 / 70%), 0 14px 30px -12px rgb(0 0 0 / 40%);
   }
+
+  body::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1022,7 +1026,7 @@ h1 {
   --tooltip-border: #2a2f38;
   --paper-wash-start: rgb(255 255 255 / .45);
   --paper-wash-end: rgb(18 20 27 / .02);
-  --grain-opacity: .07;
+  --grain-opacity: .12;
   --ring: 0 0 0 1px color-mix(in oklab, var(--ink-1) 7%, transparent);
   --shadow-sm: 0 1px 2px rgb(18 20 27 / 5%);
   --shadow-md: 0 6px 18px -8px rgb(18 20 27 / 12%), 0 2px 6px -2px rgb(18 20 27 / 6%);
@@ -1057,4 +1061,8 @@ h1 {
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
   --shadow-md: 0 10px 30px -10px rgb(0 0 0 / 50%), 0 4px 10px -4px rgb(0 0 0 / 30%);
   --shadow-lg: 0 30px 70px -20px rgb(0 0 0 / 70%), 0 14px 30px -12px rgb(0 0 0 / 40%);
+}
+
+:root[data-theme="dark"] body::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
 }
