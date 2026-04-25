@@ -449,12 +449,10 @@ function setFilter(group, value) {
 function setPageTheme(theme) {
   state.pageTheme = theme;
   window.localStorage.setItem(PAGE_THEME_STORAGE_KEY, theme);
-  document.documentElement.dataset.theme = theme === "system" ? "" : theme;
   if (theme === "system") {
     document.documentElement.removeAttribute("data-theme");
-    setFilter("appearance", "all");
   } else {
-    setFilter("appearance", theme);
+    document.documentElement.dataset.theme = theme;
   }
 
   document
