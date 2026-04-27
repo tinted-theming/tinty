@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/tinted-theming/tinty/blob/main/config.schema.json",
+  "title": "Tinty configuration",
+  "description": "Schema for Tinty's config.toml. The file lives at $XDG_CONFIG_HOME/tinted-theming/tinty/config.toml (or ~/.config/tinted-theming/tinty/config.toml) by default, and may be overridden with --config/-c.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "shell": {
+      "type": "string",
+      "description": "Shell command used to execute hooks. Must contain the '{}' command placeholder, which is substituted with the hook command at runtime.",
+      "default": "sh -c '{}'",
+      "pattern": "\\{\\}",
+      "examples": ["sh -c '{}'", "bash -c '{}'", "zsh -c '{}'"]
+    },
+    "default-scheme": {
+      "type": "string",
+      "description": "Scheme to apply when no scheme has been previously set. Used specifically by `tinty init`.",
+      "examples": ["base16-mocha", "base16-oceanicnext"]
+    },
+    "preferred-schemes": {
+      "type": "array",
+      "description": "Ordered list of favourite schemes that `tinty cycle` rotates through.",
+      "items": { "type": "string" },
+      "default": [],
+      "examples": [["base16-gruvbox-dark", "base16-gruvbox-light"]]
+    },
+    "hooks": {
+      "type": "array",
+      "description": "Commands executed (through `shell`) after every `tinty apply`. The TINTY_* environment variables documented in the README are available to each command.",
+      "items": { "type": "string" },
+      "examples": [["echo \"The current scheme is: $(tinty current)\""]]
+    },
+    "items": {
+      "type": "array",
+      "description": "Themeable components. Each item ties a theme template repository to local output. If omitted, Tinty falls back to a single default item that themes tinted-shell.",
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "description": "A single themeable component, e.g. a terminal, editor, or status bar.",
+      "additionalProperties": false,
+      "required": ["name", "path", "themes-dir"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name for the item. Names must be unique across all items.",
+          "minLength": 1,
+          "examples": ["tinted-shell", "base16-vim", "tmux"]
+        },
+        "path": {
+          "type": "string",
+          "description": "URL of the theme template repository, an absolute filesystem path, or a path beginning with `~/` (which is expanded to the user's home directory).",
+          "minLength": 1,
+          "examples": [
+            "https://github.com/tinted-theming/tinted-shell",
+            "~/path/to/base16-tmux"
+          ]
+        },
+        "themes-dir": {
+          "type": "string",
+          "description": "Directory within the template repository that contains the theme files.",
+          "minLength": 1,
+          "examples": ["scripts", "colors", "themes"]
+        },
+        "hook": {
+          "type": "string",
+          "description": "Command executed (through `shell`) after the theme is applied. Useful for reloading the themed application's configuration. The TINTY_* environment variables documented in the README are available to the command; the deprecated %f / %n / %o printf-style placeholders also still work.",
+          "examples": [
+            ". %f",
+            "source \"$TINTY_THEME_FILE_PATH\"",
+            "test -n \"$TMUX\" && tmux source-file %f"
+          ]
+        },
+        "supported-systems": {
+          "type": "array",
+          "description": "Theming systems supported by the template. If a system is not listed it is assumed unsupported.",
+          "items": {
+            "type": "string",
+            "enum": ["base16", "base24", "tinted8"]
+          },
+          "uniqueItems": true,
+          "default": ["base16"]
+        },
+        "theme-file-extension": {
+          "type": "string",
+          "description": "Override for the theme file extension when the template's files do not match Tinty's default `base16-<name>.*` pattern.",
+          "examples": [".module.css"]
+        },
+        "revision": {
+          "type": "string",
+          "description": "Git revision (branch name, tag, or commit SHA) of the template repository to check out. Only meaningful when `path` is a Git URL.",
+          "default": "main",
+          "examples": ["main", "1.2.0", "a1b2c3d"]
+        },
+        "write-to-file": {
+          "type": "array",
+          "description": "Inline the rendered theme into an existing file rather than (or in addition to) producing a separate theme file. Tuple of [target_filename, start_marker?, end_marker?]: when the optional markers are provided, only content between them is replaced.",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "maxItems": 3,
+          "examples": [
+            ["~/.config/alacritty/config.toml", "# Tinty Start", "# Tinty End"]
+          ]
+        }
+      }
+    }
+  }
+}
