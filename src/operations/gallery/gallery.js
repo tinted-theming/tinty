@@ -253,17 +253,20 @@ function renderColorMap(container, map) {
     .forEach(([name, value]) => {
       const swatch = document.createElement("div");
       const block = document.createElement("div");
-      const label = document.createElement("div");
       const hex = document.createElement("span");
+      const label = document.createElement("div");
 
       swatch.className = "swatch";
       block.className = "swatch-color";
+      hex.className = "swatch-hex";
       label.className = "swatch-label";
-      block.style.background = value.hex_str;
-      label.textContent = name;
-      hex.textContent = value.hex_str;
 
-      label.append(hex);
+      block.style.background = value.hex_str;
+      hex.textContent = value.hex_str;
+      hex.style.color = pillTextColor(value.rgb, value.hex_str);
+      label.textContent = name;
+
+      block.append(hex);
       swatch.append(block, label);
       container.append(swatch);
     });
@@ -277,8 +280,14 @@ function relativeLuminance(rgb) {
   return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
 }
 
-function pillTextColor(rgb) {
-  return relativeLuminance(rgb) > 0.45 ? "#0b0d10" : "#f8f9fb";
+// Hue-aware text color: starts from a near-black or near-white base depending
+// on the swatch luminance, then mixes ~25% of the swatch color in. Keeps the
+// text high-contrast (dark on light, light on dark) while picking up a tonal
+// hint of the swatch's hue. Uses color-mix in oklab for perceptual mixing.
+function pillTextColor(rgb, hexStr) {
+  const isLight = relativeLuminance(rgb) > 0.45;
+  const base = isLight ? "#06080a" : "#fafbfd";
+  return `color-mix(in oklab, ${hexStr} 25%, ${base} 75%)`;
 }
 
 function renderVariableList(container, map) {
@@ -298,7 +307,7 @@ function renderVariableList(container, map) {
       key.textContent = name;
       pill.textContent = value.hex_str;
       pill.style.background = value.hex_str;
-      pill.style.color = pillTextColor(value.rgb);
+      pill.style.color = pillTextColor(value.rgb, value.hex_str);
 
       row.append(key, pill);
       container.append(row);
