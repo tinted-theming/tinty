@@ -1,0 +1,11 @@
+<span class="keyword">defmodule</span> <span class="type">Tinty</span> <span class="keyword">do</span>
+  <span class="comment"># load and apply a color scheme</span>
+  <span class="keyword">def</span> <span class="function">apply</span>(<span class="parameter">name</span>) <span class="keyword">do</span>
+    {<span class="string">:ok</span>, theme} =
+      <span class="parameter">name</span>
+      |&gt; <span class="type">Scheme</span>.<span class="function">load</span>()
+      |&gt; <span class="type">Theme</span>.<span class="function">build</span>(base: <span class="number">16</span>)
+    <span class="type">IO</span>.<span class="builtin">puts</span>(<span class="string">"applied: #{theme.name}"</span>)
+    theme
+  <span class="keyword">end</span>
+<span class="keyword">end</span>

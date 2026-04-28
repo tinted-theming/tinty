@@ -23,6 +23,24 @@ const FONT_DM_SERIF_400_ITALIC: &[u8] =
 const FONT_IBM_PLEX_MONO_400: &[u8] = include_bytes!("gallery/fonts/ibm-plex-mono-400.woff2");
 const FONT_IBM_PLEX_MONO_500: &[u8] = include_bytes!("gallery/fonts/ibm-plex-mono-500.woff2");
 
+const SNIPPETS: &[(&str, &str)] = &[
+    ("rust", include_str!("gallery/snippets/rust.html")),
+    ("kotlin", include_str!("gallery/snippets/kotlin.html")),
+    ("lisp", include_str!("gallery/snippets/lisp.html")),
+    ("elixir", include_str!("gallery/snippets/elixir.html")),
+    ("haskell", include_str!("gallery/snippets/haskell.html")),
+    ("diff", include_str!("gallery/snippets/diff.html")),
+    ("terminal", include_str!("gallery/snippets/terminal.html")),
+];
+
+fn snippet_templates() -> String {
+    SNIPPETS
+        .iter()
+        .map(|(id, body)| format!("<template id=\"snippet-{id}\">{body}</template>"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 pub fn gallery(
     data_path: &Path,
     is_custom: bool,
@@ -56,7 +74,8 @@ fn write_gallery_files(output_dir: &Path, schemes_json: &str) -> Result<()> {
     ensure_directory_exists(&assets_dir)?;
     ensure_directory_exists(&fonts_dir)?;
 
-    write_to_file(output_dir.join("index.html"), INDEX_HTML)?;
+    let index_html = INDEX_HTML.replace("<!--SNIPPETS-->", &snippet_templates());
+    write_to_file(output_dir.join("index.html"), &index_html)?;
     write_to_file(assets_dir.join("gallery.css"), GALLERY_CSS)?;
     let gallery_js = GALLERY_JS.replace("__TINTY_SCHEMES__", schemes_json);
     write_to_file(assets_dir.join("gallery.js"), &gallery_js)?;

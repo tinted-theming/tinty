@@ -28,80 +28,16 @@ const fallbackPalette = {
 
 SCHEMES.sort((a, b) => a.id.localeCompare(b.id));
 
-const previewSnippets = {
-  rust: `<span class="keyword">use</span> tinty::{<span class="type">Scheme</span>, <span class="type">Theme</span>};
+function getSnippet(lang) {
+  const template = document.getElementById(`snippet-${lang}`);
+  return template ? template.innerHTML : "";
+}
 
-<span class="comment">// load and apply a color scheme</span>
-<span class="keyword">fn</span> <span class="function">apply</span>(<span class="parameter">name</span>: &amp;<span class="type">str</span>) -&gt; <span class="type">Option</span>&lt;<span class="type">Theme</span>&gt; {
-    <span class="keyword">let</span> scheme = <span class="type">Scheme</span>::<span class="function">load</span>(<span class="parameter">name</span>)?;
-    <span class="keyword">let</span> theme = scheme.<span class="function">with_base</span>(<span class="number">16</span>).<span class="function">build</span>();
-    theme.<span class="function">apply</span>();
-    <span class="builtin">println!</span>(<span class="string">"applied: {}"</span>, theme.<span class="function">name</span>());
-    <span class="type">Some</span>(theme)
-}`,
-  kotlin: `<span class="keyword">import</span> tinty.<span class="type">Scheme</span>
+function hasSnippet(lang) {
+  return Boolean(document.getElementById(`snippet-${lang}`));
+}
 
-<span class="comment">// load and apply a color scheme</span>
-<span class="keyword">fun</span> <span class="function">apply</span>(<span class="parameter">name</span>: <span class="type">String</span>) = <span class="builtin">runCatching</span> {
-    <span class="keyword">val</span> theme = <span class="type">Scheme</span>.<span class="function">load</span>(<span class="parameter">name</span>)
-        .<span class="function">withBase</span>(<span class="number">16</span>)
-        .<span class="function">build</span>()
-    theme.<span class="function">apply</span>()
-    <span class="builtin">println</span>(<span class="string">"applied: \${theme.name}"</span>)
-}`,
-  lisp:`<span class="comment">;; load and apply a color scheme</span>
-(<span class="keyword">defpackage</span> <span class="string">:tinty</span> (:use :cl))
-
-(<span class="keyword">defun</span> <span class="function">apply-scheme</span> (<span class="parameter">name</span>)
-  (<span class="keyword">let*</span> ((scheme (<span class="function">scheme:load</span> <span class="parameter">name</span>))
-         (theme (<span class="function">scheme:build</span> scheme :base <span class="number">16</span>)))
-    (<span class="function">theme:apply</span> theme)
-    (<span class="builtin">format</span> t <span class="string">"applied: ~a~%"</span>
-      (<span class="function">theme:name</span> theme))))`,
-  elixir:`<span class="keyword">defmodule</span> <span class="type">Tinty</span> <span class="keyword">do</span>
-  <span class="comment"># load and apply a color scheme</span>
-  <span class="keyword">def</span> <span class="function">apply</span>(<span class="parameter">name</span>) <span class="keyword">do</span>
-    {<span class="string">:ok</span>, theme} =
-      <span class="parameter">name</span>
-      |&gt; <span class="type">Scheme</span>.<span class="function">load</span>()
-      |&gt; <span class="type">Theme</span>.<span class="function">build</span>(base: <span class="number">16</span>)
-    <span class="type">IO</span>.<span class="builtin">puts</span>(<span class="string">"applied: #{theme.name}"</span>)
-    theme
-  <span class="keyword">end</span>
-<span class="keyword">end</span>`,
-  diff: `<span class="comment">diff --git a/apply.rs b/apply.rs</span>
-<span class="diff-del">--- a/apply.rs</span><span class="diff-add">+++ b/apply.rs</span><span class="function">@@ -3,7 +3,9 @@ use tinty;</span>
-
-<span class="diff-del">-fn apply(name: &amp;str) {
--    let colors = 8;</span><span class="diff-add">+fn apply(name: &amp;str) -&gt; Theme {
-+    let colors = 16;
-+    println!("applying: {name}");</span>     scheme.apply(colors);
- }`,
-  haskell: `<span class="keyword">import</span> <span class="type">Tinty</span> (<span class="type">Scheme</span>, <span class="type">Theme</span>)
-
-<span class="comment">-- load and apply a color scheme</span>
-<span class="function">apply</span> :: <span class="type">String</span> -&gt; <span class="type">IO</span> ()
-<span class="function">apply</span> <span class="parameter">name</span> = <span class="keyword">do</span>
-  scheme &lt;- <span class="function">loadScheme</span> <span class="parameter">name</span>
-  <span class="keyword">let</span> theme = <span class="function">buildWith</span> scheme <span class="number">16</span>
-  <span class="function">applyTheme</span> theme
-  <span class="builtin">putStrLn</span> (<span class="string">"applied: "</span> ++ <span class="function">themeName</span> theme)`,
-  terminal: `<span class="ansi-bright-green">user@host</span> <span class="ansi-bright-blue">~/dev/scheme</span>  <span class="ansi-bright-magenta">main</span><span class="ansi-bright-white">$</span> ls <span class="ansi-cyan">-F</span>
-Cargo.toml  README.md  <span class="ansi-bright-cyan">current@</span>  <span class="ansi-blue">drafts/</span>  <span class="ansi-blue">scripts/</span>  <span class="ansi-blue">src/</span>
-
-<span class="ansi-bright-green">user@host</span> <span class="ansi-bright-blue">~/dev/scheme</span>  <span class="ansi-bright-magenta">main</span><span class="ansi-bright-white">$</span> tree <span class="ansi-cyan">-L</span> <span class="ansi-bright-yellow">2</span> <span class="ansi-blue">src/</span>
-<span class="ansi-blue">src/</span>
-<span class="ansi-bright-black">├──</span> lib.rs
-<span class="ansi-bright-black">├──</span> <span class="ansi-blue">scheme/</span>
-<span class="ansi-bright-black">│   ├──</span> base16.rs
-<span class="ansi-bright-black">│   └──</span> tinted8.rs
-<span class="ansi-bright-black">└──</span> <span class="ansi-blue">templates/</span>
-<span class="ansi-bright-black">    ├──</span> <span class="ansi-yellow">alacritty.tpl</span>
-<span class="ansi-bright-black">    └──</span> <span class="ansi-yellow">kitty.tpl</span>
-
-<span class="ansi-bright-green">user@host</span> <span class="ansi-bright-blue">~/dev/scheme</span>  <span class="ansi-bright-magenta">main</span><span class="ansi-bright-white">$</span> grep <span class="ansi-cyan">-rn</span> <span class="ansi-green">"TODO"</span> <span class="ansi-blue">src/</span>
-<span class="ansi-magenta">src/scheme/tinted8.rs</span><span class="ansi-cyan">:</span><span class="ansi-green">42</span><span class="ansi-cyan">:</span> // <span class="ansi-bright-red">TODO</span>: validate non-standard variants`,
-};
+const FALLBACK_LANGUAGE = "rust";
 
 function color(scheme, key) {
   return scheme.palette[key]?.hex_str || fallbackPalette[key] || fallbackPalette.base05;
@@ -247,8 +183,12 @@ function setPreviewColors(card, scheme) {
   });
 }
 
+function snippetFor(lang) {
+  return hasSnippet(lang) ? getSnippet(lang) : getSnippet(FALLBACK_LANGUAGE);
+}
+
 function setPreviewLanguage(language) {
-  document.getElementById("sheet-code").innerHTML = previewSnippets[language] || previewSnippets.rust;
+  document.getElementById("sheet-code").innerHTML = snippetFor(language);
   document
     .querySelectorAll("[data-preview-language]")
     .forEach((candidate) => candidate.classList.toggle("active", candidate.dataset.previewLanguage === language));
@@ -259,14 +199,15 @@ function setLanguage(lang) {
   window.localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
   document.getElementById("language-select").value = lang;
   setPreviewLanguage(lang);
+  const html = snippetFor(lang);
   document.querySelectorAll(".card .code-preview code").forEach((el) => {
-    el.innerHTML = previewSnippets[lang] || previewSnippets.rust;
+    el.innerHTML = html;
   });
 }
 
 function loadSavedLanguage() {
   const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (saved && previewSnippets[saved]) {
+  if (saved && hasSnippet(saved)) {
     state.language = saved;
     document.getElementById("language-select").value = saved;
   }
@@ -496,7 +437,7 @@ function createCard(scheme) {
   card.querySelector(".card-title p").textContent = scheme.id;
   card.querySelector(".scheme-system span").textContent = scheme.system;
   card.querySelector(".scheme-appearance span").textContent = appearance(scheme);
-  card.querySelector(".code-preview code").innerHTML = previewSnippets[state.language] || previewSnippets.rust;
+  card.querySelector(".code-preview code").innerHTML = snippetFor(state.language);
 
   card.querySelector(".preview-button").addEventListener("click", () => {
     openSheet(scheme, true, card);
