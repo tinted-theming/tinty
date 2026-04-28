@@ -20,10 +20,22 @@
     },
     "preferred-schemes": {
       "type": "array",
-      "description": "Ordered list of favourite schemes that `tinty cycle` rotates through.",
+      "description": "Deprecated: replaced by `[[rings]]` + `default-cycle-ring`. `tinty cycle` will refuse to run while this key is present and will emit a migration message instructing how to convert these entries into a ring named \"default\".",
+      "deprecated": true,
       "items": { "type": "string" },
       "default": [],
       "examples": [["base16-gruvbox-dark", "base16-gruvbox-light"]]
+    },
+    "default-cycle-ring": {
+      "type": "string",
+      "description": "Name of the ring that `tinty cycle` uses when invoked without `--ring <name>`. Must match the `name` of one of the entries in `[[rings]]`.",
+      "minLength": 1,
+      "examples": ["default", "dark"]
+    },
+    "rings": {
+      "type": "array",
+      "description": "Named scheme cycles consumed by `tinty cycle`. Each ring is an ordered list of schemes; `tinty cycle` advances to the next entry in the active ring.",
+      "items": { "$ref": "#/$defs/ring" }
     },
     "hooks": {
       "type": "array",
@@ -38,6 +50,26 @@
     }
   },
   "$defs": {
+    "ring": {
+      "type": "object",
+      "description": "A named ordered cycle of schemes for `tinty cycle`.",
+      "additionalProperties": false,
+      "required": ["name", "schemes"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique, non-empty name for the ring. Used as the value of `--ring <name>` and `default-cycle-ring`.",
+          "minLength": 1,
+          "examples": ["default", "dark", "light"]
+        },
+        "schemes": {
+          "type": "array",
+          "description": "Ordered list of scheme IDs that `tinty cycle` rotates through for this ring.",
+          "items": { "type": "string" },
+          "examples": [["base16-gruvbox-dark", "base16-gruvbox-light", "base16-github-dark"]]
+        }
+      }
+    },
     "item": {
       "type": "object",
       "description": "A single themeable component, e.g. a terminal, editor, or status bar.",
