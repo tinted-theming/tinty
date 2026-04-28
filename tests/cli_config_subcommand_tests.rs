@@ -72,6 +72,51 @@ themes-dir = "colors"
 }
 
 #[test]
+fn test_cli_config_with_rings() -> Result<()> {
+    let config_text = r#"shell = "zsh -c '{}'"
+default-scheme = "base16-oceanicnext"
+default-cycle-ring = "default"
+hooks = [
+  "echo hook"
+]
+
+[[rings]]
+name = "default"
+schemes = ["base16-oceanicnext", "base16-gruvbox-dark"]
+
+[[rings]]
+name = "light"
+schemes = ["base16-github", "base16-gruvbox-light"]
+
+[[items]]
+name = "tinted-vim"
+path = "https://github.com/tinted-theming/tinted-vim"
+supported-systems = ["base16", "base24"]
+themes-dir = "colors"
+
+"#;
+    let (config_path, data_path, command_vec, _temp_dir) =
+        setup("test_cli_config_with_rings", "config")?;
+
+    write_to_file(&config_path, config_text)?;
+
+    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+
+    ensure!(stdout == config_text, "std not as expected");
+    ensure!(
+        stdout.find("default-cycle-ring").unwrap_or_default()
+            < stdout.find("[[rings]]").unwrap_or_default(),
+        "default-cycle-ring should be printed before [[rings]]"
+    );
+    ensure!(
+        stdout.find("hooks = [").unwrap_or_default() < stdout.find("[[rings]]").unwrap_or_default(),
+        "hooks should be printed before [[rings]]"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_cli_config_with_config_flag() -> Result<()> {
     // -------
     // Arrange

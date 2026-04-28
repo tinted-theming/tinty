@@ -1,5 +1,5 @@
 #![allow(clippy::arithmetic_side_effects)]
-use crate::config::{Config, ConfigItem, DEFAULT_CONFIG_SHELL};
+use crate::config::{Config, ConfigItem, ConfigRing, DEFAULT_CONFIG_SHELL};
 use crate::constants::REPO_NAME;
 use anyhow::{anyhow, Context, Error, Result};
 use home::home_dir;
@@ -538,32 +538,77 @@ pub fn next_scheme_in_cycle(current: &String, schemes: &[String]) -> String {
     }
 }
 
-pub fn user_curated_scheme_list(config: &Config) -> Option<Vec<String>> {
-    // Return a list of preferred schemes based on presence of this value in the config, and
-    // whatever the default scheme is if specified in config also.
-    config
-        .preferred_schemes
+fn ring_names(rings: &[ConfigRing]) -> String {
+    rings
+        .iter()
+        .map(|ring| ring.name.clone())
+        .collect::<Vec<String>>()
+        .join(", ")
+}
+
+pub fn preferred_schemes_migration_message(config: &Config) -> String {
+    let mut migration_schemes = config.preferred_schemes.clone().unwrap_or_default();
+
+    if let Some(default_scheme) = config
+        .default_scheme
         .as_ref()
-        .map(|preferred| {
-            // If default scheme is defined, add it to the cycle.
-            config
-                .default_scheme
-                .as_ref()
-                .filter(|default| !preferred.contains(default))
-                .map_or_else(
-                    || preferred.clone(),
-                    |default| {
-                        let mut result = vec![default.clone()];
-                        result.extend(preferred.clone());
-                        result
-                    },
-                )
-        })
-        .or_else(|| {
-            // If default scheme is defined, use it if preferred schemes is unset.
-            config
-                .default_scheme
-                .as_ref()
-                .map(|theme| vec![theme.clone()])
-        })
+        .filter(|default_scheme| !migration_schemes.contains(default_scheme))
+    {
+        migration_schemes.insert(0, default_scheme.clone());
+    }
+
+    let schemes = migration_schemes
+        .iter()
+        .map(|scheme| format!("\"{scheme}\""))
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    format!(
+        "`preferred-schemes` is no longer supported by `tinty cycle`.\n\
+Remove `preferred-schemes` from your config and add this instead:\n\n\
+default-cycle-ring = \"default\"\n\n\
+[[rings]]\n\
+name = \"default\"\n\
+schemes = [{schemes}]"
+    )
+}
+
+pub fn cycle_scheme_list(config: &Config, requested_ring: Option<&str>) -> Result<Vec<String>> {
+    if config.preferred_schemes.is_some() {
+        return Err(anyhow!(preferred_schemes_migration_message(config)));
+    }
+
+    let ring_name = requested_ring
+        .or(config.default_cycle_ring.as_deref())
+        .ok_or_else(|| {
+            anyhow!(
+                "`tinty cycle` requires either `default-cycle-ring` in config.toml or `--ring <name>`"
+            )
+        })?;
+
+    let rings = config
+        .rings
+        .as_ref()
+        .ok_or_else(|| anyhow!("`tinty cycle` requires at least one configured `[[rings]]`"))?;
+
+    let ring = rings
+        .iter()
+        .find(|ring| ring.name == ring_name)
+        .ok_or_else(|| {
+            let available_rings = ring_names(rings);
+            if available_rings.is_empty() {
+                anyhow!("No ring named \"{ring_name}\" exists")
+            } else {
+                anyhow!("No ring named \"{ring_name}\" exists. Available rings: {available_rings}")
+            }
+        })?;
+
+    if ring.schemes.is_empty() {
+        return Err(anyhow!(
+            "Ring \"{}\" does not contain any schemes and cannot be cycled",
+            ring.name
+        ));
+    }
+
+    Ok(ring.schemes.clone())
 }

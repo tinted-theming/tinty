@@ -32,7 +32,7 @@ complete -c tinty -n "__fish_tinty_needs_command" -f -a "build" -d 'Builds the t
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "current" -d 'Prints the last scheme name applied or specific values from the current scheme'
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "generate-completion" -d 'Generates a shell completion script'
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "generate-scheme" -d 'Generates a scheme based on an image'
-complete -c tinty -n "__fish_tinty_needs_command" -f -a "info" -d 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)'
+complete -c tinty -n "__fish_tinty_needs_command" -f -a "info" -d 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha or tinty info tinted8-mocha)'
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "init" -d 'Initializes with the exising config. Used to Initialize exising theme for when your shell starts up'
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "list" -d 'Lists available schemes'
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "config" -d 'Provides config related information'
@@ -40,7 +40,7 @@ complete -c tinty -n "__fish_tinty_needs_command" -f -a "apply" -d 'Applies a th
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "install" -d 'Install the environment needed for tinty'
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "update" -d 'Update to the latest themes'
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "sync" -d 'Install missing templates in tinty/config.toml and update existing templates'
-complete -c tinty -n "__fish_tinty_needs_command" -f -a "cycle" -d 'Cycle through your preferred themes'
+complete -c tinty -n "__fish_tinty_needs_command" -f -a "cycle" -d 'Cycle through a configured ring of schemes'
 complete -c tinty -n "__fish_tinty_needs_command" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c tinty -n "__fish_tinty_using_subcommand build" -s c -l config -d 'Optional path to the tinty config.toml file' -r
 complete -c tinty -n "__fish_tinty_using_subcommand build" -s d -l data-dir -d 'Optional path to the tinty data directory' -r
@@ -66,6 +66,7 @@ complete -c tinty -n "__fish_tinty_using_subcommand generate-scheme" -l save -d 
 complete -c tinty -n "__fish_tinty_using_subcommand generate-scheme" -s h -l help -d 'Print help'
 complete -c tinty -n "__fish_tinty_using_subcommand info" -s c -l config -d 'Optional path to the tinty config.toml file' -r
 complete -c tinty -n "__fish_tinty_using_subcommand info" -s d -l data-dir -d 'Optional path to the tinty data directory' -r
+complete -c tinty -n "__fish_tinty_using_subcommand info" -l all -d 'Lists all availabile custom schemes'
 complete -c tinty -n "__fish_tinty_using_subcommand info" -l custom-schemes -d 'Lists availabile custom schemes'
 complete -c tinty -n "__fish_tinty_using_subcommand info" -s h -l help -d 'Print help'
 complete -c tinty -n "__fish_tinty_using_subcommand init" -s c -l config -d 'Optional path to the tinty config.toml file' -r
@@ -98,6 +99,7 @@ complete -c tinty -n "__fish_tinty_using_subcommand sync" -s c -l config -d 'Opt
 complete -c tinty -n "__fish_tinty_using_subcommand sync" -s d -l data-dir -d 'Optional path to the tinty data directory' -r
 complete -c tinty -n "__fish_tinty_using_subcommand sync" -s q -l quiet -d 'Silence stdout'
 complete -c tinty -n "__fish_tinty_using_subcommand sync" -s h -l help -d 'Print help'
+complete -c tinty -n "__fish_tinty_using_subcommand cycle" -l ring -d 'Name of the configured ring to cycle through' -r
 complete -c tinty -n "__fish_tinty_using_subcommand cycle" -s c -l config -d 'Optional path to the tinty config.toml file' -r
 complete -c tinty -n "__fish_tinty_using_subcommand cycle" -s d -l data-dir -d 'Optional path to the tinty data directory' -r
 complete -c tinty -n "__fish_tinty_using_subcommand cycle" -s q -l quiet -d 'Silence stdout'
@@ -106,7 +108,7 @@ complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_su
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "current" -d 'Prints the last scheme name applied or specific values from the current scheme'
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "generate-completion" -d 'Generates a shell completion script'
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "generate-scheme" -d 'Generates a scheme based on an image'
-complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "info" -d 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha)'
+complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "info" -d 'Shows scheme colors for all schemes matching <scheme_system>-<scheme_name> (Eg: tinty info base16-mocha or tinty info tinted8-mocha)'
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "init" -d 'Initializes with the exising config. Used to Initialize exising theme for when your shell starts up'
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "list" -d 'Lists available schemes'
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "config" -d 'Provides config related information'
@@ -114,5 +116,5 @@ complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_su
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "install" -d 'Install the environment needed for tinty'
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "update" -d 'Update to the latest themes'
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "sync" -d 'Install missing templates in tinty/config.toml and update existing templates'
-complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "cycle" -d 'Cycle through your preferred themes'
+complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "cycle" -d 'Cycle through a configured ring of schemes'
 complete -c tinty -n "__fish_tinty_using_subcommand help; and not __fish_seen_subcommand_from build current generate-completion generate-scheme info init list config apply install update sync cycle help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'

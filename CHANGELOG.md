@@ -10,6 +10,15 @@
   Supports `--custom-schemes` to gallery user-defined schemes, a directory
   flag to write the static site to disk instead of opening it, and
   `--no-open` to skip browser launch.
+- Add `[[rings]]` config option to define named lists of schemes for `tinty cycle`
+  to cycle through, along with a `default-cycle-ring` config option and a
+  `--ring` flag on `tinty cycle` to select which ring to use.
+
+### Removed
+
+- **BREAKING**: Retire the `preferred-schemes` config option in favor of
+  `[[rings]]`. `tinty cycle` will now error with a migration message if
+  `preferred-schemes` is set.
 
 ## [0.31.0] - 2026-04-20
 
