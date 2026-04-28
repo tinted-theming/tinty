@@ -13,7 +13,7 @@
 - Add `[[rings]]` config option to define named lists of schemes for `tinty cycle`
   to cycle through, along with a `default-cycle-ring` config option and a
   `--ring` flag on `tinty cycle` to select which ring to use.
-- Add `config.schema.json`, a JSON Schema describing the `config.toml` format.
+- Add `schemas/config.schema.json`, a JSON Schema describing the `config.toml` format.
   Editors using a TOML language server with JSON Schema support (e.g. taplo via
   Even Better TOML, Helix, Neovim, Zed) can use it for key autocomplete, hover
   docs, and inline validation by adding a `#:schema` directive at the top of

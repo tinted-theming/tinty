@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/tinted-theming/tinty/blob/main/config.schema.json",
+  "$id": "https://github.com/tinted-theming/tinty/blob/main/schemas/config.schema.json",
   "title": "Tinty configuration",
   "description": "Schema for Tinty's config.toml. The file lives at $XDG_CONFIG_HOME/tinted-theming/tinty/config.toml (or ~/.config/tinted-theming/tinty/config.toml) by default, and may be overridden with --config/-c.",
   "type": "object",
