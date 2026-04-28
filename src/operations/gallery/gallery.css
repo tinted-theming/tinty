@@ -621,21 +621,23 @@ h1 {
 }
 
 .swatch-color {
-  height: 42px;
+  display: flex;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 8%);
+}
+
+.swatch-hex {
+  font: 10.5px/1 var(--font-mono);
+  letter-spacing: .02em;
 }
 
 .swatch-label {
   padding: 6px 8px;
-  font: 11.5px/1.3 var(--font-mono);
-  color: var(--ink-1);
-}
-
-.swatch-label span {
-  display: block;
   overflow-wrap: anywhere;
-  color: var(--ink-3);
-  font-size: 10.5px;
+  color: var(--ink-1);
+  font: 11.5px/1.3 var(--font-mono);
 }
 
 .variable-list {
