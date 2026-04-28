@@ -618,6 +618,8 @@ h1 {
   backdrop-filter: blur(0);
   -webkit-backdrop-filter: blur(0);
   opacity: 0;
+  transform: translate3d(0, 0, 0);
+  will-change: backdrop-filter, -webkit-backdrop-filter, opacity;
   transition: opacity 120ms ease, backdrop-filter 220ms ease, -webkit-backdrop-filter 220ms ease;
 }
 
@@ -1177,64 +1179,6 @@ body.sheet-open .sheet-backdrop {
   animation-delay: var(--enter-delay, 0ms);
 }
 
-@keyframes sheet-panel-reveal {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes sheet-pill-pop {
-  from {
-    opacity: 0;
-    transform: scale(.7) translateY(6px);
-  }
-  60% {
-    transform: scale(1.06) translateY(0);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes sheet-title-rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-    letter-spacing: .04em;
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    letter-spacing: -.02em;
-  }
-}
-
-.detail-sheet.open .sheet-glass-panel {
-  animation: sheet-panel-reveal 380ms cubic-bezier(.22, .8, .28, 1) 460ms both;
-  will-change: opacity;
-}
-
-.detail-sheet.open .sheet-main-header h2 {
-  animation: sheet-title-rise 520ms cubic-bezier(.22, .6, .25, 1) 280ms both;
-  will-change: transform, opacity;
-}
-
-.detail-sheet.open .sheet-title-meta .meta-pill {
-  animation: sheet-pill-pop 260ms cubic-bezier(.22, .8, .28, 1) both;
-  will-change: transform, opacity;
-}
-
-.detail-sheet.open .sheet-title-meta .meta-pill:nth-child(1) {
-  animation-delay: 480ms;
-}
-
-.detail-sheet.open .sheet-title-meta .meta-pill:nth-child(2) {
-  animation-delay: 560ms;
-}
 
 @media (prefers-reduced-motion: reduce) {
   *,
