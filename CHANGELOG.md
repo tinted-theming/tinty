@@ -22,6 +22,9 @@
   Tinted8 schemes, exposing every UI variable (~36 dotted-path keys) and Syntax
   variable (~105 dotted-path keys) alongside the existing palette. Base16 and
   Base24 entries are unchanged. The gallery uses the same data internally.
+- The `tinty gallery` detail sheet now lists every UI and Syntax variable for
+  Tinted8 schemes in two new panels alongside Palette. Base16 and Base24
+  schemes still show only Palette.
 
 ### Removed
 
