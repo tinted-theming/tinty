@@ -158,6 +158,10 @@ struct TestSchemeEntry {
     pub slug: String,
     pub palette: BTreeMap<String, TestColorOut>,
     pub lightness: Option<TestLightness>,
+    #[serde(default)]
+    pub ui: Option<BTreeMap<String, TestColorOut>>,
+    #[serde(default)]
+    pub syntax: Option<BTreeMap<String, TestColorOut>>,
 }
 
 impl std::ops::Deref for TestSchemeEntry {
@@ -179,6 +183,8 @@ impl std::fmt::Debug for TestSchemeEntry {
             .field("slug", &self.slug)
             .field("palette", &self.palette)
             .field("lightness", &self.lightness)
+            .field("ui", &self.ui)
+            .field("syntax", &self.syntax)
             .finish()
     }
 }
@@ -227,18 +233,34 @@ impl TestSchemeEntry {
             && self.system == other.system
             && self.variant == other.variant
             && self.slug == other.slug
-            && self.palette.len() == other.palette.len()
-            && self.palette.iter().all(|(k, v)| {
-                other
-                    .palette
-                    .get(k)
-                    .is_some_and(|other_v| v.approx_eq(other_v))
-            })
+            && color_map_approx_eq(&self.palette, &other.palette)
             && match (&self.lightness, &other.lightness) {
                 (Some(a), Some(b)) => a.approx_eq(b),
                 (None, None) => true,
                 _ => false,
             }
+            && optional_color_map_approx_eq(self.ui.as_ref(), other.ui.as_ref())
+            && optional_color_map_approx_eq(self.syntax.as_ref(), other.syntax.as_ref())
+    }
+}
+
+fn color_map_approx_eq(
+    a: &BTreeMap<String, TestColorOut>,
+    b: &BTreeMap<String, TestColorOut>,
+) -> bool {
+    a.len() == b.len()
+        && a.iter()
+            .all(|(k, v)| b.get(k).is_some_and(|other_v| v.approx_eq(other_v)))
+}
+
+fn optional_color_map_approx_eq(
+    a: Option<&BTreeMap<String, TestColorOut>>,
+    b: Option<&BTreeMap<String, TestColorOut>>,
+) -> bool {
+    match (a, b) {
+        (Some(x), Some(y)) => color_map_approx_eq(x, y),
+        (None, None) => true,
+        _ => false,
     }
 }
 
@@ -473,6 +495,99 @@ fn test_cli_list_subcommand_deserialize_fixture_scheme_entry() -> Result<()> {
 }
 
 #[test]
+fn test_cli_list_subcommand_base16_omits_ui_and_syntax() -> Result<()> {
+    let scheme_json = fs::read_to_string(Path::new("fixtures/base16-dracula.json"))?;
+    let scheme_entry: TestSchemeEntry = serde_json::from_str(&scheme_json)?;
+
+    ensure!(
+        scheme_entry.ui.is_none(),
+        "Expected Base16 entry to omit `ui`, got Some(_)"
+    );
+    ensure!(
+        scheme_entry.syntax.is_none(),
+        "Expected Base16 entry to omit `syntax`, got Some(_)"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_list_subcommand_deserialize_tinted8_fixture() -> Result<()> {
+    let scheme_json = fs::read_to_string(Path::new("fixtures/tinted8-catppuccin-mocha.json"))?;
+    let scheme_entry: TestSchemeEntry = serde_json::from_str(&scheme_json)?;
+
+    ensure!(
+        scheme_entry.system == SchemeSystem::Tinted8,
+        format!("Expected system tinted8, got {}", scheme_entry.system)
+    );
+    ensure!(
+        scheme_entry.id == "tinted8-catppuccin-mocha",
+        format!(
+            "Expected id tinted8-catppuccin-mocha, got {}",
+            scheme_entry.id
+        )
+    );
+    ensure!(
+        scheme_entry.palette.len() == 33,
+        format!(
+            "Expected 33 tinted8 palette entries (11 colors x 3 variants), got {}",
+            scheme_entry.palette.len()
+        )
+    );
+
+    let ui = scheme_entry
+        .ui
+        .as_ref()
+        .context("Expected tinted8 entry to include `ui`")?;
+    ensure!(
+        ui.len() == 36,
+        format!("Expected 36 ui entries, got {}", ui.len())
+    );
+    let bg_normal = ui
+        .get("global.background.normal")
+        .context("ui.global.background.normal missing")?;
+    ensure!(
+        bg_normal.hex_str == "#1e1e2e",
+        format!(
+            "Expected ui.global.background.normal #1e1e2e, got {}",
+            bg_normal.hex_str
+        )
+    );
+
+    let syntax = scheme_entry
+        .syntax
+        .as_ref()
+        .context("Expected tinted8 entry to include `syntax`")?;
+    ensure!(
+        syntax.len() == tinted_builder::tinted8::SyntaxKey::variants().len(),
+        format!(
+            "Expected syntax len to match SyntaxKey::variants().len() ({}), got {}",
+            tinted_builder::tinted8::SyntaxKey::variants().len(),
+            syntax.len()
+        )
+    );
+    // Authored override in the source YAML — should round-trip into the fixture.
+    let keyword_operator = syntax
+        .get("keyword.operator")
+        .context("syntax.keyword.operator missing")?;
+    ensure!(
+        keyword_operator.hex_str == "#94e2d5",
+        format!(
+            "Expected syntax.keyword.operator #94e2d5 (authored override), got {}",
+            keyword_operator.hex_str
+        )
+    );
+    // Default-derived value (no override in YAML) — exercises the inheritance path.
+    let comment = syntax.get("comment").context("syntax.comment missing")?;
+    ensure!(
+        !comment.hex_str.is_empty(),
+        "Expected syntax.comment to be populated by default inheritance"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
     // -------
     // Arrange
@@ -502,12 +617,15 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
         .get("base16-gruvbox-material-dark-hard")
         .unwrap()
         .clone();
+    let catppuccin = entry_map.get("tinted8-catppuccin-mocha").unwrap().clone();
 
     let dracula_json = fs::read_to_string(Path::new("fixtures/base16-dracula.json"))?;
     let gruvbox_json = fs::read_to_string(Path::new("fixtures/gruvbox-material-dark-hard.json"))?;
+    let catppuccin_json = fs::read_to_string(Path::new("fixtures/tinted8-catppuccin-mocha.json"))?;
 
     let expected_dracula: TestSchemeEntry = serde_json::from_str(&dracula_json).unwrap();
     let expected_gruvbox: TestSchemeEntry = serde_json::from_str(&gruvbox_json).unwrap();
+    let expected_catppuccin: TestSchemeEntry = serde_json::from_str(&catppuccin_json).unwrap();
 
     ensure!(
         expected_dracula.approx_eq(&dracula),
@@ -520,6 +638,16 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
         format!(
             "Gruvbox does not match expected.\nExpected: {expected_gruvbox:?}\nActual: {gruvbox:?}"
         )
+    );
+    ensure!(
+        expected_catppuccin.approx_eq(&catppuccin),
+        format!(
+            "Catppuccin (tinted8) does not match expected.\nExpected: {expected_catppuccin:?}\nActual: {catppuccin:?}"
+        )
+    );
+    ensure!(
+        dracula.ui.is_none() && dracula.syntax.is_none(),
+        "Expected Base16 Dracula entry to omit ui/syntax in live JSON output"
     );
 
     Ok(())

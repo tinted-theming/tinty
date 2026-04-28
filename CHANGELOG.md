@@ -18,6 +18,10 @@
   Even Better TOML, Helix, Neovim, Zed) can use it for key autocomplete, hover
   docs, and inline validation by adding a `#:schema` directive at the top of
   their config or referencing it via [SchemaStore](https://www.schemastore.org/).
+- `tinty list --json` now includes Tinted8 `ui` and `syntax` color blocks for
+  Tinted8 schemes, exposing every UI variable (~36 dotted-path keys) and Syntax
+  variable (~105 dotted-path keys) alongside the existing palette. Base16 and
+  Base24 entries are unchanged. The gallery uses the same data internally.
 
 ### Removed
 

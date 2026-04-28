@@ -13,6 +13,7 @@ use std::{
     path::Path,
     sync::{Arc, Mutex},
 };
+use tinted_builder::tinted8::SyntaxKey;
 use tinted_builder::{Color, Scheme, SchemeSystem, SchemeVariant};
 use tinted_builder_rust::operation_build::utils::SchemeFile;
 
@@ -78,6 +79,10 @@ pub struct SchemeEntry {
     slug: String,
     palette: HashMap<String, ColorOut>,
     lightness: Option<Lightness>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ui: Option<HashMap<String, ColorOut>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    syntax: Option<HashMap<String, ColorOut>>,
 }
 
 #[derive(Clone, Serialize)]
@@ -98,6 +103,30 @@ impl SchemeEntry {
     pub fn from_scheme(scheme: &Scheme) -> Self {
         let slug = scheme.get_scheme_slug();
         let system = scheme.get_scheme_system();
+        let (palette, ui, syntax) = match scheme.clone() {
+            Scheme::Base16(s) => (
+                s.palette
+                    .into_iter()
+                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
+                    .collect(),
+                None,
+                None,
+            ),
+            Scheme::Base24(s) => (
+                s.palette
+                    .into_iter()
+                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
+                    .collect(),
+                None,
+                None,
+            ),
+            Scheme::Tinted8(s) => (
+                tinted8_palette(&s),
+                Some(tinted8_ui(&s)),
+                Some(tinted8_syntax(&s)),
+            ),
+            _ => (HashMap::new(), None, None),
+        };
         Self {
             id: format!("{system}-{slug}"),
             name: scheme.get_scheme_name(),
@@ -106,31 +135,9 @@ impl SchemeEntry {
             author: scheme.get_scheme_author(),
             variant: scheme.get_scheme_variant(),
             lightness: Lightness::from_color(scheme).ok(),
-            palette: match scheme.clone() {
-                Scheme::Base16(s) => s
-                    .palette
-                    .into_iter()
-                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
-                    .collect(),
-                Scheme::Base24(s) => s
-                    .palette
-                    .into_iter()
-                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
-                    .collect(),
-                Scheme::Tinted8(s) => {
-                    let mut map = HashMap::new();
-                    for (color_name, color_variant) in
-                        tinted_builder::tinted8::Palette::get_color_list()
-                    {
-                        if let Some(color) = s.palette.get_color(&color_name, &color_variant) {
-                            let key = format!("{color_name}-{color_variant}");
-                            map.insert(key, ColorOut::from_color(color));
-                        }
-                    }
-                    map
-                }
-                _ => HashMap::new(),
-            },
+            palette,
+            ui,
+            syntax,
         }
     }
 
@@ -226,6 +233,103 @@ impl ColorOut {
             dec: color.dec,
         }
     }
+}
+
+fn tinted8_palette(scheme: &tinted_builder::tinted8::Scheme) -> HashMap<String, ColorOut> {
+    let mut map = HashMap::new();
+    for (color_name, color_variant) in tinted_builder::tinted8::Palette::get_color_list() {
+        if let Some(color) = scheme.palette.get_color(&color_name, &color_variant) {
+            let key = format!("{color_name}-{color_variant}");
+            map.insert(key, ColorOut::from_color(color));
+        }
+    }
+    map
+}
+
+fn tinted8_syntax(scheme: &tinted_builder::tinted8::Scheme) -> HashMap<String, ColorOut> {
+    SyntaxKey::variants()
+        .iter()
+        .map(|key| {
+            (
+                key.to_string(),
+                ColorOut::from_color(scheme.syntax.get_color(key)),
+            )
+        })
+        .collect()
+}
+
+// Tinted8 UI keys for tinted-builder 0.13.0. The library doesn't expose `UiKey`
+// publicly at this version (PR pending: tinted-theming/tinted-builder-rust#33),
+// so the canonical list is mirrored here. Switch to iterating
+// `tinted_builder::tinted8::UiKey::variants()` once the dependency is bumped.
+fn tinted8_ui(scheme: &tinted_builder::tinted8::Scheme) -> HashMap<String, ColorOut> {
+    let ui = &scheme.ui;
+    let entries: [(&str, &Color); 36] = [
+        ("global.background.normal", &ui.global.background.normal),
+        ("global.background.dark", &ui.global.background.dark),
+        ("global.background.light", &ui.global.background.light),
+        ("global.foreground.normal", &ui.global.foreground.normal),
+        ("global.foreground.dark", &ui.global.foreground.dark),
+        ("global.foreground.light", &ui.global.foreground.light),
+        ("deprecated", &ui.deprecated),
+        ("accent", &ui.accent),
+        ("border", &ui.border),
+        ("cursor.normal", &ui.cursor.normal),
+        ("cursor.muted", &ui.cursor.muted),
+        ("gutter.background", &ui.gutter.background),
+        ("gutter.foreground", &ui.gutter.foreground),
+        (
+            "highlight.button.background",
+            &ui.highlight.button.background,
+        ),
+        (
+            "highlight.button.foreground",
+            &ui.highlight.button.foreground,
+        ),
+        ("highlight.line.background", &ui.highlight.line.background),
+        ("highlight.line.foreground", &ui.highlight.line.foreground),
+        (
+            "highlight.search.background",
+            &ui.highlight.search.background,
+        ),
+        (
+            "highlight.search.foreground",
+            &ui.highlight.search.foreground,
+        ),
+        ("highlight.text.background", &ui.highlight.text.background),
+        ("highlight.text.foreground", &ui.highlight.text.foreground),
+        (
+            "highlight.text.active-background",
+            &ui.highlight.text.active_background,
+        ),
+        (
+            "highlight.text.active-foreground",
+            &ui.highlight.text.active_foreground,
+        ),
+        ("indent-guide.background", &ui.indent_guide.background),
+        (
+            "indent-guide.active-background",
+            &ui.indent_guide.active_background,
+        ),
+        ("link", &ui.link),
+        ("selection.background", &ui.selection.background),
+        ("selection.foreground", &ui.selection.foreground),
+        (
+            "selection.inactive-background",
+            &ui.selection.inactive_background,
+        ),
+        ("status.error", &ui.status.error),
+        ("status.warning", &ui.status.warning),
+        ("status.info", &ui.status.info),
+        ("status.success", &ui.status.success),
+        ("tooltip.background", &ui.tooltip.background),
+        ("tooltip.foreground", &ui.tooltip.foreground),
+        ("whitespace.foreground", &ui.whitespace.foreground),
+    ];
+    entries
+        .iter()
+        .map(|(k, c)| ((*k).to_string(), ColorOut::from_color(c)))
+        .collect()
 }
 
 impl Lightness {
