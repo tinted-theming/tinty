@@ -6,6 +6,7 @@ const state = {
   appearance: "all",
   pageTheme: "system",
   language: "rust",
+  variablesView: "palette",
 };
 let currentSheetId = null;
 let tooltipTimeoutId = null;
@@ -213,20 +214,41 @@ function loadSavedLanguage() {
   }
 }
 
-function metadataItem(label, value) {
-  const fragment = document.createDocumentFragment();
-  const dt = document.createElement("dt");
-  const dd = document.createElement("dd");
-  dt.textContent = label;
-  dd.textContent = value || "n/a";
-  fragment.append(dt, dd);
-  return fragment;
+function metadataRow(label, value) {
+  const row = document.createElement("div");
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("span");
+  row.className = "metadata-row";
+  labelEl.className = "metadata-label";
+  valueEl.className = "metadata-value";
+  labelEl.textContent = label;
+  valueEl.textContent = value || "n/a";
+  row.append(labelEl, valueEl);
+  return row;
 }
 
-function renderPalette(container, scheme) {
-  container.textContent = "";
+function metadataGroup(className, ...rows) {
+  const group = document.createElement("div");
+  group.className = className;
+  group.append(...rows);
+  return group;
+}
 
-  Object.entries(scheme.palette)
+function setVariablesView(view) {
+  state.variablesView = view;
+  document.querySelectorAll("[data-variables-view]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.variablesView === view);
+  });
+  document.getElementById("sheet-palette").hidden = view !== "palette";
+  document.getElementById("sheet-ui").hidden = view !== "ui";
+  document.getElementById("sheet-syntax").hidden = view !== "syntax";
+}
+
+function renderColorMap(container, map) {
+  container.textContent = "";
+  container.dataset.size = String(Object.keys(map).length);
+
+  Object.entries(map)
     .sort(([a], [b]) => a.localeCompare(b))
     .forEach(([name, value]) => {
       const swatch = document.createElement("div");
@@ -244,6 +266,42 @@ function renderPalette(container, scheme) {
       label.append(hex);
       swatch.append(block, label);
       container.append(swatch);
+    });
+}
+
+function relativeLuminance(rgb) {
+  const channels = rgb.map((c) => {
+    const norm = c / 255;
+    return norm <= 0.03928 ? norm / 12.92 : Math.pow((norm + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function pillTextColor(rgb) {
+  return relativeLuminance(rgb) > 0.45 ? "#0b0d10" : "#f8f9fb";
+}
+
+function renderVariableList(container, map) {
+  container.textContent = "";
+
+  Object.entries(map)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([name, value]) => {
+      const row = document.createElement("div");
+      const key = document.createElement("span");
+      const pill = document.createElement("span");
+
+      row.className = "variable-row";
+      key.className = "variable-key";
+      pill.className = "variable-pill";
+
+      key.textContent = name;
+      pill.textContent = value.hex_str;
+      pill.style.background = value.hex_str;
+      pill.style.color = pillTextColor(value.rgb);
+
+      row.append(key, pill);
+      container.append(row);
     });
 }
 
@@ -336,15 +394,41 @@ function applySheetState(scheme, updateHash) {
   const metadata = document.getElementById("sheet-metadata");
   metadata.textContent = "";
   metadata.append(
-    metadataItem("ID", scheme.id),
-    metadataItem("Author", scheme.author),
-    metadataItem("System", scheme.system),
-    metadataItem("Variant", scheme.variant),
-    metadataItem("Appearance", appearance(scheme)),
-    metadataItem("Background L*", scheme.lightness?.background?.toFixed(2)),
-    metadataItem("Foreground L*", scheme.lightness?.foreground?.toFixed(2)),
+    metadataGroup(
+      "metadata-top",
+      metadataRow("ID", scheme.id),
+      metadataRow("Author", scheme.author),
+    ),
+    metadataGroup(
+      "metadata-cols",
+      metadataGroup(
+        "metadata-col",
+        metadataRow("System", scheme.system),
+        metadataRow("Variant", scheme.variant),
+        metadataRow("Appearance", appearance(scheme)),
+      ),
+      metadataGroup(
+        "metadata-col",
+        metadataRow("Bg L*", scheme.lightness?.background?.toFixed(2)),
+        metadataRow("Fg L*", scheme.lightness?.foreground?.toFixed(2)),
+      ),
+    ),
   );
-  renderPalette(document.getElementById("sheet-palette"), scheme);
+  renderColorMap(document.getElementById("sheet-palette"), scheme.palette);
+
+  const hasVariables = Boolean(scheme.ui && scheme.syntax);
+  const label = document.getElementById("variables-label");
+  const toggle = document.getElementById("variables-toggle");
+  label.hidden = hasVariables;
+  toggle.hidden = !hasVariables;
+
+  if (hasVariables) {
+    renderVariableList(document.getElementById("sheet-ui"), scheme.ui);
+    renderVariableList(document.getElementById("sheet-syntax"), scheme.syntax);
+    setVariablesView(state.variablesView);
+  } else {
+    setVariablesView("palette");
+  }
 
   if (updateHash) {
     setSheetHash(scheme.id);
@@ -555,6 +639,12 @@ document.getElementById("language-select").addEventListener("change", (event) =>
 document.querySelectorAll("[data-preview-language]").forEach((button) => {
   button.addEventListener("click", () => {
     setLanguage(button.dataset.previewLanguage);
+  });
+});
+
+document.querySelectorAll("[data-variables-view]").forEach((button) => {
+  button.addEventListener("click", () => {
+    setVariablesView(button.dataset.variablesView);
   });
 });
 

@@ -305,7 +305,8 @@ h1 {
 
 .filter-group,
 .theme-switcher,
-.preview-toolbar {
+.preview-toolbar,
+.variables-toggle {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 2px;
@@ -336,8 +337,16 @@ h1 {
 
 .filter-group .chip,
 .theme-switcher .chip,
-.preview-toolbar .chip {
+.preview-toolbar .chip,
+.variables-toggle .chip {
   border-radius: var(--radius-full);
+}
+
+.variables-toggle {
+  display: flex;
+  justify-content: center;
+  width: fit-content;
+  margin: 0 auto 14px;
 }
 
 .preview-toolbar .chip {
@@ -541,21 +550,40 @@ h1 {
 }
 
 .metadata {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 8px 14px;
-  margin: 0;
   font-size: 13px;
 }
 
-.metadata dt {
+.metadata-top {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
+  margin-bottom: 12px;
+}
+
+.metadata-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.metadata-col {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 10px;
+  align-content: start;
+}
+
+.metadata-row {
+  display: contents;
+}
+
+.metadata-label {
   color: var(--ink-3);
   font-weight: 500;
   letter-spacing: .01em;
 }
 
-.metadata dd {
-  margin: 0;
+.metadata-value {
   color: var(--ink-1);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -570,6 +598,12 @@ h1 {
 
 .sheet-glass-panel .palette {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Tinted8 palettes are 33 entries (11 colors x 3 variants) — 3 columns
+   distribute evenly with one color per row. */
+.sheet-glass-panel .palette[data-size="33"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .swatch {
@@ -602,6 +636,47 @@ h1 {
   overflow-wrap: anywhere;
   color: var(--ink-3);
   font-size: 10.5px;
+}
+
+.variable-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.variable-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+}
+
+.variable-row:last-child {
+  border-bottom: none;
+}
+
+.variable-key {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink-2);
+  font: 11px/1.3 var(--font-mono);
+}
+
+.variable-pill {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font: 10.5px/1.4 var(--font-mono);
+  letter-spacing: .02em;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 14%);
+}
+
+.palette[hidden],
+.variable-list[hidden],
+.section-label[hidden],
+.variables-toggle[hidden] {
+  display: none;
 }
 
 .empty {
