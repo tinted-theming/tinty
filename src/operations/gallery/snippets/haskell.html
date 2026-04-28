@@ -1,0 +1,9 @@
+<span class="keyword">import</span> <span class="type">Tinty</span> (<span class="type">Scheme</span>, <span class="type">Theme</span>)
+
+<span class="comment">-- load and apply a color scheme</span>
+<span class="function">apply</span> :: <span class="type">String</span> -&gt; <span class="type">IO</span> ()
+<span class="function">apply</span> <span class="parameter">name</span> = <span class="keyword">do</span>
+  scheme &lt;- <span class="function">loadScheme</span> <span class="parameter">name</span>
+  <span class="keyword">let</span> theme = <span class="function">buildWith</span> scheme <span class="number">16</span>
+  <span class="function">applyTheme</span> theme
+  <span class="builtin">putStrLn</span> (<span class="string">"applied: "</span> ++ <span class="function">themeName</span> theme)

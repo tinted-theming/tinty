@@ -1,0 +1,10 @@
+<span class="keyword">import</span> tinty.<span class="type">Scheme</span>
+
+<span class="comment">// load and apply a color scheme</span>
+<span class="keyword">fun</span> <span class="function">apply</span>(<span class="parameter">name</span>: <span class="type">String</span>) = <span class="builtin">runCatching</span> {
+    <span class="keyword">val</span> theme = <span class="type">Scheme</span>.<span class="function">load</span>(<span class="parameter">name</span>)
+        .<span class="function">withBase</span>(<span class="number">16</span>)
+        .<span class="function">build</span>()
+    theme.<span class="function">apply</span>()
+    <span class="builtin">println</span>(<span class="string">"applied: ${theme.name}"</span>)
+}

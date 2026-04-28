@@ -21,31 +21,11 @@ use tinted_builder_rust::operation_build::utils::SchemeFile;
 /// Lists colorschemes file which is updated via scripts/install by getting a list of schemes
 /// available in <https://github.com/tinted-theming/schemes>
 pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
-    let schemes_dir_path = if is_custom {
-        data_path.join(CUSTOM_SCHEMES_DIR_NAME)
-    } else {
-        data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"))
-    };
-
-    match (schemes_dir_path.exists(), is_custom) {
-        (false, true) => {
-            return Err(anyhow!(
-                "You don't have any local custom schemes at: {}",
-                schemes_dir_path.display(),
-            ))
-        }
-        (false, false) => {
-            return Err(anyhow!(
-                "Schemes are missing, run install and then try again: `{REPO_NAME} install`",
-            ))
-        }
-        _ => {}
-    }
+    let schemes_dir_path = schemes_dir_path(data_path, is_custom)?;
 
     let stdout = io::stdout();
     if is_json {
-        let scheme_files = get_all_scheme_file_paths(&schemes_dir_path, None)?;
-        let json = as_json(scheme_files)?;
+        let json = scheme_entries_json(&schemes_dir_path)?;
         let mut handle = stdout.lock();
         let _ = writeln!(handle, "{json}");
         return Ok(());
@@ -60,6 +40,32 @@ pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn schemes_dir_path(data_path: &Path, is_custom: bool) -> Result<std::path::PathBuf> {
+    let schemes_dir_path = if is_custom {
+        data_path.join(CUSTOM_SCHEMES_DIR_NAME)
+    } else {
+        data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"))
+    };
+
+    match (schemes_dir_path.exists(), is_custom) {
+        (false, true) => Err(anyhow!(
+            "You don't have any local custom schemes at: {}",
+            schemes_dir_path.display(),
+        )),
+        (false, false) => Err(anyhow!(
+            "Schemes are missing, run install and then try again: `{REPO_NAME} install`",
+        )),
+        _ => Ok(schemes_dir_path),
+    }
+}
+
+pub fn scheme_entries_json(schemes_dir_path: &Path) -> Result<String> {
+    let scheme_files = get_all_scheme_file_paths(schemes_dir_path, None)?;
+    let entries = scheme_entries(scheme_files)?;
+
+    Ok(serde_json::to_string(&entries)?)
 }
 
 #[derive(Clone, Serialize)]
@@ -275,7 +281,7 @@ impl Lightness {
     }
 }
 
-fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
+fn scheme_entries(scheme_files: HashMap<String, SchemeFile>) -> Result<Vec<SchemeEntry>> {
     let mut keys: Vec<String> = scheme_files.keys().cloned().collect();
     // Create a thread-safe HashMap to collect results
     let mutex = Arc::new(Mutex::new(HashMap::new()));
@@ -314,5 +320,5 @@ fn as_json(scheme_files: HashMap<String, SchemeFile>) -> Result<String> {
         }
     }
 
-    Ok(serde_json::to_string(&*sorted_results)?)
+    Ok(sorted_results)
 }

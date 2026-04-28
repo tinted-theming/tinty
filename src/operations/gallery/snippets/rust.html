@@ -1,0 +1,10 @@
+<span class="keyword">use</span> tinty::{<span class="type">Scheme</span>, <span class="type">Theme</span>};
+
+<span class="comment">// load and apply a color scheme</span>
+<span class="keyword">fn</span> <span class="function">apply</span>(<span class="parameter">name</span>: &amp;<span class="type">str</span>) -&gt; <span class="type">Option</span>&lt;<span class="type">Theme</span>&gt; {
+    <span class="keyword">let</span> scheme = <span class="type">Scheme</span>::<span class="function">load</span>(<span class="parameter">name</span>)?;
+    <span class="keyword">let</span> theme = scheme.<span class="function">with_base</span>(<span class="number">16</span>).<span class="function">build</span>();
+    theme.<span class="function">apply</span>();
+    <span class="builtin">println!</span>(<span class="string">"applied: {}"</span>, theme.<span class="function">name</span>());
+    <span class="type">Some</span>(theme)
+}

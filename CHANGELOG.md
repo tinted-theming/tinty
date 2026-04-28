@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- New `tinty gallery` command that opens an interactive, offline-capable HTML
+  gallery of all available schemes, with per-scheme code previews (Rust,
+  Kotlin, Lisp, Elixir, Haskell, diff, terminal), palette, and metadata.
+  Supports `--custom-schemes` to gallery user-defined schemes, a directory
+  flag to write the static site to disk instead of opening it, and
+  `--no-open` to skip browser launch.
+
 ## [0.31.0] - 2026-04-20
 
 ### Added

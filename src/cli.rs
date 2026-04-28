@@ -74,6 +74,30 @@ pub fn build_cli() -> Command {
             ),
         )
         .subcommand(
+            Command::new("gallery")
+                .about("Opens an interactive gallery for available schemes")
+                .arg(
+                    Arg::new("custom-schemes")
+                        .help("Build gallery from available custom schemes")
+                        .long("custom-schemes")
+                        .action(ArgAction::SetTrue),
+                )
+                .arg(
+                    Arg::new("dump")
+                        .long("dump")
+                        .help("Write a static gallery site to the provided directory")
+                        .value_name("DIRECTORY")
+                        .value_hint(ValueHint::DirPath)
+                        .action(ArgAction::Set),
+                )
+                .arg(
+                    Arg::new("no-open")
+                        .long("no-open")
+                        .help("Do not open the generated gallery in a browser")
+                        .action(ArgAction::SetTrue),
+                ),
+        )
+        .subcommand(
             Command::new("generate-scheme")
                 .about("Generates a scheme based on an image")
                 .arg(

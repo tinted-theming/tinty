@@ -1,0 +1,15 @@
+<span class="ansi-bright-green">user@host</span> <span class="ansi-bright-blue">~/dev/scheme</span>  <span class="ansi-bright-magenta">main</span><span class="ansi-bright-white">$</span> ls <span class="ansi-cyan">-F</span>
+Cargo.toml  README.md  <span class="ansi-bright-cyan">current@</span>  <span class="ansi-blue">drafts/</span>  <span class="ansi-blue">scripts/</span>  <span class="ansi-blue">src/</span>
+
+<span class="ansi-bright-green">user@host</span> <span class="ansi-bright-blue">~/dev/scheme</span>  <span class="ansi-bright-magenta">main</span><span class="ansi-bright-white">$</span> tree <span class="ansi-cyan">-L</span> <span class="ansi-bright-yellow">2</span> <span class="ansi-blue">src/</span>
+<span class="ansi-blue">src/</span>
+<span class="ansi-bright-black">├──</span> lib.rs
+<span class="ansi-bright-black">├──</span> <span class="ansi-blue">scheme/</span>
+<span class="ansi-bright-black">│   ├──</span> base16.rs
+<span class="ansi-bright-black">│   └──</span> tinted8.rs
+<span class="ansi-bright-black">└──</span> <span class="ansi-blue">templates/</span>
+<span class="ansi-bright-black">    ├──</span> <span class="ansi-yellow">alacritty.tpl</span>
+<span class="ansi-bright-black">    └──</span> <span class="ansi-yellow">kitty.tpl</span>
+
+<span class="ansi-bright-green">user@host</span> <span class="ansi-bright-blue">~/dev/scheme</span>  <span class="ansi-bright-magenta">main</span><span class="ansi-bright-white">$</span> grep <span class="ansi-cyan">-rn</span> <span class="ansi-green">"TODO"</span> <span class="ansi-blue">src/</span>
+<span class="ansi-magenta">src/scheme/tinted8.rs</span><span class="ansi-cyan">:</span><span class="ansi-green">42</span><span class="ansi-cyan">:</span> // <span class="ansi-bright-red">TODO</span>: validate non-standard variants

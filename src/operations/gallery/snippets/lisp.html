@@ -1,0 +1,9 @@
+<span class="comment">;; load and apply a color scheme</span>
+(<span class="keyword">defpackage</span> <span class="string">:tinty</span> (:use :cl))
+
+(<span class="keyword">defun</span> <span class="function">apply-scheme</span> (<span class="parameter">name</span>)
+  (<span class="keyword">let*</span> ((scheme (<span class="function">scheme:load</span> <span class="parameter">name</span>))
+         (theme (<span class="function">scheme:build</span> scheme :base <span class="number">16</span>)))
+    (<span class="function">theme:apply</span> theme)
+    (<span class="builtin">format</span> t <span class="string">"applied: ~a~%"</span>
+      (<span class="function">theme:name</span> theme))))
