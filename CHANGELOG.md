@@ -26,6 +26,15 @@
   Tinted8 schemes in two new panels alongside Palette. Base16 and Base24
   schemes still show only Palette.
 
+### Changed
+
+- The `tinty gallery` code preview for Tinted8 schemes now sources its
+  per-token colors (`bg`, `fg`, `muted`, `comment`, `keyword`, `function`,
+  `string`, `number`, `type`, `builtin`, `parameter`, `added`, `deleted`)
+  from the scheme's authored `syntax.*` and `ui.*` values rather than a
+  hand-picked palette mapping, so authored overrides drive the preview.
+  ANSI roles still come from the palette, and Base16/Base24 are unchanged.
+
 ### Removed
 
 - **BREAKING**: Retire the `preferred-schemes` config option in favor of
