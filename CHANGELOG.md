@@ -18,6 +18,7 @@
   Even Better TOML, Helix, Neovim, Zed) can use it for key autocomplete, hover
   docs, and inline validation by adding a `#:schema` directive at the top of
   their config or referencing it via [SchemaStore](https://www.schemastore.org/).
+- `tinty list --json` now includes Tinted8 `ui` and `syntax` color blocks for
   Tinted8 schemes, exposing every UI variable (39 dotted-path keys) and Syntax
   variable (105 dotted-path keys) alongside the existing palette, sourced
   from the canonical `tinted_builder::tinted8::{UiKey, SyntaxKey}` enums.
@@ -38,6 +39,12 @@
   `link.normal.{background,foreground}`, and split `cursor.{normal,muted}`
   into `.background` / `.foreground` sub-fields. Internal change for
   consumers; the gallery picks these up automatically.
+- The `tinty gallery` code preview for Tinted8 schemes now sources its
+  per-token colors (`bg`, `fg`, `muted`, `comment`, `keyword`, `function`,
+  `string`, `number`, `type`, `builtin`, `parameter`, `added`, `deleted`)
+  from the scheme's authored `syntax.*` and `ui.*` values rather than a
+  hand-picked palette mapping, so authored overrides drive the preview.
+  ANSI roles still come from the palette, and Base16/Base24 are unchanged.
 
 ### Removed
 

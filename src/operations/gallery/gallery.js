@@ -40,9 +40,26 @@ function hasSnippet(lang) {
 
 const FALLBACK_LANGUAGE = "rust";
 
-function color(scheme, key) {
-  return scheme.palette[key]?.hex_str || fallbackPalette[key] || fallbackPalette.base05;
-}
+// For Tinted8 schemes, map each non-ANSI preview role to a canonical
+// dotted-path key in `scheme.syntax` or `scheme.ui`. Lets authored scheme
+// overrides drive the gallery preview instead of the hand-rolled palette
+// guess. ANSI roles aren't in the syntax/ui spec — they fall through to
+// the palette mapping.
+const TINTED8_ROLE_PATHS = {
+  bg: ["ui", "global.background.normal"],
+  fg: ["ui", "global.foreground.normal"],
+  muted: ["ui", "global.foreground.dark"],
+  comment: ["syntax", "comment"],
+  keyword: ["syntax", "keyword"],
+  function: ["syntax", "entity.name.function"],
+  string: ["syntax", "string"],
+  number: ["syntax", "constant.numeric"],
+  type: ["syntax", "entity.name.type"],
+  builtin: ["syntax", "support.function.builtin"],
+  parameter: ["syntax", "variable.parameter"],
+  added: ["syntax", "markup.inserted"],
+  deleted: ["syntax", "markup.deleted"],
+};
 
 const PREVIEW_ROLE_KEYS = {
   base16: {
@@ -137,7 +154,7 @@ const PREVIEW_ROLES = [
   "ansi-bright-blue", "ansi-bright-magenta", "ansi-bright-cyan", "ansi-bright-white",
 ];
 
-function previewKey(scheme, role) {
+function palettePreviewKey(scheme, role) {
   const system = String(scheme.system).toLowerCase();
   if (system === "tinted8") {
     const variant = String(scheme.variant || "").toLowerCase() === "light" ? "light" : "dark";
@@ -148,6 +165,21 @@ function previewKey(scheme, role) {
     return PREVIEW_ROLE_KEYS.base24[role] ?? PREVIEW_ROLE_KEYS.base16[role];
   }
   return PREVIEW_ROLE_KEYS.base16[role];
+}
+
+function previewColor(scheme, role) {
+  if (String(scheme.system).toLowerCase() === "tinted8") {
+    const path = TINTED8_ROLE_PATHS[role];
+    if (path) {
+      const [source, key] = path;
+      const entry = scheme[source]?.[key];
+      if (entry?.hex_str) {
+        return entry.hex_str;
+      }
+    }
+  }
+  const key = palettePreviewKey(scheme, role);
+  return scheme.palette[key]?.hex_str || fallbackPalette[key] || fallbackPalette.base05;
 }
 
 function appearance(scheme) {
@@ -180,7 +212,7 @@ function matchesFilters(scheme) {
 
 function setPreviewColors(card, scheme) {
   PREVIEW_ROLES.forEach((role) => {
-    card.style.setProperty(`--preview-${role}`, color(scheme, previewKey(scheme, role)));
+    card.style.setProperty(`--preview-${role}`, previewColor(scheme, role));
   });
 }
 
