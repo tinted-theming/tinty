@@ -8,11 +8,12 @@ use io::Write;
 use rayon::{iter::ParallelIterator, slice::ParallelSlice};
 use serde::Serialize;
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     io,
     path::Path,
     sync::{Arc, Mutex},
 };
+use tinted_builder::tinted8::{SyntaxKey, UiKey};
 use tinted_builder::{Color, Scheme, SchemeSystem, SchemeVariant};
 use tinted_builder_rust::operation_build::utils::SchemeFile;
 
@@ -76,8 +77,12 @@ pub struct SchemeEntry {
     system: SchemeSystem,
     variant: SchemeVariant,
     slug: String,
-    palette: HashMap<String, ColorOut>,
+    palette: BTreeMap<String, ColorOut>,
     lightness: Option<Lightness>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ui: Option<BTreeMap<String, ColorOut>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    syntax: Option<BTreeMap<String, ColorOut>>,
 }
 
 #[derive(Clone, Serialize)]
@@ -98,6 +103,30 @@ impl SchemeEntry {
     pub fn from_scheme(scheme: &Scheme) -> Self {
         let slug = scheme.get_scheme_slug();
         let system = scheme.get_scheme_system();
+        let (palette, ui, syntax) = match scheme.clone() {
+            Scheme::Base16(s) => (
+                s.palette
+                    .into_iter()
+                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
+                    .collect(),
+                None,
+                None,
+            ),
+            Scheme::Base24(s) => (
+                s.palette
+                    .into_iter()
+                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
+                    .collect(),
+                None,
+                None,
+            ),
+            Scheme::Tinted8(s) => (
+                tinted8_palette(&s),
+                Some(tinted8_ui(&s)),
+                Some(tinted8_syntax(&s)),
+            ),
+            _ => (BTreeMap::new(), None, None),
+        };
         Self {
             id: format!("{system}-{slug}"),
             name: scheme.get_scheme_name(),
@@ -106,31 +135,9 @@ impl SchemeEntry {
             author: scheme.get_scheme_author(),
             variant: scheme.get_scheme_variant(),
             lightness: Lightness::from_color(scheme).ok(),
-            palette: match scheme.clone() {
-                Scheme::Base16(s) => s
-                    .palette
-                    .into_iter()
-                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
-                    .collect(),
-                Scheme::Base24(s) => s
-                    .palette
-                    .into_iter()
-                    .map(|(k, v)| (k, ColorOut::from_color(&v)))
-                    .collect(),
-                Scheme::Tinted8(s) => {
-                    let mut map = HashMap::new();
-                    for (color_name, color_variant) in
-                        tinted_builder::tinted8::Palette::get_color_list()
-                    {
-                        if let Some(color) = s.palette.get_color(&color_name, &color_variant) {
-                            let key = format!("{color_name}-{color_variant}");
-                            map.insert(key, ColorOut::from_color(color));
-                        }
-                    }
-                    map
-                }
-                _ => HashMap::new(),
-            },
+            palette,
+            ui,
+            syntax,
         }
     }
 
@@ -226,6 +233,41 @@ impl ColorOut {
             dec: color.dec,
         }
     }
+}
+
+fn tinted8_palette(scheme: &tinted_builder::tinted8::Scheme) -> BTreeMap<String, ColorOut> {
+    let mut map = BTreeMap::new();
+    for (color_name, color_variant) in tinted_builder::tinted8::Palette::get_color_list() {
+        if let Some(color) = scheme.palette.get_color(&color_name, &color_variant) {
+            let key = format!("{color_name}-{color_variant}");
+            map.insert(key, ColorOut::from_color(color));
+        }
+    }
+    map
+}
+
+fn tinted8_syntax(scheme: &tinted_builder::tinted8::Scheme) -> BTreeMap<String, ColorOut> {
+    SyntaxKey::variants()
+        .iter()
+        .map(|key| {
+            (
+                key.to_string(),
+                ColorOut::from_color(scheme.syntax.get_color(key)),
+            )
+        })
+        .collect()
+}
+
+fn tinted8_ui(scheme: &tinted_builder::tinted8::Scheme) -> BTreeMap<String, ColorOut> {
+    UiKey::variants()
+        .iter()
+        .map(|key| {
+            (
+                key.to_string(),
+                ColorOut::from_color(scheme.ui.get_color(key)),
+            )
+        })
+        .collect()
 }
 
 impl Lightness {
