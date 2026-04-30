@@ -19,9 +19,23 @@
   docs, and inline validation by adding a `#:schema` directive at the top of
   their config or referencing it via [SchemaStore](https://www.schemastore.org/).
 - `tinty list --json` now includes Tinted8 `ui` and `syntax` color blocks for
-  Tinted8 schemes, exposing every UI variable (~36 dotted-path keys) and Syntax
-  variable (~105 dotted-path keys) alongside the existing palette. Base16 and
-  Base24 entries are unchanged. The gallery uses the same data internally.
+  Tinted8 schemes, exposing every UI variable (39 dotted-path keys) and Syntax
+  variable (105 dotted-path keys) alongside the existing palette, sourced
+  from the canonical `tinted_builder::tinted8::{UiKey, SyntaxKey}` enums.
+  Base16 and Base24 entries are unchanged. The gallery uses the same data
+  internally.
+- `tinty list --json` now serializes `palette`, `ui`, and `syntax` maps with
+  alphabetically-sorted keys for stable output across runs.
+
+### Changed
+
+- Updated `tinted-builder` to `0.15.0`, `tinted-builder-rust` to `0.19.0`,
+  and `tinted-scheme-extractor` to `0.12.0`. The Tinted8 styling spec
+  carried by `tinted-builder` 0.14.0 renamed several `ui.*` keys: `accent`
+  → `accent.normal`, `border` → `border.normal`, `link` →
+  `link.normal.{background,foreground}`, and split `cursor.{normal,muted}`
+  into `.background` / `.foreground` sub-fields. Internal change for
+  consumers; the gallery picks these up automatically.
 
 ### Removed
 
