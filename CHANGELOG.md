@@ -19,8 +19,8 @@
   docs, and inline validation by adding a `#:schema` directive at the top of
   their config or referencing it via [SchemaStore](https://www.schemastore.org/).
 - `tinty list --json` now includes Tinted8 `ui` and `syntax` color blocks for
-  Tinted8 schemes, exposing every UI variable (~36 dotted-path keys) and Syntax
-  variable (~105 dotted-path keys) alongside the existing palette. Base16 and
+  Tinted8 schemes, exposing every UI variable (39 dotted-path keys) and Syntax
+  variable (105 dotted-path keys) alongside the existing palette. Base16 and
   Base24 entries are unchanged. The gallery uses the same data internally.
 - The `tinty gallery` detail sheet now lists every UI and Syntax variable for
   Tinted8 schemes in two new panels alongside Palette. Base16 and Base24
@@ -34,6 +34,18 @@
   from the scheme's authored `syntax.*` and `ui.*` values rather than a
   hand-picked palette mapping, so authored overrides drive the preview.
   ANSI roles still come from the palette, and Base16/Base24 are unchanged.
+- Updated `tinted-builder` to `0.15.0` and `tinted-builder-rust` to `0.19.0`.
+  Picks up upstream's `tinted8::UiKey` re-export so tinty's `tinty list --json`
+  Tinted8 `ui` block iterates the spec's canonical UI key enum instead of a
+  hardcoded list. **BREAKING (Tinted8 `ui` JSON shape only):** the lib's
+  0.14.0 styling spec renamed `ui.accent` → `ui.accent.normal`,
+  `ui.border` → `ui.border.normal`, `ui.link` → `ui.link.normal.{background,foreground}`,
+  and split `ui.cursor.{normal,muted}` into `.background` / `.foreground`
+  sub-fields. The `ui` map gains 3 keys (39 total, was 36). Base16 / Base24
+  JSON shape is unchanged.
+- `tinty list --json` now serializes `palette`, `ui`, and `syntax` maps with
+  alphabetically-sorted keys for stable output across runs (was: HashMap
+  iteration order).
 
 ### Removed
 

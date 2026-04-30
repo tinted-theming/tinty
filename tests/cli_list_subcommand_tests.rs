@@ -540,8 +540,12 @@ fn test_cli_list_subcommand_deserialize_tinted8_fixture() -> Result<()> {
         .as_ref()
         .context("Expected tinted8 entry to include `ui`")?;
     ensure!(
-        ui.len() == 36,
-        format!("Expected 36 ui entries, got {}", ui.len())
+        ui.len() == tinted_builder::tinted8::UiKey::variants().len(),
+        format!(
+            "Expected ui len to match UiKey::variants().len() ({}), got {}",
+            tinted_builder::tinted8::UiKey::variants().len(),
+            ui.len()
+        )
     );
     let bg_normal = ui
         .get("global.background.normal")
@@ -552,6 +556,14 @@ fn test_cli_list_subcommand_deserialize_tinted8_fixture() -> Result<()> {
             "Expected ui.global.background.normal #1e1e2e, got {}",
             bg_normal.hex_str
         )
+    );
+    // 0.14.0+ renamed `accent` → `accent.normal`; sanity-check the new shape.
+    let accent_normal = ui
+        .get("accent.normal")
+        .context("ui.accent.normal missing")?;
+    ensure!(
+        !accent_normal.hex_str.is_empty(),
+        "Expected ui.accent.normal to be populated"
     );
 
     let syntax = scheme_entry

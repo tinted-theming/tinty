@@ -21,8 +21,8 @@ serde_yaml = "0.9.34"
 serde_json = { version = "1.0.149", features = ["preserve_order"] }
 shell-words = "1.1.1"
 strip-ansi-escapes = "0.2.1"
-tinted-builder-rust = "0.17.0"
-tinted-builder = "0.13.0"
+tinted-builder-rust = "0.19.0"
+tinted-builder = "0.15.0"
 tinted-scheme-extractor = "0.11.0"
 toml = "0.8.23"
 url = "2.5.8"
@@ -56,3 +56,15 @@ panic_in_result_fn = "deny"
 panic = "deny"
 exit = "deny"
 as_conversions = "deny"
+
+# TEMPORARY: pin `tinted-scheme-extractor` to my fork's branch that bumps its
+# `tinted-builder` dep from `^0.13.0` to `^0.15.0`. Without this, our direct
+# bump to `tinted-builder = "0.15.0"` collides with the extractor's still-pinned
+# `^0.13.0`, producing two versions of `tinted-builder` in the dep graph and
+# breaking `generate_scheme.rs` (which receives `SchemeSystem`/`SchemeVariant`
+# from the extractor).
+#
+# This MUST be reverted to a published version before merging. See:
+#   - tinted-theming/tinted-scheme-extractor-rs#2 (the bump PR)
+[patch.crates-io]
+tinted-scheme-extractor = { git = "https://github.com/bezhermoso/tinted-scheme-extractor-rs.git", rev = "e27da9ab72706139bdaac88f452529017296ee7e" }
