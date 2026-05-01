@@ -8,7 +8,8 @@
 mod utils;
 
 use crate::utils::{
-    setup, write_to_file, COMMAND_NAME, CURRENT_SCHEME_FILE_NAME, ORG_NAME, REPO_NAME,
+    clone_test_repos, setup, write_to_file, COMMAND_NAME, CURRENT_SCHEME_FILE_NAME, ORG_NAME,
+    REPO_NAME,
 };
 use anyhow::{ensure, Result};
 use std::fs;
@@ -18,12 +19,12 @@ fn test_cli_no_arguments() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) = setup("test_cli_no_arguments", "")?;
+    let (_, _, command_vec, _temp_dir) = setup("test_cli_no_arguments", "", true)?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -64,11 +65,12 @@ themes-dir = "colors"
 hook = "echo 'test_cli_config_path_tilde_as_home_config_output'"
 "#;
     write_to_file(&config_path, config_content)?;
+    clone_test_repos(&data_path)?;
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -108,11 +110,12 @@ fn test_cli_default_data_path() -> Result<()> {
         format!("default-scheme = \"{init_scheme_name}\"").as_str(),
     )?;
     let env_vars: &[(&str, &str)] = &[("XDG_DATA_HOME", xdg_data_home.to_str().unwrap())];
+    clone_test_repos(&data_path)?;
 
     // ---
     // Act
     // ---
-    utils::run_command_with_env(&init_command_vec, &data_path, true, env_vars)?;
+    utils::run_command_with_env(&init_command_vec, env_vars)?;
 
     // This test is important to determine the config.toml is being read correctly
     ensure!(
@@ -120,10 +123,9 @@ fn test_cli_default_data_path() -> Result<()> {
         "current_scheme_file_path not as expected"
     );
 
-    utils::run_command_with_env(&apply_command_vec, &data_path, false, env_vars)?;
-    utils::run_command_with_env(&init_command_vec, &data_path, false, env_vars)?;
-    let (stdout, stderr) =
-        utils::run_command_with_env(&apply_command_vec, &data_path, false, env_vars)?;
+    utils::run_command_with_env(&apply_command_vec, env_vars)?;
+    utils::run_command_with_env(&init_command_vec, env_vars)?;
+    let (stdout, stderr) = utils::run_command_with_env(&apply_command_vec, env_vars)?;
 
     // ------
     // Assert
@@ -165,11 +167,12 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     );
     let command_vec = shell_words::split(command.as_str())?;
     write_to_file(&config_path, "")?;
+    clone_test_repos(&data_path)?;
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert

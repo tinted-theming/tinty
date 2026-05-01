@@ -19,7 +19,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     // Arrange
     // -------
     let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_current_subcommand_with_setup", "current")?;
+        setup("test_cli_current_subcommand_with_setup", "current", true)?;
     let scheme_name = "base16-oceanicnext";
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
     let schemes_dir = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
@@ -30,7 +30,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -46,13 +46,13 @@ fn test_cli_current_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_current_subcommand_without_setup", "current")?;
+    let (_, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_current_subcommand_without_setup", "current", true)?;
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -106,6 +106,7 @@ where
     let (_, data_path, command_vec, _temp_dir) = setup(
         &format!("test_cli_current_subcommand_with_{subcommand}_existing"),
         &format!("current {subcommand}"),
+        false,
     )?;
 
     let scheme_name = "base16-tinty-generated";
@@ -118,7 +119,7 @@ where
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert

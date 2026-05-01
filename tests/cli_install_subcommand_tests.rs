@@ -16,9 +16,10 @@ fn test_cli_install_subcommand_non_unique_config_item_name() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, _temp_dir) = setup(
+    let (config_path, _data_path, command_vec, _temp_dir) = setup(
         "test_cli_install_subcommand_non_unique_config_item_name",
         "install",
+        true,
     )?;
     let config_content = r#"[[items]]
 path = "https://github.com/tinted-theming/tinted-shell"
@@ -36,7 +37,7 @@ themes-dir = "some-dir"
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -54,9 +55,10 @@ fn test_cli_install_subcommand_invalid_config_item_path() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, _temp_dir) = setup(
+    let (config_path, _data_path, command_vec, _temp_dir) = setup(
         "test_cli_install_subcommand_invalid_config_item_path",
         "install",
+        true,
     )?;
     let config_content = r#"[[items]]
 path = "/path/to/non-existant/directory"
@@ -68,7 +70,7 @@ themes-dir = "some-dir""#;
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -86,14 +88,17 @@ fn test_cli_install_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_install_subcommand_without_setup", "install")?;
+    let (_, _data_path, command_vec, _temp_dir) = setup(
+        "test_cli_install_subcommand_without_setup",
+        "install",
+        false,
+    )?;
     let expected_output = "tinted-shell installed";
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, false)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -111,15 +116,15 @@ fn test_cli_install_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_install_subcommand_with_setup", "install")?;
+    let (_, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_install_subcommand_with_setup", "install", true)?;
     let expected_output = "tinted-shell already installed";
 
     // ---
     // Act
     // ---
-    utils::run_command(&command_vec, &data_path, true)?;
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    utils::run_command(&command_vec)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -139,16 +144,17 @@ fn test_cli_install_subcommand_with_setup_quiet_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) = setup(
+    let (_, _data_path, command_vec, _temp_dir) = setup(
         "test_cli_install_subcommand_with_setup_quiet_flag",
         "install --quiet",
+        true,
     )?;
 
     // ---
     // Act
     // ---
-    utils::run_command(&command_vec, &data_path, true)?;
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    utils::run_command(&command_vec)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -206,6 +212,7 @@ fn test_cli_install_subcommand_with_non_existent_revision() -> Result<()> {
     let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_install_subcommand_with_non_existent_revision",
         "install",
+        false,
     )?;
     let commit_sha = "invalid-revision";
     let config_content = format!(
@@ -223,7 +230,7 @@ revision = "{commit_sha}"
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert

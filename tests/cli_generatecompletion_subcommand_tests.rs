@@ -12,15 +12,16 @@ fn generate_shell_completion_test(shell_name: &str, test_name: &str) -> Result<S
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) = setup(
+    let (_, _data_path, command_vec, _temp_dir) = setup(
         test_name,
         format!("generate-completion {shell_name}").as_str(),
+        false,
     )?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, false)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     Ok(stdout)
 }

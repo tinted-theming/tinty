@@ -13,6 +13,7 @@ fn test_cli_gallery_subcommand_dump_creates_html_file() -> Result<()> {
     let (_, data_path, mut command_vec, _temp_dir) = setup(
         "test_cli_gallery_subcommand_dump_creates_html_file",
         "gallery --custom-schemes --no-open",
+        false,
     )?;
     let custom_base16_path = data_path.join("custom-schemes/base16");
     let dump_path = data_path.join("gallery-dump");
@@ -29,7 +30,7 @@ fn test_cli_gallery_subcommand_dump_creates_html_file() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -54,6 +55,7 @@ fn test_cli_gallery_subcommand_embeds_complete_scheme_json() -> Result<()> {
     let (config_path, data_path, mut command_vec, _temp_dir) = setup(
         "test_cli_gallery_subcommand_embeds_complete_scheme_json",
         "gallery --custom-schemes --no-open",
+        false,
     )?;
     let custom_base16_path = data_path.join("custom-schemes/base16");
     let dump_path = data_path.join("gallery-dump");
@@ -74,10 +76,10 @@ fn test_cli_gallery_subcommand_embeds_complete_scheme_json() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, gallery_stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (_, gallery_stderr) = utils::run_command(&command_vec)?;
     let list_command_vec =
         utils::build_command_vec("list --custom-schemes --json", &config_path, &data_path)?;
-    let (list_stdout, list_stderr) = utils::run_command(&list_command_vec, &data_path, false)?;
+    let (list_stdout, list_stderr) = utils::run_command(&list_command_vec)?;
 
     // ------
     // Assert

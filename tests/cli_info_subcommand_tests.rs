@@ -17,7 +17,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // Arrange
     // -------
     let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_info_subcommand_with_setup", "info")?;
+        setup("test_cli_info_subcommand_with_setup", "info", true)?;
     let scheme_name = "base16-oceanicnext";
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
     write_to_file(&current_scheme_path, scheme_name)?;
@@ -25,7 +25,7 @@ fn test_cli_info_subcommand_with_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -50,12 +50,15 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_info_subcommand_all_with_setup", "info --all")?;
+    let (_, _data_path, command_vec, _temp_dir) = setup(
+        "test_cli_info_subcommand_all_with_setup",
+        "info --all",
+        true,
+    )?;
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -81,15 +84,16 @@ fn test_cli_info_subcommand_with_setup_for_base16() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base16-oceanicnext";
-    let (_, data_path, command_vec, _temp_dir) = setup(
+    let (_, _data_path, command_vec, _temp_dir) = setup(
         "test_cli_info_subcommand_with_setup_for_base16",
         format!("info {scheme_name}").as_str(),
+        true,
     )?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -124,15 +128,16 @@ fn test_cli_info_subcommand_with_setup_for_base24() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "base24-ayu-dark";
-    let (_, data_path, command_vec, _temp_dir) = setup(
+    let (_, _data_path, command_vec, _temp_dir) = setup(
         "test_cli_info_subcommand_with_setup_for_base24",
         format!("info {scheme_name}").as_str(),
+        true,
     )?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -166,14 +171,14 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, _temp_dir) =
-        setup("test_cli_info_subcommand_without_setup", "info")?;
+    let (config_path, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_info_subcommand_without_setup", "info", false)?;
     write_to_file(&config_path, "")?;
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -196,7 +201,7 @@ fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // Arrange
     // -------
     let test_name = "test_info_list_subcommand_without_setup_with_custom_schemes_flag";
-    let (_, data_path, command_vec, _temp_dir) = setup(test_name, "list --custom-schemes")?;
+    let (_, data_path, command_vec, _temp_dir) = setup(test_name, "list --custom-schemes", true)?;
     let expected_output = format!(
         "You don't have any local custom schemes at: {}/custom-schemes",
         data_path.display(),
@@ -205,7 +210,7 @@ fn test_cli_info_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -224,15 +229,16 @@ fn test_cli_info_subcommand_with_setup_invalid_scheme_name() -> Result<()> {
     // Arrange
     // -------
     let scheme_name = "mocha";
-    let (_, data_path, command_vec, _temp_dir) = setup(
+    let (_, _data_path, command_vec, _temp_dir) = setup(
         "test_cli_info_subcommand_with_setup_invalid_scheme_name",
         format!("info {scheme_name}").as_str(),
+        true,
     )?;
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert

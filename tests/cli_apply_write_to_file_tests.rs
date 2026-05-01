@@ -58,6 +58,7 @@ fn test_cli_apply_write_to_file_with_start_and_end_markers() -> Result<()> {
     let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_write_to_file_with_start_and_end_markers",
         format!("apply {scheme_name}").as_str(),
+        false,
     )?;
     let theme_contents = "THEME-CONTENT-123";
     let target_path = data_path.join("data/markers.txt");
@@ -87,7 +88,7 @@ write-to-file = ["{}", "{start_marker}", "{end_marker}"]
     // ---
     // Act
     // ---
-    let (_stdout, _stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (_stdout, _stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -124,6 +125,7 @@ fn test_cli_apply_write_to_file_with_start_marker_only() -> Result<()> {
     let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_write_to_file_with_start_marker_only",
         format!("apply {scheme_name}").as_str(),
+        false,
     )?;
     let theme_contents = "THEME-CONTENT-ABC";
     let target_path = data_path.join("data/markers.txt");
@@ -151,7 +153,7 @@ write-to-file = ["{}", "{}"]
     // ---
     // Act
     // ---
-    let (_stdout, _stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (_stdout, _stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -182,6 +184,7 @@ fn test_cli_apply_write_to_file_overwrite_full_file() -> Result<()> {
     let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_apply_write_to_file_overwrite_full_file",
         format!("apply {scheme_name}").as_str(),
+        false,
     )?;
     let theme_contents = "THEME-CONTENT-XYZ";
     let target_path = data_path.join("data/markers.txt");
@@ -204,7 +207,7 @@ write-to-file = ["{}"]
     // ---
     // Act
     // ---
-    let (_stdout, _stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (_stdout, _stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert

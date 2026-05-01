@@ -23,12 +23,13 @@ supported-systems = ["base16"]
 themes-dir = "scripts"
 
 "#;
-    let (_, data_path, command_vec, _temp_dir) = setup("test_cli_config_without_config", "config")?;
+    let (_, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_config_without_config", "config", true)?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -53,15 +54,15 @@ supported-systems = ["base16", "base24"]
 themes-dir = "colors"
 
 "#;
-    let (config_path, data_path, command_vec, _temp_dir) =
-        setup("test_cli_config_with_config", "config")?;
+    let (config_path, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_config_with_config", "config", true)?;
 
     write_to_file(&config_path, config_text)?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -95,12 +96,12 @@ supported-systems = ["base16", "base24"]
 themes-dir = "colors"
 
 "#;
-    let (config_path, data_path, command_vec, _temp_dir) =
-        setup("test_cli_config_with_rings", "config")?;
+    let (config_path, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_config_with_rings", "config", true)?;
 
     write_to_file(&config_path, config_text)?;
 
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     ensure!(stdout == config_text, "std not as expected");
     ensure!(
@@ -121,13 +122,16 @@ fn test_cli_config_with_config_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, _temp_dir) =
-        setup("test_cli_config_with_config_flag", "config --config-path")?;
+    let (config_path, _data_path, command_vec, _temp_dir) = setup(
+        "test_cli_config_with_config_flag",
+        "config --config-path",
+        true,
+    )?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -146,13 +150,16 @@ fn test_cli_config_with_data_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_config_with_data_flag", "config --data-dir-path")?;
+    let (_, data_path, command_vec, _temp_dir) = setup(
+        "test_cli_config_with_data_flag",
+        "config --data-dir-path",
+        true,
+    )?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
