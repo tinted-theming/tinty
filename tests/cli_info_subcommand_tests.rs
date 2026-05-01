@@ -63,7 +63,7 @@ fn test_cli_info_subcommand_all_with_setup() -> Result<()> {
     ensure!(
         stdout.contains("System: base16\nSlug: oceanicnext\nName: OceanicNext"),
         "stdout does not contain expected scheme metadata.\nGot first 200 chars: {}",
-        &stdout[..stdout.len().min(200)]
+        stdout.get(..200).unwrap_or(&stdout)
     );
     // Each scheme produces at least 16 lines (one per palette color), and there are 250+ schemes.
     let line_count = stdout.lines().count();
