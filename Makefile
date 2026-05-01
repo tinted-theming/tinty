@@ -21,7 +21,7 @@ test: setup_tests
 	@echo "------------"
 	@echo "Running test"
 	@echo "------------"
-	RUST_TEST_THREADS=1 cargo test --release $(TINTY_RUST_TEST)
+	cargo test --release $(TINTY_RUST_TEST)
 
 setup_tests: build
 	@echo "-----------------"

@@ -8,10 +8,10 @@
 mod utils;
 
 use crate::utils::{
-    cleanup, setup, write_to_file, COMMAND_NAME, CURRENT_SCHEME_FILE_NAME, ORG_NAME, REPO_NAME,
+    setup, write_to_file, COMMAND_NAME, CURRENT_SCHEME_FILE_NAME, ORG_NAME, REPO_NAME,
 };
 use anyhow::{ensure, Result};
-use std::{fs, path::PathBuf};
+use std::fs;
 
 #[test]
 fn test_cli_no_arguments() -> Result<()> {
@@ -39,12 +39,17 @@ fn test_cli_config_path_tilde_as_home() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let name = "test_cli_config_path_tilde_as_home";
-    let config_path_name = format!("config_path_{name}");
     let home_path = home::home_dir().unwrap();
-    let config_path = home_path.join(&config_path_name);
-    let provided_config_path = format!("~/{config_path_name}");
-    let data_path = PathBuf::from(format!("data_path_{name}"));
+    let home_temp_dir = tempfile::Builder::new()
+        .prefix(".tinty-test-config-tilde-")
+        .tempdir_in(&home_path)?;
+    let config_path = home_temp_dir.path().join("config.toml");
+    let dir_name = home_temp_dir.path().file_name().unwrap().to_str().unwrap();
+    let provided_config_path = format!("~/{dir_name}/config.toml");
+    let data_temp_dir = tempfile::Builder::new()
+        .prefix("tinty-test-config-tilde-data-")
+        .tempdir()?;
+    let data_path = data_temp_dir.path().join("data");
     let command = format!(
         "{COMMAND_NAME} --config=\"{provided_config_path}\" --data-dir=\"{}\" init",
         data_path.display()
@@ -74,7 +79,6 @@ hook = "echo 'test_cli_config_path_tilde_as_home_config_output'"
     );
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup(&config_path, &data_path)?;
     Ok(())
 }
 
@@ -83,11 +87,14 @@ fn test_cli_default_data_path() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let config_path = PathBuf::from("test_cli_default_data_path.toml");
+    let temp_dir = tempfile::Builder::new()
+        .prefix("tinty-test-default-data-")
+        .tempdir()?;
+    let config_path = temp_dir.path().join("config.toml");
+    let xdg_data_home = temp_dir.path().join("share");
+    let data_path = xdg_data_home.join(ORG_NAME).join(REPO_NAME);
     let scheme_name = "base16-uwunicorn";
     let init_scheme_name = "base16-mocha";
-    let xdg_dirs = xdg::BaseDirectories::with_prefix(format!("{ORG_NAME}/{REPO_NAME}"))?;
-    let data_path = xdg_dirs.get_data_home();
     let init_command = format!("{COMMAND_NAME} --config=\"{}\" init", config_path.display());
     let init_command_vec = shell_words::split(init_command.as_str())?;
     let apply_command = format!(
@@ -100,14 +107,12 @@ fn test_cli_default_data_path() -> Result<()> {
         &config_path,
         format!("default-scheme = \"{init_scheme_name}\"").as_str(),
     )?;
-    if current_scheme_file_path.exists() {
-        fs::remove_file(&current_scheme_file_path)?;
-    }
+    let env_vars: &[(&str, &str)] = &[("XDG_DATA_HOME", xdg_data_home.to_str().unwrap())];
 
     // ---
     // Act
     // ---
-    utils::run_command(&init_command_vec, &data_path, true)?;
+    utils::run_command_with_env(&init_command_vec, &data_path, true, env_vars)?;
 
     // This test is important to determine the config.toml is being read correctly
     ensure!(
@@ -115,14 +120,14 @@ fn test_cli_default_data_path() -> Result<()> {
         "current_scheme_file_path not as expected"
     );
 
-    utils::run_command(&apply_command_vec, &data_path, true)?;
-    utils::run_command(&init_command_vec, &data_path, true)?;
-    let (stdout, stderr) = utils::run_command(&apply_command_vec, &data_path, true)?;
+    utils::run_command_with_env(&apply_command_vec, &data_path, false, env_vars)?;
+    utils::run_command_with_env(&init_command_vec, &data_path, false, env_vars)?;
+    let (stdout, stderr) =
+        utils::run_command_with_env(&apply_command_vec, &data_path, false, env_vars)?;
 
     // ------
     // Assert
     // ------
-    fs::remove_file(&config_path)?; // cleanup
     ensure!(
         data_path.join("repos/tinted-shell").exists(),
         "Expected tinted-shell repo to exist at: {}",
@@ -143,11 +148,17 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let data_path_name = "test_cli_data_path_tilde_as_home";
     let home_path = home::home_dir().unwrap();
-    let config_path = PathBuf::from(format!("{data_path_name}.toml"));
-    let data_path = home_path.join(data_path_name);
-    let provided_data_path = format!("~/{data_path_name}");
+    let home_temp_dir = tempfile::Builder::new()
+        .prefix(".tinty-test-data-tilde-")
+        .tempdir_in(&home_path)?;
+    let data_path = home_temp_dir.path().to_path_buf();
+    let dir_name = home_temp_dir.path().file_name().unwrap().to_str().unwrap();
+    let provided_data_path = format!("~/{dir_name}");
+    let config_temp_dir = tempfile::Builder::new()
+        .prefix("tinty-test-data-tilde-config-")
+        .tempdir()?;
+    let config_path = config_temp_dir.path().join("config.toml");
     let command = format!(
         "{COMMAND_NAME} --config=\"{}\" --data-dir=\"{provided_data_path}\" apply base16-mocha",
         config_path.display(),
@@ -171,6 +182,5 @@ fn test_cli_data_path_tilde_as_home() -> Result<()> {
     ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
     ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
-    cleanup(&config_path, &data_path)?;
     Ok(())
 }
