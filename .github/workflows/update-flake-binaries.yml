@@ -17,6 +17,12 @@ jobs:
         with:
           token: ${{ secrets.BOT_ACCESS_TOKEN }}
 
+      - name: Sync with remote via rebase
+        run: |
+          git fetch origin
+          git pull --rebase origin main
+        continue-on-error: false
+
       - name: Install Nix
         uses: cachix/install-nix-action@v31
 
