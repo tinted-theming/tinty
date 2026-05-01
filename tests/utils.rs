@@ -16,6 +16,8 @@
 //! All commands executed via `run_command()` and `run_install_command()` are
 //! subject to a 5-minute timeout to prevent the test suite from hanging.
 
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
 use anyhow::{anyhow, ensure, Context, Error, Result};
 use fs2::FileExt;
 use regex::bytes::Regex;
@@ -50,17 +52,15 @@ fn wait_with_timeout(
 ) -> Result<std::process::ExitStatus> {
     let start = Instant::now();
     loop {
-        match child.try_wait()? {
-            Some(status) => return Ok(status),
-            None => {
-                if start.elapsed() > timeout {
-                    let _ = child.kill();
-                    let _ = child.wait();
-                    return Err(anyhow!("Command timed out after {timeout:?}"));
-                }
-                std::thread::sleep(Duration::from_millis(100));
-            }
+        if let Some(status) = child.try_wait()? {
+            return Ok(status);
         }
+        if start.elapsed() > timeout {
+            let _ = child.kill();
+            let _ = child.wait();
+            return Err(anyhow!("Command timed out after {timeout:?}"));
+        }
+        std::thread::sleep(Duration::from_millis(100));
     }
 }
 
@@ -83,10 +83,11 @@ pub fn run_command_with_env(
         clone_test_repos(data_path)?;
     }
 
-    let mut cmd = Command::new(&command_vec[0]);
-    cmd.args(&command_vec[1..])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
+    let (command, args) = command_vec
+        .split_first()
+        .ok_or_else(|| anyhow!("command_vec is empty"))?;
+    let mut cmd = Command::new(command);
+    cmd.args(args).stdout(Stdio::piped()).stderr(Stdio::piped());
 
     for (key, value) in env_vars {
         cmd.env(key, value);
@@ -239,8 +240,10 @@ pub fn write_to_file(path: impl AsRef<Path>, contents: &str) -> Result<()> {
         fs::remove_file(&path)?;
     }
 
-    if path.as_ref().parent().is_some() && !path.as_ref().parent().unwrap().exists() {
-        fs::create_dir_all(path.as_ref().parent().unwrap())?;
+    if let Some(parent) = path.as_ref().parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
     }
 
     let mut file = File::create(path)?;
@@ -500,11 +503,14 @@ fn clone_with_retry(
     let mut last_error = None;
     for attempt in 0..=max_retries {
         if attempt > 0 {
-            eprintln!(
-                "Retrying clone of {repo_url} (attempt {}/{})",
-                attempt + 1,
-                max_retries + 1
-            );
+            #[allow(clippy::arithmetic_side_effects)]
+            {
+                eprintln!(
+                    "Retrying clone of {repo_url} (attempt {}/{})",
+                    attempt + 1,
+                    max_retries + 1
+                );
+            }
             if target_dir.exists() {
                 let _ = fs::remove_dir_all(target_dir);
             }
