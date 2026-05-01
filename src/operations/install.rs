@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_REVISION, SCHEMES_REPO_URL};
-use crate::utils::git_clone;
+use crate::git;
 use anyhow::{anyhow, Result};
 use std::fs::{remove_file as remove_symlink, symlink_metadata};
 use std::os::unix::fs::symlink;
@@ -15,7 +15,7 @@ fn install_git_url(
     is_quiet: bool,
 ) -> Result<()> {
     if !data_item_path.is_dir() {
-        git_clone(item_git_url, data_item_path, revision)?;
+        git::clone_repo(item_git_url, data_item_path, revision)?;
 
         if !is_quiet {
             println!("{item_name} installed");

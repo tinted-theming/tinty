@@ -1,6 +1,7 @@
 mod cli;
 mod config;
 mod constants;
+mod git;
 mod operations {
     pub mod apply;
     pub mod build;
