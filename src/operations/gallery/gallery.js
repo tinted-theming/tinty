@@ -6,6 +6,7 @@ const state = {
   appearance: "all",
   pageTheme: "system",
   language: "rust",
+  variablesView: "palette",
 };
 let currentSheetId = null;
 let tooltipTimeoutId = null;
@@ -39,9 +40,26 @@ function hasSnippet(lang) {
 
 const FALLBACK_LANGUAGE = "rust";
 
-function color(scheme, key) {
-  return scheme.palette[key]?.hex_str || fallbackPalette[key] || fallbackPalette.base05;
-}
+// For Tinted8 schemes, map each non-ANSI preview role to a canonical
+// dotted-path key in `scheme.syntax` or `scheme.ui`. Lets authored scheme
+// overrides drive the gallery preview instead of the hand-rolled palette
+// guess. ANSI roles aren't in the syntax/ui spec — they fall through to
+// the palette mapping.
+const TINTED8_ROLE_PATHS = {
+  bg: ["ui", "global.background.normal"],
+  fg: ["ui", "global.foreground.normal"],
+  muted: ["ui", "global.foreground.dark"],
+  comment: ["syntax", "comment"],
+  keyword: ["syntax", "keyword"],
+  function: ["syntax", "entity.name.function"],
+  string: ["syntax", "string"],
+  number: ["syntax", "constant.numeric"],
+  type: ["syntax", "entity.name.type"],
+  builtin: ["syntax", "support.function.builtin"],
+  parameter: ["syntax", "variable.parameter"],
+  added: ["syntax", "markup.inserted"],
+  deleted: ["syntax", "markup.deleted"],
+};
 
 const PREVIEW_ROLE_KEYS = {
   base16: {
@@ -136,7 +154,7 @@ const PREVIEW_ROLES = [
   "ansi-bright-blue", "ansi-bright-magenta", "ansi-bright-cyan", "ansi-bright-white",
 ];
 
-function previewKey(scheme, role) {
+function palettePreviewKey(scheme, role) {
   const system = String(scheme.system).toLowerCase();
   if (system === "tinted8") {
     const variant = String(scheme.variant || "").toLowerCase() === "light" ? "light" : "dark";
@@ -147,6 +165,21 @@ function previewKey(scheme, role) {
     return PREVIEW_ROLE_KEYS.base24[role] ?? PREVIEW_ROLE_KEYS.base16[role];
   }
   return PREVIEW_ROLE_KEYS.base16[role];
+}
+
+function previewColor(scheme, role) {
+  if (String(scheme.system).toLowerCase() === "tinted8") {
+    const path = TINTED8_ROLE_PATHS[role];
+    if (path) {
+      const [source, key] = path;
+      const entry = scheme[source]?.[key];
+      if (entry?.hex_str) {
+        return entry.hex_str;
+      }
+    }
+  }
+  const key = palettePreviewKey(scheme, role);
+  return scheme.palette[key]?.hex_str || fallbackPalette[key] || fallbackPalette.base05;
 }
 
 function appearance(scheme) {
@@ -179,7 +212,7 @@ function matchesFilters(scheme) {
 
 function setPreviewColors(card, scheme) {
   PREVIEW_ROLES.forEach((role) => {
-    card.style.setProperty(`--preview-${role}`, color(scheme, previewKey(scheme, role)));
+    card.style.setProperty(`--preview-${role}`, previewColor(scheme, role));
   });
 }
 
@@ -213,37 +246,103 @@ function loadSavedLanguage() {
   }
 }
 
-function metadataItem(label, value) {
-  const fragment = document.createDocumentFragment();
-  const dt = document.createElement("dt");
-  const dd = document.createElement("dd");
-  dt.textContent = label;
-  dd.textContent = value || "n/a";
-  fragment.append(dt, dd);
-  return fragment;
+function metadataRow(label, value) {
+  const row = document.createElement("div");
+  const labelEl = document.createElement("span");
+  const valueEl = document.createElement("span");
+  row.className = "metadata-row";
+  labelEl.className = "metadata-label";
+  valueEl.className = "metadata-value";
+  labelEl.textContent = label;
+  valueEl.textContent = value || "n/a";
+  row.append(labelEl, valueEl);
+  return row;
 }
 
-function renderPalette(container, scheme) {
-  container.textContent = "";
+function metadataGroup(className, ...rows) {
+  const group = document.createElement("div");
+  group.className = className;
+  group.append(...rows);
+  return group;
+}
 
-  Object.entries(scheme.palette)
+function setVariablesView(view) {
+  state.variablesView = view;
+  document.querySelectorAll("[data-variables-view]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.variablesView === view);
+  });
+  document.getElementById("sheet-palette").hidden = view !== "palette";
+  document.getElementById("sheet-ui").hidden = view !== "ui";
+  document.getElementById("sheet-syntax").hidden = view !== "syntax";
+}
+
+function renderColorMap(container, map) {
+  container.textContent = "";
+  container.dataset.size = String(Object.keys(map).length);
+
+  Object.entries(map)
     .sort(([a], [b]) => a.localeCompare(b))
     .forEach(([name, value]) => {
       const swatch = document.createElement("div");
       const block = document.createElement("div");
-      const label = document.createElement("div");
       const hex = document.createElement("span");
+      const label = document.createElement("div");
 
       swatch.className = "swatch";
       block.className = "swatch-color";
+      hex.className = "swatch-hex";
       label.className = "swatch-label";
-      block.style.background = value.hex_str;
-      label.textContent = name;
-      hex.textContent = value.hex_str;
 
-      label.append(hex);
+      block.style.background = value.hex_str;
+      hex.textContent = value.hex_str;
+      hex.style.color = pillTextColor(value.rgb, value.hex_str);
+      label.textContent = name;
+
+      block.append(hex);
       swatch.append(block, label);
       container.append(swatch);
+    });
+}
+
+function relativeLuminance(rgb) {
+  const channels = rgb.map((c) => {
+    const norm = c / 255;
+    return norm <= 0.03928 ? norm / 12.92 : Math.pow((norm + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+// Hue-aware text color: starts from a near-black or near-white base depending
+// on the swatch luminance, then mixes ~25% of the swatch color in. Keeps the
+// text high-contrast (dark on light, light on dark) while picking up a tonal
+// hint of the swatch's hue. Uses color-mix in oklab for perceptual mixing.
+function pillTextColor(rgb, hexStr) {
+  const isLight = relativeLuminance(rgb) > 0.45;
+  const base = isLight ? "#06080a" : "#fafbfd";
+  return `color-mix(in oklab, ${hexStr} 25%, ${base} 75%)`;
+}
+
+function renderVariableList(container, map) {
+  container.textContent = "";
+
+  Object.entries(map)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([name, value]) => {
+      const row = document.createElement("div");
+      const key = document.createElement("span");
+      const pill = document.createElement("span");
+
+      row.className = "variable-row";
+      key.className = "variable-key";
+      pill.className = "variable-pill";
+
+      key.textContent = name;
+      pill.textContent = value.hex_str;
+      pill.style.background = value.hex_str;
+      pill.style.color = pillTextColor(value.rgb, value.hex_str);
+
+      row.append(key, pill);
+      container.append(row);
     });
 }
 
@@ -336,15 +435,41 @@ function applySheetState(scheme, updateHash) {
   const metadata = document.getElementById("sheet-metadata");
   metadata.textContent = "";
   metadata.append(
-    metadataItem("ID", scheme.id),
-    metadataItem("Author", scheme.author),
-    metadataItem("System", scheme.system),
-    metadataItem("Variant", scheme.variant),
-    metadataItem("Appearance", appearance(scheme)),
-    metadataItem("Background L*", scheme.lightness?.background?.toFixed(2)),
-    metadataItem("Foreground L*", scheme.lightness?.foreground?.toFixed(2)),
+    metadataGroup(
+      "metadata-top",
+      metadataRow("ID", scheme.id),
+      metadataRow("Author", scheme.author),
+    ),
+    metadataGroup(
+      "metadata-cols",
+      metadataGroup(
+        "metadata-col",
+        metadataRow("System", scheme.system),
+        metadataRow("Variant", scheme.variant),
+        metadataRow("Appearance", appearance(scheme)),
+      ),
+      metadataGroup(
+        "metadata-col",
+        metadataRow("Bg L*", scheme.lightness?.background?.toFixed(2)),
+        metadataRow("Fg L*", scheme.lightness?.foreground?.toFixed(2)),
+      ),
+    ),
   );
-  renderPalette(document.getElementById("sheet-palette"), scheme);
+  renderColorMap(document.getElementById("sheet-palette"), scheme.palette);
+
+  const hasVariables = Boolean(scheme.ui && scheme.syntax);
+  const label = document.getElementById("variables-label");
+  const toggle = document.getElementById("variables-toggle");
+  label.hidden = hasVariables;
+  toggle.hidden = !hasVariables;
+
+  if (hasVariables) {
+    renderVariableList(document.getElementById("sheet-ui"), scheme.ui);
+    renderVariableList(document.getElementById("sheet-syntax"), scheme.syntax);
+    setVariablesView(state.variablesView);
+  } else {
+    setVariablesView("palette");
+  }
 
   if (updateHash) {
     setSheetHash(scheme.id);
@@ -555,6 +680,12 @@ document.getElementById("language-select").addEventListener("change", (event) =>
 document.querySelectorAll("[data-preview-language]").forEach((button) => {
   button.addEventListener("click", () => {
     setLanguage(button.dataset.previewLanguage);
+  });
+});
+
+document.querySelectorAll("[data-variables-view]").forEach((button) => {
+  button.addEventListener("click", () => {
+    setVariablesView(button.dataset.variablesView);
   });
 });
 

@@ -133,14 +133,21 @@
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path><path d="M8 7v10"></path></svg>
             Properties
           </div>
-          <dl id="sheet-metadata" class="metadata"></dl>
+          <div id="sheet-metadata" class="metadata"></div>
         </section>
-        <section aria-label="Palette">
-          <div class="section-label">
+        <section aria-label="Colors">
+          <div id="variables-label" class="section-label">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="13.5" r="2.5"></circle><circle cx="8.5" cy="14.5" r="2.5"></circle><path d="M11.3 8.3 9.7 12.3"></path><path d="m15.5 8.7 1.1 2.4"></path></svg>
             Palette
           </div>
+          <div id="variables-toggle" class="variables-toggle" role="tablist" hidden>
+            <button type="button" class="chip active" role="tab" data-variables-view="palette">Palette</button>
+            <button type="button" class="chip" role="tab" data-variables-view="ui">UI</button>
+            <button type="button" class="chip" role="tab" data-variables-view="syntax">Syntax</button>
+          </div>
           <div id="sheet-palette" class="palette"></div>
+          <div id="sheet-ui" class="variable-list" hidden></div>
+          <div id="sheet-syntax" class="variable-list" hidden></div>
         </section>
       </div>
       <div class="sheet-main-footer">
