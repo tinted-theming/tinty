@@ -26,6 +26,7 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str;
+use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
@@ -64,25 +65,15 @@ fn wait_with_timeout(
     }
 }
 
-pub fn run_command(
-    command_vec: &[String],
-    data_path: &Path,
-    cache: bool,
-) -> Result<(String, String)> {
-    run_command_with_env(command_vec, data_path, cache, &[])
+pub fn run_command(command_vec: &[String]) -> Result<(String, String)> {
+    run_command_with_env(command_vec, &[])
 }
 
 #[allow(dead_code)]
 pub fn run_command_with_env(
     command_vec: &[String],
-    data_path: &Path,
-    cache: bool,
     env_vars: &[(&str, &str)],
 ) -> Result<(String, String)> {
-    if cache {
-        clone_test_repos(data_path)?;
-    }
-
     let (command, args) = command_vec
         .split_first()
         .ok_or_else(|| anyhow!("command_vec is empty"))?;
@@ -137,11 +128,7 @@ pub fn run_command_with_env(
 }
 
 #[allow(dead_code)]
-pub fn run_install_command(config_path: &Path, data_path: &Path, cache: bool) -> Result<()> {
-    if cache {
-        clone_test_repos(data_path).context("Unable to clone tmp repos")?;
-    }
-
+pub fn run_install_command(config_path: &Path, data_path: &Path) -> Result<()> {
     let mut child = Command::new(COMMAND_NAME)
         .args([
             "install",
@@ -160,11 +147,22 @@ pub fn run_install_command(config_path: &Path, data_path: &Path, cache: bool) ->
     }
 }
 
-fn clone_test_repos(data_path: &Path) -> Result<()> {
+static REPOS_CACHE_DIR: Mutex<Option<PathBuf>> = Mutex::new(None);
+
+#[allow(clippy::significant_drop_tightening)]
+fn ensure_repos_cache() -> Result<PathBuf> {
+    let mut guard = REPOS_CACHE_DIR
+        .lock()
+        .map_err(|e| anyhow!("Cache mutex poisoned: {e}"))?;
+
+    if let Some(dir) = guard.as_ref() {
+        return Ok(dir.clone());
+    }
+
     let tmp_repos_dir = std::env::temp_dir().join("tinty-test-repos");
     fs::create_dir_all(&tmp_repos_dir)?;
 
-    // Use a file lock to prevent concurrent clones to the shared cache
+    // Use a file lock to prevent concurrent clones across processes
     let lock_path = tmp_repos_dir.join(".lock");
     let lock_file = File::create(&lock_path)?;
     lock_file
@@ -196,14 +194,20 @@ fn clone_test_repos(data_path: &Path) -> Result<()> {
         }
     }
 
-    // Release the lock before copying (copies go to test-specific paths)
     lock_file
         .unlock()
         .context("Failed to release lock on tmp/repos")?;
 
+    *guard = Some(tmp_repos_dir.clone());
+    Ok(tmp_repos_dir)
+}
+
+pub fn clone_test_repos(data_path: &Path) -> Result<()> {
+    let cache_dir = ensure_repos_cache()?;
+
     for repo_name in ["schemes", "tinted-shell", "tinted-vim"] {
         let repo_path = data_path.join(format!("repos/{repo_name}"));
-        let tmp_repo_path = tmp_repos_dir.join(repo_name);
+        let cached_repo_path = cache_dir.join(repo_name);
 
         if repo_path.exists() {
             fs::remove_dir_all(&repo_path)
@@ -212,9 +216,9 @@ fn clone_test_repos(data_path: &Path) -> Result<()> {
 
         fs::create_dir_all(&repo_path)
             .context(format!("Unable to create dir {}", &repo_path.display()))?;
-        copy_dir_all(&tmp_repo_path, &repo_path).context(format!(
+        copy_dir_all(&cached_repo_path, &repo_path).context(format!(
             "Unable to copy {} to {}",
-            tmp_repo_path.display(),
+            cached_repo_path.display(),
             repo_path.display()
         ))?;
     }
@@ -256,6 +260,7 @@ pub fn write_to_file(path: impl AsRef<Path>, contents: &str) -> Result<()> {
 pub fn setup(
     name: &str,
     command: &str,
+    cache: bool,
 ) -> Result<(PathBuf, PathBuf, Vec<String>, tempfile::TempDir)> {
     let temp_dir = tempfile::Builder::new()
         .prefix(&format!("tinty-test-{name}-"))
@@ -263,6 +268,10 @@ pub fn setup(
 
     let config_path = temp_dir.path().join("config.toml");
     let data_path = temp_dir.path().join("data");
+
+    if cache {
+        clone_test_repos(&data_path)?;
+    }
 
     let command_vec = build_command_vec(command, &config_path, &data_path)?;
     write_to_file(&config_path, "")?;
@@ -569,7 +578,7 @@ pub fn test_install_with_revision(
     revision: &str,
     expected_sha: &str,
 ) -> Result<()> {
-    let (config_path, data_path, command_vec, _temp_dir) = setup(test_name, "install")?;
+    let (config_path, data_path, command_vec, _temp_dir) = setup(test_name, "install", false)?;
     let config_content = format!(
         r#"[[items]]
 path = "{repo_url}"
@@ -580,7 +589,7 @@ revision = "{revision}"
     );
     write_to_file(&config_path, &config_content)?;
 
-    let (_, _) = run_command(&command_vec, &data_path, false)?;
+    let (_, _) = run_command(&command_vec)?;
 
     let repo_path = data_path.join(format!("repos/{repo_name}"));
     let output = Command::new("git")

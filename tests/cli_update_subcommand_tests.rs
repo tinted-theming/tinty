@@ -19,14 +19,14 @@ fn test_cli_update_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_update_subcommand_without_setup", "update")?;
+    let (_, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_update_subcommand_without_setup", "update", false)?;
     let expected_output = format!("tinted-shell not installed (run `{REPO_NAME} install`)");
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, false)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -44,14 +44,14 @@ fn test_cli_update_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_update_subcommand_with_setup", "update")?;
+    let (_, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_update_subcommand_with_setup", "update", true)?;
     let expected_output = "tinted-shell up to date";
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -70,15 +70,16 @@ fn test_cli_update_subcommand_with_setup_quiet_flag() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) = setup(
+    let (_, _data_path, command_vec, _temp_dir) = setup(
         "test_cli_update_subcommand_with_setup_quiet_flag",
         "update --quiet",
+        true,
     )?;
 
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -94,8 +95,11 @@ fn test_cli_update_subcommand_with_new_remote() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, _temp_dir) =
-        setup("test_cli_update_subcommand_with_new_remote", "update")?;
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
+        "test_cli_update_subcommand_with_new_remote",
+        "update",
+        false,
+    )?;
     let expected_output = "tinted-vim up to date";
 
     let config_content = r#"[[items]]
@@ -109,7 +113,7 @@ themes-dir = "colors"
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path, false)?;
+    utils::run_install_command(&config_path, &data_path)?;
 
     // Replace the remote with a new one
     let config_content = r#"[[items]]
@@ -118,7 +122,7 @@ name = "tinted-vim"
 themes-dir = "colors"
 "#;
     write_to_file(&config_path, config_content)?;
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, false)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")
@@ -151,8 +155,11 @@ fn test_cli_update_subcommand_with_new_revision() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (config_path, data_path, command_vec, _temp_dir) =
-        setup("test_cli_update_subcommand_with_new_revision", "update")?;
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
+        "test_cli_update_subcommand_with_new_revision",
+        "update",
+        true,
+    )?;
     let expected_output = "tinted-vim up to date";
     let expected_revision = "c7ab4daadd143a78d4fc561d216d83ef0188f343";
     let config_content = r#"[[items]]
@@ -165,7 +172,7 @@ themes-dir = "colors"
 
     // ---
     // Act
-    utils::run_install_command(&config_path, &data_path, true)?;
+    utils::run_install_command(&config_path, &data_path)?;
 
     // Replace the remote with a new one
     let config_content = r#"[[items]]
@@ -175,7 +182,7 @@ themes-dir = "colors"
 revision = "tinty-test-tag-01"
 "#;
     write_to_file(&config_path, config_content)?;
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, false)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")
@@ -205,6 +212,7 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_tag_revision() -> Resu
     let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_update_subcommand_with_new_remote_but_invalid_tag_revision",
         "update",
+        true,
     )?;
     let expected_output = "tinted-vim up to date";
     let config_content = r#"[[items]]
@@ -219,7 +227,7 @@ themes-dir = "colors"
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path, true)?;
+    utils::run_install_command(&config_path, &data_path)?;
 
     // Replace the remote with a new one
     // tinty-test-tag-01 exist in tinted-theming but not on this one.
@@ -232,7 +240,7 @@ revision = "{git_tag_name}"
 "#
     );
     write_to_file(&config_path, &config_content)?;
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")
@@ -272,6 +280,7 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_branch_revision() -> R
     let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_update_subcommand_with_new_remote_but_invalid_branch_revision",
         "update",
+        true,
     )?;
     let unexpected_output = "tinted-vim up to date";
     let config_content = r#"[[items]]
@@ -294,7 +303,7 @@ themes-dir = "colors"
 revision = "tinty-test-01"
 "#;
     write_to_file(&config_path, config_content)?;
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")
         .args(vec!["remote", "get-url", "origin"])
@@ -332,6 +341,7 @@ fn test_cli_update_subcommand_with_new_remote_but_invalid_commit_sha1_revision()
     let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_update_subcommand_with_new_remote_but_commit_sha1_revision",
         "update",
+        false,
     )?;
     let expected_output = "tinted-vim up to date";
     let config_content = r#"[[items]]
@@ -344,7 +354,7 @@ themes-dir = "colors"
     // ---
     // Act
     // ---
-    utils::run_install_command(&config_path, &data_path, false)?;
+    utils::run_install_command(&config_path, &data_path)?;
 
     // Replace the remote with a new one
     // This commit SHA only exist in tinted-theming but not on this one.
@@ -356,7 +366,7 @@ revision = "43b36ed5eadad59a5027e442330d2485b8607b34"
 "#;
     write_to_file(&config_path, config_content)?;
 
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     let repo_path = data_path.join("repos/tinted-vim");
     let output = Command::new("git")

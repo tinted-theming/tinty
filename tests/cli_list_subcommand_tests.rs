@@ -17,15 +17,15 @@ fn test_cli_list_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_list_subcommand_without_setup", "list")?;
+    let (_, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_list_subcommand_without_setup", "list", false)?;
     let expected_output =
         format!("Schemes are missing, run install and then try again: `{REPO_NAME} install`");
 
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, false)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -44,7 +44,7 @@ fn test_cli_list_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // Arrange
     // -------
     let test_name = "test_cli_list_subcommand_without_setup_with_custom_schemes_flag";
-    let (_, data_path, command_vec, _temp_dir) = setup(test_name, "list --custom-schemes")?;
+    let (_, data_path, command_vec, _temp_dir) = setup(test_name, "list --custom-schemes", true)?;
     let expected_output = format!(
         "You don't have any local custom schemes at: {}/custom-schemes",
         data_path.display(),
@@ -53,7 +53,7 @@ fn test_cli_list_subcommand_without_setup_with_custom_schemes_flag() -> Result<(
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -71,14 +71,14 @@ fn test_cli_list_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_list_subcommand_with_setup", "list")?;
+    let (_, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_list_subcommand_with_setup", "list", true)?;
     let expected_output = fs::read_to_string(Path::new("fixtures/schemes.txt"))?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -102,7 +102,7 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     // Arrange
     // -------
     let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_list_subcommand_with_custom", "list")?;
+        setup("test_cli_list_subcommand_with_custom", "list", true)?;
     let scheme_system = "base16";
     let scheme_name_one = "tinted-theming";
     let scheme_name_two = "tinty";
@@ -126,7 +126,7 @@ fn test_cli_list_subcommand_with_custom() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -604,13 +604,16 @@ fn test_cli_list_subcommand_as_json_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_list_subcommand_as_json_with_setup", "list --json")?;
+    let (_, _data_path, command_vec, _temp_dir) = setup(
+        "test_cli_list_subcommand_as_json_with_setup",
+        "list --json",
+        true,
+    )?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
     let results: Vec<TestSchemeEntry> = serde_json::from_str(&stdout).unwrap();
 
     ensure!(
@@ -673,6 +676,7 @@ fn test_cli_list_subcommand_as_json_with_custom() -> Result<()> {
     let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_list_subcommand_as_json_with_custom",
         "list --json",
+        true,
     )?;
     let scheme_system = "base16";
     let scheme_name_one = "tinted-theming";
@@ -697,7 +701,7 @@ fn test_cli_list_subcommand_as_json_with_custom() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     let expected_json = fs::read_to_string(Path::new("fixtures/tinty-city-dark.json"))?;
     let expected_entry: TestSchemeEntry = serde_json::from_str(&expected_json).unwrap();
@@ -729,6 +733,7 @@ fn test_cli_list_subcommand_with_malformed_custom_scheme() -> Result<()> {
     let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_list_subcommand_with_malformed_custom_scheme",
         "list --json",
+        true,
     )?;
     let custom_scheme_path = data_path.join("custom-schemes/base16");
 
@@ -744,7 +749,7 @@ fn test_cli_list_subcommand_with_malformed_custom_scheme() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert

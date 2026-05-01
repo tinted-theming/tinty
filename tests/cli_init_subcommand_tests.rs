@@ -18,8 +18,8 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_init_subcommand_without_setup", "init")?;
+    let (_, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_init_subcommand_without_setup", "init", true)?;
     let expected_output = format!(
         "Failed to initialize, config files seem to be missing. Try applying a theme first with `{REPO_NAME} apply <SCHEME_NAME>`.",
     );
@@ -27,7 +27,7 @@ fn test_cli_init_subcommand_without_setup() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (_, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -45,13 +45,13 @@ fn test_cli_init_subcommand_with_setup() -> Result<()> {
     // -------
     // Arrange
     // -------
-    let (_, data_path, command_vec, _temp_dir) =
-        setup("test_cli_init_subcommand_with_setup", "init")?;
+    let (_, _data_path, command_vec, _temp_dir) =
+        setup("test_cli_init_subcommand_with_setup", "init", true)?;
 
     // ---
     // Act
     // ---
-    let (stdout, _) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, _) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -69,6 +69,7 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     let (config_path, data_path, command_vec, _temp_dir) = setup(
         "test_cli_init_subcommand_with_config_default_scheme",
         "init",
+        true,
     )?;
     let scheme_name = "base16-mocha";
     let config_content = format!("default-scheme = \"{scheme_name}\"");
@@ -77,7 +78,7 @@ fn test_cli_init_subcommand_with_config_default_scheme() -> Result<()> {
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert

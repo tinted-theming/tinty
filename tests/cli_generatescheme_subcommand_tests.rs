@@ -23,12 +23,13 @@ fn test_cli_generatescheme_subcommand_custom_properties() -> Result<()> {
     let name = "Some custom name";
     let slug = "some-custom-slug";
     let variant = "light";
-    let (_, data_path, command_vec, _temp_dir) = setup(
+    let (_, _data_path, command_vec, _temp_dir) = setup(
         "test_cli_generatescheme_subcommand_custom_properties",
         format!(
           "generate-scheme --author \"{author}\" --name \"{name}\" --slug {slug} --system {system} --variant {variant} ./tests/fixtures/assets/article-featured-image.webp",
         )
         .as_str(),
+        true,
     )?;
     let expected_output = format!(
         r##"author: "{author}"
@@ -67,7 +68,7 @@ palette:
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -86,9 +87,10 @@ fn test_cli_generatescheme_subcommand_with_image() -> Result<()> {
     // ---
     // Act
     // ---
-    let (_, data_path, command_vec, _temp_dir) = setup(
+    let (_, _data_path, command_vec, _temp_dir) = setup(
         "test_cli_generatescheme_subcommand_with_image",
         "generate-scheme --system base16 ./tests/fixtures/assets/article-featured-image.webp",
+        true,
     )?;
     let expected_output = r##"author: "Tinty"
 name: "Tinty Generated"
@@ -117,7 +119,7 @@ palette:
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
 
     // ------
     // Assert
@@ -142,6 +144,7 @@ fn test_cli_generatescheme_subcommand_with_save() -> Result<()> {
     let (_, data_path, command_vec, _temp_dir) = setup(
         "test_cli_generatescheme_subcommand_with_save",
         format!("generate-scheme --slug {scheme_slug} --system {scheme_system} --description \"{scheme_description}\" --save ./tests/fixtures/assets/article-featured-image.webp").as_str(),
+        true,
     )?;
     let out_scheme_path = data_path.join(format!(
         "{CUSTOM_SCHEMES_DIR_NAME}/{scheme_system}/{scheme_slug}.yaml"
@@ -176,7 +179,7 @@ palette:
     // ---
     // Act
     // ---
-    let (stdout, stderr) = utils::run_command(&command_vec, &data_path, true)?;
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
     let actual_output = fs::read_to_string(&out_scheme_path)?;
 
     // ------
