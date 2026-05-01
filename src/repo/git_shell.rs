@@ -1,6 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
-use crate::git::GitBackend;
+use crate::repo::RepositoryBackend;
 use anyhow::{anyhow, Context, Error, Result};
 use rand::Rng;
 use regex::bytes::Regex;
@@ -9,19 +9,20 @@ use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-pub struct CliBackend;
+/// Repository backend implemented by shelling out to the user's `git` binary.
+pub struct GitShellBackend;
 
-impl GitBackend for CliBackend {
-    fn clone_repo(&self, url: &str, target: &Path, revision: Option<&str>) -> Result<()> {
+impl RepositoryBackend for GitShellBackend {
+    fn install(&self, url: &str, target: &Path, revision: Option<&str>) -> Result<()> {
         git_clone(url, target, revision)
     }
 
-    fn update_repo(&self, repo: &Path, url: &str, revision: Option<&str>) -> Result<()> {
-        git_update(repo, url, revision)
+    fn update(&self, target: &Path, url: &str, revision: Option<&str>) -> Result<()> {
+        git_update(target, url, revision)
     }
 
-    fn is_working_dir_clean(&self, repo: &Path) -> Result<bool> {
-        git_is_working_dir_clean(repo)
+    fn is_clean(&self, target: &Path) -> Result<bool> {
+        git_is_working_dir_clean(target)
     }
 }
 
