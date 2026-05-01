@@ -8,7 +8,7 @@ test pattern: setup_tests
     @echo "------------"
     @echo "Running test"
     @echo "------------"
-    RUST_TEST_THREADS=1 cargo test --release {{pattern}}
+    cargo test --release {{pattern}}
 
 setup_tests: lint build
     @echo "-----------------"

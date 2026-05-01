@@ -69,16 +69,30 @@ pub fn run_command(
     data_path: &Path,
     cache: bool,
 ) -> Result<(String, String)> {
+    run_command_with_env(command_vec, data_path, cache, &[])
+}
+
+#[allow(dead_code)]
+pub fn run_command_with_env(
+    command_vec: &[String],
+    data_path: &Path,
+    cache: bool,
+    env_vars: &[(&str, &str)],
+) -> Result<(String, String)> {
     if cache {
         clone_test_repos(data_path)?;
     }
 
-    let mut child = Command::new(&command_vec[0])
-        .args(&command_vec[1..])
+    let mut cmd = Command::new(&command_vec[0]);
+    cmd.args(&command_vec[1..])
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
+        .stderr(Stdio::piped());
+
+    for (key, value) in env_vars {
+        cmd.env(key, value);
+    }
+
+    let mut child = cmd.spawn().map_err(|e| anyhow::anyhow!("{e}"))?;
 
     let stdout_pipe = child.stdout.take();
     let stderr_pipe = child.stderr.take();

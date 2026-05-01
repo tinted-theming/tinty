@@ -26,6 +26,5 @@ FROM builder AS tests
 RUN rustup component add clippy rustfmt
 RUN cargo clippy -- -D warnings
 RUN cargo fmt --all -- --check
-ENV RUST_TEST_THREADS=1
 
-CMD ["cargo", "test", "--release", "--", "--nocapture"]
+CMD ["cargo", "test", "--release", "--all-targets", "--all-features"]
