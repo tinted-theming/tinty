@@ -13,8 +13,8 @@ echo "Latest version: $VERSION"
 declare -A ASSETS=(
   ["x86_64-linux"]="tinty-x86_64-unknown-linux-gnu.tar.gz"
   ["aarch64-linux"]="tinty-aarch64-unknown-linux-gnu.tar.gz"
-  ["x86_64-darwin"]="tinty-universal-apple-darwin.tar.gz"
-  ["aarch64-darwin"]="tinty-universal-apple-darwin.tar.gz"
+  ["x86_64-darwin"]="tinty-x86_64-apple-darwin.tar.gz"
+  ["aarch64-darwin"]="tinty-aarch64-apple-darwin.tar.gz"
 )
 
 # Fetch hashes
