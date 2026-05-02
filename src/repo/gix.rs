@@ -41,15 +41,27 @@ impl RepositoryBackend for GixBackend {
         bail!("gix backend: update is not yet implemented (set TINTY_USE_GIX=0 to use the git CLI)")
     }
 
+    /// Reports whether the working directory is clean.
+    ///
+    /// Intentional divergence from the CLI backend: untracked files do **not**
+    /// count as dirty here. The CLI backend uses `git status --porcelain` which
+    /// reports untracked entries; this implementation excludes them so that
+    /// artifacts written by `tinty generate-scheme` (and similar) into a cloned
+    /// template repo don't block `tinty update` / `tinty sync`. See
+    /// tinted-theming/tinty#130.
+    ///
+    /// Modified, deleted, renamed, or conflicted entries on tracked files all
+    /// still count as dirty, matching the CLI backend.
     fn is_clean(&self, target: &Path) -> Result<bool> {
         let repo = gix::open(target)
             .with_context(|| format!("Failed to open git repository at {}", target.display()))?;
-        // `is_dirty` reports any change to tracked files plus any untracked
-        // (non-ignored) files — equivalent to `git status --porcelain` being
-        // non-empty, which is the contract the CLI backend implements.
-        let dirty = repo
-            .is_dirty()
-            .with_context(|| format!("Failed to read status in {}", target.display()))?;
-        Ok(!dirty)
+        let mut iter = repo
+            .status(gix::progress::Discard)
+            .with_context(|| format!("Failed to read status in {}", target.display()))?
+            .untracked_files(gix::status::UntrackedFiles::None)
+            .into_iter(None)
+            .with_context(|| format!("Failed to iterate status in {}", target.display()))?;
+        let any_change = iter.next().is_some();
+        Ok(!any_change)
     }
 }
