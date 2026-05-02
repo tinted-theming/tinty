@@ -1,14 +1,10 @@
 #![allow(clippy::module_name_repetitions)]
 
 use crate::repo::RepositoryBackend;
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use std::path::Path;
 
 /// Repository backend implemented with the pure-Rust `gix` (gitoxide) library.
-///
-/// Phase 2 stub: every method returns an error so the dispatcher path is
-/// reachable but the operations are explicitly not yet wired up. Real
-/// implementations land in Phase 3.
 pub struct GixBackend;
 
 impl RepositoryBackend for GixBackend {
@@ -22,9 +18,15 @@ impl RepositoryBackend for GixBackend {
         bail!("gix backend: update is not yet implemented (set TINTY_USE_GIX=0 to use the git CLI)")
     }
 
-    fn is_clean(&self, _target: &Path) -> Result<bool> {
-        bail!(
-            "gix backend: is_clean is not yet implemented (set TINTY_USE_GIX=0 to use the git CLI)"
-        )
+    fn is_clean(&self, target: &Path) -> Result<bool> {
+        let repo = gix::open(target)
+            .with_context(|| format!("Failed to open git repository at {}", target.display()))?;
+        // `is_dirty` reports any change to tracked files plus any untracked
+        // (non-ignored) files — equivalent to `git status --porcelain` being
+        // non-empty, which is the contract the CLI backend implements.
+        let dirty = repo
+            .is_dirty()
+            .with_context(|| format!("Failed to read status in {}", target.display()))?;
+        Ok(!dirty)
     }
 }
