@@ -16,6 +16,7 @@ mod operations {
     pub mod sync;
     pub mod update;
 }
+mod repo;
 mod utils;
 
 use crate::cli::{build_cli, get_matches};
