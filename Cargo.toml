@@ -38,6 +38,7 @@ gix = { version = "0.83", default-features = false, features = [
     "blocking-http-transport-reqwest-rust-tls",
     "worktree-mutation",
     "status",
+    "revision",
     "sha1",
     "max-performance-safe",
 ] }

@@ -1567,6 +1567,7 @@ dependencies = [
  "gix-date",
  "gix-error",
  "gix-hash",
+ "gix-hashtable",
  "gix-object",
  "gix-revwalk",
  "gix-trace",
