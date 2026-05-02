@@ -2,6 +2,8 @@
 
 use crate::repo::RepositoryBackend;
 use anyhow::{anyhow, bail, Context, Result};
+use gix::refs::transaction::{Change, LogChange, PreviousValue, RefEdit, RefLog};
+use gix::refs::Target;
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
 
@@ -18,22 +20,54 @@ impl RepositoryBackend for GixBackend {
             ));
         }
 
-        if revision.is_some() {
-            bail!(
-                "gix backend: install with a pinned revision is not yet implemented \
-                 (set TINTY_USE_GIX=0 to use the git CLI)"
-            );
-        }
-
         let interrupt = AtomicBool::new(false);
         let mut prepare = gix::prepare_clone(url, target)
             .with_context(|| format!("Failed to set up clone of {url}"))?;
-        let (mut checkout, _outcome) = prepare
-            .fetch_then_checkout(gix::progress::Discard, &interrupt)
-            .with_context(|| format!("Failed to clone repository from {url}"))?;
-        checkout
+
+        // For tag- or branch-named revisions, point gix at the requested ref
+        // up front so the clone fetches and checks it out in one step. This
+        // also gets HEAD attached when the ref is a branch, matching what
+        // `git clone --branch` does. SHA revisions don't go through this
+        // path because they aren't a ref name; they fall through to the
+        // post-fetch resolve-and-checkout below.
+        if let Some(rev) = revision {
+            if !looks_like_sha(rev) {
+                prepare = prepare
+                    .with_ref_name(Some(rev))
+                    .with_context(|| format!("Failed to target revision {rev} on remote {url}"))?;
+            }
+        }
+
+        let fetch_result = prepare.fetch_then_checkout(gix::progress::Discard, &interrupt);
+        let (mut checkout, _outcome) = match fetch_result {
+            Ok(t) => t,
+            Err(e) => {
+                // For non-SHA revisions, gix surfaces an error like
+                // "The remote didn't have any ref that matched '<rev>'"
+                // when neither a tag nor a branch matches. Normalize to the
+                // CLI backend's wording so callers (and tests) see the same
+                // message regardless of which backend ran.
+                if let Some(rev) = revision {
+                    if !looks_like_sha(rev) && format!("{e:#}").contains("didn't have any ref") {
+                        bail!("cannot resolve {rev} into a Git SHA1");
+                    }
+                }
+                return Err(e).with_context(|| format!("Failed to clone repository from {url}"));
+            }
+        };
+        let (repo, _) = checkout
             .main_worktree(gix::progress::Discard, &interrupt)
             .with_context(|| format!("Failed to check out worktree at {}", target.display()))?;
+
+        if let Some(rev) = revision {
+            if looks_like_sha(rev) {
+                if let Err(e) = checkout_sha(&repo, rev) {
+                    let _ = std::fs::remove_dir_all(target);
+                    return Err(e);
+                }
+            }
+        }
+
         Ok(())
     }
 
@@ -64,4 +98,124 @@ impl RepositoryBackend for GixBackend {
         let any_change = iter.next().is_some();
         Ok(!any_change)
     }
+}
+
+/// Returns true iff `rev` is shaped like a (possibly abbreviated) SHA-1.
+/// Mirrors the regex used by the CLI backend: `^[0-9a-f]{1,40}$`.
+fn looks_like_sha(rev: &str) -> bool {
+    !rev.is_empty()
+        && rev.len() <= 40
+        && rev
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+/// After a default-branch clone, switch the worktree onto a specific commit
+/// referenced by SHA. Verifies the SHA is reachable from a remote-tracking
+/// branch (matches the CLI backend's containment check) and detaches HEAD.
+fn checkout_sha(repo: &gix::Repository, rev: &str) -> Result<()> {
+    // Resolve the (possibly abbreviated) SHA to a full ObjectId.
+    let candidate = repo
+        .rev_parse_single(rev)
+        .map_err(|_| anyhow!("cannot find revision {rev} in remote origin"))?
+        .detach();
+
+    // Reachability check: the commit must be an ancestor of some
+    // refs/remotes/origin/* tip. Matches the semantic of
+    // `git branch -a --contains <sha>` filtered to that prefix in the CLI
+    // backend.
+    let prefix = "refs/remotes/origin/";
+    let mut reachable = false;
+    let refs = repo
+        .references()
+        .with_context(|| "Failed to read references")?;
+    let prefixed = refs
+        .prefixed(prefix)
+        .with_context(|| "Failed to filter references")?;
+    for reference in prefixed {
+        let Ok(mut reference) = reference else {
+            continue;
+        };
+        // Skip symbolic refs (e.g. `refs/remotes/origin/HEAD` → `…/main`)
+        // by peeling; if peeling fails the ref is unusable for reachability.
+        let Ok(tip_id) = reference.peel_to_id() else {
+            continue;
+        };
+        let tip = tip_id.detach();
+        if let Ok(merge_base) = repo.merge_base(tip, candidate) {
+            if merge_base.detach() == candidate {
+                reachable = true;
+                break;
+            }
+        }
+    }
+    if !reachable {
+        bail!("cannot find revision {rev} in remote origin");
+    }
+
+    // Detach HEAD onto the resolved commit.
+    repo.edit_reference(RefEdit {
+        change: Change::Update {
+            log: LogChange {
+                mode: RefLog::AndReference,
+                force_create_reflog: false,
+                message: format!("tinty: detached HEAD onto {rev}").into(),
+            },
+            expected: PreviousValue::Any,
+            new: Target::Object(candidate),
+        },
+        name: "HEAD".try_into().map_err(anyhow::Error::new)?,
+        deref: false,
+    })
+    .with_context(|| format!("Failed to detach HEAD onto {rev}"))?;
+
+    // Re-materialize the worktree at the new HEAD. Use the index built from
+    // the target tree, then write it through gix's worktree-state checkout.
+    reset_worktree_to(repo, candidate)
+        .with_context(|| format!("Failed to check out worktree at {rev}"))?;
+    Ok(())
+}
+
+/// Materialize the worktree to match the tree of `commit_id`. Rebuilds the
+/// index from that tree and runs gix's worktree-state checkout to write
+/// every file.
+fn reset_worktree_to(repo: &gix::Repository, commit_id: gix::ObjectId) -> Result<()> {
+    let commit = repo
+        .find_object(commit_id)
+        .with_context(|| format!("Failed to find commit {commit_id}"))?
+        .into_commit();
+    let tree_id = commit
+        .tree_id()
+        .with_context(|| format!("Failed to read tree of commit {commit_id}"))?
+        .detach();
+
+    // Rebuild the index from the target tree.
+    let index = repo
+        .index_from_tree(&tree_id)
+        .with_context(|| format!("Failed to build index from tree {tree_id}"))?;
+    let mut index = index;
+
+    let workdir = repo
+        .workdir()
+        .ok_or_else(|| anyhow!("Repository has no working directory"))?
+        .to_owned();
+
+    let opts = gix::worktree::state::checkout::Options::default();
+    gix::worktree::state::checkout(
+        &mut index,
+        &workdir,
+        repo.objects.clone().into_arc()?,
+        &gix::progress::Discard,
+        &gix::progress::Discard,
+        &AtomicBool::new(false),
+        opts,
+    )
+    .with_context(|| "Failed to materialize worktree")?;
+
+    // Persist the new index so subsequent `git status` calls have a sane view.
+    index
+        .write(gix::index::write::Options::default())
+        .with_context(|| "Failed to write index")?;
+
+    Ok(())
 }
