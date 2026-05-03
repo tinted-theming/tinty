@@ -2,6 +2,7 @@ use anyhow::Result;
 use std::path::Path;
 
 pub mod git_shell;
+pub mod gix;
 
 /// High-level repository operations tinty performs against a `[[items]]` entry:
 /// fetching it onto disk for the first time (`install`), bringing it up to a
@@ -18,13 +19,29 @@ pub trait RepositoryBackend {
     fn is_clean(&self, target: &Path) -> Result<bool>;
 }
 
+/// Environment variable for opting in to the gix backend at runtime.
+///
+/// Truthy values: `1`, `true`, `TRUE`, `yes`. Anything else (including unset)
+/// keeps the default git-shell-out backend.
+const USE_GIX_ENV: &str = "TINTY_USE_GIX";
+
+fn use_gix() -> bool {
+    std::env::var(USE_GIX_ENV)
+        .map(|v| matches!(v.as_str(), "1" | "true" | "TRUE" | "yes"))
+        .unwrap_or(false)
+}
+
 /// Returns the active repository backend for this invocation.
 ///
-/// Phase 1 always returns the git-shell-out backend. Phase 2 introduces the
-/// gix backend and runtime dispatch via `TINTY_USE_GIX`.
+/// Defaults to the git-shell-out backend. Set `TINTY_USE_GIX=1` to opt in to
+/// the gix backend (currently a stub — Phase 2 of the migration).
 #[must_use]
 pub fn backend() -> Box<dyn RepositoryBackend> {
-    Box::new(git_shell::GitShellBackend)
+    if use_gix() {
+        Box::new(gix::GixBackend)
+    } else {
+        Box::new(git_shell::GitShellBackend)
+    }
 }
 
 pub fn install(url: &str, target: &Path, revision: Option<&str>) -> Result<()> {
