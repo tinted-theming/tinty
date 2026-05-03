@@ -2,8 +2,10 @@
 
 use crate::repo::RepositoryBackend;
 use anyhow::{anyhow, bail, Context, Result};
+use gix::bstr::ByteSlice;
 use gix::refs::transaction::{Change, LogChange, PreviousValue, RefEdit, RefLog};
 use gix::refs::Target;
+use gix::remote::Direction;
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
 
@@ -25,11 +27,9 @@ impl RepositoryBackend for GixBackend {
             .with_context(|| format!("Failed to set up clone of {url}"))?;
 
         // For tag- or branch-named revisions, point gix at the requested ref
-        // up front so the clone fetches and checks it out in one step. This
-        // also gets HEAD attached when the ref is a branch, matching what
-        // `git clone --branch` does. SHA revisions don't go through this
-        // path because they aren't a ref name; they fall through to the
-        // post-fetch resolve-and-checkout below.
+        // up front so the clone fetches and checks it out in one step. SHA
+        // revisions don't go through this path because they aren't a ref
+        // name; they fall through to the post-fetch resolve-and-checkout.
         if let Some(rev) = revision {
             if !looks_like_sha(rev) {
                 prepare = prepare
@@ -42,11 +42,6 @@ impl RepositoryBackend for GixBackend {
         let (mut checkout, _outcome) = match fetch_result {
             Ok(t) => t,
             Err(e) => {
-                // For non-SHA revisions, gix surfaces an error like
-                // "The remote didn't have any ref that matched '<rev>'"
-                // when neither a tag nor a branch matches. Normalize to the
-                // CLI backend's wording so callers (and tests) see the same
-                // message regardless of which backend ran.
                 if let Some(rev) = revision {
                     if !looks_like_sha(rev) && format!("{e:#}").contains("didn't have any ref") {
                         bail!("cannot resolve {rev} into a Git SHA1");
@@ -61,8 +56,15 @@ impl RepositoryBackend for GixBackend {
 
         if let Some(rev) = revision {
             let post = if looks_like_sha(rev) {
-                checkout_sha(&repo, rev)
+                // SHA path: clone landed on the default branch; resolve and
+                // detach onto the requested SHA.
+                resolve_revision(&repo, "origin", rev)
+                    .and_then(|resolved| checkout_revision(&repo, &resolved, rev))
             } else {
+                // Tag/branch path: gix already checked out the ref. For
+                // annotated tags we still need to detach HEAD onto the
+                // peeled commit so `git rev-parse HEAD` returns the commit
+                // SHA rather than the tag-object SHA.
                 detach_if_tag(&repo)
             };
             if let Err(e) = post {
@@ -76,14 +78,18 @@ impl RepositoryBackend for GixBackend {
 
     /// Update an installed repository to a (possibly new) URL and revision.
     ///
-    /// Implementation note: rather than mutating the existing repository in
-    /// place (which the CLI backend does via a temp-remote dance to keep
-    /// `.git/config` consistent), we move the existing repo aside, run a
-    /// fresh `install` into the target path, and only delete the moved-aside
-    /// copy on success. On failure we restore the moved-aside copy. This
-    /// gives atomic semantics via filesystem rename without ever touching
-    /// the .git/config file mid-operation, and lets us share all the
-    /// resolve / checkout logic with `install`.
+    /// Validate-first design:
+    ///
+    /// 1. ls-refs against the new URL via an in-memory anonymous remote.
+    ///    This bails before any local mutation if the requested tag/branch
+    ///    doesn't exist on the remote (and the revision isn't a SHA we can
+    ///    verify post-fetch).
+    /// 2. If the URL changed, write the new URL to `.git/config`. The
+    ///    original URL is kept in memory for rollback.
+    /// 3. Fetch from origin, resolve the revision against local refs, and
+    ///    update HEAD + worktree.
+    /// 4. On any failure during step 3, restore the original URL in
+    ///    `.git/config` and propagate the error.
     fn update(&self, target: &Path, url: &str, revision: Option<&str>) -> Result<()> {
         if !target.is_dir() {
             return Err(anyhow!(
@@ -92,39 +98,48 @@ impl RepositoryBackend for GixBackend {
             ));
         }
 
-        let backup = backup_path_for(target);
-        if backup.exists() {
-            std::fs::remove_dir_all(&backup).with_context(|| {
-                format!("Failed to remove stale backup at {}", backup.display())
+        let mut repo = gix::open(target)
+            .with_context(|| format!("Failed to open git repository at {}", target.display()))?;
+        let rev_str = revision.unwrap_or("main");
+
+        // Phase 1: ls-refs against the new URL — no local mutation yet.
+        let _kind_hint = probe_revision_kind_at(&repo, url, rev_str)?;
+
+        // Phase 2: capture the current origin URL and switch to the new one
+        // if it changed. The captured URL is used for rollback if the work
+        // below fails.
+        let old_url = read_origin_url(&repo)?;
+        let url_changed = old_url.as_bstr() != url.as_bytes().as_bstr();
+        if url_changed {
+            write_origin_url(&repo, url)?;
+            repo = gix::open(target).with_context(|| {
+                format!(
+                    "Failed to re-open repository after URL update at {}",
+                    target.display()
+                )
             })?;
         }
-        std::fs::rename(target, &backup).with_context(|| {
-            format!(
-                "Failed to move {} aside to {}",
-                target.display(),
-                backup.display()
-            )
-        })?;
 
-        match self.install(url, target, revision) {
-            Ok(()) => {
-                std::fs::remove_dir_all(&backup)
-                    .with_context(|| format!("Failed to remove backup at {}", backup.display()))?;
-                Ok(())
-            }
+        // Phase 3: fetch + resolve + checkout. Encapsulated so we can run
+        // rollback on any failure.
+        let do_work = || -> Result<()> {
+            fetch_origin(&repo)?;
+            let resolved = resolve_revision(&repo, "origin", rev_str)?;
+            checkout_revision(&repo, &resolved, rev_str)?;
+            Ok(())
+        };
+
+        match do_work() {
+            Ok(()) => Ok(()),
             Err(e) => {
-                // Clean up any partial install at the target path, then
-                // restore the original repo from backup.
-                if target.exists() {
-                    let _ = std::fs::remove_dir_all(target);
+                if url_changed {
+                    let restored = std::str::from_utf8(old_url.as_ref())
+                        .map(str::to_owned)
+                        .ok();
+                    if let Some(orig) = restored {
+                        let _ = write_origin_url(&repo, &orig);
+                    }
                 }
-                std::fs::rename(&backup, target).with_context(|| {
-                    format!(
-                        "Failed to restore backup from {} to {} (original error: {e:#})",
-                        backup.display(),
-                        target.display()
-                    )
-                })?;
                 Err(e)
             }
         }
@@ -153,6 +168,263 @@ impl RepositoryBackend for GixBackend {
         let any_change = iter.next().is_some();
         Ok(!any_change)
     }
+}
+
+#[derive(Clone, Copy)]
+enum RevisionKind {
+    Tag,
+    Branch,
+    Sha,
+}
+
+struct ResolvedRevision {
+    /// The commit SHA that the revision resolves to. For annotated tags
+    /// this is the *peeled* commit, not the tag object.
+    commit: gix::ObjectId,
+    kind: RevisionKind,
+}
+
+/// Probe a remote URL for whether it has the requested revision, without
+/// touching any local state. Uses an anonymous in-memory remote and
+/// `ref_map` (which performs an ls-refs handshake but doesn't fetch
+/// objects). Returns the classified `RevisionKind` so callers can decide
+/// whether to follow up with a fetch or jump straight to SHA verification.
+fn probe_revision_kind_at(repo: &gix::Repository, url: &str, rev: &str) -> Result<RevisionKind> {
+    // Anonymous remotes start with no refspecs; ref_map filters through
+    // them, so without these the response is empty even if the remote has
+    // matching refs. Configure the standard fetch refspecs explicitly.
+    let probe = repo
+        .remote_at(url)
+        .with_context(|| format!("Failed to build in-memory remote at {url}"))?
+        .with_refspecs(
+            [
+                "+refs/heads/*:refs/remotes/probe/*",
+                "+refs/tags/*:refs/tags/*",
+            ],
+            Direction::Fetch,
+        )
+        .with_context(|| "Failed to set refspecs on probe remote")?;
+    let connection = probe
+        .connect(Direction::Fetch)
+        .with_context(|| format!("Failed to connect to {url}"))?;
+    let (ref_map, _handshake) = connection
+        .ref_map(
+            gix::progress::Discard,
+            gix::remote::ref_map::Options::default(),
+        )
+        .with_context(|| format!("Failed to enumerate refs at {url}"))?;
+
+    let tag_name = format!("refs/tags/{rev}");
+    let head_name = format!("refs/heads/{rev}");
+    let mut found_tag = false;
+    let mut found_branch = false;
+    for r in &ref_map.remote_refs {
+        let (name, _target, _peeled) = r.unpack();
+        if name.as_bstr() == tag_name.as_bytes() {
+            found_tag = true;
+        } else if name.as_bstr() == head_name.as_bytes() {
+            found_branch = true;
+        }
+    }
+
+    if found_tag {
+        return Ok(RevisionKind::Tag);
+    }
+    if found_branch {
+        return Ok(RevisionKind::Branch);
+    }
+    if !looks_like_sha(rev) {
+        bail!("cannot resolve {rev} into a Git SHA1");
+    }
+    Ok(RevisionKind::Sha)
+}
+
+/// Read the fetch URL configured for `origin` in this repository.
+fn read_origin_url(repo: &gix::Repository) -> Result<gix::bstr::BString> {
+    let remote = repo
+        .find_remote("origin")
+        .with_context(|| "Failed to find origin remote")?;
+    let url = remote
+        .url(Direction::Fetch)
+        .ok_or_else(|| anyhow!("origin has no fetch URL configured"))?;
+    Ok(url.to_bstring())
+}
+
+/// Persist a new fetch URL for `origin` to `.git/config`. The caller is
+/// expected to re-open the repository afterwards to pick up the change.
+fn write_origin_url(repo: &gix::Repository, url: &str) -> Result<()> {
+    let config_path = repo.git_dir().join("config");
+    let mut config =
+        gix::config::File::from_path_no_includes(config_path.clone(), gix::config::Source::Local)
+            .with_context(|| format!("Failed to read {}", config_path.display()))?;
+    config
+        .set_raw_value("remote.origin.url", url.as_bytes())
+        .with_context(|| format!("Failed to set remote.origin.url = {url}"))?;
+    let mut file = std::fs::File::create(&config_path)
+        .with_context(|| format!("Failed to open {} for writing", config_path.display()))?;
+    config
+        .write_to(&mut file)
+        .with_context(|| format!("Failed to write to {}", config_path.display()))?;
+    Ok(())
+}
+
+/// Fetch from the configured `origin` remote, updating `refs/remotes/origin/*`
+/// and `refs/tags/*` per the existing refspecs in `.git/config`.
+fn fetch_origin(repo: &gix::Repository) -> Result<()> {
+    let interrupt = AtomicBool::new(false);
+    let remote = repo
+        .find_remote("origin")
+        .with_context(|| "Failed to find origin remote")?;
+    let connection = remote
+        .connect(Direction::Fetch)
+        .with_context(|| "Failed to connect to origin")?;
+    let prepare = connection
+        .prepare_fetch(
+            gix::progress::Discard,
+            gix::remote::ref_map::Options::default(),
+        )
+        .with_context(|| "Failed to prepare fetch from origin")?;
+    prepare
+        .receive(gix::progress::Discard, &interrupt)
+        .with_context(|| "Failed to receive objects from origin")?;
+    Ok(())
+}
+
+/// Resolve a revision string against an existing repository's local refs,
+/// using the same precedence as the CLI backend: tag → branch → SHA. The
+/// `remote_name` controls which `refs/remotes/<name>/*` namespace counts
+/// for branch and SHA-reachability lookups.
+fn resolve_revision(
+    repo: &gix::Repository,
+    remote_name: &str,
+    rev: &str,
+) -> Result<ResolvedRevision> {
+    // Tag (peel through annotated tag objects to a commit).
+    let tag_ref_name = format!("refs/tags/{rev}");
+    if let Ok(mut reference) = repo.find_reference(tag_ref_name.as_str()) {
+        let commit = reference
+            .peel_to_id()
+            .with_context(|| format!("Failed to peel {tag_ref_name}"))?
+            .detach();
+        return Ok(ResolvedRevision {
+            commit,
+            kind: RevisionKind::Tag,
+        });
+    }
+
+    // Branch (remote-tracking ref).
+    let branch_ref_name = format!("refs/remotes/{remote_name}/{rev}");
+    if let Ok(mut reference) = repo.find_reference(branch_ref_name.as_str()) {
+        let commit = reference
+            .peel_to_id()
+            .with_context(|| format!("Failed to peel {branch_ref_name}"))?
+            .detach();
+        return Ok(ResolvedRevision {
+            commit,
+            kind: RevisionKind::Branch,
+        });
+    }
+
+    // SHA. Validate shape, then verify reachability from a remote-tracking
+    // branch (matches the CLI backend's `git branch -a --contains <sha>`
+    // semantic, filtered to the relevant remote prefix).
+    if !looks_like_sha(rev) {
+        bail!("cannot resolve {rev} into a Git SHA1");
+    }
+    let candidate = repo
+        .rev_parse_single(rev)
+        .map_err(|_| anyhow!("cannot find revision {rev} in remote {remote_name}"))?
+        .detach();
+
+    let prefix = format!("refs/remotes/{remote_name}/");
+    let refs = repo
+        .references()
+        .with_context(|| "Failed to read references")?;
+    let prefixed = refs
+        .prefixed(prefix.as_str())
+        .with_context(|| "Failed to filter references")?;
+    for reference in prefixed {
+        let Ok(mut reference) = reference else {
+            continue;
+        };
+        let Ok(tip_id) = reference.peel_to_id() else {
+            continue;
+        };
+        if let Ok(merge_base) = repo.merge_base(tip_id.detach(), candidate) {
+            if merge_base.detach() == candidate {
+                return Ok(ResolvedRevision {
+                    commit: candidate,
+                    kind: RevisionKind::Sha,
+                });
+            }
+        }
+    }
+
+    bail!("cannot find revision {rev} in remote {remote_name}");
+}
+
+/// Apply a resolved revision: update HEAD (attached for branches, detached
+/// for tags and SHAs) and reset the worktree to the resolved commit's tree.
+fn checkout_revision(repo: &gix::Repository, resolved: &ResolvedRevision, rev: &str) -> Result<()> {
+    match resolved.kind {
+        RevisionKind::Branch => {
+            // Create or reset the local branch to the resolved SHA, then
+            // make HEAD point at the branch ref symbolically.
+            let local_branch = format!("refs/heads/{rev}");
+            let local_branch_name: gix::refs::FullName = local_branch
+                .as_str()
+                .try_into()
+                .map_err(anyhow::Error::new)?;
+            repo.edit_reference(RefEdit {
+                change: Change::Update {
+                    log: LogChange {
+                        mode: RefLog::AndReference,
+                        force_create_reflog: false,
+                        message: format!("tinty: set {rev} to fetched tip").into(),
+                    },
+                    expected: PreviousValue::Any,
+                    new: Target::Object(resolved.commit),
+                },
+                name: local_branch_name.clone(),
+                deref: false,
+            })
+            .with_context(|| format!("Failed to update {local_branch}"))?;
+            repo.edit_reference(RefEdit {
+                change: Change::Update {
+                    log: LogChange {
+                        mode: RefLog::AndReference,
+                        force_create_reflog: false,
+                        message: format!("tinty: HEAD → {local_branch}").into(),
+                    },
+                    expected: PreviousValue::Any,
+                    new: Target::Symbolic(local_branch_name),
+                },
+                name: "HEAD".try_into().map_err(anyhow::Error::new)?,
+                deref: false,
+            })
+            .with_context(|| format!("Failed to attach HEAD to {local_branch}"))?;
+        }
+        RevisionKind::Tag | RevisionKind::Sha => {
+            // Detach HEAD onto the (peeled) commit.
+            repo.edit_reference(RefEdit {
+                change: Change::Update {
+                    log: LogChange {
+                        mode: RefLog::AndReference,
+                        force_create_reflog: false,
+                        message: format!("tinty: detached HEAD onto {rev}").into(),
+                    },
+                    expected: PreviousValue::Any,
+                    new: Target::Object(resolved.commit),
+                },
+                name: "HEAD".try_into().map_err(anyhow::Error::new)?,
+                deref: false,
+            })
+            .with_context(|| format!("Failed to detach HEAD onto {rev}"))?;
+        }
+    }
+    reset_worktree_to(repo, resolved.commit)
+        .with_context(|| format!("Failed to check out worktree at {rev}"))?;
+    Ok(())
 }
 
 /// After `with_ref_name(<tag>)` + clone, gix leaves HEAD symbolically attached
@@ -190,16 +462,6 @@ fn detach_if_tag(repo: &gix::Repository) -> Result<()> {
     Ok(())
 }
 
-/// Picks a sibling backup directory next to `target` for use during `update`.
-fn backup_path_for(target: &Path) -> std::path::PathBuf {
-    let mut name = target.file_name().map_or_else(
-        || std::ffi::OsString::from("repo"),
-        std::ffi::OsString::from,
-    );
-    name.push(".tinty-update-bak");
-    target.with_file_name(name)
-}
-
 /// Returns true iff `rev` is shaped like a (possibly abbreviated) SHA-1.
 /// Mirrors the regex used by the CLI backend: `^[0-9a-f]{1,40}$`.
 fn looks_like_sha(rev: &str) -> bool {
@@ -208,72 +470,6 @@ fn looks_like_sha(rev: &str) -> bool {
         && rev
             .bytes()
             .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-}
-
-/// After a default-branch clone, switch the worktree onto a specific commit
-/// referenced by SHA. Verifies the SHA is reachable from a remote-tracking
-/// branch (matches the CLI backend's containment check) and detaches HEAD.
-fn checkout_sha(repo: &gix::Repository, rev: &str) -> Result<()> {
-    // Resolve the (possibly abbreviated) SHA to a full ObjectId.
-    let candidate = repo
-        .rev_parse_single(rev)
-        .map_err(|_| anyhow!("cannot find revision {rev} in remote origin"))?
-        .detach();
-
-    // Reachability check: the commit must be an ancestor of some
-    // refs/remotes/origin/* tip. Matches the semantic of
-    // `git branch -a --contains <sha>` filtered to that prefix in the CLI
-    // backend.
-    let prefix = "refs/remotes/origin/";
-    let mut reachable = false;
-    let refs = repo
-        .references()
-        .with_context(|| "Failed to read references")?;
-    let prefixed = refs
-        .prefixed(prefix)
-        .with_context(|| "Failed to filter references")?;
-    for reference in prefixed {
-        let Ok(mut reference) = reference else {
-            continue;
-        };
-        // Skip symbolic refs (e.g. `refs/remotes/origin/HEAD` → `…/main`)
-        // by peeling; if peeling fails the ref is unusable for reachability.
-        let Ok(tip_id) = reference.peel_to_id() else {
-            continue;
-        };
-        let tip = tip_id.detach();
-        if let Ok(merge_base) = repo.merge_base(tip, candidate) {
-            if merge_base.detach() == candidate {
-                reachable = true;
-                break;
-            }
-        }
-    }
-    if !reachable {
-        bail!("cannot find revision {rev} in remote origin");
-    }
-
-    // Detach HEAD onto the resolved commit.
-    repo.edit_reference(RefEdit {
-        change: Change::Update {
-            log: LogChange {
-                mode: RefLog::AndReference,
-                force_create_reflog: false,
-                message: format!("tinty: detached HEAD onto {rev}").into(),
-            },
-            expected: PreviousValue::Any,
-            new: Target::Object(candidate),
-        },
-        name: "HEAD".try_into().map_err(anyhow::Error::new)?,
-        deref: false,
-    })
-    .with_context(|| format!("Failed to detach HEAD onto {rev}"))?;
-
-    // Re-materialize the worktree at the new HEAD. Use the index built from
-    // the target tree, then write it through gix's worktree-state checkout.
-    reset_worktree_to(repo, candidate)
-        .with_context(|| format!("Failed to check out worktree at {rev}"))?;
-    Ok(())
 }
 
 /// Materialize the worktree to match the tree of `commit_id`. Rebuilds the
@@ -289,11 +485,9 @@ fn reset_worktree_to(repo: &gix::Repository, commit_id: gix::ObjectId) -> Result
         .with_context(|| format!("Failed to read tree of commit {commit_id}"))?
         .detach();
 
-    // Rebuild the index from the target tree.
-    let index = repo
+    let mut index = repo
         .index_from_tree(&tree_id)
         .with_context(|| format!("Failed to build index from tree {tree_id}"))?;
-    let mut index = index;
 
     let workdir = repo
         .workdir()
@@ -312,7 +506,6 @@ fn reset_worktree_to(repo: &gix::Repository, commit_id: gix::ObjectId) -> Result
     )
     .with_context(|| "Failed to materialize worktree")?;
 
-    // Persist the new index so subsequent `git status` calls have a sane view.
     index
         .write(gix::index::write::Options::default())
         .with_context(|| "Failed to write index")?;
