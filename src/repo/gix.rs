@@ -60,19 +60,74 @@ impl RepositoryBackend for GixBackend {
             .with_context(|| format!("Failed to check out worktree at {}", target.display()))?;
 
         if let Some(rev) = revision {
-            if looks_like_sha(rev) {
-                if let Err(e) = checkout_sha(&repo, rev) {
-                    let _ = std::fs::remove_dir_all(target);
-                    return Err(e);
-                }
+            let post = if looks_like_sha(rev) {
+                checkout_sha(&repo, rev)
+            } else {
+                detach_if_tag(&repo)
+            };
+            if let Err(e) = post {
+                let _ = std::fs::remove_dir_all(target);
+                return Err(e);
             }
         }
 
         Ok(())
     }
 
-    fn update(&self, _target: &Path, _url: &str, _revision: Option<&str>) -> Result<()> {
-        bail!("gix backend: update is not yet implemented (set TINTY_USE_GIX=0 to use the git CLI)")
+    /// Update an installed repository to a (possibly new) URL and revision.
+    ///
+    /// Implementation note: rather than mutating the existing repository in
+    /// place (which the CLI backend does via a temp-remote dance to keep
+    /// `.git/config` consistent), we move the existing repo aside, run a
+    /// fresh `install` into the target path, and only delete the moved-aside
+    /// copy on success. On failure we restore the moved-aside copy. This
+    /// gives atomic semantics via filesystem rename without ever touching
+    /// the .git/config file mid-operation, and lets us share all the
+    /// resolve / checkout logic with `install`.
+    fn update(&self, target: &Path, url: &str, revision: Option<&str>) -> Result<()> {
+        if !target.is_dir() {
+            return Err(anyhow!(
+                "Error with updating. {} is not a directory",
+                target.display()
+            ));
+        }
+
+        let backup = backup_path_for(target);
+        if backup.exists() {
+            std::fs::remove_dir_all(&backup).with_context(|| {
+                format!("Failed to remove stale backup at {}", backup.display())
+            })?;
+        }
+        std::fs::rename(target, &backup).with_context(|| {
+            format!(
+                "Failed to move {} aside to {}",
+                target.display(),
+                backup.display()
+            )
+        })?;
+
+        match self.install(url, target, revision) {
+            Ok(()) => {
+                std::fs::remove_dir_all(&backup)
+                    .with_context(|| format!("Failed to remove backup at {}", backup.display()))?;
+                Ok(())
+            }
+            Err(e) => {
+                // Clean up any partial install at the target path, then
+                // restore the original repo from backup.
+                if target.exists() {
+                    let _ = std::fs::remove_dir_all(target);
+                }
+                std::fs::rename(&backup, target).with_context(|| {
+                    format!(
+                        "Failed to restore backup from {} to {} (original error: {e:#})",
+                        backup.display(),
+                        target.display()
+                    )
+                })?;
+                Err(e)
+            }
+        }
     }
 
     /// Reports whether the working directory is clean.
@@ -98,6 +153,51 @@ impl RepositoryBackend for GixBackend {
         let any_change = iter.next().is_some();
         Ok(!any_change)
     }
+}
+
+/// After `with_ref_name(<tag>)` + clone, gix leaves HEAD symbolically attached
+/// to the tag ref (`refs/tags/<tag>`). For annotated tags this means
+/// `git rev-parse HEAD` resolves to the tag object's SHA rather than the
+/// underlying commit's SHA, which differs from what `git checkout <tag>`
+/// produces (detached HEAD at the commit). This helper detects that state
+/// and detaches HEAD onto the peeled commit so behavior matches.
+fn detach_if_tag(repo: &gix::Repository) -> Result<()> {
+    let Ok(Some(mut reference)) = repo.head_ref() else {
+        return Ok(());
+    };
+    if !reference.name().as_bstr().starts_with(b"refs/tags/") {
+        return Ok(());
+    }
+    let name = reference.name().as_bstr().to_owned();
+    let commit_id = reference
+        .peel_to_id()
+        .with_context(|| format!("Failed to peel {name} to a commit"))?
+        .detach();
+    repo.edit_reference(RefEdit {
+        change: Change::Update {
+            log: LogChange {
+                mode: RefLog::AndReference,
+                force_create_reflog: false,
+                message: format!("tinty: detached HEAD onto {name}").into(),
+            },
+            expected: PreviousValue::Any,
+            new: Target::Object(commit_id),
+        },
+        name: "HEAD".try_into().map_err(anyhow::Error::new)?,
+        deref: false,
+    })
+    .with_context(|| format!("Failed to detach HEAD from {name}"))?;
+    Ok(())
+}
+
+/// Picks a sibling backup directory next to `target` for use during `update`.
+fn backup_path_for(target: &Path) -> std::path::PathBuf {
+    let mut name = target.file_name().map_or_else(
+        || std::ffi::OsString::from("repo"),
+        std::ffi::OsString::from,
+    );
+    name.push(".tinty-update-bak");
+    target.with_file_name(name)
 }
 
 /// Returns true iff `rev` is shaped like a (possibly abbreviated) SHA-1.
