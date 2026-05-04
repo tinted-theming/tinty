@@ -313,6 +313,7 @@ base24-3024-day
 base24-3024-night
 base24-adventure-time
 base24-alien-blood
+base24-alucard
 base24-argonaut
 base24-arthur
 base24-atelier-sulphurpool
