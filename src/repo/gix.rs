@@ -78,18 +78,29 @@ impl RepositoryBackend for GixBackend {
 
     /// Update an installed repository to a (possibly new) URL and revision.
     ///
-    /// Validate-first design:
+    /// Stage-then-promote design — every step that can fail does so before
+    /// any user-visible promotion. `.git/config` and `refs/remotes/origin/*`
+    /// stay at the OLD state until the very last steps:
     ///
-    /// 1. ls-refs against the new URL via an in-memory anonymous remote.
-    ///    This bails before any local mutation if the requested tag/branch
-    ///    doesn't exist on the remote (and the revision isn't a SHA we can
-    ///    verify post-fetch).
-    /// 2. If the URL changed, write the new URL to `.git/config`. The
-    ///    original URL is kept in memory for rollback.
-    /// 3. Fetch from origin, resolve the revision against local refs, and
-    ///    update HEAD + worktree.
-    /// 4. On any failure during step 3, restore the original URL in
-    ///    `.git/config` and propagate the error.
+    /// 1. **Probe.** ls-refs against the new URL via an in-memory remote.
+    ///    Bails before any local mutation if the requested tag/branch
+    ///    doesn't exist (and the revision isn't a SHA we can verify
+    ///    post-fetch).
+    /// 2. **Fetch into staging.** Pull objects + refs through the in-memory
+    ///    remote into `refs/remotes/tinty-update/*`. Origin stays unchanged.
+    /// 3. **Resolve in staging.** Tag/branch lookup against
+    ///    `refs/tags/*` and `refs/remotes/tinty-update/*`; SHA reachability
+    ///    via `merge_base`.
+    /// 4. **Materialize the worktree.** Most failure-prone step. If this
+    ///    fails, `.git/HEAD` and `refs/remotes/origin/*` are unchanged —
+    ///    git still truthfully reports the OLD state.
+    /// 5. **Atomic ref transaction.** Promote staging refs to
+    ///    `refs/remotes/origin/*` and update HEAD in a single
+    ///    `edit_references` batch. After this, the repo is at the new
+    ///    state from git's perspective.
+    /// 6. **Write origin URL.** Only if changed. Last step so a failure
+    ///    here just leaves a config that will be reconciled on the next
+    ///    `tinty update`.
     fn update(&self, target: &Path, url: &str, revision: Option<&str>) -> Result<()> {
         if !target.is_dir() {
             return Err(anyhow!(
@@ -98,51 +109,35 @@ impl RepositoryBackend for GixBackend {
             ));
         }
 
-        let mut repo = gix::open(target)
+        let repo = gix::open(target)
             .with_context(|| format!("Failed to open git repository at {}", target.display()))?;
         let rev_str = revision.unwrap_or("main");
 
-        // Phase 1: ls-refs against the new URL — no local mutation yet.
+        // 1. Probe.
         let _kind_hint = probe_revision_kind_at(&repo, url, rev_str)?;
 
-        // Phase 2: capture the current origin URL and switch to the new one
-        // if it changed. The captured URL is used for rollback if the work
-        // below fails.
+        // 2. Fetch via in-memory remote into staging.
+        fetch_to_staging(&repo, url)?;
+
+        // 3. Resolve revision against the staging namespace.
+        let resolved = resolve_revision(&repo, "tinty-update", rev_str)?;
+
+        // 4. Materialize the worktree first. If this fails, .git/ is intact.
+        reset_worktree_to(&repo, resolved.commit)
+            .with_context(|| format!("Failed to check out worktree at {rev_str}"))?;
+
+        // 5. Atomic ref transaction: promote staging → origin and update HEAD.
+        promote_and_set_head(&repo, &resolved, rev_str)?;
+
+        // 6. Persist the new origin URL last. A failure here leaves the repo
+        // at the new state ref-wise but with a stale config URL; the next
+        // `tinty update` will reconcile.
         let old_url = read_origin_url(&repo)?;
-        let url_changed = old_url.as_bstr() != url.as_bytes().as_bstr();
-        if url_changed {
+        if old_url.as_bstr() != url.as_bytes().as_bstr() {
             write_origin_url(&repo, url)?;
-            repo = gix::open(target).with_context(|| {
-                format!(
-                    "Failed to re-open repository after URL update at {}",
-                    target.display()
-                )
-            })?;
         }
 
-        // Phase 3: fetch + resolve + checkout. Encapsulated so we can run
-        // rollback on any failure.
-        let do_work = || -> Result<()> {
-            fetch_origin(&repo)?;
-            let resolved = resolve_revision(&repo, "origin", rev_str)?;
-            checkout_revision(&repo, &resolved, rev_str)?;
-            Ok(())
-        };
-
-        match do_work() {
-            Ok(()) => Ok(()),
-            Err(e) => {
-                if url_changed {
-                    let restored = std::str::from_utf8(old_url.as_ref())
-                        .map(str::to_owned)
-                        .ok();
-                    if let Some(orig) = restored {
-                        let _ = write_origin_url(&repo, &orig);
-                    }
-                }
-                Err(e)
-            }
-        }
+        Ok(())
     }
 
     /// Reports whether the working directory is clean.
@@ -268,25 +263,166 @@ fn write_origin_url(repo: &gix::Repository, url: &str) -> Result<()> {
     Ok(())
 }
 
-/// Fetch from the configured `origin` remote, updating `refs/remotes/origin/*`
-/// and `refs/tags/*` per the existing refspecs in `.git/config`.
-fn fetch_origin(repo: &gix::Repository) -> Result<()> {
+/// Refspec namespace tinty uses for "staging" remote-tracking branches
+/// during an update before promoting them onto `refs/remotes/origin/*`.
+const STAGING_PREFIX: &str = "refs/remotes/tinty-update/";
+
+/// Fetch into a staging refspec (`refs/remotes/tinty-update/*`) via an
+/// in-memory anonymous remote at `url`. Objects land in the local
+/// objectdb (idempotent — they're content-addressed). Branch refs land
+/// in the staging namespace so existing `refs/remotes/origin/*` refs are
+/// untouched until the caller explicitly promotes them. Tags fetch into
+/// `refs/tags/*` (force-overwrite); they don't have a standard
+/// remote-tracking namespace, and for tinty's "this URL is now the
+/// source of truth" semantics, overwriting matches user intent.
+fn fetch_to_staging(repo: &gix::Repository, url: &str) -> Result<()> {
     let interrupt = AtomicBool::new(false);
     let remote = repo
-        .find_remote("origin")
-        .with_context(|| "Failed to find origin remote")?;
+        .remote_at(url)
+        .with_context(|| format!("Failed to build in-memory remote at {url}"))?
+        .with_refspecs(
+            [
+                "+refs/heads/*:refs/remotes/tinty-update/*",
+                "+refs/tags/*:refs/tags/*",
+            ],
+            Direction::Fetch,
+        )
+        .with_context(|| "Failed to set staging refspecs on update remote")?;
     let connection = remote
         .connect(Direction::Fetch)
-        .with_context(|| "Failed to connect to origin")?;
+        .with_context(|| format!("Failed to connect to {url}"))?;
     let prepare = connection
         .prepare_fetch(
             gix::progress::Discard,
             gix::remote::ref_map::Options::default(),
         )
-        .with_context(|| "Failed to prepare fetch from origin")?;
+        .with_context(|| format!("Failed to prepare fetch from {url}"))?;
     prepare
         .receive(gix::progress::Discard, &interrupt)
-        .with_context(|| "Failed to receive objects from origin")?;
+        .with_context(|| format!("Failed to receive objects from {url}"))?;
+    Ok(())
+}
+
+/// Atomically promote the staging refs into `refs/remotes/origin/*` and
+/// set HEAD to the resolved revision, in a single ref transaction. If
+/// gix can't apply the whole batch atomically, it applies none of it,
+/// leaving the staging refs in place for the next attempt.
+#[allow(clippy::too_many_lines)]
+fn promote_and_set_head(
+    repo: &gix::Repository,
+    resolved: &ResolvedRevision,
+    rev: &str,
+) -> Result<()> {
+    let mut edits: Vec<RefEdit> = Vec::new();
+
+    // For every staging branch ref: write it to refs/remotes/origin/<name>
+    // and delete the staging copy. PreviousValue::Any so we overwrite
+    // whatever was there.
+    let refs = repo
+        .references()
+        .with_context(|| "Failed to read references")?;
+    let prefixed = refs
+        .prefixed(STAGING_PREFIX)
+        .with_context(|| "Failed to filter staging references")?;
+    for reference in prefixed {
+        let Ok(mut reference) = reference else {
+            continue;
+        };
+        let staging_name = reference.name().as_bstr().to_owned();
+        let suffix = match staging_name.strip_prefix(STAGING_PREFIX.as_bytes()) {
+            Some(s) => s.to_owned(),
+            None => continue,
+        };
+        let Ok(tip) = reference.peel_to_id() else {
+            continue;
+        };
+        let tip_oid = tip.detach();
+
+        let mut origin_name_bytes = b"refs/remotes/origin/".to_vec();
+        origin_name_bytes.extend_from_slice(&suffix);
+        let origin_full: gix::refs::FullName = gix::bstr::BStr::new(&origin_name_bytes)
+            .try_into()
+            .map_err(anyhow::Error::new)?;
+        let staging_full: gix::refs::FullName = staging_name
+            .as_bstr()
+            .try_into()
+            .map_err(anyhow::Error::new)?;
+
+        edits.push(RefEdit {
+            change: Change::Update {
+                log: LogChange {
+                    mode: RefLog::AndReference,
+                    force_create_reflog: false,
+                    message: format!("tinty: promote {origin_full}").into(),
+                },
+                expected: PreviousValue::Any,
+                new: Target::Object(tip_oid),
+            },
+            name: origin_full,
+            deref: false,
+        });
+        edits.push(RefEdit {
+            change: Change::Delete {
+                expected: PreviousValue::Any,
+                log: RefLog::AndReference,
+            },
+            name: staging_full,
+            deref: false,
+        });
+    }
+
+    // HEAD edits, batched into the same transaction.
+    match resolved.kind {
+        RevisionKind::Branch => {
+            let local = format!("refs/heads/{rev}");
+            let local_full: gix::refs::FullName =
+                local.as_str().try_into().map_err(anyhow::Error::new)?;
+            edits.push(RefEdit {
+                change: Change::Update {
+                    log: LogChange {
+                        mode: RefLog::AndReference,
+                        force_create_reflog: false,
+                        message: format!("tinty: set {rev} to fetched tip").into(),
+                    },
+                    expected: PreviousValue::Any,
+                    new: Target::Object(resolved.commit),
+                },
+                name: local_full.clone(),
+                deref: false,
+            });
+            edits.push(RefEdit {
+                change: Change::Update {
+                    log: LogChange {
+                        mode: RefLog::AndReference,
+                        force_create_reflog: false,
+                        message: format!("tinty: HEAD → {local}").into(),
+                    },
+                    expected: PreviousValue::Any,
+                    new: Target::Symbolic(local_full),
+                },
+                name: "HEAD".try_into().map_err(anyhow::Error::new)?,
+                deref: false,
+            });
+        }
+        RevisionKind::Tag | RevisionKind::Sha => {
+            edits.push(RefEdit {
+                change: Change::Update {
+                    log: LogChange {
+                        mode: RefLog::AndReference,
+                        force_create_reflog: false,
+                        message: format!("tinty: detached HEAD onto {rev}").into(),
+                    },
+                    expected: PreviousValue::Any,
+                    new: Target::Object(resolved.commit),
+                },
+                name: "HEAD".try_into().map_err(anyhow::Error::new)?,
+                deref: false,
+            });
+        }
+    }
+
+    repo.edit_references(edits)
+        .with_context(|| "Failed to promote staging refs and update HEAD atomically")?;
     Ok(())
 }
 
@@ -363,9 +499,16 @@ fn resolve_revision(
     bail!("cannot find revision {rev} in remote {remote_name}");
 }
 
-/// Apply a resolved revision: update HEAD (attached for branches, detached
-/// for tags and SHAs) and reset the worktree to the resolved commit's tree.
+/// Apply a resolved revision. Materialize the worktree first (the most
+/// failure-prone step), then update HEAD as a single bookkeeping step that
+/// "promotes" the operation. If the worktree materialization fails partway,
+/// `.git/HEAD` and `refs/heads/*` still describe the old state — the user
+/// or a follow-up `tinty apply` / `tinty update` can recover by re-checking
+/// out the (still-old) HEAD over the partial worktree.
 fn checkout_revision(repo: &gix::Repository, resolved: &ResolvedRevision, rev: &str) -> Result<()> {
+    reset_worktree_to(repo, resolved.commit)
+        .with_context(|| format!("Failed to check out worktree at {rev}"))?;
+
     match resolved.kind {
         RevisionKind::Branch => {
             // Create or reset the local branch to the resolved SHA, then
@@ -422,8 +565,6 @@ fn checkout_revision(repo: &gix::Repository, resolved: &ResolvedRevision, rev: &
             .with_context(|| format!("Failed to detach HEAD onto {rev}"))?;
         }
     }
-    reset_worktree_to(repo, resolved.commit)
-        .with_context(|| format!("Failed to check out worktree at {rev}"))?;
     Ok(())
 }
 
