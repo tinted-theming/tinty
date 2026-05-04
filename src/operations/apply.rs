@@ -298,6 +298,10 @@ fn build_and_get_custom_scheme_file(
         let item_name_vec: Vec<String> = items.iter().map(|p| p.name.clone()).collect();
         for item_name in item_name_vec {
             let item_template_path: PathBuf = data_path.join(format!("{REPO_DIR}/{item_name}"));
+
+            // The `is_quiet` is set to true because errors appear here because custom schemes
+            // doesn't necessarily include schemes for all scheme-systems in the
+            // template/config.yaml file
             build(&item_template_path, custom_schemes_path, &[], true)?;
         }
     }
