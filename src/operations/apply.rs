@@ -263,7 +263,14 @@ pub fn apply(
     std::mem::forget(staging_data_dir);
 
     for hook in hook_commands {
-        hook.run_command(&target_path, config_path, full_scheme_name, scheme_file)?;
+        let mut child =
+            hook.run_command(&target_path, config_path, full_scheme_name, scheme_file)?;
+        child.wait().with_context(|| {
+            format!(
+                "Failed to wait for {} hook: {}",
+                hook.name, hook.command_template
+            )
+        })?;
     }
 
     create_symlinks_for_backwards_compat(&target_path, data_path)?;
