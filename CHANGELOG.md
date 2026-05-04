@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fix `supported-systems` filter in `apply` subcommand ignoring the actual
+  system check, causing items to run hooks for unsupported scheme systems
+
 ## [0.32.0] - 2026-05-01
 
 ### Added

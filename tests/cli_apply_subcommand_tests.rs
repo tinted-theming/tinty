@@ -633,3 +633,54 @@ fn test_cli_apply_subcommand_with_unicode_scheme_name() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_cli_apply_subcommand_filters_items_by_supported_systems() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-oceanicnext";
+    let (config_path, _data_path, command_vec, _temp_dir) = setup(
+        "test_cli_apply_subcommand_filters_items_by_supported_systems",
+        format!("apply {scheme_name}").as_str(),
+        true,
+    )?;
+    // The first item supports base16 so its hook should run.
+    // The second item supports only base24 so its hook should NOT run.
+    let config_content = r#"
+[[items]]
+path = "https://github.com/tinted-theming/tinted-vim"
+name = "tinted-vim"
+themes-dir = "colors"
+supported-systems = ["base16"]
+hook = "echo 'base16-item-ran'"
+
+[[items]]
+path = "https://github.com/tinted-theming/tinted-shell"
+name = "tinted-shell"
+themes-dir = "scripts"
+supported-systems = ["base24"]
+hook = "echo 'base24-item-should-not-run'"
+"#;
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    let (stdout, stderr) = utils::run_command(&command_vec)?;
+
+    // ------
+    // Assert
+    // ------
+    ensure!(
+        stdout.contains("base16-item-ran"),
+        "Expected base16 item hook to run, got stdout: {stdout}"
+    );
+    ensure!(
+        !stdout.contains("base24-item-should-not-run"),
+        "base24 item hook should not run for a base16 scheme, got stdout: {stdout}"
+    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
+
+    Ok(())
+}
