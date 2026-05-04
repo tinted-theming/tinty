@@ -122,8 +122,7 @@ pub fn apply(
                 .filter(|f| {
                     f.supported_systems
                         .clone()
-                        .map(|s| s.contains(&scheme_system))
-                        .is_some()
+                        .is_some_and(|s| s.contains(&scheme_system))
                 })
                 .collect::<Vec<_>>()
         })
