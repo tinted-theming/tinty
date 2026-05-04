@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fix bug where applying a custom scheme can potentially print
+  tinted-builder-rust template errors.
+
 ## [0.32.1] - 2026-05-04
 
 ### Fixed

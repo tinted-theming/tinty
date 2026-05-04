@@ -207,10 +207,7 @@ fn test_cli_apply_subcommand_with_custom_schemes() -> Result<()> {
         "current_scheme_path different to scheme_name_with_system"
     );
     ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
-    ensure!(
-        stderr.contains("W001"),
-        "Expected stderr containing \"W001\", got: {stderr}"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     Ok(())
 }
@@ -251,10 +248,7 @@ fn test_cli_apply_subcommand_with_custom_schemes_quiet_flag() -> Result<()> {
         "current_scheme_path different to scheme_name_with_system"
     );
     ensure!(stdout.is_empty(), "Expected empty stdout, got: {stdout}");
-    ensure!(
-        stderr.contains("W001"),
-        "Expected stderr containing \"W001\", got: {stderr}"
-    );
+    ensure!(stderr.is_empty(), "Expected empty stderr, got: {stderr}");
 
     Ok(())
 }
