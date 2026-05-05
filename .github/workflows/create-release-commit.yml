@@ -79,11 +79,15 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install cargo about and cargo deny for create_release_changes script
-        if: ${{ steps.search_commit.outputs.hash == '' }}
-        run: |
-          command -v cargo-about >/dev/null 2>&1 || cargo install --locked cargo-about
-          command -v cargo-deny >/dev/null 2>&1 || cargo install --locked cargo-deny
+      - name: "Install tinted-builder-rust"
+        uses: "jaxxstorm/action-install-gh-release@v1.10.0"
+        with: # Get the latest cargo-about release
+          repo: "EmbarkStudios/cargo-about"
+
+      - name: "Install tinted-builder-rust"
+        uses: "jaxxstorm/action-install-gh-release@v1.10.0"
+        with: # Get the latest cargo-deny release
+          repo: "EmbarkStudios/cargo-deny"
 
       - name: Add release changes to CHANGELOG.md
         if: ${{ steps.search_commit.outputs.hash == '' }}
