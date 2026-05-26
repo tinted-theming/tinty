@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_REVISION, SCHEMES_REPO_URL};
-use crate::utils::git_clone;
+use crate::repo;
 use anyhow::{anyhow, Result};
 use std::fs::{remove_file as remove_symlink, symlink_metadata};
 use std::os::unix::fs::symlink;
@@ -15,7 +15,7 @@ fn install_git_url(
     is_quiet: bool,
 ) -> Result<()> {
     if !data_item_path.is_dir() {
-        git_clone(item_git_url, data_item_path, revision)?;
+        repo::install(item_git_url, data_item_path, revision)?;
 
         if !is_quiet {
             println!("{item_name} installed");
@@ -27,6 +27,12 @@ fn install_git_url(
     Ok(())
 }
 
+// TODO(repo-backend): non-URL `[[items]]` (a local path on disk) take this
+// symlink-based path instead of going through `RepositoryBackend`. A future
+// `LocalPathBackend` implementing `RepositoryBackend` would let us route both
+// branches of the dispatch in `install()` below through a single trait, with
+// `is_clean` returning a sensible answer for symlinked source dirs and
+// `update` becoming a no-op (or re-validating the symlink target).
 fn install_dir(
     data_item_path: &Path,
     item_name: &str,
