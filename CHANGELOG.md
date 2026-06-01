@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Changed
+
+- **BREAKING**: `tinty current <property>` now only discovers schemes under
+  the `base16/`/`base24/`/`tinted8/` subdirectories of the schemes repo and
+  custom-schemes directory, matching how `tinty apply` and `tinty list`
+  already work. Previously it walked the schemes repo recursively from the
+  root. Custom schemes laid flat at the root of `custom-schemes/` (rather
+  than under `custom-schemes/<system>/`) will no longer be resolved by
+  `current <property>`; this matches the layout `apply` has always required.
+
 ### Fixed
 
 - Fix `tinty current <property>` failing with `E111: Invalid scheme file extension` 
