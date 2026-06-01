@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fix `tinty current <property>` failing with `E111: Invalid scheme file extension` 
+  when the schemes repo contains non-YAML files (e.g. `LICENSE`, `README.md`)
+  at its root.
+
 ## [0.32.2] - 2026-05-04
 
 ### Fixed
