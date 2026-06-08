@@ -9,11 +9,11 @@
       hash = "sha256-cQocG57iTWGpQWPgaVSoV0m6SD3NzwGGKNhfHlV/2ko=";
     };
     "x86_64-darwin" = {
-      name = "tinty-universal-apple-darwin.tar.gz";
+      name = "tinty-x86_64-apple-darwin.tar.gz";
       hash = "sha256-S0e9+QxQ076YUVfeNzlmvvF8OIHp1Il0F2AnVhxUDMI=";
     };
     "aarch64-darwin" = {
-      name = "tinty-universal-apple-darwin.tar.gz";
+      name = "tinty-aarch64-apple-darwin.tar.gz";
       hash = "sha256-dIEzlB8P04De2SPC/ajFPPlbg7eGaQ8wP8AbBk82C+U=";
     };
   };
