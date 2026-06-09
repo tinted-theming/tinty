@@ -1789,7 +1789,7 @@ dependencies = [
 
 [[package]]
 name = "tinty"
-version = "0.32.2"
+version = "0.33.0"
 dependencies = [
  "anyhow",
  "clap",
