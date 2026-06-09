@@ -2,10 +2,10 @@ use crate::constants::{
     ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME,
     SCHEMES_REPO_NAME,
 };
+use crate::utils::get_all_scheme_file_paths;
 use anyhow::{anyhow, Result};
 use std::fs;
 use std::path::Path;
-use tinted_builder_rust::utils::get_scheme_files;
 
 pub fn get_current_scheme_slug(data_path: &Path) -> String {
     fs::read_to_string(data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME))
@@ -36,39 +36,15 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
     }
 
     let custom_schemes_path = data_path.join(CUSTOM_SCHEMES_DIR_NAME);
-    let scheme_files = {
-        let mut scheme_files = get_scheme_files(&schemes_path, &[], true)?;
+    let mut scheme_files = get_all_scheme_file_paths(&schemes_path, None)?;
+    if custom_schemes_path.is_dir() {
+        let custom_scheme_files = get_all_scheme_file_paths(&custom_schemes_path, None)?;
+        scheme_files.extend(custom_scheme_files);
+    }
 
-        if custom_schemes_path.is_dir() {
-            let custom_scheme_files = get_scheme_files(&custom_schemes_path, &[], true)?;
-            scheme_files.extend(custom_scheme_files);
-        }
-
-        scheme_files
-    };
-
-    let current_scheme_container = scheme_files.iter().find_map(|scheme_file| {
-        let path = scheme_file.get_path();
-        let file_stem = path
-            .file_stem()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap_or_default();
-
-        if current_scheme_slug.ends_with(file_stem) {
-            if let Ok(scheme) = scheme_file.get_scheme() {
-                let scheme_slug = scheme.get_scheme_slug();
-                let system = scheme.get_scheme_system();
-                let tinty_slug = format!("{system}-{scheme_slug}");
-
-                if tinty_slug == current_scheme_slug {
-                    return Some(scheme);
-                }
-            }
-        }
-
-        None
-    });
+    let current_scheme_container = scheme_files
+        .get(&current_scheme_slug)
+        .and_then(|scheme_file| scheme_file.get_scheme().ok());
 
     if let Some(current_scheme_container) = current_scheme_container {
         match property_name.trim() {
