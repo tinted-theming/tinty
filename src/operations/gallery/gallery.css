@@ -444,6 +444,18 @@ h1 {
     0 0 10px 4px color-mix(in oklab, var(--preview-bg) 60%, transparent);
 }
 
+/* Palette-mode pills only. The default pill styling above (color-mix blend +
+   layered diffuse halo) depends on a solid scheme-bg behind the card and
+   thrashes Safari's paint pipeline when applied over the rainbow palette
+   grid. Swap in a flat translucent-dark pill that reads on any backdrop and
+   needs no color-mix or box-shadow to render. */
+.preview-button:has(.code-preview.is-palette) .meta-pill,
+.sheet-main:has(.code-preview.is-palette) .meta-pill {
+  background: rgb(0 0 0 / 60%);
+  color: rgb(255 255 255 / 95%);
+  box-shadow: none;
+}
+
 .meta-pill .icon {
   width: 11px;
   height: 11px;
@@ -459,6 +471,23 @@ h1 {
   background: var(--preview-bg);
   color: var(--preview-fg);
   font: 12.5px/1.6 var(--font-mono);
+}
+
+.code-preview.is-palette {
+  display: grid;
+  padding: 0;
+  overflow: hidden;
+}
+
+.code-preview.is-palette > code {
+  display: grid;
+  width: 100%;
+  min-height: inherit;
+}
+
+.palette-cell {
+  display: block;
+  min-width: 0;
 }
 
 .comment {

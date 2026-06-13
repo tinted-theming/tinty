@@ -5,7 +5,15 @@ const state = {
   system: "all",
   appearance: "all",
   pageTheme: "system",
+  // Gallery-card preview language. Can be a code lang or the special
+  // PALETTE_LANGUAGE value. Persisted under LANGUAGE_STORAGE_KEY.
   language: "rust",
+  // Modal code-preview language. Always a code lang — the modal does not
+  // expose a Palette option in its chip toolbar. Persisted under
+  // MODAL_LANGUAGE_STORAGE_KEY. Stays in lockstep with `state.language`
+  // whenever the gallery is on a code lang; diverges (preserves its prior
+  // value) when the gallery flips to palette.
+  modalLanguage: "rust",
   variablesView: "palette",
 };
 let currentSheetId = null;
@@ -13,6 +21,7 @@ let tooltipTimeoutId = null;
 let isFirstRender = true;
 const PAGE_THEME_STORAGE_KEY = "tinty-gallery-page-theme";
 const LANGUAGE_STORAGE_KEY = "tinty-gallery-preview-language";
+const MODAL_LANGUAGE_STORAGE_KEY = "tinty-gallery-modal-language";
 
 const fallbackPalette = {
   base00: "#101418",
@@ -216,33 +225,145 @@ function setPreviewColors(card, scheme) {
   });
 }
 
+const PALETTE_LANGUAGE = "palette";
+const TINTED8_VARIANT_ORDER = { dim: 0, normal: 1, bright: 2 };
+
 function snippetFor(lang) {
   return hasSnippet(lang) ? getSnippet(lang) : getSnippet(FALLBACK_LANGUAGE);
 }
 
-function setPreviewLanguage(language) {
-  document.getElementById("sheet-code").innerHTML = snippetFor(language);
-  document
-    .querySelectorAll("[data-preview-language]")
-    .forEach((candidate) => candidate.classList.toggle("active", candidate.dataset.previewLanguage === language));
+// Per scheme system, return the grid dimensions that pack the palette evenly:
+//   Base16   16 colors  → 8 cols × 2 rows (darks row, accents row)
+//   Base24   24 colors  → 8 cols × 3 rows (adds the bright-ANSI row)
+//   Tinted8  33 colors  → 11 cols × 3 rows (cols = color, rows = variant)
+function paletteGridShape(scheme) {
+  const system = String(scheme.system).toLowerCase();
+  if (system === "tinted8") return { cols: 11, rows: 3 };
+  if (system === "base24") return { cols: 8, rows: 3 };
+  return { cols: 8, rows: 2 };
 }
 
-function setLanguage(lang) {
+// Order palette entries so a row-major grid lays out the natural shape:
+//   Base16/Base24: alphabetical (base00, base01, …) places base0X..base1X
+//                  rows in order.
+//   Tinted8:       sort by (variant, color) so row 1 = all dims, row 2 = all
+//                  normals, row 3 = all brights; each column is one color.
+function paletteEntriesInGridOrder(scheme) {
+  const all = Object.entries(scheme.palette);
+  if (String(scheme.system).toLowerCase() === "tinted8") {
+    return all.sort(([a], [b]) => {
+      const [aColor, aVariant] = a.split("-");
+      const [bColor, bVariant] = b.split("-");
+      const vd = TINTED8_VARIANT_ORDER[aVariant] - TINTED8_VARIANT_ORDER[bVariant];
+      if (vd !== 0) return vd;
+      return aColor.localeCompare(bColor);
+    });
+  }
+  return all.sort(([a], [b]) => a.localeCompare(b));
+}
+
+function palettePreviewHtml(scheme) {
+  return paletteEntriesInGridOrder(scheme)
+    .map(([name, value]) => {
+      const safeName = name.replace(/[<>&"]/g, "");
+      return `<span class="palette-cell" style="background:${value.hex_str}" title="${safeName}: ${value.hex_str}"></span>`;
+    })
+    .join("");
+}
+
+function renderPreviewInto(codePre, scheme, lang) {
+  const codeEl = codePre.querySelector("code");
+  const isPalette = lang === PALETTE_LANGUAGE && scheme;
+  codePre.classList.toggle("is-palette", isPalette);
+  if (isPalette) {
+    codeEl.innerHTML = palettePreviewHtml(scheme);
+    const { cols, rows } = paletteGridShape(scheme);
+    codeEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    codeEl.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  } else {
+    codeEl.style.gridTemplateColumns = "";
+    codeEl.style.gridTemplateRows = "";
+    codeEl.innerHTML = snippetFor(lang);
+  }
+}
+
+function schemeForCard(card) {
+  return SCHEMES.find((s) => s.id === card.dataset.schemeId);
+}
+
+// Render the modal's code preview using whatever state.modalLanguage is.
+// Also refresh the chip toolbar's active state. No state writes.
+function renderModalPreview() {
+  const sheetPre = document.getElementById("sheet-code").closest(".code-preview");
+  const scheme = SCHEMES.find((s) => s.id === currentSheetId);
+  renderPreviewInto(sheetPre, scheme, state.modalLanguage);
+  document
+    .querySelectorAll("[data-preview-language]")
+    .forEach((candidate) =>
+      candidate.classList.toggle("active", candidate.dataset.previewLanguage === state.modalLanguage),
+    );
+}
+
+// Internal: set the gallery-card language and re-render. Does NOT sync to
+// the modal. Public callers should go through onGalleryLanguageChange.
+function applyGalleryLanguage(lang) {
   state.language = lang;
   window.localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
   document.getElementById("language-select").value = lang;
-  setPreviewLanguage(lang);
-  const html = snippetFor(lang);
-  document.querySelectorAll(".card .code-preview code").forEach((el) => {
-    el.innerHTML = html;
+  document.querySelectorAll(".card").forEach((card) => {
+    const scheme = schemeForCard(card);
+    if (!scheme) return;
+    renderPreviewInto(card.querySelector(".code-preview"), scheme, lang);
   });
 }
 
+// Internal: set the modal-preview language and re-render. Does NOT sync to
+// the gallery. Public callers should go through onModalLanguageChange.
+function applyModalLanguage(lang) {
+  state.modalLanguage = lang;
+  window.localStorage.setItem(MODAL_LANGUAGE_STORAGE_KEY, lang);
+  renderModalPreview();
+}
+
+// Event handler for the gallery's language <select>.
+// Always drives gallery; drives modal too when the new lang is a code lang
+// (so the two stay synced). When the user picks palette, the modal's
+// last-selected code lang is preserved.
+function onGalleryLanguageChange(lang) {
+  applyGalleryLanguage(lang);
+  if (lang !== PALETTE_LANGUAGE) {
+    applyModalLanguage(lang);
+  }
+}
+
+// Event handler for the modal's chip toolbar.
+// Always drives the modal. Also drives the gallery — UNLESS the gallery is
+// in palette mode, in which case the modal goes independent and the
+// gallery stays on palette.
+function onModalLanguageChange(lang) {
+  applyModalLanguage(lang);
+  if (state.language !== PALETTE_LANGUAGE) {
+    applyGalleryLanguage(lang);
+  }
+}
+
+function isValidGalleryLanguage(lang) {
+  return lang === PALETTE_LANGUAGE || hasSnippet(lang);
+}
+
 function loadSavedLanguage() {
-  const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (saved && hasSnippet(saved)) {
-    state.language = saved;
-    document.getElementById("language-select").value = saved;
+  const savedGallery = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (savedGallery && isValidGalleryLanguage(savedGallery)) {
+    state.language = savedGallery;
+    document.getElementById("language-select").value = savedGallery;
+  }
+  const savedModal = window.localStorage.getItem(MODAL_LANGUAGE_STORAGE_KEY);
+  if (savedModal && hasSnippet(savedModal)) {
+    state.modalLanguage = savedModal;
+  } else if (state.language !== PALETTE_LANGUAGE) {
+    // First-time load (or invalid saved): seed modal from gallery's code
+    // language so they start in sync.
+    state.modalLanguage = state.language;
   }
 }
 
@@ -424,7 +545,7 @@ function applySheetState(scheme, updateHash) {
       ? "true"
       : "false";
   setPreviewColors(sheet, scheme);
-  setPreviewLanguage(state.language);
+  renderModalPreview();
   document.getElementById("sheet-title").textContent = scheme.name;
   document.querySelector("#sheet-system span").textContent = scheme.system;
   document.querySelector("#sheet-appearance span").textContent = appearance(scheme);
@@ -562,7 +683,7 @@ function createCard(scheme) {
   card.querySelector(".card-title p").textContent = scheme.id;
   card.querySelector(".scheme-system span").textContent = scheme.system;
   card.querySelector(".scheme-appearance span").textContent = appearance(scheme);
-  card.querySelector(".code-preview code").innerHTML = snippetFor(state.language);
+  renderPreviewInto(card.querySelector(".code-preview"), scheme, state.language);
 
   card.querySelector(".preview-button").addEventListener("click", () => {
     openSheet(scheme, true, card);
@@ -674,12 +795,12 @@ document.querySelectorAll("[data-page-theme]").forEach((button) => {
 });
 
 document.getElementById("language-select").addEventListener("change", (event) => {
-  setLanguage(event.target.value);
+  onGalleryLanguageChange(event.target.value);
 });
 
 document.querySelectorAll("[data-preview-language]").forEach((button) => {
   button.addEventListener("click", () => {
-    setLanguage(button.dataset.previewLanguage);
+    onModalLanguageChange(button.dataset.previewLanguage);
   });
 });
 
