@@ -19,6 +19,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [rofi](#rofi)
 - [dunst](#dunst)
 - [delta](#delta)
+- [Claude Code](#claude-code)
 
 ## Shell completions
 
@@ -575,6 +576,66 @@ Configure [delta] as your Git pager and/or difftool under the name `delta`, like
 [include]
 	path = ~/.local/share/tinted-theming/tinty/tinted-delta-configs-file.gitconfig
 ```
+
+## Claude Code
+
+[tinted-claude-code] themes [Claude Code] (Anthropic's CLI coding tool)
+from any [Base16], [Base24] or [Tinted8] scheme. Requires Claude Code
+`v2.1.118` or later.
+
+The hook writes the theme to a single fixed file
+(`~/.claude/themes/tinty.json`). You select it once in Claude Code with
+`/theme` (it is stored as `custom:tinty`); after that Claude Code
+hot-reloads `~/.claude/themes/` on every `tinty apply`, so no
+re-selection or restart is needed. The picker labels the entry by the
+theme's `name` (which tracks the current scheme), but the selection is
+keyed off the filename slug `tinty`, so it stays selected across scheme
+changes.
+
+[tinted-claude-code] ships two flavors. Pick one.
+
+### Executable JS (recommended)
+
+This flavor produces true shimmer and themed diffs (computed via color
+math) and picks dark/light by measured perceptual lightness. It requires
+[Node] to be installed.
+
+Add the following to `~/.config/tinted-theming/tinty/config.toml`:
+
+```toml
+[[items]]
+name = "tinted-claude-code"
+path = "https://github.com/tinted-theming/tinted-claude-code"
+themes-dir = "scripts"
+theme-file-extension = ".js"
+supported-systems = ["base16", "base24", "tinted8"]
+hook = "mkdir -p \"$HOME/.claude/themes\" && node \"$TINTY_THEME_FILE_PATH\" > \"$HOME/.claude/themes/tinty.json\""
+```
+
+### Static JSON (no Node)
+
+This flavor uses plain theme files and does not require Node.
+
+Add the following to `~/.config/tinted-theming/tinty/config.toml`:
+
+```toml
+[[items]]
+name = "tinted-claude-code"
+path = "https://github.com/tinted-theming/tinted-claude-code"
+themes-dir = "themes"
+theme-file-extension = ".json"
+supported-systems = ["base16", "base24", "tinted8"]
+hook = "mkdir -p \"$HOME/.claude/themes\" && cp -f \"$TINTY_THEME_FILE_PATH\" \"$HOME/.claude/themes/tinty.json\""
+```
+
+### One-time setup
+
+After adding the `[[items]]` entry and running `tinty apply` at least
+once, open Claude Code, run `/theme` and select the `tinted-claude-code`
+entry (stored as `custom:tinty`). Subsequent `tinty apply` calls
+hot-reload the theme automatically, so this selection only needs to be
+done once.
+
 [Usage section]: https://github.com/tinted-theming/tinty?tab=readme-ov-file#usage
 [README.md]: https://github.com/tinted-theming/tinty/blob/main/README.md
 [bat]: https://github.com/sharkdp/bat
@@ -590,3 +651,9 @@ Configure [delta] as your Git pager and/or difftool under the name `delta`, like
 [base16-qutebrowser]: https://github.com/tinted-theming/base16-qutebrowser
 [delta]: https://github.com/dandavison/delta
 [jq]: https://jqlang.github.io/jq/
+[tinted-claude-code]: https://github.com/tinted-theming/tinted-claude-code
+[Claude Code]: https://www.anthropic.com/claude-code
+[Node]: https://nodejs.org
+[Base16]: https://github.com/tinted-theming/home/blob/main/styling.md
+[Base24]: https://github.com/tinted-theming/base24/blob/master/styling.md
+[Tinted8]: https://github.com/tinted-theming/home/blob/main/specs/tinted8/styling.md
