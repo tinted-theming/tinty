@@ -7,6 +7,7 @@
       url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
+    # Only used for dev shell
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
@@ -26,11 +27,7 @@
         };
 
         lib.mkTinty = {pkgs}:
-          pkgs.callPackage ./nix/package.nix {
-            inherit
-              pkgs
-              ;
-          };
+          pkgs.callPackage ./nix/package.nix {};
       };
 
       perSystem = {
