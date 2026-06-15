@@ -21,7 +21,7 @@ serde_yaml = "0.9.34"
 serde_json = { version = "1.0.149", features = ["preserve_order"] }
 shell-words = "1.1.1"
 strip-ansi-escapes = "0.2.1"
-tinted-builder-rust = "0.20.1"
+tinted-builder-rust = "0.21.0"
 tinted-builder = "0.16.0"
 tinted-scheme-extractor = "0.13.0"
 toml = "0.8.23"

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fix `tinty build` failing with `E111: Invalid scheme file extension` when the
+  schemes repo contains non-scheme files (e.g. `LICENSE`, `README.md`) at its
+  root.
+
 ## [0.33.0] - 2026-06-09
 
 ### Changed
