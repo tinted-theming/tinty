@@ -4311,8 +4311,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&
 
 #### Used by
 
-- [tinty 0.33.0](https://github.com/tinted-theming/tinty)
-- [tinted-builder-rust 0.20.1](https://github.com/tinted-theming/tinted-builder-rust)
+- [tinty 0.34.0](https://github.com/tinted-theming/tinty)
+- [tinted-builder-rust 0.21.0](https://github.com/tinted-theming/tinted-builder-rust)
 - [tinted-builder 0.16.0](https://github.com/tinted-theming/tinted-builder-rust)
 
 ```
