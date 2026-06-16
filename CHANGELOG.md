@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- Add a "Palette" language option to the `tinty gallery` view. Selecting it
+  swaps each card's syntax-highlighted code snippet for a colored grid that
+  visualizes the scheme's palette, laid out to match its system (Base16,
+  Base24, or Tinted8). Hovering a cell reveals its palette key and hex value.
+
 ### Fixed
 
 - Fix `tinty build` failing with `E111: Invalid scheme file extension` when the
