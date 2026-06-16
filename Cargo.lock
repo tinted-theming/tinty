@@ -1757,9 +1757,9 @@ dependencies = [
 
 [[package]]
 name = "tinted-builder-rust"
-version = "0.20.1"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67b3b05445e671a8206c48089ca3eb7231b4bd8752946e03a3d5a29b314b0d7d"
+checksum = "35f07b56ec9e04193a6711a34cb3c2e5e73dbbf60e0faf0d72c3e16a7956dcd5"
 dependencies = [
  "anyhow",
  "clap",

@@ -8,7 +8,7 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use tinted_builder::SchemeSystem;
-use tinted_builder_rust::operation_build::utils::SchemeFile;
+use tinted_builder_rust::operation_build::utils::{get_scheme_files_by_name, SchemeFile};
 
 /// Ensures that a directory exists, creating it if it does not.
 pub fn ensure_directory_exists<P: AsRef<Path>>(dir_path: P) -> Result<()> {
@@ -78,36 +78,10 @@ pub fn get_all_scheme_file_paths(
         ));
     }
 
-    let mut scheme_files: HashMap<String, SchemeFile> = HashMap::new();
-
-    // For each supported scheme system, add schemes to vec
-    let scheme_systems =
-        scheme_systems_option.map_or_else(|| SchemeSystem::variants().to_vec(), |s| vec![s]);
-    for scheme_system in scheme_systems {
-        let scheme_system_dir = schemes_path.join(scheme_system.as_str());
-        if !scheme_system_dir.exists() {
-            continue;
-        }
-
-        let files = fs::read_dir(&scheme_system_dir)?
-            // Discard failed read results
-            .filter_map(Result::ok)
-            .collect::<Vec<_>>()
-            .into_iter()
-            .filter_map(|file| {
-                // Convert batch of files into a HashMap<String, SchemeFile>, where
-                // the key is the scheme's <system>-<slug> e.g. base16-github
-                // Map each entry into a (<String, SchemaFile) tuple that
-                // we can collect() into this batch's HashMap<String, SchemaFile>
-                let name = format!("{scheme_system}-{}", file.path().file_stem()?.to_str()?);
-                let scheme_file = SchemeFile::new(file.path().as_path()).ok()?;
-
-                Some((name, scheme_file))
-            })
-            .collect::<HashMap<String, SchemeFile>>();
-        scheme_files.extend(files);
-    }
-    Ok(scheme_files)
+    // Delegate the actual `<system>/`-subdir walk to tinted-builder-rust so the
+    // scheme-discovery logic lives in one place. This keeps tinty's friendly
+    // "run install" error while sharing the keyed (`<system>-<slug>`) lookup.
+    get_scheme_files_by_name(schemes_path, scheme_systems_option)
 }
 
 pub fn replace_tilde_slash_with_home(path_str: &str) -> Result<PathBuf> {
