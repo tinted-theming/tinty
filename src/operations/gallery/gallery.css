@@ -527,13 +527,24 @@ h1 {
   color: var(--preview-type);
 }
 
-.builtin {
-  color: var(--preview-builtin);
+.include {
+  color: var(--preview-include);
 }
 
-.parameter {
-  color: var(--preview-parameter);
-  font-style: italic;
+.namespace {
+  color: var(--preview-namespace);
+}
+
+.macro {
+  color: var(--preview-macro);
+}
+
+.escape {
+  color: var(--preview-escape);
+}
+
+.punctuation {
+  color: var(--preview-punctuation);
 }
 
 .ansi-black { color: var(--preview-ansi-black); }

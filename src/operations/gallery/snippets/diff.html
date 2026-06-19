@@ -1,5 +1,5 @@
 <span class="comment">diff --git a/apply.rs b/apply.rs</span>
-<span class="diff-del">--- a/apply.rs</span><span class="diff-add">+++ b/apply.rs</span><span class="function">@@ -3,7 +3,9 @@ use tinty;</span>
+<span class="diff-del">--- a/apply.rs</span><span class="diff-add">+++ b/apply.rs</span><span class="type">@@ -3,7 +3,9 @@ use tinty;</span>
 
 <span class="diff-del">-fn apply(name: &amp;str) {
 -    let colors = 8;</span><span class="diff-add">+fn apply(name: &amp;str) -&gt; Theme {
