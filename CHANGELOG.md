@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add favorites to the `tinty gallery` view. Click the heart on any scheme
+  card (or in its detail modal) to star it; favorites are remembered locally
+  in the browser with no server or account. A "Favorites" pill on the filter
+  bar narrows the grid to your starred schemes, and the favorites view offers
+  a ready-to-paste `config.toml` cycle-ring snippet plus a short guide for
+  rotating through them with `tinty cycle`.
+
 ## [0.34.0] - 2026-06-16
 
 ### Added

@@ -84,6 +84,60 @@
             Both
           </button>
         </div>
+        <button type="button" id="favorites-filter" class="favorites-pill" aria-pressed="false" aria-label="Show favorites only">
+          <svg class="icon icon-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.49 4.04 3 5.5l7 7Z"></path></svg>
+          Favorites
+          <span id="favorites-count" class="favorites-count" hidden></span>
+        </button>
+      </section>
+
+      <section id="favorites-ring" class="favorites-ring" hidden aria-label="Cycle your favorites">
+        <div class="favorites-ring-head">
+          <div class="section-label">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
+            Cycle your favorites
+          </div>
+          <p class="favorites-ring-intro">
+            Tinty can rotate through a saved ring of schemes. Drop this into your
+            <code class="inline-code">config.toml</code> to make your favorites the default
+            ring, then step through them with a single command.
+          </p>
+        </div>
+        <div class="favorites-ring-body">
+          <div class="ring-snippet">
+            <div class="ring-snippet-head">
+              <span class="ring-snippet-label">config.toml</span>
+              <button type="button" id="copy-ring" class="icon-button" aria-label="Copy ring config" data-tooltip="Copy config">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            </div>
+            <pre class="ring-code"><code id="favorites-ring-toml"></code></pre>
+          </div>
+          <ol class="ring-guide">
+            <li class="ring-guide-step">
+              <span class="ring-step-num">1</span>
+              <div>Add this to your <code class="inline-code">config.toml</code> — it saves the ring and makes it your default.</div>
+            </li>
+            <li class="ring-guide-step">
+              <span class="ring-step-num">2</span>
+              <div>
+                Apply the next favorite — no ring flag needed:
+                <div class="command-row ring-command">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m8 9 3 3-3 3"></path><path d="M13 15h3"></path></svg>
+                  <code id="ring-cycle-command">tinty cycle</code>
+                  <button type="button" id="copy-ring-command" class="icon-button" aria-label="Copy cycle command" data-tooltip="Copy command">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg>
+                  </button>
+                </div>
+                Bind it to a key in your shell to flip themes on demand.
+              </div>
+            </li>
+            <li class="ring-guide-step">
+              <span class="ring-step-num">3</span>
+              <div>Keep more than one ring? Run <code class="inline-code">tinty cycle --help</code> to cycle a specific one with <code class="inline-code">--ring &lt;name&gt;</code>.</div>
+            </li>
+          </ol>
+        </div>
       </section>
 
       <section id="gallery" class="gallery" aria-label="Scheme previews"></section>
@@ -110,6 +164,10 @@
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18"></path></svg>
                 <span></span>
               </span>
+              <button type="button" id="sheet-favorite" class="favorite-button" aria-pressed="false" aria-label="Add to favorites">
+                <svg class="icon icon-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.49 4.04 3 5.5l7 7Z"></path></svg>
+                <span class="favorite-label">Favorite</span>
+              </button>
             </div>
           </div>
         </div>
@@ -165,6 +223,9 @@
 
   <template id="card-template">
     <article class="card">
+      <button type="button" class="favorite-toggle" aria-pressed="false" aria-label="Add to favorites">
+        <svg class="icon icon-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.49 4.04 3 5.5l7 7Z"></path></svg>
+      </button>
       <button type="button" class="preview-button">
         <div class="card-header">
           <span class="scheme-system meta-pill">
