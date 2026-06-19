@@ -15,13 +15,24 @@ const state = {
   // value) when the gallery flips to palette.
   modalLanguage: "rust",
   variablesView: "palette",
+  // When true, only schemes the user has favorited (browser-local) are shown.
+  favoritesOnly: false,
 };
 let currentSheetId = null;
 let tooltipTimeoutId = null;
+let toastTimeoutId = null;
 let isFirstRender = true;
 const PAGE_THEME_STORAGE_KEY = "tinty-gallery-page-theme";
 const LANGUAGE_STORAGE_KEY = "tinty-gallery-preview-language";
 const MODAL_LANGUAGE_STORAGE_KEY = "tinty-gallery-modal-language";
+// Favorites live purely in the browser — no server, no account. The set of
+// favorited scheme ids is persisted as a JSON array under this key.
+const FAVORITES_STORAGE_KEY = "tinty-gallery-favorites";
+// One-shot flag so the "turn your favorites into a cycle ring" nudge is shown
+// once (when the user first has enough favorites to make a ring), not nagged.
+const RING_TIP_STORAGE_KEY = "tinty-gallery-ring-tip-seen";
+// Name used for the generated cycle ring in the config.toml snippet.
+const FAVORITES_RING_NAME = "favorites";
 
 const fallbackPalette = {
   base00: "#101418",
@@ -37,6 +48,186 @@ const fallbackPalette = {
 };
 
 SCHEMES.sort((a, b) => a.id.localeCompare(b.id));
+
+const KNOWN_SCHEME_IDS = new Set(SCHEMES.map((scheme) => scheme.id));
+
+// Read the persisted favorites, dropping anything malformed or pointing at a
+// scheme that no longer exists in this build. Insertion order is preserved so
+// the generated cycle ring keeps the order the user favorited things in.
+function loadFavorites() {
+  try {
+    const raw = window.localStorage.getItem(FAVORITES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id) => typeof id === "string" && KNOWN_SCHEME_IDS.has(id));
+  } catch (_error) {
+    return [];
+  }
+}
+
+const favorites = new Set(loadFavorites());
+
+function saveFavorites() {
+  window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([...favorites]));
+}
+
+function isFavorite(id) {
+  return favorites.has(id);
+}
+
+// Sync a favorite control (card heart, modal button) to a pressed/unpressed
+// state. Handles the optional text label used by the modal button.
+function updateFavoriteButton(button, on) {
+  if (!button) return;
+  button.setAttribute("aria-pressed", on ? "true" : "false");
+  button.setAttribute("aria-label", on ? "Remove from favorites" : "Add to favorites");
+  const label = button.querySelector(".favorite-label");
+  if (label) {
+    label.textContent = on ? "Favorited" : "Favorite";
+  }
+}
+
+function showToast(message, duration = 2600) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.hidden = false;
+  // Force a reflow so the entrance transition plays from the closed state.
+  void toast.offsetWidth;
+  toast.classList.add("open");
+  if (toastTimeoutId) {
+    window.clearTimeout(toastTimeoutId);
+  }
+  toastTimeoutId = window.setTimeout(() => {
+    toast.classList.remove("open");
+  }, duration);
+}
+
+// Tasteful disclosure of the cycle-ring feature: a plain confirmation most of
+// the time, and — exactly once, the first time the user has enough favorites
+// to form a ring — a one-line nudge toward the Favorites view where the full
+// config snippet and guide live.
+function announceFavorite(on) {
+  if (!on) {
+    showToast("Removed from favorites");
+    return;
+  }
+  const tipSeen = window.localStorage.getItem(RING_TIP_STORAGE_KEY) === "1";
+  if (!tipSeen && favorites.size >= 2) {
+    window.localStorage.setItem(RING_TIP_STORAGE_KEY, "1");
+    showToast("Saved ♥  Tip: cycle your favorites as a Tinty ring — open Favorites for the config", 5200);
+  } else {
+    showToast("Added to favorites ♥");
+  }
+}
+
+function toggleFavorite(id) {
+  const nowFavorite = !favorites.has(id);
+  if (nowFavorite) {
+    favorites.add(id);
+  } else {
+    favorites.delete(id);
+  }
+  saveFavorites();
+
+  const card = document.querySelector(`.card[data-scheme-id="${CSS.escape(id)}"]`);
+  if (card) {
+    updateFavoriteButton(card.querySelector(".favorite-toggle"), nowFavorite);
+    card.classList.toggle("is-favorite", nowFavorite);
+  }
+  if (currentSheetId === id) {
+    updateFavoriteButton(document.getElementById("sheet-favorite"), nowFavorite);
+  }
+
+  updateFavoritesCount();
+  announceFavorite(nowFavorite);
+
+  // In the Favorites view the visible set and the ring snippet both change as
+  // schemes come and go; re-render through the layout transition so the grid
+  // re-flows smoothly.
+  if (state.favoritesOnly) {
+    transitionLayout(() => {
+      renderFavoritesRing();
+      render();
+    });
+  } else {
+    renderFavoritesRing();
+  }
+}
+
+function updateFavoritesCount() {
+  const badge = document.getElementById("favorites-count");
+  const count = favorites.size;
+  badge.textContent = String(count);
+  badge.hidden = count === 0;
+}
+
+// Build the `[[rings]]` block for config.toml from the current favorites.
+// Scheme ids are slug-safe ([a-z0-9-]) so no escaping is needed, and one
+// scheme per line keeps a long ring readable when pasted into a config.
+function favoritesRingToml() {
+  const schemes = [...favorites].map((id) => `  "${id}",`).join("\n");
+  // Set the ring as the default cycle ring so a bare `tinty cycle` rotates
+  // through it. The top-level key must precede the [[rings]] table in TOML.
+  return `default-cycle-ring = "${FAVORITES_RING_NAME}"\n\n[[rings]]\nname = "${FAVORITES_RING_NAME}"\nschemes = [\n${schemes}\n]`;
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Syntax-highlighted version of the TOML above. Reuses the gallery's role
+// classes (.function/.string/.keyword read the --preview-* custom properties)
+// so the block is colored by whatever scheme is applied to the code element.
+function favoritesRingHtml() {
+  const str = (value) => `<span class="string">"${escapeHtml(value)}"</span>`;
+  const key = (name) => `<span class="function">${name}</span>`;
+  const lines = [
+    `${key("default-cycle-ring")} = ${str(FAVORITES_RING_NAME)}`,
+    "",
+    `<span class="keyword">[[rings]]</span>`,
+    `${key("name")} = ${str(FAVORITES_RING_NAME)}`,
+    `${key("schemes")} = [`,
+    ...[...favorites].map((id) => `  ${str(id)},`),
+    "]",
+  ];
+  return lines.join("\n");
+}
+
+// Pick the GitHub base16 scheme that matches the page's light/dark appearance,
+// so the config snippet always reads like a real editor regardless of theme.
+function ringSyntaxScheme() {
+  const id = effectivePageTheme() === "dark" ? "base16-github-dark" : "base16-github";
+  return SCHEMES.find((scheme) => scheme.id === id) || null;
+}
+
+// The ring callout only appears in the Favorites view and only when there is
+// at least one favorite — discoverable when relevant, invisible otherwise.
+function renderFavoritesRing() {
+  const section = document.getElementById("favorites-ring");
+  const show = state.favoritesOnly && favorites.size > 0;
+  section.hidden = !show;
+  if (!show) return;
+
+  const codeEl = document.getElementById("favorites-ring-toml");
+  const pre = codeEl.closest(".ring-code");
+  const scheme = ringSyntaxScheme();
+  if (scheme) {
+    // Theme the block with the GitHub palette and highlight the TOML.
+    setPreviewColors(pre, scheme);
+    pre.classList.add("is-themed");
+    codeEl.innerHTML = favoritesRingHtml();
+  } else {
+    // Fall back to plain, page-themed text if GitHub schemes are absent.
+    pre.classList.remove("is-themed");
+    codeEl.textContent = favoritesRingToml();
+  }
+
+  // The copy buttons always carry plain text, never the highlighted markup.
+  document.getElementById("copy-ring").dataset.command = favoritesRingToml();
+  const cycleCommand = document.getElementById("ring-cycle-command").textContent;
+  document.getElementById("copy-ring-command").dataset.command = cycleCommand;
+}
 
 function getSnippet(lang) {
   const template = document.getElementById(`snippet-${lang}`);
@@ -208,6 +399,10 @@ function searchableText(scheme) {
 }
 
 function matchesFilters(scheme) {
+  if (state.favoritesOnly && !favorites.has(scheme.id)) {
+    return false;
+  }
+
   if (state.system !== "all" && String(scheme.system).toLowerCase() !== state.system) {
     return false;
   }
@@ -547,6 +742,7 @@ function applySheetState(scheme, updateHash) {
   setPreviewColors(sheet, scheme);
   renderModalPreview();
   document.getElementById("sheet-title").textContent = scheme.name;
+  updateFavoriteButton(document.getElementById("sheet-favorite"), favorites.has(scheme.id));
   document.querySelector("#sheet-system span").textContent = scheme.system;
   document.querySelector("#sheet-appearance span").textContent = appearance(scheme);
   document.getElementById("sheet-command").textContent = command;
@@ -685,6 +881,15 @@ function createCard(scheme) {
   card.querySelector(".scheme-appearance span").textContent = appearance(scheme);
   renderPreviewInto(card.querySelector(".code-preview"), scheme, state.language);
 
+  const favToggle = card.querySelector(".favorite-toggle");
+  const favorited = favorites.has(scheme.id);
+  card.classList.toggle("is-favorite", favorited);
+  updateFavoriteButton(favToggle, favorited);
+  favToggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleFavorite(scheme.id);
+  });
+
   card.querySelector(".preview-button").addEventListener("click", () => {
     openSheet(scheme, true, card);
   });
@@ -734,6 +939,10 @@ function render() {
   }
 
   empty.hidden = visible.length !== 0;
+  empty.textContent =
+    state.favoritesOnly && favorites.size === 0
+      ? "No favorites yet — tap the ♥ on any scheme to save it."
+      : "No matching schemes.";
   count.textContent = `${visible.length} of ${SCHEMES.length} schemes`;
 
   isFirstRender = false;
@@ -760,6 +969,8 @@ function setPageTheme(theme) {
     .forEach((candidate) => candidate.classList.toggle("active", candidate.dataset.pageTheme === theme));
 
   render();
+  // Re-pick the GitHub light/dark variant for the ring snippet.
+  renderFavoritesRing();
 }
 
 function loadSavedPageTheme() {
@@ -810,18 +1021,39 @@ document.querySelectorAll("[data-variables-view]").forEach((button) => {
   });
 });
 
-document.getElementById("sheet-close").addEventListener("click", closeSheet);
-document.getElementById("sheet-backdrop").addEventListener("click", closeSheet);
-document.getElementById("copy-command").addEventListener("click", async (event) => {
-  const button = event.currentTarget;
+document.getElementById("favorites-filter").addEventListener("click", () => {
+  transitionLayout(() => {
+    state.favoritesOnly = !state.favoritesOnly;
+    document
+      .getElementById("favorites-filter")
+      .setAttribute("aria-pressed", state.favoritesOnly ? "true" : "false");
+    renderFavoritesRing();
+    render();
+  });
+});
 
-  try {
-    await navigator.clipboard.writeText(button.dataset.command);
-    showButtonTooltip(button, "Copied");
-  } catch (_error) {
-    showButtonTooltip(button, "Copy failed");
+document.getElementById("sheet-favorite").addEventListener("click", () => {
+  if (currentSheetId) {
+    toggleFavorite(currentSheetId);
   }
 });
+
+document.getElementById("sheet-close").addEventListener("click", closeSheet);
+document.getElementById("sheet-backdrop").addEventListener("click", closeSheet);
+
+function attachCopyButton(id) {
+  document.getElementById(id).addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    try {
+      await navigator.clipboard.writeText(button.dataset.command || "");
+      showButtonTooltip(button, "Copied");
+    } catch (_error) {
+      showButtonTooltip(button, "Copy failed");
+    }
+  });
+}
+
+["copy-command", "copy-ring", "copy-ring-command"].forEach(attachCopyButton);
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
@@ -832,5 +1064,6 @@ document.addEventListener("keydown", (event) => {
 window.addEventListener("hashchange", syncSheetToHash);
 
 loadSavedLanguage();
+updateFavoritesCount();
 loadSavedPageTheme();
 syncSheetToHash();
