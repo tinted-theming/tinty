@@ -2,22 +2,22 @@
   assets = {
     "x86_64-linux" = {
       name = "tinty-x86_64-unknown-linux-gnu.tar.gz";
-      hash = "sha256-ebyglFAGVT5iRp82OktQ7MMoTIJjwaIj8A+V4zXuCQc=";
+      hash = "sha256-MRmF5LJcRjwJ2wDn/YyeUKBV4H12THwJFrfn4xrdD8M=";
     };
     "aarch64-linux" = {
       name = "tinty-aarch64-unknown-linux-gnu.tar.gz";
-      hash = "sha256-zq0ngY5mBFmjneJsxV1GkHOoDV4LX+UldvPpG/ngrOY=";
+      hash = "sha256-5NpY5xO1oh9ZQzqVAJLZaWf/4mlibNiAwy3XHGJpkKo=";
     };
     "x86_64-darwin" = {
       name = "tinty-x86_64-apple-darwin.tar.gz";
-      hash = "sha256-dxoFMMeHfa7bIEVErjIjmLHYbwmAcBWqVwYy+DafFak=";
+      hash = "sha256-58967a+prTf4WQUlzmcpVZ+16NAByAIa8XUWdl8lLN4=";
     };
     "aarch64-darwin" = {
       name = "tinty-aarch64-apple-darwin.tar.gz";
-      hash = "sha256-1D6hfynzOZqIto+zTJ7ggWulF74+vKOFUOR+Rr33L/Y=";
+      hash = "sha256-vKUpuJDuuFtLosh6Ss8IkfGp37qe1n88QuK3RhpTepI=";
     };
   };
-  version = "0.34.0";
+  version = "0.34.1";
   asset = assets.${pkgs.system};
   isLinux = pkgs.stdenv.isLinux;
 in
