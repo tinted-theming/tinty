@@ -75,7 +75,16 @@ pub fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("gallery")
-                .about("Opens an interactive gallery for available schemes")
+                .about("Serves an interactive gallery that applies schemes on this machine")
+                .long_about(
+                    "Serves an interactive gallery for available schemes.\n\n\
+                     By default this starts a local web server: applying a scheme in the \
+                     browser applies it on this machine, and the currently applied scheme \
+                     is highlighted and kept in sync.\n\n\
+                     Use --static to instead open a self-contained static gallery (no server, \
+                     no system changes), or --output <DIRECTORY> to write that static site to \
+                     a directory for hosting elsewhere.",
+                )
                 .arg(
                     Arg::new("custom-schemes")
                         .help("Build gallery from available custom schemes")
@@ -83,17 +92,36 @@ pub fn build_cli() -> Command {
                         .action(ArgAction::SetTrue),
                 )
                 .arg(
-                    Arg::new("dump")
-                        .long("dump")
-                        .help("Write a static gallery site to the provided directory")
+                    Arg::new("static")
+                        .long("static")
+                        .help("Open a static gallery with no server and no system changes")
+                        .conflicts_with("output")
+                        .conflicts_with("port")
+                        .action(ArgAction::SetTrue),
+                )
+                .arg(
+                    Arg::new("output")
+                        .long("output")
+                        .visible_alias("dump")
+                        .help("Write the static gallery site to the provided directory")
                         .value_name("DIRECTORY")
                         .value_hint(ValueHint::DirPath)
+                        .conflicts_with("static")
+                        .conflicts_with("port")
+                        .action(ArgAction::Set),
+                )
+                .arg(
+                    Arg::new("port")
+                        .long("port")
+                        .help("Port for the live gallery server (default: an available port)")
+                        .value_name("PORT")
+                        .value_parser(clap::value_parser!(u16))
                         .action(ArgAction::Set),
                 )
                 .arg(
                     Arg::new("no-open")
                         .long("no-open")
-                        .help("Do not open the generated gallery in a browser")
+                        .help("Do not open the gallery in a browser")
                         .action(ArgAction::SetTrue),
                 ),
         )

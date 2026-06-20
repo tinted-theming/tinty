@@ -110,12 +110,65 @@ fn test_cli_gallery_subcommand_embeds_complete_scheme_json() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn test_cli_gallery_subcommand_static_output_is_not_live() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let (_, data_path, mut command_vec, _temp_dir) = setup(
+        "test_cli_gallery_subcommand_static_output_is_not_live",
+        "gallery --custom-schemes --no-open",
+        false,
+    )?;
+    let custom_base16_path = data_path.join("custom-schemes/base16");
+    let dump_path = data_path.join("gallery-static");
+
+    fs::create_dir_all(&custom_base16_path)?;
+    fs::copy(
+        "fixtures/tinty-city-dark.yaml",
+        custom_base16_path.join("tinty-city-dark.yaml"),
+    )?;
+
+    // `--output` is the static build; it must never enable the live server.
+    command_vec.push("--output".to_string());
+    command_vec.push(dump_path.display().to_string());
+
+    // ---
+    // Act
+    // ---
+    let (_, stderr) = utils::run_command(&command_vec)?;
+
+    // ------
+    // Assert
+    // ------
+    ensure!(
+        stderr.is_empty(),
+        "Expected stderr to be empty, got: {stderr}"
+    );
+
+    let gallery_js = fs::read_to_string(dump_path.join("assets/gallery.js"))?;
+    ensure!(
+        gallery_js.contains("const TINTY_SERVE = false;"),
+        "Expected the static build to disable live-server mode"
+    );
+    ensure!(
+        !gallery_js.contains("__TINTY_SERVE__"),
+        "Expected the live-server placeholder to be substituted"
+    );
+
+    Ok(())
+}
+
 fn embedded_schemes_json(gallery_js: &str) -> Result<&str> {
+    // The scheme data is assigned on the first line as compact (single-line)
+    // JSON, so the terminating `;\n` only appears once: at the end of the
+    // assignment. Splitting there isolates the JSON regardless of whatever
+    // declarations follow it.
     let value = gallery_js
         .strip_prefix("const SCHEMES = ")
         .context("gallery.js did not start with embedded scheme data")?;
     let (json, _) = value
-        .split_once(";\n\nconst state =")
+        .split_once(";\n")
         .context("gallery.js did not contain the expected scheme data delimiter")?;
 
     Ok(json)

@@ -1,10 +1,21 @@
 const SCHEMES = __TINTY_SCHEMES__;
 
+// Live-server mode flag. Substituted by the Rust generator: `true` only for
+// `tinty gallery` (the live server), `false` for the static site produced by
+// `--static` / `--output`. When false the gallery makes no network requests
+// and the apply controls stay hidden, so the static build is fully portable.
+const TINTY_SERVE = __TINTY_SERVE__;
+const CURRENT_POLL_INTERVAL = 2000;
+
 const state = {
   search: "",
   system: "all",
   appearance: "all",
   pageTheme: "system",
+  // Live-server only: id of the scheme currently applied on this machine, or
+  // null. Tracked so the matching card can be highlighted and the modal's
+  // Apply button can reflect the applied state. Always null in static builds.
+  appliedSchemeId: null,
   // Gallery-card preview language. Can be a code lang or the special
   // PALETTE_LANGUAGE value. Persisted under LANGUAGE_STORAGE_KEY.
   language: "rust",
@@ -596,6 +607,8 @@ function applySheetState(scheme, updateHash) {
     setSheetHash(scheme.id);
   }
 
+  updateApplyButton();
+
   backdrop.hidden = false;
   document.body.classList.add("sheet-open");
   // Force layout flush so the opacity transition plays from the pre-`.open` state
@@ -693,6 +706,10 @@ function createCard(scheme) {
     card.classList.add("is-sheet-source");
   }
 
+  if (TINTY_SERVE && scheme.id === state.appliedSchemeId) {
+    card.classList.add("is-applied");
+  }
+
   return card;
 }
 
@@ -708,12 +725,26 @@ function syncSheetToHash() {
   }
 }
 
+// Live-server only: pin the currently applied scheme to the front of the
+// already-filtered list. Filters/search still decide membership, so a scheme
+// that doesn't match isn't force-shown; it just leads when it is present.
+function pinAppliedFirst(visible) {
+  if (!TINTY_SERVE || !state.appliedSchemeId) return visible;
+
+  const applied = [];
+  const rest = [];
+  visible.forEach((scheme) => {
+    (scheme.id === state.appliedSchemeId ? applied : rest).push(scheme);
+  });
+  return applied.concat(rest);
+}
+
 function render() {
   const gallery = document.getElementById("gallery");
   const empty = document.getElementById("empty");
   const count = document.getElementById("result-count");
   const fragment = document.createDocumentFragment();
-  const visible = SCHEMES.filter(matchesFilters);
+  const visible = pinAppliedFirst(SCHEMES.filter(matchesFilters));
 
   gallery.classList.toggle("is-first-render", isFirstRender);
   gallery.textContent = "";
@@ -831,6 +862,128 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("hashchange", syncSheetToHash);
 
+// ---------------------------------------------------------------------------
+// Live-server mode (TINTY_SERVE only)
+//
+// Everything below is inert in the static build: it is gated on TINTY_SERVE
+// and only wired up by setupLiveServer(), which no-ops when the flag is false.
+// ---------------------------------------------------------------------------
+
+let toastTimeoutId = null;
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.hidden = false;
+  // Force layout flush so the slide-up transition plays from the hidden state.
+  void toast.offsetWidth;
+  toast.classList.add("open");
+
+  if (toastTimeoutId) {
+    window.clearTimeout(toastTimeoutId);
+  }
+  toastTimeoutId = window.setTimeout(() => {
+    toast.classList.remove("open");
+  }, 2400);
+}
+
+// Reflect the applied scheme onto the card grid and modal. Short-circuits when
+// the value is unchanged; createCard re-applies the marker on re-render.
+function setAppliedScheme(id) {
+  const normalized = id || null;
+  if (state.appliedSchemeId === normalized) {
+    updateApplyButton();
+    return;
+  }
+
+  state.appliedSchemeId = normalized;
+  // Re-render so the applied scheme is re-pinned to the front and the
+  // highlight markers refresh. Animate the reorder when the modal is closed;
+  // re-render plainly while it's open so the view transition doesn't snapshot
+  // the sheet.
+  if (currentSheetId) {
+    render();
+  } else {
+    transitionLayout(render);
+  }
+
+  updateApplyButton();
+}
+
+function updateApplyButton() {
+  const button = document.getElementById("apply-scheme");
+  if (!button || !TINTY_SERVE) return;
+
+  const isApplied = Boolean(currentSheetId) && currentSheetId === state.appliedSchemeId;
+  button.classList.toggle("is-applied", isApplied);
+  const label = button.querySelector(".apply-label");
+  if (label) {
+    label.textContent = isApplied ? "Applied" : "Apply";
+  }
+}
+
+async function fetchCurrentScheme() {
+  if (!TINTY_SERVE) return;
+
+  try {
+    const response = await fetch("api/current", { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json();
+    setAppliedScheme(data.scheme || null);
+  } catch (_error) {
+    // Server unreachable (e.g. stopped); leave the last known state in place.
+  }
+}
+
+async function applyCurrentSheet() {
+  const button = document.getElementById("apply-scheme");
+  if (!button || !currentSheetId) return;
+
+  const schemeId = currentSheetId;
+  button.disabled = true;
+  button.classList.add("is-applying");
+
+  try {
+    const response = await fetch("api/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scheme: schemeId }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (response.ok && data.ok) {
+      setAppliedScheme(schemeId);
+      showToast(`Applied ${schemeId}`);
+    } else {
+      showToast(data.error ? `Apply failed: ${data.error}` : "Apply failed");
+    }
+  } catch (_error) {
+    showToast("Apply failed: server unreachable");
+  } finally {
+    button.disabled = false;
+    button.classList.remove("is-applying");
+    updateApplyButton();
+  }
+}
+
+function setupLiveServer() {
+  if (!TINTY_SERVE) return;
+
+  document.body.classList.add("tinty-serve");
+
+  const button = document.getElementById("apply-scheme");
+  if (button) {
+    button.hidden = false;
+    button.addEventListener("click", applyCurrentSheet);
+  }
+
+  fetchCurrentScheme();
+  window.setInterval(fetchCurrentScheme, CURRENT_POLL_INTERVAL);
+}
+
 loadSavedLanguage();
 loadSavedPageTheme();
 syncSheetToHash();
+setupLiveServer();

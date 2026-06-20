@@ -123,9 +123,21 @@ fn main() -> Result<()> {
             let should_open = !sub_matches
                 .get_one::<bool>("no-open")
                 .is_some_and(ToOwned::to_owned);
-            let dump_dir = sub_matches.get_one::<String>("dump").map(String::as_str);
+            let output_dir = sub_matches.get_one::<String>("output").map(String::as_str);
+            let is_static = sub_matches
+                .get_one::<bool>("static")
+                .is_some_and(ToOwned::to_owned);
+            let port = sub_matches.get_one::<u16>("port").copied();
 
-            operations::gallery::gallery(&data_path, is_custom, dump_dir, should_open)?;
+            // The default mode is the live server. `--static` and `--output`
+            // both select the self-contained static gallery (no server, no
+            // system changes); `--output` additionally writes it to a chosen
+            // directory rather than the default artifacts location.
+            if is_static || output_dir.is_some() {
+                operations::gallery::gallery(&data_path, is_custom, output_dir, should_open)?;
+            } else {
+                operations::gallery::serve(&config_path, &data_path, is_custom, port, should_open)?;
+            }
         }
         Some(("info", sub_matches)) => {
             let is_custom = sub_matches

@@ -392,6 +392,30 @@ h1 {
   visibility: hidden;
 }
 
+/* Live-server only: the scheme currently applied on this machine. */
+.card.is-applied {
+  border-color: color-mix(in oklab, var(--accent) 60%, var(--border));
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-md);
+}
+
+.card.is-applied::after {
+  content: "Applied";
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+  pointer-events: none;
+}
+
 .card:hover,
 .card:focus-within {
   border-color: color-mix(in oklab, var(--accent) 35%, var(--border));
@@ -1109,6 +1133,73 @@ body.sheet-open .sheet-backdrop {
 .toast.open {
   transform: translate(-50%, 0);
   opacity: 1;
+}
+
+/* Live-server only: Apply button in the modal footer. Hidden in static builds. */
+.apply-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: #fff;
+  font: 600 13px/1 var(--font-sans);
+  letter-spacing: .01em;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background 160ms ease, transform 120ms ease, box-shadow 160ms ease;
+}
+
+/* Lay the Apply button and the command row side-by-side, vertically aligned.
+   In the static build the Apply button is hidden, leaving just the command
+   row — identical to the original single-control footer. */
+.footer-actions {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-actions .apply-button {
+  flex: 0 0 auto;
+}
+
+.footer-actions .command-row {
+  flex: 1 1 auto;
+  width: auto;
+  margin: 0;
+}
+
+.apply-button .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.apply-button:hover {
+  background: color-mix(in oklab, var(--accent) 88%, #000);
+  box-shadow: var(--shadow-md);
+}
+
+.apply-button:active {
+  transform: scale(.98);
+}
+
+.apply-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.apply-button[disabled] {
+  opacity: .65;
+  cursor: progress;
+}
+
+.apply-button.is-applied {
+  background: color-mix(in oklab, var(--accent) 16%, var(--surface));
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 45%, transparent);
 }
 
 @media (max-width: 960px) {

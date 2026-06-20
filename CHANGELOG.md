@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Make `tinty gallery` serve a live, interactive gallery by default: it
+  starts a local web server (on `127.0.0.1` only) that highlights the
+  currently applied scheme, keeps it in sync as it changes, and applies a
+  scheme on your system when you click **Apply** in a scheme's detail view.
+  Use `--port <PORT>` to pick a fixed port.
+
+### Changed
+
+- **BREAKING**: `tinty gallery` now starts the live server by default. Pass
+  `--static` to open the previous self-contained static gallery (no server,
+  no system changes). Rename `--dump <DIRECTORY>` to `--output <DIRECTORY>`
+  for writing the static site to a directory; `--dump` remains as an alias.
+
 ## [0.34.0] - 2026-06-16
 
 ### Added
