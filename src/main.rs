@@ -123,18 +123,18 @@ fn main() -> Result<()> {
             let should_open = !sub_matches
                 .get_one::<bool>("no-open")
                 .is_some_and(ToOwned::to_owned);
-            let output_dir = sub_matches.get_one::<String>("output").map(String::as_str);
-            let is_static = sub_matches
-                .get_one::<bool>("static")
+            let dump_dir = sub_matches.get_one::<String>("dump").map(String::as_str);
+            let is_no_rc = sub_matches
+                .get_one::<bool>("no-rc")
                 .is_some_and(ToOwned::to_owned);
             let port = sub_matches.get_one::<u16>("port").copied();
 
-            // The default mode is the live server. `--static` and `--output`
-            // both select the self-contained static gallery (no server, no
-            // system changes); `--output` additionally writes it to a chosen
-            // directory rather than the default artifacts location.
-            if is_static || output_dir.is_some() {
-                operations::gallery::gallery(&data_path, is_custom, output_dir, should_open)?;
+            // Remote-control mode (the live server) is the default. It is
+            // disabled when a static build is requested: `--dump <DIR>` writes
+            // the static site to a directory, and `--no-rc` opens the static
+            // gallery locally (no server, no system changes).
+            if dump_dir.is_some() || is_no_rc {
+                operations::gallery::gallery(&data_path, is_custom, dump_dir, should_open)?;
             } else {
                 operations::gallery::serve(&config_path, &data_path, is_custom, port, should_open)?;
             }

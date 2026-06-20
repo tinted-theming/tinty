@@ -111,12 +111,12 @@ fn test_cli_gallery_subcommand_embeds_complete_scheme_json() -> Result<()> {
 }
 
 #[test]
-fn test_cli_gallery_subcommand_static_output_is_not_live() -> Result<()> {
+fn test_cli_gallery_subcommand_dump_is_not_live() -> Result<()> {
     // -------
     // Arrange
     // -------
     let (_, data_path, mut command_vec, _temp_dir) = setup(
-        "test_cli_gallery_subcommand_static_output_is_not_live",
+        "test_cli_gallery_subcommand_dump_is_not_live",
         "gallery --custom-schemes --no-open",
         false,
     )?;
@@ -129,8 +129,9 @@ fn test_cli_gallery_subcommand_static_output_is_not_live() -> Result<()> {
         custom_base16_path.join("tinty-city-dark.yaml"),
     )?;
 
-    // `--output` is the static build; it must never enable the live server.
-    command_vec.push("--output".to_string());
+    // `--dump` is the static build; it must never enable the remote-control
+    // server.
+    command_vec.push("--dump".to_string());
     command_vec.push(dump_path.display().to_string());
 
     // ---

@@ -75,15 +75,16 @@ pub fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("gallery")
-                .about("Serves an interactive gallery that applies schemes on this machine")
+                .about("Serves an interactive gallery that can apply schemes on this machine")
                 .long_about(
                     "Serves an interactive gallery for available schemes.\n\n\
-                     By default this starts a local web server: applying a scheme in the \
-                     browser applies it on this machine, and the currently applied scheme \
-                     is highlighted and kept in sync.\n\n\
-                     Use --static to instead open a self-contained static gallery (no server, \
-                     no system changes), or --output <DIRECTORY> to write that static site to \
-                     a directory for hosting elsewhere.",
+                     By default the gallery runs in remote-control mode (--rc): a local web \
+                     server (on 127.0.0.1 only) that applies a scheme on this machine when you \
+                     click Apply, and highlights the currently applied scheme, kept in sync as \
+                     it changes.\n\n\
+                     Pass --no-rc to open a static gallery instead (no server, no system \
+                     changes), or --dump <DIRECTORY> to write that static site to a directory \
+                     for hosting elsewhere.",
                 )
                 .arg(
                     Arg::new("custom-schemes")
@@ -92,30 +93,35 @@ pub fn build_cli() -> Command {
                         .action(ArgAction::SetTrue),
                 )
                 .arg(
-                    Arg::new("static")
-                        .long("static")
-                        .help("Open a static gallery with no server and no system changes")
-                        .conflicts_with("output")
-                        .conflicts_with("port")
+                    Arg::new("rc")
+                        .long("rc")
+                        .help("Enable remote-control mode: serve a live gallery that applies schemes on this machine (default)")
+                        .conflicts_with("no-rc")
+                        .conflicts_with("dump")
                         .action(ArgAction::SetTrue),
                 )
                 .arg(
-                    Arg::new("output")
-                        .long("output")
-                        .visible_alias("dump")
-                        .help("Write the static gallery site to the provided directory")
+                    Arg::new("no-rc")
+                        .long("no-rc")
+                        .help("Disable remote-control mode: open a static gallery with no server and no system changes")
+                        .action(ArgAction::SetTrue),
+                )
+                .arg(
+                    Arg::new("dump")
+                        .long("dump")
+                        .help("Write a static gallery site to the provided directory")
                         .value_name("DIRECTORY")
                         .value_hint(ValueHint::DirPath)
-                        .conflicts_with("static")
                         .conflicts_with("port")
                         .action(ArgAction::Set),
                 )
                 .arg(
                     Arg::new("port")
                         .long("port")
-                        .help("Port for the live gallery server (default: an available port)")
+                        .help("Port for the remote-control server (default: an available port)")
                         .value_name("PORT")
                         .value_parser(clap::value_parser!(u16))
+                        .conflicts_with("no-rc")
                         .action(ArgAction::Set),
                 )
                 .arg(

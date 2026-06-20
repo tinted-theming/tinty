@@ -4,7 +4,7 @@
 
 ### Added
 
-- Make `tinty gallery` serve a live, interactive gallery by default: it
+- Add a remote-control mode to `tinty gallery` (`--rc`, on by default): it
   starts a local web server (on `127.0.0.1` only) that highlights and pins
   the currently applied scheme, keeps it in sync as it changes, and applies
   a scheme on your system when you click **Apply** in a scheme's detail
@@ -14,10 +14,10 @@
 
 ### Changed
 
-- **BREAKING**: `tinty gallery` now starts the live server by default. Pass
-  `--static` to open the previous self-contained static gallery (no server,
-  no system changes). Rename `--dump <DIRECTORY>` to `--output <DIRECTORY>`
-  for writing the static site to a directory; `--dump` remains as an alias.
+- **BREAKING**: `tinty gallery` now runs in remote-control mode by default,
+  serving the live server instead of opening a static page. Pass `--no-rc`
+  to open the previous self-contained static gallery (no server, no system
+  changes). `--dump <DIRECTORY>` still writes the static site to a directory.
 
 ## [0.34.0] - 2026-06-16
 

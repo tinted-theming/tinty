@@ -50,10 +50,10 @@ fn rendered_index_html() -> String {
 }
 
 /// Builds the final `gallery.js`, substituting the scheme data, the
-/// live-server flag, and (for the live server) the `user@hostname` label of
+/// remote-control flag, and (for the live server) the `user@hostname` label of
 /// the machine it runs on. `serve_host` is `None` for the static site (the
-/// `--static` / `--output` builds), which keeps that build fully static with
-/// no server interactions; it is `Some` only for the in-memory live build.
+/// `--no-rc` / `--dump` builds), which keeps that build fully static with no
+/// server interactions; it is `Some` only for the in-memory live build.
 fn rendered_gallery_js(schemes_json: &str, serve_host: Option<&str>) -> String {
     // Encode the host label as a JSON string literal (or `null`) so it lands
     // in the JS as a safe, properly-escaped value.

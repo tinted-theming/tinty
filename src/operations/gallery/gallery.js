@@ -1,9 +1,9 @@
 const SCHEMES = __TINTY_SCHEMES__;
 
-// Live-server mode flag. Substituted by the Rust generator: `true` only for
-// `tinty gallery` (the live server), `false` for the static site produced by
-// `--static` / `--output`. When false the gallery makes no network requests
-// and the apply controls stay hidden, so the static build is fully portable.
+// Remote-control mode flag. Substituted by the Rust generator: `true` only for
+// the default `tinty gallery` (the live server), `false` for the static site
+// produced by `--no-rc` / `--dump`. When false the gallery makes no network
+// requests and the apply controls stay hidden, so the static build is portable.
 const TINTY_SERVE = __TINTY_SERVE__;
 // Live-server only: `user@hostname` of the machine running the server, shown
 // in the header so it's clear which system an Apply affects. `null` in static
