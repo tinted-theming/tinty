@@ -204,6 +204,53 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
+/* Live-server only: header badge announcing live mode + the target machine. */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: auto;
+  padding: 4px 11px 4px 9px;
+  border-radius: var(--radius-full);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent) 32%, transparent);
+  color: var(--ink-1);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3fb950;
+  box-shadow: 0 0 0 0 color-mix(in oklab, #3fb950 60%, transparent);
+  animation: live-pulse 2.4s ease-out infinite;
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, #3fb950 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px color-mix(in oklab, #3fb950 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, #3fb950 0%, transparent);
+  }
+}
+
+.live-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.live-host {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
 .icon {
   width: 15px;
   height: 15px;

@@ -5,10 +5,11 @@
 ### Added
 
 - Make `tinty gallery` serve a live, interactive gallery by default: it
-  starts a local web server (on `127.0.0.1` only) that highlights the
-  currently applied scheme, keeps it in sync as it changes, and applies a
-  scheme on your system when you click **Apply** in a scheme's detail view.
-  Use `--port <PORT>` to pick a fixed port.
+  starts a local web server (on `127.0.0.1` only) that highlights and pins
+  the currently applied scheme, keeps it in sync as it changes, and applies
+  a scheme on your system when you click **Apply** in a scheme's detail
+  view. The header shows a "Live" indicator with the `user@hostname` of the
+  machine being changed. Use `--port <PORT>` to pick a fixed port.
 
 ### Changed
 

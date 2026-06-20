@@ -5,6 +5,10 @@ const SCHEMES = __TINTY_SCHEMES__;
 // `--static` / `--output`. When false the gallery makes no network requests
 // and the apply controls stay hidden, so the static build is fully portable.
 const TINTY_SERVE = __TINTY_SERVE__;
+// Live-server only: `user@hostname` of the machine running the server, shown
+// in the header so it's clear which system an Apply affects. `null` in static
+// builds.
+const TINTY_HOST = __TINTY_HOST__;
 const CURRENT_POLL_INTERVAL = 2000;
 
 const state = {
@@ -972,6 +976,18 @@ function setupLiveServer() {
   if (!TINTY_SERVE) return;
 
   document.body.classList.add("tinty-serve");
+
+  const indicator = document.getElementById("live-indicator");
+  if (indicator) {
+    const host = indicator.querySelector(".live-host");
+    if (host && TINTY_HOST) {
+      host.textContent = TINTY_HOST;
+    }
+    if (TINTY_HOST) {
+      indicator.title = `Live — schemes you apply here change ${TINTY_HOST}`;
+    }
+    indicator.hidden = false;
+  }
 
   const button = document.getElementById("apply-scheme");
   if (button) {
