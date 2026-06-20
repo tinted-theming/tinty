@@ -1,9 +1,9 @@
 <span class="comment">;; load and apply a color scheme</span>
-(<span class="keyword">defpackage</span> <span class="string">:tinty</span> (:use :cl))
+(<span class="function">defpackage</span> <span class="punctuation">:</span><span class="string">tinty</span> (<span class="punctuation">:</span><span class="string">use</span> <span class="punctuation">:</span><span class="string">cl</span>))
 
-(<span class="keyword">defun</span> <span class="function">apply-scheme</span> (<span class="parameter">name</span>)
-  (<span class="keyword">let*</span> ((scheme (<span class="function">scheme:load</span> <span class="parameter">name</span>))
-         (theme (<span class="function">scheme:build</span> scheme :base <span class="number">16</span>)))
-    (<span class="function">theme:apply</span> theme)
-    (<span class="builtin">format</span> t <span class="string">"applied: ~a~%"</span>
-      (<span class="function">theme:name</span> theme))))
+(<span class="macro">defun</span> <span class="function">apply-scheme</span> (name)
+  (<span class="function">let*</span> ((scheme (<span class="namespace">scheme</span><span class="punctuation">:</span>load name))
+         (theme (<span class="namespace">scheme</span><span class="punctuation">:</span>build scheme <span class="punctuation">:</span><span class="string">base</span> <span class="number">16</span>)))
+    (<span class="namespace">theme</span><span class="punctuation">:</span>apply theme)
+    (<span class="function">format</span> <span class="number">t</span> <span class="string">"applied:</span> <span class="escape">~a~%</span><span class="string">"</span>
+      (<span class="namespace">theme</span><span class="punctuation">:</span>name theme))))

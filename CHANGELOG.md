@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Rework `tinty gallery` code-snippet syntax highlighting so each token is
+  colored exactly as tinted-nvim renders it in Neovim. Highlighting is now
+  derived from real tree-sitter captures: import keywords and functions use
+  the blue accent, modules/namespaces and macros use red, types use yellow,
+  string escapes use cyan, and punctuation delimiters use the dark accent.
+  Parameters and operators now match the foreground color instead of being
+  tinted, matching tinted-nvim's defaults.
+
 ## [0.34.0] - 2026-06-16
 
 ### Added
