@@ -98,6 +98,24 @@ pub fn build_cli() -> Command {
                 ),
         )
         .subcommand(
+            Command::new("studio")
+                .about("Opens a web-based editor for building and exporting schemes")
+                .arg(
+                    Arg::new("dump")
+                        .long("dump")
+                        .help("Write the static studio site to the provided directory")
+                        .value_name("DIRECTORY")
+                        .value_hint(ValueHint::DirPath)
+                        .action(ArgAction::Set),
+                )
+                .arg(
+                    Arg::new("no-open")
+                        .long("no-open")
+                        .help("Do not open the studio in a browser")
+                        .action(ArgAction::SetTrue),
+                ),
+        )
+        .subcommand(
             Command::new("generate-scheme")
                 .about("Generates a scheme based on an image")
                 .arg(

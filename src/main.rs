@@ -13,6 +13,7 @@ mod operations {
     pub mod init;
     pub mod install;
     pub mod list;
+    pub mod studio;
     pub mod sync;
     pub mod update;
 }
@@ -126,6 +127,14 @@ fn main() -> Result<()> {
             let dump_dir = sub_matches.get_one::<String>("dump").map(String::as_str);
 
             operations::gallery::gallery(&data_path, is_custom, dump_dir, should_open)?;
+        }
+        Some(("studio", sub_matches)) => {
+            let should_open = !sub_matches
+                .get_one::<bool>("no-open")
+                .is_some_and(ToOwned::to_owned);
+            let dump_dir = sub_matches.get_one::<String>("dump").map(String::as_str);
+
+            operations::studio::studio(&data_path, dump_dir, should_open)?;
         }
         Some(("info", sub_matches)) => {
             let is_custom = sub_matches

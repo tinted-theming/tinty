@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add `tinty studio`, a local web-based scheme editor. It opens a self-contained
+  static web app for building a Base16, Base24, or Tinted8 scheme from scratch:
+  each color slot has both a hex and a color-picker input, a live preview renders
+  the scheme using the same code snippets and highlighting tokens as
+  `tinty gallery`, and the result downloads as a valid scheme YAML file. For
+  Tinted8, undefined slots and UI/syntax tokens are derived from the eight base
+  colors per the Tinted8 spec; any derived value can be overridden and the
+  override cleared to fall back to derivation. You can also start from a known
+  scheme (deep-linkable via `#<scheme-id>`), undo/redo edits, and reset back to
+  the starting point. Like `tinty gallery`, it supports `--dump <DIRECTORY>` to
+  write the static site anywhere and `--no-open` to skip opening a browser.
+
 ## [0.34.0] - 2026-06-16
 
 ### Added

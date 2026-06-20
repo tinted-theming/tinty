@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tinted Studio — Scheme Editor</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <script>
+    // Apply the saved page theme before first paint to avoid a flash of the
+    // default theme (and a bare shell behind any startup prompt).
+    (function () {
+      try {
+        var t = localStorage.getItem("tinty-studio-page-theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/studio.css" />
+</head>
+<body>
+  <div class="page-scene">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-logo" src="assets/tinted-theming-logo.png" alt="Tinted Theming" />
+        <div class="brand-text">
+          <h1>Tinted Studio</h1>
+          <p class="brand-tagline">Build &amp; export a color scheme</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="theme-switcher" role="group" aria-label="Page theme">
+          <button class="icon-button" data-page-theme="system" title="Match system theme" aria-label="System theme">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </button>
+          <button class="icon-button" data-page-theme="light" title="Light theme" aria-label="Light theme">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          </button>
+          <button class="icon-button" data-page-theme="dark" title="Dark theme" aria-label="Dark theme">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="studio-layout">
+      <section class="editor-panel" aria-label="Scheme editor">
+        <div class="workspace-tabs" role="tablist" aria-label="Scheme workspaces">
+          <button class="ws-tab" type="button" role="tab" data-flavor="base16">
+            <span class="ws-tab-name">Base16</span>
+            <span class="ws-tab-dot" aria-hidden="true"></span>
+          </button>
+          <button class="ws-tab" type="button" role="tab" data-flavor="base24">
+            <span class="ws-tab-name">Base24</span>
+            <span class="ws-tab-dot" aria-hidden="true"></span>
+          </button>
+          <button class="ws-tab" type="button" role="tab" data-flavor="tinted8">
+            <span class="ws-tab-name">Tinted8</span>
+            <span class="ws-tab-dot" aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <div class="editor-toolbar">
+          <div class="library-picker" id="library-picker" hidden>
+            <label for="library-select">Start from</label>
+            <div class="language-select-wrapper">
+              <select id="library-select">
+                <option value="">Select a scheme…</option>
+              </select>
+            </div>
+          </div>
+          <div class="toolbar-actions">
+            <div class="history-controls" role="group" aria-label="History">
+              <button class="icon-button" id="undo-btn" title="Undo (⌘Z)" aria-label="Undo" disabled>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+              </button>
+              <button class="icon-button" id="redo-btn" title="Redo (⇧⌘Z)" aria-label="Redo" disabled>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>
+              </button>
+            </div>
+            <button class="button button-ghost reset-button" id="reset-btn" title="Restore this scheme to its starting point">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>Reset</span>
+            </button>
+            <button class="button button-ghost reset-button" id="clear-all-btn" title="Clear everything back to a blank scheme">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+              <span>Clear all</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-card properties-card">
+          <div class="plate-head">
+            <h2 class="section-label">Properties</h2>
+            <span class="plate-rule"></span>
+          </div>
+          <div class="properties-grid" id="properties-grid"></div>
+        </div>
+
+        <div class="panel-card slots-card">
+          <div class="slots-header">
+            <h2 class="section-label">Palette</h2>
+            <span class="plate-rule"></span>
+            <p class="slots-hint plate-meta" id="slots-hint"></p>
+          </div>
+          <div class="slot-list" id="palette-slots"></div>
+
+          <div class="advanced-sections" id="advanced-sections" hidden>
+            <details class="advanced-group" id="ui-group">
+              <summary class="advanced-summary">
+                <svg class="icon chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                <span>UI tokens</span>
+                <span class="advanced-count" id="ui-count"></span>
+              </summary>
+              <p class="advanced-note">Every UI token is derived from the palette. Override any value; clear it to fall back to derivation.</p>
+              <div class="slot-list" id="ui-slots"></div>
+            </details>
+            <details class="advanced-group" id="syntax-group">
+              <summary class="advanced-summary">
+                <svg class="icon chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                <span>Syntax tokens</span>
+                <span class="advanced-count" id="syntax-count"></span>
+              </summary>
+              <p class="advanced-note">Every syntax token is derived from the palette. Override any value; clear it to fall back to derivation.</p>
+              <div class="slot-list" id="syntax-slots"></div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <aside class="preview-panel" aria-label="Live preview">
+        <div class="panel-card preview-card">
+          <div class="preview-toolbar">
+            <h2 class="section-label">Preview</h2>
+            <span class="plate-rule"></span>
+            <div class="language-select-wrapper">
+              <select id="language-select" aria-label="Preview language">
+                <option value="rust">Rust</option>
+                <option value="kotlin">Kotlin</option>
+                <option value="lisp">Lisp</option>
+                <option value="elixir">Elixir</option>
+                <option value="haskell">Haskell</option>
+                <option value="diff">Diff</option>
+                <option value="terminal">Terminal</option>
+                <option value="palette">Palette</option>
+              </select>
+            </div>
+          </div>
+          <pre class="code-preview"><code></code></pre>
+        </div>
+
+        <div class="panel-card export-card">
+          <div class="export-header">
+            <h2 class="section-label">Export</h2>
+            <span class="plate-rule"></span>
+            <div class="export-actions">
+              <button class="button button-ghost" id="copy-yaml" data-tooltip="Copy YAML">Copy</button>
+              <button class="button button-primary" id="download-yaml">Download YAML</button>
+            </div>
+          </div>
+          <p class="export-status" id="export-status" hidden></p>
+          <pre class="yaml-preview"><code id="yaml-output"></code></pre>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <template id="slot-row-template">
+    <div class="slot-row">
+      <button class="slot-swatch" type="button" aria-label="Pick color">
+        <input class="slot-picker" type="color" />
+      </button>
+      <div class="slot-meta">
+        <span class="slot-key"></span>
+        <span class="slot-desc"></span>
+      </div>
+      <div class="slot-input-group">
+        <button class="slot-clear" type="button" title="Clear override — fall back to derivation">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <input class="slot-hex" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" maxlength="7" />
+      </div>
+    </div>
+  </template>
+
+  <!--SNIPPETS-->
+  <script src="assets/studio.js"></script>
+</body>
+</html>

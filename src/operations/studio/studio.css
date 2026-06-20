@@ -1,0 +1,1106 @@
+@font-face {
+  font-family: 'DM Serif Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/dm-serif-display-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'DM Serif Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/dm-serif-display-400-italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/ibm-plex-mono-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('fonts/ibm-plex-mono-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/space-mono-700.woff2') format('woff2');
+}
+
+/* ============================================================
+ * Tinted Studio — "The Drafting Table"
+ * A draftsman's sheet: warm vellum, graphite linework,
+ * crop-mark corner ticks, and mono technical annotations.
+ * The accent is plain ink — black on light, white on dark —
+ * reserved for what you've crafted (overrides, actions).
+ * ========================================================== */
+
+:root {
+  color-scheme: light;
+
+  --sheet: #f4f1e9;
+  --sheet-2: #ece7db;
+  --ink-1: #1b1f25;
+  --ink-2: #393f47;
+  --ink-3: #6a7077;
+  --ink-4: #9a9f9c;
+
+  --rule: color-mix(in oklab, var(--ink-1) 20%, transparent);
+  --rule-soft: color-mix(in oklab, var(--ink-1) 12%, transparent);
+  --tick: color-mix(in oklab, var(--ink-1) 55%, transparent);
+  --grid-minor: color-mix(in oklab, var(--ink-1) 4.5%, transparent);
+  --grid-major: color-mix(in oklab, var(--ink-1) 8%, transparent);
+
+  --accent: #14171b;
+  --accent-ink: #f6f8fa;
+  --accent-soft: color-mix(in oklab, var(--accent) 14%, transparent);
+  --accent-line: color-mix(in oklab, var(--accent) 55%, transparent);
+  --accent-ring: color-mix(in oklab, var(--accent) 40%, transparent);
+
+  --invalid: #c0392b;
+  --ws-dot: #0f857a; /* teal — workspace "edited" indicator */
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "DM Serif Display", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-wordmark: "Space Mono", "IBM Plex Mono", ui-monospace, monospace;
+
+  --grid-size: 23px;
+  --grid-major-size: 115px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--ink-1);
+  font: 14.5px/1.55 var(--font-sans);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--sheet);
+}
+
+/* ---------- Topbar (title block) ---------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px clamp(16px, 4vw, 40px);
+  background: color-mix(in oklab, var(--sheet) 86%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+
+.brand-text h1 {
+  margin: 0;
+  font: 700 17px/1 var(--font-wordmark);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.brand-tagline {
+  margin: 3px 0 0;
+  font: 500 10.5px/1 var(--font-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ---------- Chips / segmented controls ---------- */
+
+.theme-switcher {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--rule);
+  background: color-mix(in oklab, var(--ink-1) 2.5%, transparent);
+}
+
+.theme-switcher .icon-button + .icon-button {
+  border-left: 1px solid var(--rule);
+}
+
+/* ---------- Workspace tabs (one independent scheme per tab) ---------- */
+
+.workspace-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 26px;
+}
+
+.ws-tab {
+  position: relative;
+  margin-bottom: -1px; /* sit on the baseline rule */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-3);
+  font: 500 11.5px/1 var(--font-mono);
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.ws-tab:hover {
+  color: var(--ink-1);
+  background: color-mix(in oklab, var(--ink-1) 4%, transparent);
+}
+
+/* The active tab is outlined and opens into the sheet below (its bottom edge
+   erases the baseline rule), so it reads as the document you're editing. */
+.ws-tab.active {
+  color: var(--ink-1);
+  background: transparent;
+  border-color: var(--rule);
+  border-bottom-color: var(--sheet);
+}
+
+.ws-tab:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: -2px;
+}
+
+.ws-tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ws-dot);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ws-dot) 22%, transparent);
+  visibility: hidden;
+}
+
+.ws-tab.is-edited .ws-tab-dot {
+  visibility: visible;
+}
+
+.chip {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 9px 15px;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.chip:hover {
+  color: var(--ink-1);
+  background: color-mix(in oklab, var(--ink-1) 5%, transparent);
+}
+
+.chip.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.icon-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 33px;
+  height: 31px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.icon-button:hover {
+  color: var(--ink-1);
+  background: color-mix(in oklab, var(--ink-1) 5%, transparent);
+}
+
+.icon-button.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.chip:focus-visible,
+.icon-button:focus-visible,
+.button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: -1px;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+/* ---------- Layout ---------- */
+
+/* Full-height app shell: the page itself doesn't scroll on desktop — each
+   column scrolls independently, so the Preview stays pinned while you scroll
+   the (long) palette/token list on the left. */
+.page-scene {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.studio-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: clamp(22px, 3.5vw, 48px);
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px);
+  overflow: hidden;
+}
+
+.editor-panel,
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: clip; /* keep crop-mark pseudo-elements from forcing a sideways scroll */
+  scrollbar-gutter: stable;
+  padding: 26px 8px 80px;
+}
+
+/* ---------- Plates (open drawing regions, no fill) ---------- */
+
+.panel-card {
+  position: relative;
+  padding: 0;
+}
+
+/* Section header: tick · LABEL ·········· rule ·········· [meta] */
+.plate-head,
+.slots-header,
+.preview-toolbar,
+.export-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.section-label {
+  margin: 0;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.section-label::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: var(--ink-2);
+  flex: none;
+}
+
+.plate-rule {
+  flex: 1;
+  height: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.plate-meta {
+  flex: none;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: .04em;
+  color: var(--ink-4);
+}
+
+/* ---------- Editor toolbar ---------- */
+
+.editor-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.library-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  flex: 1;
+}
+
+.library-picker[hidden] {
+  display: none;
+}
+
+.library-picker label,
+.field label {
+  font: 500 10px/1 var(--font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.library-picker .language-select-wrapper {
+  max-width: 360px;
+}
+
+#library-select {
+  appearance: none;
+  width: 100%;
+  font: 500 13px/1.4 var(--font-mono);
+  color: var(--ink-1);
+  background: transparent;
+  border: 1px solid var(--rule);
+  padding: 9px 32px 9px 11px;
+  cursor: pointer;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.history-controls {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--rule);
+}
+
+/* Let the history buttons stretch to the Reset button's height. */
+.history-controls .icon-button {
+  height: auto;
+}
+
+.history-controls .icon-button + .icon-button {
+  border-left: 1px solid var(--rule);
+}
+
+.history-controls .icon-button:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.history-controls .icon-button:disabled:hover {
+  color: var(--ink-3);
+  background: transparent;
+}
+
+.reset-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* ---------- Buttons ---------- */
+
+.button {
+  appearance: none;
+  border: 1px solid var(--ink-2);
+  background: transparent;
+  color: var(--ink-1);
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.button-ghost {
+  border-color: var(--rule);
+  color: var(--ink-2);
+}
+
+.button-ghost:hover {
+  border-color: var(--ink-2);
+  color: var(--ink-1);
+  background: color-mix(in oklab, var(--ink-1) 4%, transparent);
+}
+
+.button-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  /* A defined edge so it reads the same height as the bordered ghost button. */
+  border-color: color-mix(in oklab, var(--accent) 78%, black);
+}
+
+.button-primary:hover {
+  background: color-mix(in oklab, var(--accent) 88%, black);
+  border-color: color-mix(in oklab, var(--accent) 70%, black);
+}
+
+/* ---------- Properties ---------- */
+
+.properties-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px 22px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.field.field-wide {
+  grid-column: 1 / -1;
+}
+
+.field input,
+.field select,
+.field textarea {
+  font: 13px/1.4 var(--font-sans);
+  color: var(--ink-1);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: 7px 2px;
+  width: 100%;
+}
+
+.field input:hover,
+.field select:hover {
+  border-bottom-color: var(--ink-3);
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+.field input::placeholder {
+  color: var(--ink-4);
+}
+
+/* The scheme name is the title of the work — signed in the studio's hand. */
+.field-nameplate input {
+  font: 400 24px/1.2 var(--font-display);
+  padding: 2px 2px 6px;
+  border-bottom-width: 1px;
+  border-bottom-color: var(--ink-3);
+}
+
+.slug-caption {
+  margin: 7px 0 0;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: .04em;
+  color: var(--ink-4);
+}
+
+.field-variant {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  width: fit-content;
+}
+
+.field-variant .chip + .chip {
+  border-left: 1px solid var(--rule);
+}
+
+.field-variant .chip {
+  padding: 8px 18px;
+}
+
+/* ---------- Slot rows (drawing schedule / ledger) ---------- */
+
+.slots-hint,
+.plate-meta {
+  margin: 0;
+}
+
+.slot-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.slot-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 7px 4px 7px 9px;
+  border-bottom: 1px solid var(--rule-soft);
+  transition: background 110ms ease;
+}
+
+.slot-row:hover {
+  background: color-mix(in oklab, var(--ink-1) 3%, transparent);
+}
+
+.slot-swatch {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 1px solid var(--rule);
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+}
+
+.slot-row.is-overridden .slot-swatch {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 1px var(--accent-line);
+}
+
+.slot-picker {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.slot-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.slot-key {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: 500 12.5px/1.2 var(--font-mono);
+  color: var(--ink-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slot-desc {
+  font: 11px/1.3 var(--font-sans);
+  color: var(--ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.derived-tag {
+  flex: none;
+  padding: 2px 6px;
+  font: 500 8.5px/1.4 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border: 1px solid var(--rule);
+  color: var(--ink-4);
+}
+
+.slot-row.is-overridden .derived-tag {
+  color: var(--accent);
+  border-color: var(--accent-line);
+}
+
+.slot-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.slot-hex {
+  font: 12.5px/1 var(--font-mono);
+  text-transform: lowercase;
+  width: 94px;
+  text-align: center;
+  color: var(--ink-1);
+  background: transparent;
+  border: 1px solid var(--rule);
+  padding: 8px;
+}
+
+.slot-hex:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.slot-hex.is-invalid {
+  border-color: var(--invalid);
+  color: var(--invalid);
+}
+
+/* Base16/Base24 have no overridable slots, so no clear column at all. */
+.slot-clear {
+  appearance: none;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-4);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+/* Tinted8 reserves the clear column on every row so hex inputs stay aligned,
+   whether the slot is derived or overridden. */
+.reserve-clear .slot-clear {
+  display: inline-flex;
+  visibility: hidden;
+}
+
+.reserve-clear .slot-row.is-overridden .slot-clear {
+  visibility: visible;
+}
+
+.slot-clear:hover {
+  color: var(--accent);
+  border-color: var(--accent-line);
+}
+
+.slot-clear .icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---------- Advanced (UI / Syntax) ---------- */
+
+.advanced-sections {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.advanced-sections[hidden] {
+  display: none;
+}
+
+.advanced-group {
+  border-top: 1px solid var(--rule);
+}
+
+.advanced-summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 2px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+.advanced-summary .chevron {
+  width: 13px;
+  height: 13px;
+  color: var(--ink-3);
+  transition: transform 140ms ease;
+}
+
+.advanced-group[open] > .advanced-summary .chevron {
+  transform: rotate(90deg);
+}
+
+.advanced-count {
+  margin-left: auto;
+  font: 500 10.5px/1 var(--font-mono);
+  letter-spacing: .04em;
+  color: var(--ink-4);
+  text-transform: none;
+}
+
+.advanced-count.has-overrides {
+  color: var(--accent);
+}
+
+.advanced-note {
+  margin: 0 0 8px;
+  font: 11.5px/1.4 var(--font-sans);
+  color: var(--ink-4);
+}
+
+/* ---------- Preview ---------- */
+
+.language-select-wrapper {
+  position: relative;
+  flex: none;
+}
+
+.language-select-wrapper::after {
+  content: '';
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.6px solid var(--ink-3);
+  border-bottom: 1.6px solid var(--ink-3);
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+}
+
+#language-select {
+  appearance: none;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--rule);
+  padding: 9px 30px 9px 12px;
+  cursor: pointer;
+}
+
+/* Crop-mark corner ticks for the "drawing" viewports. */
+.code-preview,
+.yaml-preview {
+  position: relative;
+  border: 1px solid var(--rule);
+  background: var(--preview-bg, color-mix(in oklab, var(--ink-1) 2.5%, transparent));
+}
+
+.code-preview::before,
+.yaml-preview::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--tick), var(--tick)) 0 0 / 10px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 0 / 1px 10px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 0 / 10px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 0 / 1px 10px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 100% / 10px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 100% / 1px 10px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 100% / 10px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 100% / 1px 10px no-repeat;
+}
+
+.code-preview {
+  min-height: 300px;
+  margin: 0;
+  padding: 18px;
+  overflow: auto;
+  color: var(--preview-fg, var(--ink-1));
+  font: 12.5px/1.62 var(--font-mono);
+  white-space: pre;
+  tab-size: 2;
+}
+
+.code-preview.is-palette {
+  display: grid;
+  padding: 0;
+  overflow: hidden;
+  min-height: 230px;
+}
+
+.code-preview.is-palette > code {
+  display: grid;
+  width: 100%;
+  min-height: inherit;
+}
+
+.palette-cell {
+  display: block;
+  min-width: 0;
+}
+
+.comment { color: var(--preview-comment); font-style: italic; }
+.keyword { color: var(--preview-keyword); }
+.function { color: var(--preview-function); }
+.string { color: var(--preview-string); }
+.number { color: var(--preview-number); }
+.type { color: var(--preview-type); }
+.builtin { color: var(--preview-builtin); }
+.parameter { color: var(--preview-parameter); font-style: italic; }
+
+.diff-add {
+  display: block;
+  color: var(--preview-added);
+  background: color-mix(in oklab, var(--preview-added) 14%, transparent);
+}
+
+.diff-del {
+  display: block;
+  color: var(--preview-deleted);
+  background: color-mix(in oklab, var(--preview-deleted) 14%, transparent);
+}
+
+.ansi-black { color: var(--preview-ansi-black); }
+.ansi-red { color: var(--preview-ansi-red); }
+.ansi-green { color: var(--preview-ansi-green); }
+.ansi-yellow { color: var(--preview-ansi-yellow); }
+.ansi-blue { color: var(--preview-ansi-blue); }
+.ansi-magenta { color: var(--preview-ansi-magenta); }
+.ansi-cyan { color: var(--preview-ansi-cyan); }
+.ansi-white { color: var(--preview-ansi-white); }
+.ansi-bright-black { color: var(--preview-ansi-bright-black); }
+.ansi-bright-red { color: var(--preview-ansi-bright-red); }
+.ansi-bright-green { color: var(--preview-ansi-bright-green); }
+.ansi-bright-yellow { color: var(--preview-ansi-bright-yellow); }
+.ansi-bright-blue { color: var(--preview-ansi-bright-blue); }
+.ansi-bright-magenta { color: var(--preview-ansi-bright-magenta); }
+.ansi-bright-white { color: var(--preview-ansi-bright-white); font-weight: 500; }
+
+/* ---------- Export ---------- */
+
+.export-actions {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.yaml-preview {
+  margin: 0;
+  padding: 15px 16px;
+  color: var(--ink-2);
+  font: 12px/1.65 var(--font-mono);
+  /* Grow to fit the whole document — no inner scrollbar. */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.export-status {
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: 500 10.5px/1.4 var(--font-mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--invalid);
+}
+
+.export-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: none;
+  background: var(--invalid);
+}
+
+.export-status[hidden] {
+  display: none;
+}
+
+.button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+.button:disabled:hover {
+  background: transparent;
+  color: var(--ink-2);
+  border-color: var(--rule);
+}
+
+.button-primary:disabled:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: color-mix(in oklab, var(--accent) 78%, black);
+}
+
+.field input.is-invalid {
+  border-bottom-color: var(--invalid);
+}
+
+.field-nameplate input.is-invalid {
+  border-bottom-color: var(--invalid);
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 30px;
+  transform: translate(-50%, 16px);
+  z-index: 50;
+  padding: 11px 18px;
+  border: 1px solid var(--ink-1);
+  background: var(--sheet);
+  color: var(--ink-1);
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--ink-1) 18%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 170ms ease, transform 170ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.toast.open {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- Dark mode: a true blueprint ---------- */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --sheet: #0c1219;
+    --sheet-2: #121b24;
+    --ink-1: #dde6ec;
+    --ink-2: #aebcc7;
+    --ink-3: #7c8c98;
+    --ink-4: #51606c;
+    --rule: color-mix(in oklab, #8fc7da 24%, transparent);
+    --rule-soft: color-mix(in oklab, #8fc7da 13%, transparent);
+    --tick: color-mix(in oklab, #8fc7da 55%, transparent);
+    --grid-minor: color-mix(in oklab, #6fb8d6 7%, transparent);
+    --grid-major: color-mix(in oklab, #6fb8d6 12%, transparent);
+    --accent: #f1f5f8;
+    --accent-ink: #0c1219;
+    --accent-soft: color-mix(in oklab, var(--accent) 22%, transparent);
+    --accent-line: color-mix(in oklab, var(--accent) 60%, transparent);
+    --accent-ring: color-mix(in oklab, var(--accent) 45%, transparent);
+    --invalid: #e0685c;
+    --ws-dot: #2bb5a6;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sheet: #0c1219;
+  --sheet-2: #121b24;
+  --ink-1: #dde6ec;
+  --ink-2: #aebcc7;
+  --ink-3: #7c8c98;
+  --ink-4: #51606c;
+  --rule: color-mix(in oklab, #8fc7da 24%, transparent);
+  --rule-soft: color-mix(in oklab, #8fc7da 13%, transparent);
+  --tick: color-mix(in oklab, #8fc7da 55%, transparent);
+  --grid-minor: color-mix(in oklab, #6fb8d6 7%, transparent);
+  --grid-major: color-mix(in oklab, #6fb8d6 12%, transparent);
+  --accent: #f1f5f8;
+  --accent-ink: #0c1219;
+  --accent-soft: color-mix(in oklab, var(--accent) 22%, transparent);
+  --accent-line: color-mix(in oklab, var(--accent) 60%, transparent);
+  --accent-ring: color-mix(in oklab, var(--accent) 45%, transparent);
+  --invalid: #e0685c;
+  --ws-dot: #2bb5a6;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 920px) {
+  /* Stacked single column — fall back to normal whole-page scrolling. */
+  .page-scene {
+    display: block;
+    height: auto;
+  }
+  .studio-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    height: auto;
+    overflow: visible;
+    padding: 26px clamp(16px, 4vw, 40px) 90px;
+  }
+  .editor-panel,
+  .preview-panel {
+    overflow: visible;
+    min-height: 0;
+    padding: 0;
+    scrollbar-gutter: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .topbar-actions {
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}
