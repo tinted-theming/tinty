@@ -9,7 +9,8 @@
   the currently applied scheme, keeps it in sync as it changes, and applies
   a scheme on your system when you click **Apply** in a scheme's detail
   view. The header shows a "Live" indicator with the `user@hostname` of the
-  machine being changed. Use `--port <PORT>` to pick a fixed port.
+  machine being changed, and a fallback panel prompts you to restart the
+  server if it stops responding. Use `--port <PORT>` to pick a fixed port.
 
 ### Changed
 

@@ -251,6 +251,104 @@ main {
   font-size: 11px;
 }
 
+/* Header badge when the live server has stopped responding. */
+.live-indicator.is-offline {
+  background: color-mix(in oklab, #e5484d 12%, transparent);
+  border-color: color-mix(in oklab, #e5484d 34%, transparent);
+}
+
+.live-indicator.is-offline .live-dot {
+  background: #e5484d;
+  box-shadow: none;
+  animation: none;
+}
+
+/* Fallback panel shown when the live server is unreachable. */
+.offline-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 40;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  max-width: min(680px, calc(100vw - 32px));
+  padding: 12px 14px 12px 16px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, #e5484d 14%, var(--surface));
+  border: 1px solid color-mix(in oklab, #e5484d 42%, transparent);
+  box-shadow: var(--shadow-lg);
+  color: var(--ink-1);
+}
+
+.offline-banner .icon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: #e5484d;
+}
+
+.offline-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.offline-text strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.offline-text span {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.offline-cmd {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--ink-1) 6%, transparent);
+  color: var(--ink-1);
+  font: 12px/1 var(--font-mono);
+}
+
+.offline-retry {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: #fff;
+  font: 600 12px/1 var(--font-sans);
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.offline-retry:hover {
+  background: color-mix(in oklab, var(--accent) 88%, #000);
+}
+
+.offline-retry:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+@media (max-width: 560px) {
+  .offline-banner {
+    flex-wrap: wrap;
+    width: calc(100vw - 24px);
+  }
+
+  .offline-cmd {
+    order: 1;
+  }
+}
+
 .icon {
   width: 15px;
   height: 15px;

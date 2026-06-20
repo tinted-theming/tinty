@@ -8,6 +8,16 @@
   <link rel="stylesheet" href="assets/gallery.css">
 </head>
 <body>
+  <div id="offline-banner" class="offline-banner" role="alert" hidden>
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+    <div class="offline-text">
+      <strong>Gallery server stopped</strong>
+      <span>The live gallery server isn’t responding. Re-run it in your terminal to keep applying schemes.</span>
+    </div>
+    <code class="offline-cmd">tinty gallery</code>
+    <button type="button" id="offline-retry" class="offline-retry">Retry</button>
+  </div>
+
   <div class="page-scene">
     <header class="topbar">
       <div class="brand">

@@ -874,6 +874,9 @@ window.addEventListener("hashchange", syncSheetToHash);
 // ---------------------------------------------------------------------------
 
 let toastTimeoutId = null;
+// Whether the gallery server is currently reachable. Starts true (the page was
+// just served by it); flipped by the poll / apply requests.
+let serverConnected = true;
 
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -891,6 +894,30 @@ function showToast(message) {
   toastTimeoutId = window.setTimeout(() => {
     toast.classList.remove("open");
   }, 2400);
+}
+
+// Toggle the offline fallback UI and the header badge when the server's
+// reachability changes. When the server stops, the page can no longer apply
+// schemes, so we surface a persistent panel prompting a restart; the poll keeps
+// running and clears it automatically once the server is back.
+function setConnected(connected) {
+  if (serverConnected === connected) return;
+  serverConnected = connected;
+
+  const banner = document.getElementById("offline-banner");
+  if (banner) banner.hidden = connected;
+
+  const indicator = document.getElementById("live-indicator");
+  if (indicator) {
+    indicator.classList.toggle("is-offline", !connected);
+    const label = indicator.querySelector(".live-label");
+    if (label) label.textContent = connected ? "Live" : "Offline";
+    if (TINTY_HOST) {
+      indicator.title = connected
+        ? `Live — schemes you apply here change ${TINTY_HOST}`
+        : `Disconnected from the gallery server on ${TINTY_HOST}`;
+    }
+  }
 }
 
 // Reflect the applied scheme onto the card grid and modal. Short-circuits when
@@ -933,11 +960,15 @@ async function fetchCurrentScheme() {
 
   try {
     const response = await fetch("api/current", { cache: "no-store" });
+    // Any HTTP response means the server is reachable.
+    setConnected(true);
     if (!response.ok) return;
     const data = await response.json();
     setAppliedScheme(data.scheme || null);
   } catch (_error) {
-    // Server unreachable (e.g. stopped); leave the last known state in place.
+    // Server unreachable (e.g. stopped): show the offline fallback. The last
+    // known applied state is left in place.
+    setConnected(false);
   }
 }
 
@@ -957,6 +988,7 @@ async function applyCurrentSheet() {
     });
     const data = await response.json().catch(() => ({}));
 
+    setConnected(true);
     if (response.ok && data.ok) {
       setAppliedScheme(schemeId);
       showToast(`Applied ${schemeId}`);
@@ -964,6 +996,7 @@ async function applyCurrentSheet() {
       showToast(data.error ? `Apply failed: ${data.error}` : "Apply failed");
     }
   } catch (_error) {
+    setConnected(false);
     showToast("Apply failed: server unreachable");
   } finally {
     button.disabled = false;
@@ -993,6 +1026,11 @@ function setupLiveServer() {
   if (button) {
     button.hidden = false;
     button.addEventListener("click", applyCurrentSheet);
+  }
+
+  const retry = document.getElementById("offline-retry");
+  if (retry) {
+    retry.addEventListener("click", fetchCurrentScheme);
   }
 
   fetchCurrentScheme();
