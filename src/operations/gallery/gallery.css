@@ -212,9 +212,19 @@ main {
   margin-right: auto;
   padding: 4px 11px 4px 9px;
   border-radius: var(--radius-full);
-  background: color-mix(in oklab, var(--accent) 12%, transparent);
-  border: 1px solid color-mix(in oklab, var(--accent) 32%, transparent);
+  background: color-mix(in oklab, #3fb950 14%, transparent);
+  border: 1px solid color-mix(in oklab, #3fb950 34%, transparent);
   color: var(--ink-1);
+}
+
+/* The `hidden` attribute must win over the display rules above. A bare class
+   selector setting `display` would otherwise override the attribute's
+   `display: none`, leaving these controls visible when they should be off
+   (the offline panel while connected, the live/apply controls in static). */
+.live-indicator[hidden],
+.apply-button[hidden],
+.offline-banner[hidden] {
+  display: none;
 }
 
 .live-dot {
