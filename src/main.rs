@@ -124,8 +124,20 @@ fn main() -> Result<()> {
                 .get_one::<bool>("no-open")
                 .is_some_and(ToOwned::to_owned);
             let dump_dir = sub_matches.get_one::<String>("dump").map(String::as_str);
+            let is_no_rc = sub_matches
+                .get_one::<bool>("no-rc")
+                .is_some_and(ToOwned::to_owned);
+            let port = sub_matches.get_one::<u16>("port").copied();
 
-            operations::gallery::gallery(&data_path, is_custom, dump_dir, should_open)?;
+            // Remote-control mode (the live server) is the default. It is
+            // disabled when a static build is requested: `--dump <DIR>` writes
+            // the static site to a directory, and `--no-rc` opens the static
+            // gallery locally (no server, no system changes).
+            if dump_dir.is_some() || is_no_rc {
+                operations::gallery::gallery(&data_path, is_custom, dump_dir, should_open)?;
+            } else {
+                operations::gallery::serve(&config_path, &data_path, is_custom, port, should_open)?;
+            }
         }
         Some(("info", sub_matches)) => {
             let is_custom = sub_matches

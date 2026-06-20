@@ -1,3 +1,5 @@
+mod server;
+
 use crate::{
     constants::ARTIFACTS_DIR,
     operations::list::{scheme_entries_json, schemes_dir_path},
@@ -41,6 +43,104 @@ fn snippet_templates() -> String {
         .join("\n")
 }
 
+/// Builds the final `index.html` with the per-language snippet templates
+/// injected into the `<!--SNIPPETS-->` placeholder.
+fn rendered_index_html() -> String {
+    INDEX_HTML.replace("<!--SNIPPETS-->", &snippet_templates())
+}
+
+/// Builds the final `gallery.js`, substituting the scheme data, the
+/// remote-control flag, and (for the live server) the `user@hostname` label of
+/// the machine it runs on. `serve_host` is `None` for the static site (the
+/// `--no-rc` / `--dump` builds), which keeps that build fully static with no
+/// server interactions; it is `Some` only for the in-memory live build.
+fn rendered_gallery_js(schemes_json: &str, serve_host: Option<&str>) -> String {
+    // Encode the host label as a JSON string literal (or `null`) so it lands
+    // in the JS as a safe, properly-escaped value.
+    let host_literal = serde_json::to_string(&serve_host).unwrap_or_else(|_| "null".to_string());
+
+    GALLERY_JS
+        .replace("__TINTY_SCHEMES__", schemes_json)
+        .replace(
+            "__TINTY_SERVE__",
+            if serve_host.is_some() {
+                "true"
+            } else {
+                "false"
+            },
+        )
+        .replace("__TINTY_HOST__", &host_literal)
+}
+
+/// A `user@hostname` label identifying the machine the live server runs on,
+/// shown in the gallery header so it's clear which system applies will affect.
+fn current_host_label() -> String {
+    let user = std::env::var("USER")
+        .or_else(|_| std::env::var("USERNAME"))
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| "user".to_string());
+
+    format!("{user}@{}", hostname_label())
+}
+
+fn hostname_label() -> String {
+    // Prefer the portable `hostname` command (set on macOS, Linux, and
+    // Windows); fall back to $HOSTNAME, then a generic label.
+    let from_command = Command::new("hostname")
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
+
+    if let Some(name) = from_command {
+        return name;
+    }
+
+    std::env::var("HOSTNAME")
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| "localhost".to_string())
+}
+
+/// Starts a local web server that serves a live gallery wired to real Tinty
+/// operations on this machine: clicking *Apply* applies the scheme, and the
+/// currently-applied scheme is highlighted and kept in sync.
+pub fn serve(
+    config_path: &Path,
+    data_path: &Path,
+    is_custom: bool,
+    port: Option<u16>,
+    should_open: bool,
+) -> Result<()> {
+    let schemes_path = schemes_dir_path(data_path, is_custom)?;
+    let schemes_json = scheme_entries_json(&schemes_path)?;
+    let host = current_host_label();
+
+    let assets = server::Assets {
+        index_html: rendered_index_html(),
+        gallery_js: rendered_gallery_js(&schemes_json, Some(&host)),
+        gallery_css: GALLERY_CSS,
+        logo: LOGO_BYTES,
+        favicon: FAVICON_BYTES,
+        font_dm_serif_400: FONT_DM_SERIF_400,
+        font_dm_serif_400_italic: FONT_DM_SERIF_400_ITALIC,
+        font_ibm_plex_mono_400: FONT_IBM_PLEX_MONO_400,
+        font_ibm_plex_mono_500: FONT_IBM_PLEX_MONO_500,
+    };
+
+    server::serve(
+        assets,
+        config_path.to_path_buf(),
+        data_path.to_path_buf(),
+        port,
+        should_open,
+    )
+}
+
 pub fn gallery(
     data_path: &Path,
     is_custom: bool,
@@ -74,10 +174,9 @@ fn write_gallery_files(output_dir: &Path, schemes_json: &str) -> Result<()> {
     ensure_directory_exists(&assets_dir)?;
     ensure_directory_exists(&fonts_dir)?;
 
-    let index_html = INDEX_HTML.replace("<!--SNIPPETS-->", &snippet_templates());
-    write_to_file(output_dir.join("index.html"), &index_html)?;
+    write_to_file(output_dir.join("index.html"), &rendered_index_html())?;
     write_to_file(assets_dir.join("gallery.css"), GALLERY_CSS)?;
-    let gallery_js = GALLERY_JS.replace("__TINTY_SCHEMES__", schemes_json);
+    let gallery_js = rendered_gallery_js(schemes_json, None);
     write_to_file(assets_dir.join("gallery.js"), &gallery_js)?;
     write_binary_file(assets_dir.join("tinted-theming-logo.png"), LOGO_BYTES)?;
     write_binary_file(assets_dir.join("favicon.png"), FAVICON_BYTES)?;

@@ -8,6 +8,19 @@
   <link rel="stylesheet" href="assets/gallery.css">
 </head>
 <body>
+  <div id="offline-banner" class="offline-banner" role="alert" hidden>
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+    <div class="offline-text">
+      <strong>Gallery server stopped</strong>
+      <span>The live gallery server isn’t responding. Re-run it in your terminal to keep applying schemes.</span>
+    </div>
+    <code class="offline-cmd">tinty gallery</code>
+    <button type="button" id="offline-retry" class="offline-retry">
+      <span class="offline-spinner" aria-hidden="true"></span>
+      <span class="offline-retry-label">Retry</span>
+    </button>
+  </div>
+
   <div class="page-scene">
     <header class="topbar">
       <div class="brand">
@@ -18,6 +31,11 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <div id="live-indicator" class="live-indicator" hidden>
+          <span class="live-dot" aria-hidden="true"></span>
+          <span class="live-label">Live</span>
+          <span class="live-host"></span>
+        </div>
         <output id="result-count" aria-live="polite"></output>
         <div class="language-select-wrapper">
           <select id="language-select" class="language-select" aria-label="Preview language">
@@ -152,12 +170,18 @@
         </section>
       </div>
       <div class="sheet-main-footer">
-        <div class="command-row">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m8 9 3 3-3 3"></path><path d="M13 15h3"></path></svg>
-          <code id="sheet-command"></code>
-          <button type="button" id="copy-command" class="icon-button" aria-label="Copy apply command">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg>
+        <div class="footer-actions">
+          <button type="button" id="apply-scheme" class="apply-button" hidden>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+            <span class="apply-label">Apply</span>
           </button>
+          <div class="command-row">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m8 9 3 3-3 3"></path><path d="M13 15h3"></path></svg>
+            <code id="sheet-command"></code>
+            <button type="button" id="copy-command" class="icon-button" aria-label="Copy apply command">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>

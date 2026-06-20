@@ -190,23 +190,45 @@ tinty list --json | jq 'sort_by(.lightness.background)' -r
 
 ## Gallery
 
-`tinty gallery` builds an interactive static gallery from the available
-schemes and opens it in your browser:
+`tinty gallery` opens an interactive gallery of the available schemes in
+your browser:
 
 ```sh
 tinty gallery
 ```
 
-To write a hostable static site artifact, use `--dump`:
+By default the gallery runs in **remote-control mode** (`--rc`): a small
+local web server wired to Tinty on this machine. The currently applied
+scheme is highlighted in the grid (and kept in sync if it changes,
+including from `tinty apply` in another terminal), and each scheme's
+detail view offers an **Apply** button that applies it on your system
+right away. The server only listens on `127.0.0.1` and stops when you
+press `Ctrl+C`. Pass `--port <PORT>` to choose a fixed port instead of an
+automatically selected one.
+
+### Static gallery
+
+To browse without running a server — and without anything being able to
+change your system — disable remote control with `--no-rc`:
+
+```sh
+tinty gallery --no-rc
+```
+
+To write a hostable static site artifact instead, use `--dump`:
 
 ```sh
 tinty gallery --dump ./public
 ```
 
 The dumped directory contains `index.html` and static assets, so it can
-be published with GitHub Pages. Use `--no-open` to generate the files
-without launching a browser, and `--custom-schemes` to build the gallery
-from saved custom schemes.
+be published anywhere (e.g. GitHub Pages). The static gallery makes no
+network requests and contains no apply controls, so it is safe to host
+publicly.
+
+Use `--no-open` to skip launching a browser, and `--custom-schemes` to
+build the gallery from saved custom schemes. Any of these work with both
+the remote-control and static modes.
 
 ## Shell
 
