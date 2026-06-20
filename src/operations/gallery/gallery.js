@@ -901,6 +901,7 @@ function showToast(message) {
 // schemes, so we surface a persistent panel prompting a restart; the poll keeps
 // running and clears it automatically once the server is back.
 function setConnected(connected) {
+  if (!TINTY_SERVE) return;
   if (serverConnected === connected) return;
   serverConnected = connected;
 
@@ -1005,6 +1006,33 @@ async function applyCurrentSheet() {
   }
 }
 
+// Minimum time the Retry button stays in its "waiting" state, so a click
+// always reads as a deliberate attempt even when the check resolves instantly.
+const RETRY_MIN_WAIT = 5000;
+
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+// Retry button handler: enter a waiting state, run a connection check, and hold
+// the waiting state for at least RETRY_MIN_WAIT before restoring the button.
+// If the check reconnects, setConnected() hides the whole banner anyway.
+async function retryConnection() {
+  const retry = document.getElementById("offline-retry");
+  if (!retry || retry.classList.contains("is-waiting")) return;
+
+  const label = retry.querySelector(".offline-retry-label");
+  retry.classList.add("is-waiting");
+  retry.disabled = true;
+  if (label) label.textContent = "Retrying…";
+
+  await Promise.all([fetchCurrentScheme(), delay(RETRY_MIN_WAIT)]);
+
+  retry.classList.remove("is-waiting");
+  retry.disabled = false;
+  if (label) label.textContent = "Retry";
+}
+
 function setupLiveServer() {
   if (!TINTY_SERVE) return;
 
@@ -1030,7 +1058,7 @@ function setupLiveServer() {
 
   const retry = document.getElementById("offline-retry");
   if (retry) {
-    retry.addEventListener("click", fetchCurrentScheme);
+    retry.addEventListener("click", retryConnection);
   }
 
   fetchCurrentScheme();

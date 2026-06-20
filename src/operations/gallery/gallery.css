@@ -318,6 +318,9 @@ main {
 }
 
 .offline-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   flex: 0 0 auto;
   padding: 7px 14px;
   border: 0;
@@ -331,6 +334,31 @@ main {
 
 .offline-retry:hover {
   background: color-mix(in oklab, var(--accent) 88%, #000);
+}
+
+.offline-retry.is-waiting {
+  cursor: progress;
+  opacity: .9;
+}
+
+.offline-spinner {
+  display: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, #fff 45%, transparent);
+  border-top-color: #fff;
+  animation: offline-spin .7s linear infinite;
+}
+
+.offline-retry.is-waiting .offline-spinner {
+  display: inline-block;
+}
+
+@keyframes offline-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .offline-retry:focus-visible {
