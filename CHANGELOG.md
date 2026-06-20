@@ -15,6 +15,10 @@
   scheme (deep-linkable via `#<scheme-id>`), undo/redo edits, and reset back to
   the starting point. Like `tinty gallery`, it supports `--dump <DIRECTORY>` to
   write the static site anywhere and `--no-open` to skip opening a browser.
+- Extract a Base16 or Base24 scheme from an image in `tinty studio`. Drag an
+  image onto the page (or use "From image"), pick the system and variant, and
+  the editor derives a starting scheme from the image's colors as an editable
+  draft. Extraction runs entirely in the browser — the image is never uploaded.
 
 ## [0.34.0] - 2026-06-16
 

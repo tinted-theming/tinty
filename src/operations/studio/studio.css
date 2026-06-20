@@ -1013,6 +1013,139 @@ input:focus-visible {
   transform: translate(-50%, 0);
 }
 
+/* ---------- Image extraction ---------- */
+
+.extract-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Full-page drop target, shown while dragging an image over the window. */
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklab, var(--sheet) 78%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.drop-overlay[hidden] {
+  display: none;
+}
+
+.drop-overlay-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 48px 64px;
+  border: 1.5px dashed var(--accent-line);
+  color: var(--ink-1);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.drop-overlay-inner .icon {
+  width: 34px;
+  height: 34px;
+}
+
+.drop-overlay-inner p {
+  margin: 0;
+}
+
+/* The extract dialog — an open "plate" floating over a dimmed sheet. */
+.extract-dialog {
+  width: min(560px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--ink-2);
+  background: var(--sheet);
+  color: var(--ink-1);
+  box-shadow: 6px 6px 0 color-mix(in oklab, var(--ink-1) 18%, transparent);
+}
+
+.extract-dialog::backdrop {
+  background: color-mix(in oklab, var(--ink-1) 45%, transparent);
+}
+
+.extract-card {
+  padding: 22px 24px 20px;
+}
+
+.extract-body {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.extract-preview {
+  border: 1px solid var(--rule);
+  background: var(--sheet-2);
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.extract-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.extract-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.extract-note {
+  margin: 18px 0 0;
+  color: var(--ink-3);
+  font: 11px/1.5 var(--font-mono);
+  letter-spacing: .02em;
+}
+
+.extract-status {
+  margin: 12px 0 0;
+  color: var(--invalid);
+  font: 500 11px/1.4 var(--font-mono);
+  letter-spacing: .03em;
+}
+
+.extract-status[hidden] {
+  display: none;
+}
+
+.extract-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.extract-go:disabled,
+#extract-go:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+@media (max-width: 540px) {
+  .extract-body {
+    grid-template-columns: 1fr;
+  }
+  .extract-preview {
+    max-width: 160px;
+  }
+}
+
 /* ---------- Dark mode: a true blueprint ---------- */
 
 @media (prefers-color-scheme: dark) {

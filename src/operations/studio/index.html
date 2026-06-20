@@ -69,6 +69,10 @@
             </div>
           </div>
           <div class="toolbar-actions">
+            <button class="button button-ghost extract-button" id="extract-image-btn" title="Extract a scheme from an image">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+              <span>From image</span>
+            </button>
             <div class="history-controls" role="group" aria-label="History">
               <button class="icon-button" id="undo-btn" title="Undo (⌘Z)" aria-label="Undo" disabled>
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
@@ -166,6 +170,59 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <input type="file" id="extract-file" accept="image/*" hidden />
+
+  <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
+    <div class="drop-overlay-inner">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+      <p>Drop an image to extract a scheme</p>
+    </div>
+  </div>
+
+  <dialog id="extract-dialog" class="extract-dialog">
+    <div class="extract-card">
+      <div class="plate-head">
+        <h2 class="section-label">Extract from image</h2>
+        <span class="plate-rule"></span>
+      </div>
+      <div class="extract-body">
+        <div class="extract-preview">
+          <img id="extract-thumb" alt="Selected image preview" />
+        </div>
+        <div class="extract-fields">
+          <div class="field">
+            <label for="extract-name">Name</label>
+            <input type="text" id="extract-name" spellcheck="false" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="extract-author">Author</label>
+            <input type="text" id="extract-author" spellcheck="false" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label>System</label>
+            <div class="field-variant" id="extract-system" role="group" aria-label="Scheme system">
+              <button type="button" class="chip" data-system="base16">Base16</button>
+              <button type="button" class="chip" data-system="base24">Base24</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Variant</label>
+            <div class="field-variant" id="extract-variant" role="group" aria-label="Scheme variant">
+              <button type="button" class="chip" data-variant="dark">Dark</button>
+              <button type="button" class="chip" data-variant="light">Light</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="extract-note">Colors are extracted in your browser — the image is never uploaded.</p>
+      <p class="extract-status" id="extract-status" hidden></p>
+      <div class="extract-actions">
+        <button type="button" class="button button-ghost" id="extract-cancel">Cancel</button>
+        <button type="button" class="button button-primary" id="extract-go">Extract</button>
+      </div>
+    </div>
+  </dialog>
+
   <template id="slot-row-template">
     <div class="slot-row">
       <button class="slot-swatch" type="button" aria-label="Pick color">
@@ -185,6 +242,7 @@
   </template>
 
   <!--SNIPPETS-->
+  <script src="assets/quantize.js"></script>
   <script src="assets/studio.js"></script>
 </body>
 </html>

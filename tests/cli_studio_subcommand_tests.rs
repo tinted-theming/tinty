@@ -43,6 +43,17 @@ fn test_cli_studio_subcommand_dump_creates_static_site() -> Result<()> {
         dump_path.join("assets/studio.css").is_file(),
         "Expected studio dump to produce assets/studio.css"
     );
+    // The image-extraction feature depends on the vendored MMCQ quantizer
+    // shipping as its own asset and being loaded before studio.js.
+    ensure!(
+        dump_path.join("assets/quantize.js").is_file(),
+        "Expected studio dump to produce assets/quantize.js"
+    );
+    let index_html = fs::read_to_string(dump_path.join("index.html"))?;
+    ensure!(
+        index_html.contains("assets/quantize.js"),
+        "Expected index.html to load assets/quantize.js"
+    );
 
     Ok(())
 }

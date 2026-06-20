@@ -15,6 +15,9 @@ const STUDIO_DIR_NAME: &str = "studio";
 const INDEX_HTML: &str = include_str!("studio/index.html");
 const STUDIO_CSS: &str = include_str!("studio/studio.css");
 const STUDIO_JS: &str = include_str!("studio/studio.js");
+// Vendored MMCQ color quantizer (MIT) used by the image-extraction feature.
+// See src/operations/studio/vendor/README.md for provenance and licensing.
+const QUANTIZE_JS: &str = include_str!("studio/vendor/quantize.js");
 const LOGO_BYTES: &[u8] = include_bytes!("../../assets/tinted-theming-logo.png");
 const FAVICON_BYTES: &[u8] = include_bytes!("../../assets/favicon.png");
 const FONT_DM_SERIF_400: &[u8] = include_bytes!("gallery/fonts/dm-serif-display-400.woff2");
@@ -79,6 +82,7 @@ fn write_studio_files(output_dir: &Path, schemes_json: &str) -> Result<()> {
     let index_html = INDEX_HTML.replace("<!--SNIPPETS-->", &snippet_templates());
     write_to_file(output_dir.join("index.html"), &index_html)?;
     write_to_file(assets_dir.join("studio.css"), STUDIO_CSS)?;
+    write_to_file(assets_dir.join("quantize.js"), QUANTIZE_JS)?;
     let studio_js = STUDIO_JS.replace("__TINTY_SCHEMES__", schemes_json);
     write_to_file(assets_dir.join("studio.js"), &studio_js)?;
     write_binary_file(assets_dir.join("tinted-theming-logo.png"), LOGO_BYTES)?;

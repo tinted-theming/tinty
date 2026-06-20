@@ -1571,6 +1571,518 @@ function loadPageTheme() {
   setPageTheme(theme);
 }
 
+/* ============================================================
+ * Image -> scheme extraction (client-only).
+ *
+ * A faithful JS port of `tinted-scheme-extractor` (Rust): decode
+ * the image in a <canvas>, find the pixels closest to a set of
+ * pure hues, blend in a median-cut (MMCQ) dominant palette, then
+ * map the result onto Base16 / Base24 slots. Output is visually
+ * equivalent to the CLI — small divergences are expected because
+ * the browser decodes and quantizes independently. Everything
+ * runs locally; the image never leaves the page.
+ * ========================================================== */
+
+/* ---------- sRGB <-> linear <-> XYZ <-> Yxy (mirrors `palette`) ---------- */
+
+function srgbToLinear(c) {
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+function linearToSrgb(c) {
+  c = clamp01(c);
+  return c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+}
+
+// r,g,b are 0..1 sRGB-encoded. Returns CIE xyY; Y is the luminance the Rust
+// extractor reads from `palette`'s Yxy. x,y fall back to the D65 white point
+// for black so setting a new luminance yields a neutral gray (not NaN).
+function srgbToYxy(rgb) {
+  const rl = srgbToLinear(rgb.r), gl = srgbToLinear(rgb.g), bl = srgbToLinear(rgb.b);
+  const X = 0.4124564 * rl + 0.3575761 * gl + 0.1804375 * bl;
+  const Y = 0.2126729 * rl + 0.7151522 * gl + 0.0721750 * bl;
+  const Z = 0.0193339 * rl + 0.1191920 * gl + 0.9503041 * bl;
+  const sum = X + Y + Z;
+  if (sum <= 0) return { Y: 0, x: 0.3127, y: 0.3290 };
+  return { Y, x: X / sum, y: Y / sum };
+}
+
+function yxyToSrgb({ Y, x, y }) {
+  if (y <= 0) return { r: 0, g: 0, b: 0 };
+  const X = (x / y) * Y;
+  const Z = ((1 - x - y) / y) * Y;
+  const rl = 3.2404542 * X - 1.5371385 * Y - 0.4985314 * Z;
+  const gl = -0.9692660 * X + 1.8760108 * Y + 0.0415560 * Z;
+  const bl = 0.0556434 * X - 0.2040259 * Y + 1.0572252 * Z;
+  return { r: linearToSrgb(rl), g: linearToSrgb(gl), b: linearToSrgb(bl) };
+}
+
+// HSL saturation is scale-invariant, so passing 0..1 channels as if 0..255 is fine.
+function satLuma01(rgb) {
+  return { s: rgbToHsl({ r: rgb.r * 255, g: rgb.g * 255, b: rgb.b * 255 }).s, luma: srgbToYxy(rgb).Y };
+}
+
+function setSat01(rgb, newS) {
+  const hsl = rgbToHsl({ r: rgb.r * 255, g: rgb.g * 255, b: rgb.b * 255 });
+  const out = hslToRgb({ h: hsl.h, s: newS, l: hsl.l });
+  return { r: out.r / 255, g: out.g / 255, b: out.b / 255 };
+}
+
+/* ---------- Pure target colors ---------- */
+
+const PURE_RGB = {
+  red: { r: 255, g: 0, b: 0 },
+  yellow: { r: 255, g: 255, b: 0 },
+  orange: { r: 255, g: 165, b: 0 },
+  green: { r: 0, g: 255, b: 0 },
+  cyan: { r: 0, g: 255, b: 255 },
+  blue: { r: 0, g: 0, b: 255 },
+  purple: { r: 128, g: 0, b: 128 },
+  brown: { r: 165, g: 42, b: 42 },
+  magenta: { r: 255, g: 0, b: 255 },
+  azure: { r: 0, g: 90, b: 255 },
+  spring_green: { r: 127, g: 255, b: 127 },
+  light_cyan: { r: 90, g: 213, b: 213 },
+};
+
+// The order the Rust extractor scans target colors in.
+const TARGET_NAMES = [
+  "red", "yellow", "orange", "green", "cyan", "blue",
+  "purple", "brown", "magenta", "azure", "spring_green", "light_cyan",
+];
+
+const INVERSE_NAME = {
+  red: "cyan", yellow: "blue", orange: "azure", green: "magenta",
+  cyan: "red", blue: "yellow", purple: "spring_green", magenta: "green",
+  brown: "light_cyan", azure: "orange", spring_green: "purple", light_cyan: "brown",
+};
+
+const BASE_SLOT = {
+  red: "base08", orange: "base09", yellow: "base0A", green: "base0B",
+  cyan: "base0C", blue: "base0D", purple: "base0E", brown: "base0F",
+};
+
+const BASE24_SLOT = {
+  red: "base10", orange: "base11", yellow: "base12", green: "base13",
+  cyan: "base14", blue: "base15", purple: "base16", brown: "base17",
+};
+
+const MAX_COLOR_DISTANCE = 100;
+
+function colorDistance(a, b) {
+  const dr = a.r - b.r, dg = a.g - b.g, db = a.b - b.b;
+  return Math.sqrt(dr * dr + dg * dg + db * db);
+}
+
+// A scheme color: an RGB value tagged with the pure hue it stands in for, and
+// its distance from that hue's canonical RGB.
+function mkColor(name, rgb) {
+  return { name, r: rgb.r, g: rgb.g, b: rgb.b, distance: colorDistance(PURE_RGB[name], rgb) };
+}
+
+function inverseColor(c) {
+  return mkColor(INVERSE_NAME[c.name], { r: 255 - c.r, g: 255 - c.g, b: 255 - c.b });
+}
+
+function colorToHex(c) {
+  const h = (n) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0");
+  return "#" + h(c.r) + h(c.g) + h(c.b);
+}
+
+function addLightness(c, value) {
+  const hsl = rgbToHsl(c);
+  const out = hslToRgb({ h: hsl.h, s: hsl.s, l: clamp01(hsl.l + clamp01(value)) });
+  return { name: c.name, r: out.r, g: out.g, b: out.b, distance: c.distance };
+}
+
+function toSaturated(c, pct) {
+  pct = clamp01(pct);
+  const hsl = rgbToHsl(c);
+  const out = hslToRgb({ h: hsl.h, s: clamp01(hsl.s * pct * pct), l: hsl.l });
+  return { name: c.name, r: out.r, g: out.g, b: out.b, distance: c.distance };
+}
+
+function lightnessWeightDiff(c, threshold) {
+  const hsl = rgbToHsl(c);
+  const visibility = 0.5 * hsl.s + 1.0 * hsl.l;
+  return clamp01(threshold - visibility) / 2;
+}
+
+/* ---------- Stage 1: closest pixel per pure hue ---------- */
+
+function findClosestPalette(pixels) {
+  const bestSq = TARGET_NAMES.map(() => Infinity);
+  const best = TARGET_NAMES.map((name) => ({ name, r: 0, g: 0, b: 0 }));
+  for (let i = 0; i < pixels.length; i += 4) {
+    const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
+    for (let k = 0; k < TARGET_NAMES.length; k++) {
+      const t = PURE_RGB[TARGET_NAMES[k]];
+      const dr = t.r - r, dg = t.g - g, db = t.b - b;
+      const sq = dr * dr + dg * dg + db * db;
+      if (sq < bestSq[k]) {
+        bestSq[k] = sq;
+        best[k].r = r; best[k].g = g; best[k].b = b;
+      }
+    }
+  }
+  return best.map((c) => mkColor(c.name, c));
+}
+
+function createPaletteWithInverse(palette, inverse) {
+  return palette.map((color) => {
+    const inv = inverse.find((c) => c.name === color.name);
+    if (inv && color.distance > MAX_COLOR_DISTANCE && color.distance < inv.distance) return color;
+    return inv || color;
+  });
+}
+
+function createPaletteWithColorThief(palette, colorThief) {
+  const byName = new Map();
+  for (const ct of colorThief) {
+    let bestMatch = null;
+    for (const color of palette) {
+      const attempt = mkColor(color.name, ct);
+      if (attempt.distance < MAX_COLOR_DISTANCE && (!bestMatch || attempt.distance < bestMatch.distance)) {
+        bestMatch = attempt;
+      }
+    }
+    if (!bestMatch) continue;
+    const existing = byName.get(bestMatch.name);
+    if (!existing || bestMatch.distance < existing.distance) byName.set(bestMatch.name, bestMatch);
+  }
+  const combined = Array.from(byName.values());
+  for (const color of palette) {
+    if (!combined.some((c) => c.name === color.name)) combined.push(color);
+  }
+  return combined;
+}
+
+/* ---------- Stage 2: pick foreground / background ---------- */
+
+function colorPass(colors, minLuma, maxLuma, minSat, maxSat) {
+  return colors.find((c) => {
+    const { s, luma } = satLuma01(c);
+    const lumaOk = (minLuma == null || luma >= minLuma) && (maxLuma == null || luma <= maxLuma);
+    const satOk = (minSat == null || s >= minSat) && (maxSat == null || s <= maxSat);
+    return lumaOk && satOk;
+  }) || null;
+}
+
+function lightColor(colors) {
+  return colorPass(colors, 0.6, null, null, 0.4)
+    || colorPass(colors, 0.7, null, null, 0.85)
+    || colorPass(colors, 0.5, null, null, 0.5)
+    || colorPass(colors, 0.6, null, null, 0.85)
+    || colorPass(colors, 0.32, null, null, 0.4)
+    || colorPass(colors, 0.4, null, null, null)
+    || colorPass(colors, 0.3, null, null, null)
+    || colors[0] || null;
+}
+
+function darkColor(colors) {
+  return colorPass(colors, 0.012, 0.1, 0.18, 0.9)
+    || colorPass(colors, 0.012, 0.1, null, null)
+    || colorPass(colors, null, 0.1, null, null)
+    || colors[0] || null;
+}
+
+// Nudge the chosen pair toward usable fg/bg luminance and saturation. Mirrors
+// `fix_colors`: luminance is set in Yxy (keeping chromaticity), saturation in HSL.
+function fixColors(dark, light, variant) {
+  const setLuma = (rgb, Y) => yxyToSrgb({ ...srgbToYxy(rgb), Y });
+  if (variant === "light") {
+    let fg = dark, bg = light;
+    let { s, luma } = satLuma01(fg);
+    if (luma > 0.015) fg = setLuma(fg, 0.015);
+    if (s > 0.65) fg = setSat01(fg, 0.65);
+    ({ s, luma } = satLuma01(bg));
+    if (luma < 0.75) bg = setLuma(bg, 0.75);
+    if (s > 0.12) bg = setSat01(bg, 0.15);
+    return { bg, fg };
+  }
+  // dark
+  let fg = light, bg = dark;
+  let { s, luma } = satLuma01(fg);
+  if (luma < 0.6) fg = setLuma(fg, 0.6);
+  if (s > 0.15) fg = setSat01(fg, 0.15);
+  ({ s, luma } = satLuma01(bg));
+  if (luma > 0.02) bg = setLuma(bg, 0.02);
+  if (s > 0.6) bg = setSat01(bg, 0.6);
+  return { bg, fg };
+}
+
+function to255(rgb) {
+  return {
+    r: Math.round(clamp01(rgb.r) * 255),
+    g: Math.round(clamp01(rgb.g) * 255),
+    b: Math.round(clamp01(rgb.b) * 255),
+  };
+}
+
+// Linear u8 interpolation (truncating, like Rust `as u8`).
+function generateGradient(a, b, steps) {
+  const out = [];
+  for (let i = 0; i < steps; i++) {
+    const t = i / (steps - 1);
+    out.push({
+      r: Math.trunc(a.r + t * (b.r - a.r)),
+      g: Math.trunc(a.g + t * (b.g - a.g)),
+      b: Math.trunc(a.b + t * (b.b - a.b)),
+    });
+  }
+  return out;
+}
+
+/* ---------- MMCQ (median cut) — vendored color-thief quantizer ---------- */
+// The quantizer itself is the vendored `quantize` library (the MMCQ that
+// color-thief uses); see src/operations/studio/vendor/. It loads as a separate
+// <script> and exposes `window.quantize(pixelArray, maxColors)`, returning a
+// color map whose `.palette()` is an array of [r, g, b]. Around it we only add
+// color-thief's pixel filtering: skip transparent and near-white pixels.
+function mmcqPalette(pixels, maxColors) {
+  const quantize = typeof window !== "undefined" ? window.quantize : null;
+  if (!quantize) return [];
+  const arr = [];
+  for (let i = 0; i < pixels.length; i += 4) {
+    if (pixels[i + 3] < 125) continue;
+    const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
+    if (r > 250 && g > 250 && b > 250) continue;
+    arr.push([r, g, b]);
+  }
+  if (!arr.length) return [];
+  const cmap = quantize(arr, maxColors);
+  if (!cmap || typeof cmap.palette !== "function") return [];
+  return cmap.palette().map((c) => ({ r: c[0], g: c[1], b: c[2] }));
+}
+
+/* ---------- The pipeline ---------- */
+
+function extractScheme(imageData, system, variant) {
+  const pixels = imageData.data;
+  const initial = findClosestPalette(pixels);
+  const inverse = initial.map(inverseColor);
+  const curated = createPaletteWithInverse(initial, inverse);
+
+  const colorThief = mmcqPalette(pixels, 15);
+  if (!colorThief.length) throw new Error("Couldn't find usable colors in this image.");
+  const combined = createPaletteWithColorThief(curated, colorThief);
+  const ct01 = colorThief.map((c) => ({ r: c.r / 255, g: c.g / 255, b: c.b / 255 }));
+
+  const light = lightColor(ct01);
+  const dark = darkColor(ct01);
+  if (!light || !dark) throw new Error("Couldn't find usable colors in this image.");
+  const { bg, fg } = fixColors(dark, light, variant);
+
+  const palette = {};
+  generateGradient(to255(bg), to255(fg), 8).forEach((rgb, idx) => {
+    palette["base0" + idx] = colorToHex(rgb);
+  });
+
+  for (const color of combined) {
+    const lit = addLightness(color, lightnessWeightDiff(color, 0.7));
+    const slot = BASE_SLOT[lit.name];
+    if (slot && !palette[slot]) palette[slot] = colorToHex(lit);
+    if (system === "base24") {
+      const sat = toSaturated(lit, 0.7);
+      const slot24 = BASE24_SLOT[sat.name];
+      if (slot24 && !palette[slot24]) palette[slot24] = colorToHex(sat);
+    }
+  }
+  return palette;
+}
+
+/* ---------- Image decode ---------- */
+
+const EXTRACT_MAX_DIM = 1280;
+
+async function decodeImage(file) {
+  let width, height, source;
+  try {
+    const bmp = await createImageBitmap(file);
+    width = bmp.width;
+    height = bmp.height;
+    source = bmp;
+  } catch (_e) {
+    // Fallback for environments without createImageBitmap(File).
+    source = await new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Couldn't read that image.")); };
+      img.src = url;
+    });
+    width = source.naturalWidth;
+    height = source.naturalHeight;
+  }
+  if (!width || !height) throw new Error("Couldn't read that image.");
+
+  const scale = Math.min(1, EXTRACT_MAX_DIM / Math.max(width, height));
+  const w = Math.max(1, Math.round(width * scale));
+  const h = Math.max(1, Math.round(height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(source, 0, 0, w, h);
+  if (source.close) source.close();
+  return ctx.getImageData(0, 0, w, h);
+}
+
+/* ---------- Extraction UI ---------- */
+
+const extractUi = {
+  pendingImage: null,
+  system: "base16",
+  variant: "dark",
+};
+
+function fileNameToSchemeName(name) {
+  const base = String(name || "").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim();
+  if (!base) return "Untitled";
+  return base.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function setExtractStatus(message) {
+  const status = document.getElementById("extract-status");
+  if (!status) return;
+  if (message) { status.textContent = message; status.hidden = false; }
+  else { status.textContent = ""; status.hidden = true; }
+}
+
+function syncExtractChips() {
+  document.querySelectorAll("#extract-system .chip").forEach((c) => {
+    c.classList.toggle("active", c.dataset.system === extractUi.system);
+  });
+  document.querySelectorAll("#extract-variant .chip").forEach((c) => {
+    c.classList.toggle("active", c.dataset.variant === extractUi.variant);
+  });
+}
+
+async function openExtractDialog(file) {
+  const dialog = document.getElementById("extract-dialog");
+  if (!dialog || !file) return;
+  if (!file.type.startsWith("image/")) { showToast("That file isn't an image"); return; }
+
+  extractUi.pendingImage = null;
+  extractUi.system = state.flavor === "base24" ? "base24" : "base16";
+  extractUi.variant = state[state.flavor].meta.variant === "light" ? "light" : "dark";
+  syncExtractChips();
+  setExtractStatus(null);
+
+  document.getElementById("extract-name").value = fileNameToSchemeName(file.name);
+  document.getElementById("extract-author").value = state[state.flavor].meta.author || "";
+  const thumb = document.getElementById("extract-thumb");
+  if (thumb.dataset.url) URL.revokeObjectURL(thumb.dataset.url);
+  const url = URL.createObjectURL(file);
+  thumb.src = url;
+  thumb.dataset.url = url;
+
+  const goBtn = document.getElementById("extract-go");
+  goBtn.disabled = true;
+  if (!dialog.open) dialog.showModal();
+
+  try {
+    extractUi.pendingImage = await decodeImage(file);
+    goBtn.disabled = false;
+  } catch (e) {
+    setExtractStatus(e.message || "Couldn't read that image.");
+  }
+}
+
+function closeExtractDialog() {
+  const dialog = document.getElementById("extract-dialog");
+  const thumb = document.getElementById("extract-thumb");
+  if (thumb && thumb.dataset.url) { URL.revokeObjectURL(thumb.dataset.url); delete thumb.dataset.url; thumb.removeAttribute("src"); }
+  extractUi.pendingImage = null;
+  if (dialog && dialog.open) dialog.close();
+}
+
+// Apply an extracted palette as a fresh, editable draft in its workspace.
+function applyExtractedScheme(system, palette, name, author, variant) {
+  const wrapped = {};
+  Object.keys(palette).forEach((k) => { wrapped[k] = { hex_str: palette[k] }; });
+  const entry = { id: null, system, name: name || "Untitled", author: author || "", slug: "", variant, palette: wrapped };
+  pushHistory(`extract:${system}`);
+  if (!applyEntryToState(entry)) { undoStack.pop(); syncHistoryButtons(); return false; }
+  // Treat the extraction as unsaved edits: mark the workspace touched and drop
+  // any deep-link identity so a reload restores this draft without prompting.
+  state[system].touched = true;
+  state.flavor = system;
+  setHash("");
+  saveState();
+  renderAll();
+  return true;
+}
+
+function runExtraction() {
+  if (!extractUi.pendingImage) return;
+  const name = document.getElementById("extract-name").value.trim();
+  const author = document.getElementById("extract-author").value.trim();
+  const system = extractUi.system;
+  const variant = extractUi.variant;
+  setExtractStatus(null);
+  try {
+    const palette = extractScheme(extractUi.pendingImage, system, variant);
+    closeExtractDialog();
+    if (applyExtractedScheme(system, palette, name, author, variant)) {
+      showToast(`Extracted ${SYSTEM_LABELS[system]} scheme`);
+    }
+  } catch (e) {
+    setExtractStatus(e.message || "Extraction failed.");
+  }
+}
+
+function wireExtraction() {
+  const fileInput = document.getElementById("extract-file");
+  const btn = document.getElementById("extract-image-btn");
+  if (btn) {
+    btn.addEventListener("click", () => { fileInput.value = ""; fileInput.click(); });
+  }
+  if (fileInput) {
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files && fileInput.files[0]) openExtractDialog(fileInput.files[0]);
+    });
+  }
+
+  document.getElementById("extract-cancel").addEventListener("click", closeExtractDialog);
+  document.getElementById("extract-go").addEventListener("click", runExtraction);
+  document.getElementById("extract-dialog").addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closeExtractDialog();
+  });
+  document.querySelectorAll("#extract-system .chip").forEach((c) => {
+    c.addEventListener("click", () => { extractUi.system = c.dataset.system; syncExtractChips(); });
+  });
+  document.querySelectorAll("#extract-variant .chip").forEach((c) => {
+    c.addEventListener("click", () => { extractUi.variant = c.dataset.variant; syncExtractChips(); });
+  });
+
+  // Whole-page drag & drop.
+  const overlay = document.getElementById("drop-overlay");
+  let dragDepth = 0;
+  const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files");
+  window.addEventListener("dragenter", (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    dragDepth++;
+    overlay.hidden = false;
+  });
+  window.addEventListener("dragover", (e) => { if (hasFiles(e)) e.preventDefault(); });
+  window.addEventListener("dragleave", (e) => {
+    if (!hasFiles(e)) return;
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) overlay.hidden = true;
+  });
+  window.addEventListener("drop", (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    dragDepth = 0;
+    overlay.hidden = true;
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) openExtractDialog(file);
+  });
+}
+
 /* ---------- Wire up ---------- */
 
 function init() {
@@ -1623,6 +2135,8 @@ function init() {
   });
 
   window.addEventListener("hashchange", applyDeepLink);
+
+  wireExtraction();
 
   loadPageTheme();
   renderAll();
