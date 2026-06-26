@@ -1,4 +1,4 @@
-use crate::constants::REPO_NAME;
+use crate::constants::{REPO_NAME, SCHEMES_REPO_NAME};
 use anyhow::{anyhow, Context, Result};
 use home::home_dir;
 use serde::Deserialize;
@@ -106,6 +106,10 @@ fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
     let mut names = HashSet::new();
 
     for item in items {
+        if item.name == SCHEMES_REPO_NAME {
+            return Err(anyhow!("config.toml item.name \"{SCHEMES_REPO_NAME}\" is reserved for the built-in schemes repository and cannot be used for a custom item. Please rename this item."));
+        }
+
         if !names.insert(&item.name) {
             return Err(anyhow!("config.toml item.name should be unique values, but \"{}\" is used for more than 1 item.name. Please change this to a unique value.", item.name));
         }

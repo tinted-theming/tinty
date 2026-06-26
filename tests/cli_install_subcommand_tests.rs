@@ -51,6 +51,40 @@ themes-dir = "some-dir"
 }
 
 #[test]
+fn test_cli_install_subcommand_reserved_schemes_config_item_name() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let (config_path, _data_path, command_vec, _temp_dir) = setup(
+        "test_cli_install_subcommand_reserved_schemes_config_item_name",
+        "install",
+        true,
+    )?;
+    let config_content = r#"[[items]]
+path = "https://github.com/tinted-theming/schemes"
+name = "schemes"
+themes-dir = "some-dir"
+"#;
+    let expected_output = "config.toml item.name \"schemes\" is reserved for the built-in schemes repository and cannot be used for a custom item. Please rename this item.";
+    write_to_file(&config_path, config_content)?;
+
+    // ---
+    // Act
+    // ---
+    let (_, stderr) = utils::run_command(&command_vec)?;
+
+    // ------
+    // Assert
+    // ------
+    ensure!(
+        stderr.contains(expected_output),
+        "stderr does not contain the expected output"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_cli_install_subcommand_invalid_config_item_path() -> Result<()> {
     // -------
     // Arrange
