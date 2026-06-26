@@ -1,6 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
-use crate::repo::RepositoryBackend;
+use crate::repo::{RepositoryBackend, UpdateStatus};
 use anyhow::{anyhow, Context, Error, Result};
 use rand::Rng;
 use regex::bytes::Regex;
@@ -17,8 +17,14 @@ impl RepositoryBackend for GitShellBackend {
         git_clone(url, target, revision)
     }
 
-    fn update(&self, target: &Path, url: &str, revision: Option<&str>) -> Result<()> {
-        git_update(target, url, revision)
+    fn update(
+        &self,
+        target: &Path,
+        url: &str,
+        revision: Option<&str>,
+        allow_dirty: bool,
+    ) -> Result<UpdateStatus> {
+        git_update(target, url, revision, allow_dirty)
     }
 
     fn is_clean(&self, target: &Path) -> Result<bool> {
@@ -52,7 +58,9 @@ fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> Resul
         .with_context(|| format!("Failed to clone repository from {repo_url}"))?;
 
     if let Some(revision_str) = revision {
-        let result = git_to_revision(target_dir, "origin", revision_str);
+        // A freshly cloned tree is clean, so a conflict can never arise here;
+        // `allow_dirty` is irrelevant and the returned status is ignored.
+        let result = git_to_revision(target_dir, "origin", revision_str, false);
         if let Err(e) = result {
             // Cleanup! If we cannot checkout the revision, remove the directory.
             fs::remove_dir_all(target_dir)
@@ -64,7 +72,12 @@ fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> Resul
     Ok(())
 }
 
-fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> Result<()> {
+fn git_update(
+    repo_path: &Path,
+    repo_url: &str,
+    revision: Option<&str>,
+    allow_dirty: bool,
+) -> Result<UpdateStatus> {
     if !repo_path.is_dir() {
         return Err(anyhow!(
             "Error with updating. {} is not a directory",
@@ -103,25 +116,28 @@ fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> Resul
     })?;
 
     let revision_str = revision.unwrap_or("main");
-    let res = git_to_revision(repo_path, &tmp_remote_name, revision_str);
+    let res = git_to_revision(repo_path, &tmp_remote_name, revision_str, allow_dirty);
 
-    if let Err(e) = res {
-        // Failed to switch to the desired revision. Cleanup!
-        safe_command(
-            format!("git remote rm \"{tmp_remote_name}\"").as_str(),
-            repo_path,
-        )?
-        .stdout(Stdio::null())
-        .status()
-        .with_context(|| {
-            format!(
-                "Failed to remove temporary remote {} in {}",
-                tmp_remote_name,
-                repo_path.display()
-            )
-        })?;
-        return Err(e);
-    }
+    let status = match res {
+        Ok(status) => status,
+        Err(e) => {
+            // Failed to switch to the desired revision. Cleanup!
+            safe_command(
+                format!("git remote rm \"{tmp_remote_name}\"").as_str(),
+                repo_path,
+            )?
+            .stdout(Stdio::null())
+            .status()
+            .with_context(|| {
+                format!(
+                    "Failed to remove temporary remote {} in {}",
+                    tmp_remote_name,
+                    repo_path.display()
+                )
+            })?;
+            return Err(e);
+        }
+    };
 
     safe_command(
         format!("git remote set-url origin \"{repo_url}\"").as_str(),
@@ -148,7 +164,7 @@ fn git_update(repo_path: &Path, repo_url: &str, revision: Option<&str>) -> Resul
         )
     })?;
 
-    Ok(())
+    Ok(status)
 }
 
 fn random_remote_name() -> String {
@@ -337,7 +353,12 @@ fn safe_command(command_str: &str, cwd: &Path) -> Result<Command, Error> {
     Ok(command)
 }
 
-fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Result<()> {
+fn git_to_revision(
+    repo_path: &Path,
+    remote_name: &str,
+    revision: &str,
+    allow_dirty: bool,
+) -> Result<UpdateStatus> {
     // Download the object from the remote
     safe_command(
         format!("git fetch --quiet \"{remote_name}\" \"{revision}\"").as_str(),
@@ -354,52 +375,81 @@ fn git_to_revision(repo_path: &Path, remote_name: &str, revision: &str) -> Resul
     // Normalize the revision into the SHA.
     let resolved = git_resolve_revision(repo_path, remote_name, revision)?;
 
-    match resolved.kind {
-        RevisionType::Branch => {
-            // Checkout the branch by name to keep HEAD attached, avoiding detached HEAD.
-            // Use -B to create or reset the local branch to the fetched SHA.
-            safe_command(
-                format!(
-                    "git checkout --quiet -B \"{revision}\" \"{}\"",
-                    resolved.sha
-                )
-                .as_str(),
-                repo_path,
-            )?
-            .stdout(Stdio::null())
-            .current_dir(repo_path)
-            .status()
-            .with_context(|| {
-                format!(
-                    "Failed to checkout branch {revision} in {}",
-                    repo_path.display()
-                )
-            })?;
-        }
-        RevisionType::Tag | RevisionType::Sha => {
-            // Tags and specific SHAs are expected to result in detached HEAD.
-            safe_command(
-                format!(
-                    "git -c advice.detachedHead=false checkout --quiet \"{}\"",
-                    resolved.sha
-                )
-                .as_str(),
-                repo_path,
-            )?
-            .stdout(Stdio::null())
-            .current_dir(repo_path)
-            .status()
-            .with_context(|| {
-                format!(
-                    "Failed to checkout {} in {}",
-                    resolved.sha,
-                    repo_path.display()
-                )
-            })?;
-        }
+    // Build the checkout. Branches are checked out by name (with `-B`) to keep
+    // HEAD attached; tags and specific SHAs are expected to detach HEAD.
+    let checkout_command = match resolved.kind {
+        RevisionType::Branch => format!(
+            "git checkout --quiet -B \"{revision}\" \"{}\"",
+            resolved.sha
+        ),
+        RevisionType::Tag | RevisionType::Sha => format!(
+            "git -c advice.detachedHead=false checkout --quiet \"{}\"",
+            resolved.sha
+        ),
+    };
+
+    // `git checkout` is atomic with respect to local changes: if the checkout
+    // would overwrite uncommitted work it aborts without modifying anything,
+    // and if it touches only untouched files it carries local edits forward.
+    // We capture its output so a would-be-overwrite can be surfaced cleanly
+    // instead of being treated as a hard error.
+    let output = safe_command(checkout_command.as_str(), repo_path)?
+        .stdout(Stdio::null())
+        .output()
+        .with_context(|| format!("Failed to checkout {revision} in {}", repo_path.display()))?;
+
+    if output.status.success() {
+        return Ok(UpdateStatus::Updated);
     }
 
-    Ok(())
+    // Preserve git's own (possibly localized) message so we can show it to the
+    // user verbatim.
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+
+    // When the caller permits a dirty working tree, classify the failure with a
+    // locale-independent plumbing probe instead of parsing the message text: if
+    // switching to this revision would overwrite uncommitted or untracked work,
+    // that is an expected, recoverable outcome and the working tree is left
+    // untouched. Any other non-zero exit is a genuine error.
+    //
+    // Note the ordering: we run `checkout` first and probe with `read-tree`
+    // only afterwards, rather than using `read-tree` as a pre-flight gate. The
+    // probe could equally well run first, but `checkout` is what produces the
+    // human-facing message we want to show the user — and it must run in their
+    // locale to do so. `read-tree` is used purely as a yes/no oracle, never for
+    // its output. Checkout's atomicity makes this safe: on a conflict it changes
+    // nothing, so there is no half-applied state to undo before we probe.
+    if allow_dirty && checkout_blocked_by_local_changes(repo_path, &resolved.sha)? {
+        return Ok(UpdateStatus::ConflictPreserved { stderr });
+    }
+
+    Err(anyhow!(
+        "Failed to checkout {revision} in {}:\n{stderr}",
+        repo_path.display(),
+    ))
+}
+
+/// Locale-independent classification of a failed checkout: returns `true` when
+/// switching to `sha` would be refused because it would overwrite uncommitted
+/// changes or untracked files. Uses `git read-tree`'s dry-run (`-n`), which
+/// reports this through its exit code alone — no translatable text — and
+/// modifies neither the index nor the working tree.
+fn checkout_blocked_by_local_changes(repo_path: &Path, sha: &str) -> Result<bool> {
+    let status = safe_command(
+        format!("git read-tree -n -m -u \"{sha}\"").as_str(),
+        repo_path,
+    )?
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .status()
+    .with_context(|| {
+        format!(
+            "Failed to check working tree safety in {}",
+            repo_path.display()
+        )
+    })?;
+
+    Ok(!status.success())
 }
 
 fn git_is_working_dir_clean(target_dir: &Path) -> Result<bool> {

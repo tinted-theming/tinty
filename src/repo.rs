@@ -3,6 +3,18 @@ use std::path::Path;
 
 pub mod git_shell;
 
+/// Outcome of an `update` that was allowed to run against a dirty working tree.
+#[derive(Debug, PartialEq, Eq)]
+pub enum UpdateStatus {
+    /// The repository was brought to the configured revision. Any
+    /// non-overlapping local changes were carried forward untouched.
+    Updated,
+    /// The update was refused because it would have overwritten local work.
+    /// The working tree was left exactly as it was; `stderr` is git's own
+    /// explanation, which names the offending files and how to proceed.
+    ConflictPreserved { stderr: String },
+}
+
 /// High-level repository operations tinty performs against a `[[items]]` entry:
 /// fetching it onto disk for the first time (`install`), bringing it up to a
 /// configured revision (`update`), and checking whether the local copy has
@@ -14,7 +26,18 @@ pub mod git_shell;
 /// which implementation runs.
 pub trait RepositoryBackend {
     fn install(&self, url: &str, target: &Path, revision: Option<&str>) -> Result<()>;
-    fn update(&self, target: &Path, url: &str, revision: Option<&str>) -> Result<()>;
+    /// Bring the local copy at `target` to `revision`. When `allow_dirty` is
+    /// `false` the caller guarantees a clean working tree. When `true` the
+    /// update may run against uncommitted changes: non-overlapping edits are
+    /// carried forward and a would-be-overwrite is reported via
+    /// [`UpdateStatus::ConflictPreserved`] rather than an error.
+    fn update(
+        &self,
+        target: &Path,
+        url: &str,
+        revision: Option<&str>,
+        allow_dirty: bool,
+    ) -> Result<UpdateStatus>;
     fn is_clean(&self, target: &Path) -> Result<bool>;
 }
 
@@ -31,8 +54,13 @@ pub fn install(url: &str, target: &Path, revision: Option<&str>) -> Result<()> {
     backend().install(url, target, revision)
 }
 
-pub fn update(target: &Path, url: &str, revision: Option<&str>) -> Result<()> {
-    backend().update(target, url, revision)
+pub fn update(
+    target: &Path,
+    url: &str,
+    revision: Option<&str>,
+    allow_dirty: bool,
+) -> Result<UpdateStatus> {
+    backend().update(target, url, revision, allow_dirty)
 }
 
 pub fn is_clean(target: &Path) -> Result<bool> {
