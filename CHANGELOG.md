@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Reject a config `[[items]]` entry named `schemes`, which is reserved for the
+  built-in schemes repository. Previously such an item silently collided with
+  the built-in repo on disk and was reverted to the official schemes repo on
+  `tinty update`; it now fails fast with a clear error asking you to rename it.
+
 ## [0.34.1] - 2026-06-20
 
 ### Changed
