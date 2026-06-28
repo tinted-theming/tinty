@@ -219,27 +219,28 @@ fn update_is_blocked_when_flag_is_absent() -> Result<()> {
 }
 
 #[test]
-fn top_level_flag_applies_to_items_without_an_override() -> Result<()> {
-    let f = fixture("allow_dirty_global_default")?;
+fn schemes_setting_does_not_apply_to_items() -> Result<()> {
+    let f = fixture("allow_dirty_schemes_scope")?;
 
     fs::write(f.clone.join("theme-a.txt"), "my local edit\n")?;
     remote_commit(&f.remote, "theme-b.txt", "b2\n", "advance b")?;
 
-    // Top-level flag on; the item itself omits `allow-dirty-update`.
+    // `[schemes]` leniency is on, but the item does not opt in. The `[schemes]`
+    // setting governs only the built-in schemes repo, never `[[items]]`.
     let config = format!(
-        "allow-dirty-update = true\n\n{}",
+        "[schemes]\nallow-dirty-update = true\n\n{}",
         item_config(&f.remote, None)
     );
     write_to_file(&f.config_path, &config)?;
     let (stdout, _) = run_update(&f.command_vec)?;
 
     ensure!(
-        stdout.contains(&format!("{ITEM_NAME} up to date (local changes preserved)")),
-        "Top-level flag should enable lenient updates for the item.\nGot: {stdout}"
+        stdout.contains(&format!("{ITEM_NAME} contains uncommitted changes")),
+        "Item must not inherit the [schemes] setting.\nGot: {stdout}"
     );
     ensure!(
-        fs::read_to_string(f.clone.join("theme-b.txt"))? == "b2\n",
-        "Upstream change should have been applied."
+        fs::read_to_string(f.clone.join("theme-b.txt"))? == "b1\n",
+        "Item update must be skipped when the item itself does not opt in."
     );
 
     Ok(())

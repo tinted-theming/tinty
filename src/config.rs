@@ -35,10 +35,9 @@ pub struct ConfigItem {
     /// When `true`, `tinty update` is allowed to proceed even if this item's
     /// local copy has uncommitted changes. Non-overlapping local edits are
     /// carried forward; an update that would overwrite local changes is
-    /// refused without touching the working tree. When unset, the top-level
-    /// `allow-dirty-update` value is used as the default.
+    /// refused without touching the working tree. Defaults to `false`.
     #[serde(default, rename = "allow-dirty-update")]
-    pub allow_dirty_update: Option<bool>,
+    pub allow_dirty_update: bool,
 }
 
 impl fmt::Display for ConfigItem {
@@ -66,8 +65,8 @@ impl fmt::Display for ConfigItem {
         if !revision.is_empty() {
             writeln!(f, "revision = \"{revision}\"")?;
         }
-        if let Some(allow_dirty_update) = self.allow_dirty_update {
-            writeln!(f, "allow-dirty-update = {allow_dirty_update}")?;
+        if self.allow_dirty_update {
+            writeln!(f, "allow-dirty-update = true")?;
         }
         writeln!(f, "supported-systems = [{system_text}]")?;
         write!(f, "themes-dir = \"{}\"", self.themes_dir)
@@ -97,6 +96,18 @@ impl fmt::Display for ConfigRing {
     }
 }
 
+/// Settings for the built-in schemes repository, which has no `[[items]]`
+/// entry of its own. Grouped under a `[schemes]` table so more schemes-repo
+/// specific options can be added here in the future.
+#[derive(Deserialize, Debug, Default)]
+pub struct SchemesConfig {
+    /// When `true`, `tinty update` is allowed to proceed even if the schemes
+    /// repo has uncommitted changes. Behaves like an item's `allow-dirty-update`.
+    /// Defaults to `false`, preserving the strict skip-if-dirty behavior.
+    #[serde(default, rename = "allow-dirty-update")]
+    pub allow_dirty_update: bool,
+}
+
 /// Structure for configuration
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -110,11 +121,8 @@ pub struct Config {
     pub default_cycle_ring: Option<String>,
     pub items: Option<Vec<ConfigItem>>,
     pub hooks: Option<Vec<String>>,
-    /// Default for each item's `allow-dirty-update`, and the setting that
-    /// governs the built-in schemes repo (which has no `[[items]]` entry).
-    /// Defaults to `false`, preserving the strict skip-if-dirty behavior.
-    #[serde(default, rename = "allow-dirty-update")]
-    pub allow_dirty_update: bool,
+    #[serde(default)]
+    pub schemes: SchemesConfig,
 }
 
 fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
@@ -176,7 +184,7 @@ impl Config {
             theme_file_extension: None,
             revision: None,
             write_to_file: None,
-            allow_dirty_update: None,
+            allow_dirty_update: false,
         };
 
         // Add default `item` if no items exist
@@ -276,16 +284,19 @@ impl fmt::Display for Config {
             writeln!(f, "preferred-schemes = [{preferred_schemes_text}]")?;
         }
 
-        if self.allow_dirty_update {
-            writeln!(f, "allow-dirty-update = true")?;
-        }
-
         if let Some(hooks) = &self.hooks {
             writeln!(f, "hooks = [")?;
             for hook in hooks {
                 writeln!(f, "  \"{hook}\"")?;
             }
             writeln!(f, "]")?;
+        }
+
+        // Emitted before the `[[rings]]`/`[[items]]` array-of-tables so its
+        // keys are not mis-parsed as belonging to the last array entry.
+        if self.schemes.allow_dirty_update {
+            writeln!(f, "\n[schemes]")?;
+            writeln!(f, "allow-dirty-update = true")?;
         }
 
         if let Some(rings) = &self.rings {
@@ -308,7 +319,7 @@ impl fmt::Display for Config {
 mod tests {
     use super::{Config, ConfigItem};
 
-    fn item_with(allow_dirty_update: Option<bool>) -> ConfigItem {
+    fn item_with(allow_dirty_update: bool) -> ConfigItem {
         ConfigItem {
             name: "example".to_string(),
             path: "https://example.com/repo".to_string(),
@@ -331,37 +342,51 @@ themes-dir = "themes"
 allow-dirty-update = true
 "#;
         let item: ConfigItem = toml::from_str(toml).unwrap();
-        assert_eq!(item.allow_dirty_update, Some(true));
+        assert!(item.allow_dirty_update);
     }
 
     #[test]
-    fn item_allow_dirty_update_defaults_to_none_when_absent() {
+    fn item_allow_dirty_update_defaults_to_false_when_absent() {
         let toml = r#"
 name = "example"
 path = "https://example.com/repo"
 themes-dir = "themes"
 "#;
         let item: ConfigItem = toml::from_str(toml).unwrap();
-        assert_eq!(item.allow_dirty_update, None);
+        assert!(!item.allow_dirty_update);
     }
 
     #[test]
-    fn top_level_allow_dirty_update_parses_and_defaults_to_false() {
-        let with: Config = toml::from_str("allow-dirty-update = true\n").unwrap();
-        assert!(with.allow_dirty_update);
+    fn schemes_allow_dirty_update_parses_and_defaults_to_false() {
+        let with: Config = toml::from_str("[schemes]\nallow-dirty-update = true\n").unwrap();
+        assert!(with.schemes.allow_dirty_update);
 
+        // `[schemes]` table present but the key omitted.
+        let table_only: Config = toml::from_str("[schemes]\n").unwrap();
+        assert!(!table_only.schemes.allow_dirty_update);
+
+        // No `[schemes]` table at all.
         let without: Config = toml::from_str("shell = \"sh -c '{}'\"\n").unwrap();
-        assert!(!without.allow_dirty_update);
+        assert!(!without.schemes.allow_dirty_update);
     }
 
     #[test]
-    fn item_display_emits_allow_dirty_update_only_when_set() {
-        assert!(item_with(Some(true))
+    fn item_display_emits_allow_dirty_update_only_when_true() {
+        assert!(item_with(true)
             .to_string()
             .contains("allow-dirty-update = true"));
-        assert!(item_with(Some(false))
-            .to_string()
-            .contains("allow-dirty-update = false"));
-        assert!(!item_with(None).to_string().contains("allow-dirty-update"));
+        assert!(!item_with(false).to_string().contains("allow-dirty-update"));
+    }
+
+    #[test]
+    fn config_display_emits_schemes_table_only_when_set() {
+        let mut config: Config = toml::from_str("[schemes]\nallow-dirty-update = true\n").unwrap();
+        config.shell = Some("sh -c '{}'".to_string());
+        let rendered = config.to_string();
+        assert!(rendered.contains("[schemes]"));
+        assert!(rendered.contains("allow-dirty-update = true"));
+
+        let off: Config = toml::from_str("shell = \"sh -c '{}'\"\n").unwrap();
+        assert!(!off.to_string().contains("[schemes]"));
     }
 }

@@ -8,8 +8,8 @@
   a repository with uncommitted changes, for iterating on a scheme or template
   repo locally. Non-overlapping local changes are carried forward; an update
   that would overwrite uncommitted work (or an untracked file) is refused and
-  leaves the working tree untouched. Set it per `[[items]]` entry, or top-level
-  to set the default for all items and the built-in schemes repo.
+  leaves the working tree untouched. Set it per `[[items]]` entry, or under the
+  `[schemes]` table for the built-in schemes repo.
 
 ## [0.34.1] - 2026-06-20
 

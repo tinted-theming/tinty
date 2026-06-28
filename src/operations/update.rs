@@ -66,22 +66,21 @@ fn print_conflict_message(item_name: &str, git_stderr: &str) {
 /// Updates the provided repositories in config file by doing a git pull
 pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()> {
     let config = Config::read(config_path)?;
-    // The top-level value is the default for every item and also governs the
-    // built-in schemes repo, which has no `[[items]]` entry of its own.
-    let global_allow_dirty = config.allow_dirty_update;
+    // The built-in schemes repo has no `[[items]]` entry, so its leniency is
+    // configured separately under `[schemes]`.
+    let schemes_allow_dirty = config.schemes.allow_dirty_update;
     let items = config.items.unwrap_or_default();
     let hooks_path = data_path.join(REPO_DIR);
 
     for item in items {
         let item_path = hooks_path.join(&item.name);
-        let allow_dirty = item.allow_dirty_update.unwrap_or(global_allow_dirty);
 
         update_item(
             item.name.as_str(),
             item.path.as_str(),
             &item_path,
             item.revision.as_deref(),
-            allow_dirty,
+            item.allow_dirty_update,
             is_quiet,
         )?;
     }
@@ -93,7 +92,7 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
         SCHEMES_REPO_URL,
         &schemes_repo_path,
         Some(SCHEMES_REPO_REVISION),
-        global_allow_dirty,
+        schemes_allow_dirty,
         is_quiet,
     )?;
 
