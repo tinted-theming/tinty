@@ -31,3 +31,6 @@ jobs:
     uses: ./.github/workflows/test.yml
     with:
       cache-key: ${{ needs.setup-environment.outputs.cargo_cache_key }}
+
+  msrv:
+    uses: ./.github/workflows/msrv.yml
