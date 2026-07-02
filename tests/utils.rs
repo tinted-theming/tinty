@@ -196,9 +196,7 @@ fn ensure_repos_cache() -> Result<PathBuf> {
         }
     }
 
-    lock_file
-        .unlock()
-        .context("Failed to release lock on tmp/repos")?;
+    FileExt::unlock(&lock_file).context("Failed to release lock on tmp/repos")?;
 
     *guard = Some(tmp_repos_dir.clone());
     Ok(tmp_repos_dir)
