@@ -49,15 +49,12 @@ fn update_item(
 
 /// Prints a human-facing explanation when an update was refused because it
 /// would have overwritten the user's uncommitted work. The working tree is
-/// left untouched, so we echo git's own message verbatim (in yellow) — it
-/// already names the offending files and how to proceed.
+/// left untouched, so we echo git's own message verbatim — it already names
+/// the offending files and how to proceed.
 fn print_conflict_message(item_name: &str, git_stderr: &str) {
-    const YELLOW: &str = "\x1b[33m";
-    const RESET: &str = "\x1b[0m";
-
     println!("{item_name}: could not update — your local changes are preserved:");
     for line in git_stderr.lines() {
-        println!("{YELLOW}{line}{RESET}");
+        println!("{line}");
     }
 }
 
