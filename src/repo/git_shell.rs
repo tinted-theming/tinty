@@ -4,6 +4,7 @@ use crate::repo::{RepositoryBackend, UpdateStatus};
 use anyhow::{anyhow, Context, Error, Result};
 use rand::Rng;
 use regex::bytes::Regex;
+use std::collections::HashSet;
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -412,13 +413,13 @@ fn git_to_revision(
     // that is an expected, recoverable outcome and the working tree is left
     // untouched. Any other non-zero exit is a genuine error.
     //
-    // Note the ordering: we run `checkout` first and probe with `read-tree`
-    // only afterwards, rather than using `read-tree` as a pre-flight gate. The
-    // probe could equally well run first, but `checkout` is what produces the
-    // human-facing message we want to show the user — and it must run in their
-    // locale to do so. `read-tree` is used purely as a yes/no oracle, never for
-    // its output. Checkout's atomicity makes this safe: on a conflict it changes
-    // nothing, so there is no half-applied state to undo before we probe.
+    // Note the ordering: we run `checkout` first and classify only afterwards,
+    // rather than gating on the probe. The probe could equally well run first,
+    // but `checkout` is what produces the human-facing message we want to show
+    // the user — and it must run in their locale to do so. The probe is used
+    // purely as a yes/no oracle, never for its output. Checkout's atomicity
+    // makes this safe: on a conflict it changes nothing, so there is no
+    // half-applied state to reason about before we classify.
     if allow_dirty && checkout_blocked_by_local_changes(repo_path, &resolved.sha)? {
         return Ok(UpdateStatus::ConflictPreserved { stderr });
     }
@@ -430,26 +431,53 @@ fn git_to_revision(
 }
 
 /// Locale-independent classification of a failed checkout: returns `true` when
-/// switching to `sha` would be refused because it would overwrite uncommitted
-/// changes or untracked files. Uses `git read-tree`'s dry-run (`-n`), which
-/// reports this through its exit code alone — no translatable text — and
-/// modifies neither the index nor the working tree.
+/// switching to `sha` would overwrite uncommitted or untracked work. Computed
+/// entirely from plumbing whose output is NUL-separated pathnames (never
+/// translatable text): the paths that differ between `HEAD` and `sha` (what the
+/// checkout would write) intersected with the paths that hold local content a
+/// checkout could clobber (tracked files differing from `HEAD`, whether staged
+/// or unstaged, plus untracked files).
+///
+/// `git read-tree`'s dry-run was tempting here but is not faithful: it checks
+/// the working tree against the index, so a purely *staged* overlapping change
+/// reads as "up to date" and would be misclassified as a hard error.
 fn checkout_blocked_by_local_changes(repo_path: &Path, sha: &str) -> Result<bool> {
-    let status = safe_command(
-        format!("git read-tree -n -m -u \"{sha}\"").as_str(),
+    // Paths the checkout would write (differ between HEAD and the target tree).
+    let changed = git_nul_paths(
         repo_path,
-    )?
-    .stdout(Stdio::null())
-    .stderr(Stdio::null())
-    .status()
-    .with_context(|| {
-        format!(
-            "Failed to check working tree safety in {}",
-            repo_path.display()
-        )
-    })?;
+        &format!("git diff-tree -r -z --name-only --no-commit-id HEAD \"{sha}\""),
+    )?;
+    if changed.is_empty() {
+        return Ok(false);
+    }
 
-    Ok(!status.success())
+    // Paths holding local content a checkout could clobber.
+    let mut dirty: HashSet<String> =
+        git_nul_paths(repo_path, "git diff-index -z --name-only HEAD")?
+            .into_iter()
+            .collect();
+    dirty.extend(git_nul_paths(
+        repo_path,
+        "git ls-files -z --others --exclude-standard",
+    )?);
+
+    Ok(changed.iter().any(|path| dirty.contains(path.as_str())))
+}
+
+/// Runs a git command whose stdout is NUL-separated pathnames (`-z
+/// --name-only` and friends) and returns them. This output form is a stable,
+/// locale-independent plumbing format.
+fn git_nul_paths(repo_path: &Path, command: &str) -> Result<Vec<String>> {
+    let output = safe_command(command, repo_path)?
+        .stderr(Stdio::null())
+        .output()
+        .with_context(|| format!("Failed to run `{command}` in {}", repo_path.display()))?;
+
+    Ok(String::from_utf8_lossy(&output.stdout)
+        .split('\0')
+        .filter(|path| !path.is_empty())
+        .map(str::to_string)
+        .collect())
 }
 
 fn git_is_working_dir_clean(target_dir: &Path) -> Result<bool> {

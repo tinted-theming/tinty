@@ -196,6 +196,72 @@ fn update_refuses_when_incoming_file_collides_with_untracked() -> Result<()> {
 }
 
 #[test]
+fn update_refuses_and_preserves_staged_work_on_conflict() -> Result<()> {
+    let f = fixture("allow_dirty_staged_conflict")?;
+
+    // Stage an edit to theme-a; upstream changes the same file.
+    fs::write(f.clone.join("theme-a.txt"), "my staged edit\n")?;
+    git(&f.clone, &["add", "theme-a.txt"])?;
+    remote_commit(&f.remote, "theme-a.txt", "upstream edit\n", "advance a")?;
+    let before = head(&f.clone)?;
+
+    write_to_file(&f.config_path, &item_config(&f.remote, Some(true)))?;
+    let (stdout, _) = run_update(&f.command_vec)?;
+
+    ensure!(
+        stdout.contains(&format!("{ITEM_NAME}: could not update")),
+        "A staged conflict must be reported as a preserved conflict, not a hard error.\nGot: {stdout}"
+    );
+    ensure!(
+        fs::read_to_string(f.clone.join("theme-a.txt"))? == "my staged edit\n",
+        "The staged content must be left untouched."
+    );
+    // The change must remain staged, not silently unstaged.
+    ensure!(
+        git(&f.clone, &["diff", "--cached", "--name-only"])?.contains("theme-a.txt"),
+        "The change must still be staged after a refused update."
+    );
+    ensure!(
+        head(&f.clone)? == before,
+        "HEAD must not move when the update is refused."
+    );
+
+    Ok(())
+}
+
+#[test]
+fn update_carries_staged_changes_forward_without_conflict() -> Result<()> {
+    let f = fixture("allow_dirty_staged_carry_forward")?;
+
+    // Stage an edit to theme-a; upstream only advances theme-b.
+    fs::write(f.clone.join("theme-a.txt"), "my staged edit\n")?;
+    git(&f.clone, &["add", "theme-a.txt"])?;
+    remote_commit(&f.remote, "theme-b.txt", "b2\n", "advance b")?;
+
+    write_to_file(&f.config_path, &item_config(&f.remote, Some(true)))?;
+    let (stdout, _) = run_update(&f.command_vec)?;
+
+    ensure!(
+        stdout.contains(&format!("{ITEM_NAME} up to date (local changes preserved)")),
+        "Expected a preserved-changes success message.\nGot: {stdout}"
+    );
+    ensure!(
+        fs::read_to_string(f.clone.join("theme-a.txt"))? == "my staged edit\n",
+        "The staged edit must be carried forward untouched."
+    );
+    ensure!(
+        git(&f.clone, &["diff", "--cached", "--name-only"])?.contains("theme-a.txt"),
+        "The change must remain staged after a carry-forward update."
+    );
+    ensure!(
+        fs::read_to_string(f.clone.join("theme-b.txt"))? == "b2\n",
+        "Upstream change to theme-b should have been applied."
+    );
+
+    Ok(())
+}
+
+#[test]
 fn update_is_blocked_when_flag_is_absent() -> Result<()> {
     let f = fixture("allow_dirty_blocked_default")?;
 
