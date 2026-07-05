@@ -58,4 +58,10 @@ unknown-git = "deny"
 [advisories]
 ignore = [
     "RUSTSEC-2024-0436", # paste crate is unmaintained
+    # quick-xml DoS advisories. Fixed in quick-xml >= 0.41.0, but it is a
+    # transitive dependency pinned to ^0.38.3 by tinted-builder 0.16.0, so it
+    # cannot be bumped until a tinted-builder release updates it. Remove these
+    # once that lands.
+    "RUSTSEC-2026-0194", # quick-xml: quadratic run time on duplicate attribute names
+    "RUSTSEC-2026-0195", # quick-xml: unbounded namespace-declaration allocation
 ]
