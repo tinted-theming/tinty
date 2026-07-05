@@ -1,8 +1,9 @@
-use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_REVISION, SCHEMES_REPO_URL};
+use crate::config::{ensure_schemes_path_not_circular, Config};
+use crate::constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
 use crate::repo::{self, UpdateStatus};
-use crate::{config::Config, constants::REPO_NAME};
 use anyhow::{Context, Result};
 use std::path::Path;
+use url::Url;
 
 fn update_item(
     item_name: &str,
@@ -58,6 +59,39 @@ fn print_conflict_message(item_name: &str, git_stderr: &str) {
     }
 }
 
+/// Updates the built-in schemes repository from its configured source.
+///
+/// A Git URL source is pulled to its revision exactly like an item. A local-path
+/// source is a live symlink to the user's directory, so there is nothing to
+/// fetch and `revision` is irrelevant — we only confirm the symlink is in place.
+fn update_schemes_repo(
+    schemes_repo_path: &Path,
+    source: &str,
+    revision: Option<&str>,
+    allow_dirty: bool,
+    is_quiet: bool,
+) -> Result<()> {
+    if Url::parse(source).is_ok() {
+        update_item(
+            SCHEMES_REPO_NAME,
+            source,
+            schemes_repo_path,
+            revision,
+            allow_dirty,
+            is_quiet,
+        )
+    } else {
+        if !is_quiet {
+            if schemes_repo_path.exists() {
+                println!("{SCHEMES_REPO_NAME} up to date (local directory)");
+            } else {
+                println!("{SCHEMES_REPO_NAME} not installed (run `{REPO_NAME} install`)");
+            }
+        }
+        Ok(())
+    }
+}
+
 /// Updates local files
 ///
 /// Updates the provided repositories in config file by doing a git pull
@@ -66,6 +100,7 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
     // The built-in schemes repo has no `[[items]]` entry, so its leniency is
     // configured separately under `[schemes]`.
     let schemes_allow_dirty = config.schemes.allow_dirty_update;
+    let (schemes_source, schemes_revision) = config.schemes_source();
     let items = config.items.unwrap_or_default();
     let hooks_path = data_path.join(REPO_DIR);
 
@@ -84,11 +119,11 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
 
     let schemes_repo_path = hooks_path.join(SCHEMES_REPO_NAME);
 
-    update_item(
-        SCHEMES_REPO_NAME,
-        SCHEMES_REPO_URL,
+    ensure_schemes_path_not_circular(&schemes_source, &schemes_repo_path)?;
+    update_schemes_repo(
         &schemes_repo_path,
-        Some(SCHEMES_REPO_REVISION),
+        &schemes_source,
+        schemes_revision.as_deref(),
         schemes_allow_dirty,
         is_quiet,
     )?;

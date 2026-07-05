@@ -356,11 +356,30 @@ The `[schemes]` table holds settings for the built-in schemes repository
 
 | Key                  | Type      | Required | Description                                                                 | Default | Example                     |
 |----------------------|-----------|----------|-----------------------------------------------------------------------------|---------|-----------------------------|
+| `path`               | `string`  | Optional | Override the source of the schemes repository. A Git remote URL is cloned into `repos/schemes`; a local directory is symlinked as `repos/schemes` (and need not be a Git repository). When unset, the built-in `tinted-theming/schemes` repository is used. | Built-in schemes repo | `path = "https://github.com/me/my-schemes"` |
+| `revision`           | `string`  | Optional | Git revision (branch, tag, or commit SHA) to check out, mirroring an item's [`revision`](#items-table-configtoml-schema). **Ignored when `path` points at a local directory.** When unset alongside a custom `path`, the remote's default branch is used. | Built-in pinned revision | `revision = "main"` |
 | `allow-dirty-update` | `boolean` | Optional | Allow `tinty update` to update the schemes repo even when it has uncommitted changes. Behaves like an item's [`allow-dirty-update`](#note-on-allow-dirty-update). | `false` | `allow-dirty-update = true` |
+
+`path` and `revision` can be set independently: set only `revision` to re-pin
+the built-in repository to a different branch/tag/SHA, or set only `path` to
+swap the source while defaulting the revision. `path` follows the same rules as
+an item's `path` (HTTPS Git URL or a local directory; a leading `~/` is
+expanded). Pointing `path` at Tinty's own managed `repos/schemes` directory is
+rejected as a circular reference.
 
 ```toml
 [schemes]
+# Clone an alternate schemes repo at a specific branch:
+path = "https://github.com/me/my-schemes"
+revision = "main"
 allow-dirty-update = true
+```
+
+```toml
+[schemes]
+# Or symlink a local directory of schemes you are iterating on (revision is
+# ignored for local paths):
+path = "~/dev/my-schemes"
 ```
 
 ### Full Configuration Example
