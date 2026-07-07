@@ -397,3 +397,42 @@ revision = "43b36ed5eadad59a5027e442330d2485b8607b34"
 
     Ok(())
 }
+
+#[test]
+fn test_cli_update_schemes_repo_allow_dirty() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
+        "test_cli_update_schemes_repo_allow_dirty",
+        "update",
+        true, // clone cached repos, including the schemes repo
+    )?;
+
+    // Enable leniency for the built-in schemes repo via the `[schemes]` table.
+    write_to_file(&config_path, "[schemes]\nallow-dirty-update = true\n")?;
+
+    // Dirty the schemes repo with an untracked file, as custom schemes do.
+    let schemes_repo = data_path.join("repos/schemes");
+    let untracked = schemes_repo.join("custom-schemes-test.yaml");
+    write_to_file(&untracked, "system: \"base16\"\n")?;
+
+    // ---
+    // Act
+    // ---
+    let (stdout, _) = utils::run_command(&command_vec)?;
+
+    // ------
+    // Assert
+    // ------
+    ensure!(
+        stdout.contains("schemes up to date (local changes preserved)"),
+        "Expected the schemes repo to update leniently.\nGot: {stdout}"
+    );
+    ensure!(
+        untracked.exists(),
+        "Untracked file in the schemes repo should be preserved across the update."
+    );
+
+    Ok(())
+}
