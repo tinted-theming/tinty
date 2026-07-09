@@ -1,4 +1,5 @@
 use crate::constants::{REPO_NAME, SCHEMES_REPO_NAME, SCHEMES_REPO_REVISION, SCHEMES_REPO_URL};
+use crate::utils::replace_tilde_slash_with_home;
 use anyhow::{anyhow, Context, Result};
 use home::home_dir;
 use serde::Deserialize;
@@ -184,26 +185,6 @@ fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
     Ok(())
 }
 
-/// Expands a leading `~/` in a config path to the user's home directory,
-/// trimming surrounding whitespace. Paths without a `~/` prefix are returned
-/// as-is (trimmed).
-fn expand_tilde_path(path: &str) -> Result<String> {
-    let trimmed = path.trim();
-    trimmed.strip_prefix("~/").map_or_else(
-        || Ok(trimmed.to_string()),
-        |rest| {
-            home_dir().map_or_else(
-                || {
-                    Err(anyhow!(
-                        "Unable to determine a home directory for \"{trimmed}\", please use an absolute path instead"
-                    ))
-                },
-                |home| Ok(format!("{}/{rest}", home.display())),
-            )
-        },
-    )
-}
-
 fn ensure_ring_names_are_valid(rings: &[ConfigRing]) -> Result<()> {
     let mut names = HashSet::new();
 
@@ -345,7 +326,9 @@ impl Config {
         // URL or an existing local directory. Unlike an item, a local directory
         // need not be a Git repository.
         if let Some(raw_path) = config.schemes.path.clone() {
-            let expanded = expand_tilde_path(&raw_path)?;
+            let expanded = replace_tilde_slash_with_home(&raw_path)?
+                .to_string_lossy()
+                .into_owned();
 
             if Url::parse(&expanded).is_err() && !Path::new(&expanded).is_dir() {
                 return Err(anyhow!("config.toml [schemes].path \"{expanded}\" is not a valid url and is not a path to an existing local directory"));

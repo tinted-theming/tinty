@@ -75,47 +75,72 @@ fn install_dir(
     Ok(())
 }
 
-/// The kind of entry the managed `repos/schemes` slot should hold, derived from
-/// the configured schemes source.
-enum SchemesSlotKind {
-    /// A Git clone of a remote URL.
-    Clone,
-    /// A symlink to a local directory.
-    Symlink,
+/// Normalizes a Git URL for equality checks by trimming a trailing slash and a
+/// `.git` suffix, so `.../schemes`, `.../schemes/`, and `.../schemes.git` all
+/// compare equal. Used only to decide whether an existing clone already points
+/// at the configured source; the stored URL is never rewritten.
+fn git_url_eq(a: &str, b: &str) -> bool {
+    fn normalize(url: &str) -> &str {
+        let url = url.trim().trim_end_matches('/');
+        url.strip_suffix(".git").unwrap_or(url)
+    }
+    normalize(a) == normalize(b)
 }
 
-/// Reconciles the `repos/schemes` slot with the desired kind before
-/// (re)installing it. When the configured schemes source switches between a Git
-/// URL and a local path, the previously-installed form is removed so the correct
-/// one can take its place. A matching kind — or an empty slot — is left
-/// untouched, so the normal `install_git_url`/`install_dir` fast paths still
-/// run.
-fn reconcile_schemes_slot(schemes_repo_path: &Path, want: &SchemesSlotKind) -> Result<()> {
+/// Prepares the `repos/schemes` slot to hold a fresh clone of `source`. Removes
+/// a symlink left by a previous local-path source, or a stale clone whose
+/// `origin` points at a different URL, so `install_git_url` re-clones from the
+/// now-configured source. A clone already pointing at `source` (or an empty
+/// slot) is left untouched, so the common case does no extra work.
+fn prepare_clone_slot(schemes_repo_path: &Path, source: &str) -> Result<()> {
     let Ok(metadata) = symlink_metadata(schemes_repo_path) else {
-        // Nothing occupies the slot yet.
-        return Ok(());
+        return Ok(()); // Nothing occupies the slot yet.
     };
-    let is_symlink = metadata.file_type().is_symlink();
 
-    match (want, is_symlink) {
-        // Want a clone, but a symlink to a local dir is here: drop the symlink.
-        (SchemesSlotKind::Clone, true) => remove_symlink(schemes_repo_path).with_context(|| {
+    if metadata.file_type().is_symlink() {
+        return remove_symlink(schemes_repo_path).with_context(|| {
             format!(
                 "Failed to remove existing schemes symlink at {}",
                 schemes_repo_path.display()
             )
-        }),
-        // Want a symlink, but a real directory (a clone) is here: remove it.
-        (SchemesSlotKind::Symlink, false) => std::fs::remove_dir_all(schemes_repo_path)
-            .with_context(|| {
-                format!(
-                    "Failed to remove existing schemes clone at {}",
-                    schemes_repo_path.display()
-                )
-            }),
-        // Already the right kind; leave it for the installer to refresh.
-        _ => Ok(()),
+        });
     }
+
+    // A real directory: an existing clone. Re-clone only when its origin no
+    // longer matches the configured source.
+    let matches_source =
+        repo::origin_url(schemes_repo_path)?.is_some_and(|origin| git_url_eq(&origin, source));
+    if !matches_source {
+        std::fs::remove_dir_all(schemes_repo_path).with_context(|| {
+            format!(
+                "Failed to remove existing schemes clone at {}",
+                schemes_repo_path.display()
+            )
+        })?;
+    }
+
+    Ok(())
+}
+
+/// Prepares the `repos/schemes` slot to hold a symlink to a local directory.
+/// Removes a clone left by a previous Git-URL source so `install_dir` can create
+/// the symlink. An existing symlink (or empty slot) is left for `install_dir` to
+/// refresh.
+fn prepare_symlink_slot(schemes_repo_path: &Path) -> Result<()> {
+    let Ok(metadata) = symlink_metadata(schemes_repo_path) else {
+        return Ok(()); // Nothing occupies the slot yet.
+    };
+
+    if metadata.file_type().is_symlink() {
+        return Ok(());
+    }
+
+    std::fs::remove_dir_all(schemes_repo_path).with_context(|| {
+        format!(
+            "Failed to remove existing schemes clone at {}",
+            schemes_repo_path.display()
+        )
+    })
 }
 
 /// Installs the built-in schemes repository from its configured source. A Git
@@ -129,7 +154,7 @@ fn install_schemes_repo(
     is_quiet: bool,
 ) -> Result<()> {
     if Url::parse(source).is_ok() {
-        reconcile_schemes_slot(schemes_repo_path, &SchemesSlotKind::Clone)?;
+        prepare_clone_slot(schemes_repo_path, source)?;
         install_git_url(
             schemes_repo_path,
             SCHEMES_REPO_NAME,
@@ -138,7 +163,7 @@ fn install_schemes_repo(
             is_quiet,
         )
     } else {
-        reconcile_schemes_slot(schemes_repo_path, &SchemesSlotKind::Symlink)?;
+        prepare_symlink_slot(schemes_repo_path)?;
         install_dir(
             schemes_repo_path,
             SCHEMES_REPO_NAME,

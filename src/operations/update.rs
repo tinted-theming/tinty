@@ -1,5 +1,5 @@
 use crate::config::{ensure_schemes_path_not_circular, Config};
-use crate::constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
+use crate::constants::{DEFAULT_REVISION, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
 use crate::repo::{self, UpdateStatus};
 use anyhow::{Context, Result};
 use std::path::Path;
@@ -14,7 +14,7 @@ fn update_item(
     is_quiet: bool,
 ) -> Result<()> {
     if item_path.is_dir() {
-        let rev = revision.unwrap_or("main");
+        let rev = revision.unwrap_or(DEFAULT_REVISION);
         let is_clean = repo::is_clean(item_path)?;
 
         if is_clean {

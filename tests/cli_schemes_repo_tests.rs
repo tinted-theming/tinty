@@ -300,6 +300,62 @@ fn schemes_local_path_update_is_noop() -> Result<()> {
 }
 
 #[test]
+fn schemes_url_change_reclones_on_install_but_unchanged_url_is_noop() -> Result<()> {
+    let (config_path, data_path, command_vec, temp) =
+        setup("schemes_url_change_reclones", "install", false)?;
+    let schemes = schemes_repo_path(&data_path);
+
+    let remote_a = temp.path().join("schemes-a");
+    init_scheme_repo(&remote_a, "scheme-a", "Scheme A")?;
+    let remote_b = temp.path().join("schemes-b");
+    init_scheme_repo(&remote_b, "scheme-b", "Scheme B")?;
+
+    let cfg_a = format!(
+        "[schemes]\npath = \"{}\"\n\n{}",
+        file_url(&remote_a),
+        local_item_config(temp.path())?
+    );
+    let cfg_b = format!(
+        "[schemes]\npath = \"{}\"\n\n{}",
+        file_url(&remote_b),
+        local_item_config(temp.path())?
+    );
+
+    // Install from A.
+    write_to_file(&config_path, &cfg_a)?;
+    run_command(&command_vec)?;
+    ensure!(
+        schemes.join("base16").join("scheme-a.yaml").exists(),
+        "expected repo A's scheme after the first install"
+    );
+
+    // Re-installing with the SAME URL must not re-clone: a local untracked file
+    // in the clone survives.
+    let sentinel = schemes.join("sentinel.txt");
+    write_to_file(&sentinel, "keep me\n")?;
+    run_command(&command_vec)?;
+    ensure!(
+        sentinel.exists(),
+        "an unchanged URL should be a no-op, not a destructive re-clone"
+    );
+
+    // Point the source at a different URL (repo B) and re-install: the clone is
+    // replaced so it reflects the new source.
+    write_to_file(&config_path, &cfg_b)?;
+    run_command(&command_vec)?;
+    ensure!(
+        schemes.join("base16").join("scheme-b.yaml").exists(),
+        "install should re-clone from the newly-configured URL"
+    );
+    ensure!(
+        !schemes.join("base16").join("scheme-a.yaml").exists(),
+        "the previous repo's content should be gone after switching URLs"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn schemes_source_switch_reconciles_slot_kind() -> Result<()> {
     let (config_path, data_path, command_vec, temp) =
         setup("schemes_switch_slot_kind", "install", false)?;

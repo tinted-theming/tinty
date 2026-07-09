@@ -1,5 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
+use crate::constants::DEFAULT_REVISION;
 use crate::repo::{RepositoryBackend, UpdateStatus};
 use anyhow::{anyhow, Context, Error, Result};
 use rand::Rng;
@@ -31,6 +32,31 @@ impl RepositoryBackend for GitShellBackend {
     fn is_clean(&self, target: &Path) -> Result<bool> {
         git_is_working_dir_clean(target)
     }
+
+    fn origin_url(&self, target: &Path) -> Result<Option<String>> {
+        git_origin_url(target)
+    }
+}
+
+/// Reads the `origin` remote URL of the repository at `target`. Returns `None`
+/// when `target` is not a git repository or has no `origin` remote, so callers
+/// can treat "unknown" the same as "does not match".
+fn git_origin_url(target: &Path) -> Result<Option<String>> {
+    if !target.is_dir() {
+        return Ok(None);
+    }
+
+    let output = safe_command("git remote get-url origin", target)?
+        .stderr(Stdio::null())
+        .output()
+        .with_context(|| format!("Failed to read origin remote in {}", target.display()))?;
+
+    if !output.status.success() {
+        return Ok(None);
+    }
+
+    let url = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    Ok((!url.is_empty()).then_some(url))
 }
 
 fn git_clone(repo_url: &str, target_dir: &Path, revision: Option<&str>) -> Result<()> {
@@ -116,7 +142,7 @@ fn git_update(
         )
     })?;
 
-    let revision_str = revision.unwrap_or("main");
+    let revision_str = revision.unwrap_or(DEFAULT_REVISION);
     let res = git_to_revision(repo_path, &tmp_remote_name, revision_str, allow_dirty);
 
     let status = match res {
