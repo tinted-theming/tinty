@@ -17,6 +17,14 @@
   that would overwrite uncommitted work (or an untracked file) is refused and
   leaves the working tree untouched. Set it per `[[items]]` entry, or under the
   `[schemes]` table for the built-in schemes repo.
+- Add `[schemes].path` and `[schemes].revision` config options to override the
+  source of the built-in schemes repository. `path` accepts an HTTPS Git URL
+  (cloned into `repos/schemes`) or a local directory (symlinked as
+  `repos/schemes`, without requiring it to be a Git repository); `revision`
+  pins a branch, tag, or commit SHA and is ignored for local paths. Either may
+  be set on its own, they follow the same install/update semantics as
+  `[[items]]`, and pointing `path` at Tinty's own managed schemes directory is
+  rejected as a circular reference.
 
 ### Changed
 
@@ -24,7 +32,7 @@
   serving the live server instead of opening a static page. Pass `--no-rc`
   to open the previous self-contained static gallery (no server, no system
   changes). `--dump <DIRECTORY>` still writes the static site to a directory.
-  
+
 ### Fixed
 
 - Reject a config `[[items]]` entry named `schemes`, which is reserved for the

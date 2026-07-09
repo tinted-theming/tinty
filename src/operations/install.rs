@@ -1,7 +1,7 @@
-use crate::config::Config;
-use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME, SCHEMES_REPO_REVISION, SCHEMES_REPO_URL};
+use crate::config::{ensure_schemes_path_not_circular, Config};
+use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME};
 use crate::repo;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use std::fs::{remove_file as remove_symlink, symlink_metadata};
 use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
@@ -75,12 +75,111 @@ fn install_dir(
     Ok(())
 }
 
+/// Normalizes a Git URL for equality checks by trimming a trailing slash and a
+/// `.git` suffix, so `.../schemes`, `.../schemes/`, and `.../schemes.git` all
+/// compare equal. Used only to decide whether an existing clone already points
+/// at the configured source; the stored URL is never rewritten.
+fn git_url_eq(a: &str, b: &str) -> bool {
+    fn normalize(url: &str) -> &str {
+        let url = url.trim().trim_end_matches('/');
+        url.strip_suffix(".git").unwrap_or(url)
+    }
+    normalize(a) == normalize(b)
+}
+
+/// Prepares the `repos/schemes` slot to hold a fresh clone of `source`. Removes
+/// a symlink left by a previous local-path source, or a stale clone whose
+/// `origin` points at a different URL, so `install_git_url` re-clones from the
+/// now-configured source. A clone already pointing at `source` (or an empty
+/// slot) is left untouched, so the common case does no extra work.
+fn prepare_clone_slot(schemes_repo_path: &Path, source: &str) -> Result<()> {
+    let Ok(metadata) = symlink_metadata(schemes_repo_path) else {
+        return Ok(()); // Nothing occupies the slot yet.
+    };
+
+    if metadata.file_type().is_symlink() {
+        return remove_symlink(schemes_repo_path).with_context(|| {
+            format!(
+                "Failed to remove existing schemes symlink at {}",
+                schemes_repo_path.display()
+            )
+        });
+    }
+
+    // A real directory: an existing clone. Re-clone only when its origin no
+    // longer matches the configured source.
+    let matches_source =
+        repo::origin_url(schemes_repo_path)?.is_some_and(|origin| git_url_eq(&origin, source));
+    if !matches_source {
+        std::fs::remove_dir_all(schemes_repo_path).with_context(|| {
+            format!(
+                "Failed to remove existing schemes clone at {}",
+                schemes_repo_path.display()
+            )
+        })?;
+    }
+
+    Ok(())
+}
+
+/// Prepares the `repos/schemes` slot to hold a symlink to a local directory.
+/// Removes a clone left by a previous Git-URL source so `install_dir` can create
+/// the symlink. An existing symlink (or empty slot) is left for `install_dir` to
+/// refresh.
+fn prepare_symlink_slot(schemes_repo_path: &Path) -> Result<()> {
+    let Ok(metadata) = symlink_metadata(schemes_repo_path) else {
+        return Ok(()); // Nothing occupies the slot yet.
+    };
+
+    if metadata.file_type().is_symlink() {
+        return Ok(());
+    }
+
+    std::fs::remove_dir_all(schemes_repo_path).with_context(|| {
+        format!(
+            "Failed to remove existing schemes clone at {}",
+            schemes_repo_path.display()
+        )
+    })
+}
+
+/// Installs the built-in schemes repository from its configured source. A Git
+/// URL is cloned into `repos/schemes`; a local directory is symlinked as
+/// `repos/schemes` (with `revision` ignored, exactly like a local-path
+/// `[[items]]` entry).
+fn install_schemes_repo(
+    schemes_repo_path: &Path,
+    source: &str,
+    revision: Option<&str>,
+    is_quiet: bool,
+) -> Result<()> {
+    if Url::parse(source).is_ok() {
+        prepare_clone_slot(schemes_repo_path, source)?;
+        install_git_url(
+            schemes_repo_path,
+            SCHEMES_REPO_NAME,
+            source,
+            revision,
+            is_quiet,
+        )
+    } else {
+        prepare_symlink_slot(schemes_repo_path)?;
+        install_dir(
+            schemes_repo_path,
+            SCHEMES_REPO_NAME,
+            Path::new(source),
+            is_quiet,
+        )
+    }
+}
+
 /// Install cli tool
 ///
 /// Clones the provided config repositories and ensures everything is ready for when the user runs
 /// any other command
 pub fn install(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()> {
     let config = Config::read(config_path)?;
+    let (schemes_source, schemes_revision) = config.schemes_source();
     let items = config.items.unwrap_or_default();
     let hooks_path = data_path.join(REPO_DIR);
 
@@ -102,11 +201,11 @@ pub fn install(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<(
 
     let schemes_repo_path = hooks_path.join(SCHEMES_REPO_NAME);
 
-    install_git_url(
+    ensure_schemes_path_not_circular(&schemes_source, &schemes_repo_path)?;
+    install_schemes_repo(
         &schemes_repo_path,
-        SCHEMES_REPO_NAME,
-        SCHEMES_REPO_URL,
-        Some(SCHEMES_REPO_REVISION),
+        &schemes_source,
+        schemes_revision.as_deref(),
         is_quiet,
     )?;
 
