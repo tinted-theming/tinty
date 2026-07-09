@@ -11,6 +11,12 @@
   view. The header shows a "Live" indicator with the `user@hostname` of the
   machine being changed, and a fallback panel prompts you to restart the
   server if it stops responding. Use `--port <PORT>` to pick a fixed port.
+- Add an `allow-dirty-update` config option that lets `tinty update` run against
+  a repository with uncommitted changes, for iterating on a scheme or template
+  repo locally. Non-overlapping local changes are carried forward; an update
+  that would overwrite uncommitted work (or an untracked file) is refused and
+  leaves the working tree untouched. Set it per `[[items]]` entry, or under the
+  `[schemes]` table for the built-in schemes repo.
 
 ### Changed
 
@@ -18,6 +24,25 @@
   serving the live server instead of opening a static page. Pass `--no-rc`
   to open the previous self-contained static gallery (no server, no system
   changes). `--dump <DIRECTORY>` still writes the static site to a directory.
+  
+### Fixed
+
+- Reject a config `[[items]]` entry named `schemes`, which is reserved for the
+  built-in schemes repository. Previously such an item silently collided with
+  the built-in repo on disk and was reverted to the official schemes repo on
+  `tinty update`; it now fails fast with a clear error asking you to rename it.
+
+## [0.34.1] - 2026-06-20
+
+### Changed
+
+- Rework `tinty gallery` code-snippet syntax highlighting so each token is
+  colored exactly as tinted-nvim renders it in Neovim. Highlighting is now
+  derived from real tree-sitter captures: import keywords and functions use
+  the blue accent, modules/namespaces and macros use red, types use yellow,
+  string escapes use cyan, and punctuation delimiters use the dark accent.
+  Parameters and operators now match the foreground color instead of being
+  tinted, matching tinted-nvim's defaults.
 
 ## [0.34.0] - 2026-06-16
 
@@ -450,6 +475,7 @@ away in a future Tinty release.
 
 - Initial release
 
+[0.34.1]: https://github.com/tinted-theming/tinty/compare/v0.34.0...v0.34.1
 [0.34.0]: https://github.com/tinted-theming/tinty/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/tinted-theming/tinty/compare/v0.32.2...v0.33.0
 [0.32.2]: https://github.com/tinted-theming/tinty/compare/v0.32.1...v0.32.2

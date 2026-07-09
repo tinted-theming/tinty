@@ -224,6 +224,7 @@ to your preferences and environment.
 | `shell`           | `string`           | Optional | Specifies the shell command used to execute hooks. | `"sh -c '{}'"` | `shell = "bash -c '{}'"` |
 | `default-scheme`  | `string`           | Optional | Defines the default theme scheme to be applied if no specific scheme is set. | None | `default-scheme = "base16-mocha"` |
 | `default-cycle-ring` | `string`           | Optional | The configured ring used by `tinty cycle` when `--ring` is not provided. | None | `default-cycle-ring = "default"` |
+| `[schemes]`       | `table`            | Optional | Settings for the built-in schemes repository. See the [`[schemes]` table](#schemes-table-configtoml-schema) below. | - | See below |
 | `[[rings]]`       | `array<rings>`     | Optional | Named scheme cycles used by `tinty cycle`. | - | See below |
 | `hooks`           | `array<string>`    | Optional | A list of strings which are executed after every `tinty apply` | None | `hooks = ["echo \"The current scheme is: $(tinty current)\""]` |
 | `[[items]]`       | `array<items>`     | Required | An array of `items` configurations. Each item represents a themeable component. Detailed structure provided in the next section. | - | - |
@@ -315,6 +316,25 @@ themes across different applications seamlessly.
 | `theme-file-extension` | `string` | Optional | Define a custom theme file extension that isn't `/\.*$/`. Tinty looks for themes named `base16-uwunicorn.*` (for example), but when the theme file isn't structured that way, this option can help specify the pattern. | - | `theme-file-extension = ".module.css"` |
 | `supported-systems`    | `array<"base16" or "base24" or "tinted8">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported-systems = ["base16", "base24"]` |
 | `write-to-file`        | `array<"target_filename", "optional_start_marker", "optional_end_marker">` | Optional | A feature where Tinty writes the theme content directly into an existing file. | None    | `write-to-file = ["~/.config/alacritty/config.toml", "# Tinty Start", "# Tinty End"]` |
+| `allow-dirty-update`   | `boolean` | Optional | Allow `tinty update` to run even when this item's local copy has uncommitted changes. | `false` | `allow-dirty-update = true` |
+
+#### Note on `allow-dirty-update`
+
+By default `tinty update` skips any item whose local copy has uncommitted
+changes, so you never lose in-progress work. Setting `allow-dirty-update = true`
+lets the update proceed against a dirty working tree, which is handy when you
+are iterating on a scheme or template repository locally:
+
+- Local changes to files the update does **not** touch are carried forward
+  untouched, and the update succeeds.
+- If the update **would** overwrite your uncommitted changes (or an untracked
+  file that the incoming revision adds), it is refused and your working tree is
+  left exactly as it was. Tinty prints the conflicting files and how to unblock
+  the update (commit, stash, or remove them).
+
+This option is per-item. The built-in schemes repository has no `[[items]]`
+entry of its own, so its equivalent setting lives under the
+[`[schemes]` table](#schemes-table-configtoml-schema).
 
 #### Note on `supported-systems`
 
@@ -328,6 +348,20 @@ property.
 The `[[items]]` configuration allows defining multiple themeable
 components, each with its own set of configurations as described above.
 Here's how you might define multiple items in your `config.toml`:
+
+### Schemes table `config.toml` Schema
+
+The `[schemes]` table holds settings for the built-in schemes repository
+(the one Tinty manages itself, which has no `[[items]]` entry of its own).
+
+| Key                  | Type      | Required | Description                                                                 | Default | Example                     |
+|----------------------|-----------|----------|-----------------------------------------------------------------------------|---------|-----------------------------|
+| `allow-dirty-update` | `boolean` | Optional | Allow `tinty update` to update the schemes repo even when it has uncommitted changes. Behaves like an item's [`allow-dirty-update`](#note-on-allow-dirty-update). | `false` | `allow-dirty-update = true` |
+
+```toml
+[schemes]
+allow-dirty-update = true
+```
 
 ### Full Configuration Example
 

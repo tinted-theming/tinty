@@ -1,4 +1,4 @@
-use crate::constants::REPO_NAME;
+use crate::constants::{REPO_NAME, SCHEMES_REPO_NAME};
 use anyhow::{anyhow, Context, Result};
 use home::home_dir;
 use serde::Deserialize;
@@ -32,6 +32,12 @@ pub struct ConfigItem {
     pub revision: Option<String>,
     #[serde(rename = "write-to-file")]
     pub write_to_file: Option<Vec<String>>,
+    /// When `true`, `tinty update` is allowed to proceed even if this item's
+    /// local copy has uncommitted changes. Non-overlapping local edits are
+    /// carried forward; an update that would overwrite local changes is
+    /// refused without touching the working tree. Defaults to `false`.
+    #[serde(default, rename = "allow-dirty-update")]
+    pub allow_dirty_update: bool,
 }
 
 impl fmt::Display for ConfigItem {
@@ -58,6 +64,9 @@ impl fmt::Display for ConfigItem {
         }
         if !revision.is_empty() {
             writeln!(f, "revision = \"{revision}\"")?;
+        }
+        if self.allow_dirty_update {
+            writeln!(f, "allow-dirty-update = true")?;
         }
         writeln!(f, "supported-systems = [{system_text}]")?;
         write!(f, "themes-dir = \"{}\"", self.themes_dir)
@@ -87,6 +96,18 @@ impl fmt::Display for ConfigRing {
     }
 }
 
+/// Settings for the built-in schemes repository, which has no `[[items]]`
+/// entry of its own. Grouped under a `[schemes]` table so more schemes-repo
+/// specific options can be added here in the future.
+#[derive(Deserialize, Debug, Default)]
+pub struct SchemesConfig {
+    /// When `true`, `tinty update` is allowed to proceed even if the schemes
+    /// repo has uncommitted changes. Behaves like an item's `allow-dirty-update`.
+    /// Defaults to `false`, preserving the strict skip-if-dirty behavior.
+    #[serde(default, rename = "allow-dirty-update")]
+    pub allow_dirty_update: bool,
+}
+
 /// Structure for configuration
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -100,12 +121,18 @@ pub struct Config {
     pub default_cycle_ring: Option<String>,
     pub items: Option<Vec<ConfigItem>>,
     pub hooks: Option<Vec<String>>,
+    #[serde(default)]
+    pub schemes: SchemesConfig,
 }
 
 fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
     let mut names = HashSet::new();
 
     for item in items {
+        if item.name == SCHEMES_REPO_NAME {
+            return Err(anyhow!("config.toml item.name \"{SCHEMES_REPO_NAME}\" is reserved for the built-in schemes repository and cannot be used for a custom item. Please rename this item."));
+        }
+
         if !names.insert(&item.name) {
             return Err(anyhow!("config.toml item.name should be unique values, but \"{}\" is used for more than 1 item.name. Please change this to a unique value.", item.name));
         }
@@ -161,6 +188,7 @@ impl Config {
             theme_file_extension: None,
             revision: None,
             write_to_file: None,
+            allow_dirty_update: false,
         };
 
         // Add default `item` if no items exist
@@ -268,6 +296,13 @@ impl fmt::Display for Config {
             writeln!(f, "]")?;
         }
 
+        // Emitted before the `[[rings]]`/`[[items]]` array-of-tables so its
+        // keys are not mis-parsed as belonging to the last array entry.
+        if self.schemes.allow_dirty_update {
+            writeln!(f, "\n[schemes]")?;
+            writeln!(f, "allow-dirty-update = true")?;
+        }
+
         if let Some(rings) = &self.rings {
             for ring in rings {
                 writeln!(f, "{ring}")?;
@@ -281,5 +316,81 @@ impl fmt::Display for Config {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Config, ConfigItem};
+
+    fn item_with(allow_dirty_update: bool) -> ConfigItem {
+        ConfigItem {
+            name: "example".to_string(),
+            path: "https://example.com/repo".to_string(),
+            hook: None,
+            themes_dir: "themes".to_string(),
+            supported_systems: None,
+            theme_file_extension: None,
+            revision: None,
+            write_to_file: None,
+            allow_dirty_update,
+        }
+    }
+
+    #[test]
+    fn item_allow_dirty_update_parses_when_present() {
+        let toml = r#"
+name = "example"
+path = "https://example.com/repo"
+themes-dir = "themes"
+allow-dirty-update = true
+"#;
+        let item: ConfigItem = toml::from_str(toml).unwrap();
+        assert!(item.allow_dirty_update);
+    }
+
+    #[test]
+    fn item_allow_dirty_update_defaults_to_false_when_absent() {
+        let toml = r#"
+name = "example"
+path = "https://example.com/repo"
+themes-dir = "themes"
+"#;
+        let item: ConfigItem = toml::from_str(toml).unwrap();
+        assert!(!item.allow_dirty_update);
+    }
+
+    #[test]
+    fn schemes_allow_dirty_update_parses_and_defaults_to_false() {
+        let with: Config = toml::from_str("[schemes]\nallow-dirty-update = true\n").unwrap();
+        assert!(with.schemes.allow_dirty_update);
+
+        // `[schemes]` table present but the key omitted.
+        let table_only: Config = toml::from_str("[schemes]\n").unwrap();
+        assert!(!table_only.schemes.allow_dirty_update);
+
+        // No `[schemes]` table at all.
+        let without: Config = toml::from_str("shell = \"sh -c '{}'\"\n").unwrap();
+        assert!(!without.schemes.allow_dirty_update);
+    }
+
+    #[test]
+    fn item_display_emits_allow_dirty_update_only_when_true() {
+        assert!(item_with(true)
+            .to_string()
+            .contains("allow-dirty-update = true"));
+        assert!(!item_with(false).to_string().contains("allow-dirty-update"));
+    }
+
+    #[test]
+    fn config_display_emits_schemes_table_only_when_set() {
+        let mut config: Config = toml::from_str("[schemes]\nallow-dirty-update = true\n").unwrap();
+        config.shell = Some("sh -c '{}'".to_string());
+        let rendered = config.to_string();
+        assert!(rendered.contains("[schemes]"));
+        assert!(rendered.contains("allow-dirty-update = true"));
+
+        let off: Config = toml::from_str("shell = \"sh -c '{}'\"\n").unwrap();
+        assert!(!off.to_string().contains("[schemes]"));
     }
 }
