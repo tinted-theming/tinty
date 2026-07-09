@@ -1,4 +1,5 @@
-use crate::constants::{REPO_NAME, SCHEMES_REPO_NAME};
+use crate::constants::{REPO_NAME, SCHEMES_REPO_NAME, SCHEMES_REPO_REVISION, SCHEMES_REPO_URL};
+use crate::utils::replace_tilde_slash_with_home;
 use anyhow::{anyhow, Context, Result};
 use home::home_dir;
 use serde::Deserialize;
@@ -106,6 +107,49 @@ pub struct SchemesConfig {
     /// Defaults to `false`, preserving the strict skip-if-dirty behavior.
     #[serde(default, rename = "allow-dirty-update")]
     pub allow_dirty_update: bool,
+    /// Overrides the source of the built-in schemes repository. May be a Git
+    /// remote URL (cloned into `repos/schemes`) or a local directory (symlinked
+    /// as `repos/schemes`). When unset, the built-in
+    /// `tinted-theming/schemes` repo is used. A local directory need not be a
+    /// Git repository.
+    #[serde(default)]
+    pub path: Option<String>,
+    /// Git revision (branch, tag, or commit SHA) to check out for the schemes
+    /// repo, mirroring an item's `revision`. Ignored when `path` points at a
+    /// local directory. When unset and `path` is unset, the built-in pinned
+    /// revision is used.
+    #[serde(default)]
+    pub revision: Option<String>,
+}
+
+/// Rejects a `[schemes].path` (a local directory) that resolves to tinty's own
+/// managed schemes directory (`repos/schemes`). Symlinking that slot to itself,
+/// or cloning it into itself, is a circular reference. Git URL sources can never
+/// name the local slot, so they are always accepted here.
+pub fn ensure_schemes_path_not_circular(source: &str, schemes_repo_path: &Path) -> Result<()> {
+    if Url::parse(source).is_ok() {
+        return Ok(());
+    }
+
+    // Identity of the schemes-repo slot itself, computed without dereferencing a
+    // symlink that may already occupy it (canonicalizing the slot directly would
+    // follow such a symlink and produce a false positive on repeat runs).
+    let slot_identity = schemes_repo_path
+        .parent()
+        .and_then(|parent| parent.canonicalize().ok())
+        .zip(schemes_repo_path.file_name())
+        .map(|(parent, name)| parent.join(name));
+
+    if let (Ok(source_canon), Some(slot)) = (Path::new(source).canonicalize(), slot_identity) {
+        if source_canon == slot {
+            return Err(anyhow!(
+                "config.toml [schemes].path points at {REPO_NAME}'s own managed schemes directory ({}). This would create a circular reference; point it at a different directory or a Git URL.",
+                schemes_repo_path.display()
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 /// Structure for configuration
@@ -158,6 +202,33 @@ fn ensure_ring_names_are_valid(rings: &[ConfigRing]) -> Result<()> {
 }
 
 impl Config {
+    /// Resolves the effective source and revision for the built-in schemes
+    /// repository from the `[schemes]` table.
+    ///
+    /// Returns the source (a Git URL or local directory) and the revision to
+    /// check out (`None` lets the repository backend pick its default, matching
+    /// `[[items]]`). Backwards-compatible: with neither `path` nor `revision`
+    /// set, this is exactly the built-in repo pinned at its default revision.
+    /// A `revision` may be set on its own to re-pin the built-in repo, and a
+    /// `path` may be set on its own to swap the source while defaulting the
+    /// revision.
+    pub fn schemes_source(&self) -> (String, Option<String>) {
+        self.schemes.path.as_ref().map_or_else(
+            || {
+                (
+                    SCHEMES_REPO_URL.to_string(),
+                    Some(
+                        self.schemes
+                            .revision
+                            .clone()
+                            .unwrap_or_else(|| SCHEMES_REPO_REVISION.to_string()),
+                    ),
+                )
+            },
+            |path| (path.clone(), self.schemes.revision.clone()),
+        )
+    }
+
     pub fn read(path: &Path) -> Result<Self> {
         if path.exists() && !path.is_file() {
             return Err(anyhow!(
@@ -250,6 +321,22 @@ impl Config {
             }
         }
 
+        // Normalize and validate the optional `[schemes].path` the same way item
+        // paths are handled: expand a leading `~/`, then require it be a valid
+        // URL or an existing local directory. Unlike an item, a local directory
+        // need not be a Git repository.
+        if let Some(raw_path) = config.schemes.path.clone() {
+            let expanded = replace_tilde_slash_with_home(&raw_path)?
+                .to_string_lossy()
+                .into_owned();
+
+            if Url::parse(&expanded).is_err() && !Path::new(&expanded).is_dir() {
+                return Err(anyhow!("config.toml [schemes].path \"{expanded}\" is not a valid url and is not a path to an existing local directory"));
+            }
+
+            config.schemes.path = Some(expanded);
+        }
+
         if !shell.contains("{}") {
             let msg = "The configured shell does not contain the required command placeholder '{}'. Check the default file or github for config examples.";
             return Err(anyhow!(msg));
@@ -298,9 +385,20 @@ impl fmt::Display for Config {
 
         // Emitted before the `[[rings]]`/`[[items]]` array-of-tables so its
         // keys are not mis-parsed as belonging to the last array entry.
-        if self.schemes.allow_dirty_update {
+        if self.schemes.path.is_some()
+            || self.schemes.revision.is_some()
+            || self.schemes.allow_dirty_update
+        {
             writeln!(f, "\n[schemes]")?;
-            writeln!(f, "allow-dirty-update = true")?;
+            if let Some(path) = &self.schemes.path {
+                writeln!(f, "path = \"{path}\"")?;
+            }
+            if let Some(revision) = &self.schemes.revision {
+                writeln!(f, "revision = \"{revision}\"")?;
+            }
+            if self.schemes.allow_dirty_update {
+                writeln!(f, "allow-dirty-update = true")?;
+            }
         }
 
         if let Some(rings) = &self.rings {
@@ -392,5 +490,95 @@ themes-dir = "themes"
 
         let off: Config = toml::from_str("shell = \"sh -c '{}'\"\n").unwrap();
         assert!(!off.to_string().contains("[schemes]"));
+    }
+
+    #[test]
+    fn schemes_source_defaults_to_builtin_repo_and_revision() {
+        // Backwards-compatible default: no `[schemes]` table at all.
+        let config: Config = toml::from_str("shell = \"sh -c '{}'\"\n").unwrap();
+        let (source, revision) = config.schemes_source();
+        assert_eq!(source, super::SCHEMES_REPO_URL);
+        assert_eq!(revision.as_deref(), Some(super::SCHEMES_REPO_REVISION));
+    }
+
+    #[test]
+    fn schemes_source_revision_only_repins_builtin_repo() {
+        let config: Config = toml::from_str("[schemes]\nrevision = \"main\"\n").unwrap();
+        let (source, revision) = config.schemes_source();
+        assert_eq!(source, super::SCHEMES_REPO_URL);
+        assert_eq!(revision.as_deref(), Some("main"));
+    }
+
+    #[test]
+    fn schemes_source_path_overrides_source_and_defaults_revision() {
+        let config: Config =
+            toml::from_str("[schemes]\npath = \"https://example.com/schemes\"\n").unwrap();
+        let (source, revision) = config.schemes_source();
+        assert_eq!(source, "https://example.com/schemes");
+        // No revision given for a custom source => backend default (None).
+        assert_eq!(revision, None);
+    }
+
+    #[test]
+    fn schemes_source_path_and_revision_are_both_honored() {
+        let config: Config = toml::from_str(
+            "[schemes]\npath = \"https://example.com/schemes\"\nrevision = \"v1.0.0\"\n",
+        )
+        .unwrap();
+        let (source, revision) = config.schemes_source();
+        assert_eq!(source, "https://example.com/schemes");
+        assert_eq!(revision.as_deref(), Some("v1.0.0"));
+    }
+
+    #[test]
+    fn schemes_path_and_revision_parse_and_render() {
+        let mut config: Config = toml::from_str(
+            "[schemes]\npath = \"https://example.com/schemes\"\nrevision = \"dev\"\n",
+        )
+        .unwrap();
+        config.shell = Some("sh -c '{}'".to_string());
+        assert_eq!(
+            config.schemes.path.as_deref(),
+            Some("https://example.com/schemes")
+        );
+        assert_eq!(config.schemes.revision.as_deref(), Some("dev"));
+
+        let rendered = config.to_string();
+        assert!(rendered.contains("[schemes]"));
+        assert!(rendered.contains("path = \"https://example.com/schemes\""));
+        assert!(rendered.contains("revision = \"dev\""));
+    }
+
+    #[test]
+    fn ensure_schemes_path_not_circular_allows_urls_and_other_dirs() {
+        use std::path::Path;
+        // A URL source is never circular.
+        assert!(super::ensure_schemes_path_not_circular(
+            "https://example.com/schemes",
+            Path::new("/does/not/matter/repos/schemes"),
+        )
+        .is_ok());
+
+        // A local dir that differs from the slot is fine. Use the temp dir,
+        // which exists, as the source and a distinct slot path.
+        let tmp = std::env::temp_dir();
+        assert!(super::ensure_schemes_path_not_circular(
+            tmp.to_str().unwrap(),
+            &tmp.join("some-other-data/repos/schemes"),
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn ensure_schemes_path_not_circular_rejects_self_reference() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repos = tmp.path().join("repos");
+        let slot = repos.join("schemes");
+        std::fs::create_dir_all(&slot).unwrap();
+
+        // Pointing `[schemes].path` at the slot itself is circular.
+        let err = super::ensure_schemes_path_not_circular(slot.to_str().unwrap(), &slot)
+            .expect_err("expected a circular-reference error");
+        assert!(err.to_string().contains("circular reference"));
     }
 }

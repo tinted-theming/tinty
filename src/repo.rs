@@ -39,6 +39,9 @@ pub trait RepositoryBackend {
         allow_dirty: bool,
     ) -> Result<UpdateStatus>;
     fn is_clean(&self, target: &Path) -> Result<bool>;
+    /// Returns the URL of the `origin` remote for the repository at `target`,
+    /// or `None` when `target` is not a git repository or has no such remote.
+    fn origin_url(&self, target: &Path) -> Result<Option<String>>;
 }
 
 /// Returns the active repository backend for this invocation.
@@ -65,4 +68,8 @@ pub fn update(
 
 pub fn is_clean(target: &Path) -> Result<bool> {
     backend().is_clean(target)
+}
+
+pub fn origin_url(target: &Path) -> Result<Option<String>> {
+    backend().origin_url(target)
 }

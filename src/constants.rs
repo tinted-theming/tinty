@@ -9,3 +9,5 @@ pub const CUSTOM_SCHEMES_DIR_NAME: &str = "custom-schemes";
 pub const CURRENT_SCHEME_FILE_NAME: &str = "current_scheme";
 pub const DEFAULT_SCHEME_SYSTEM: &str = "base16";
 pub const SCHEMES_REPO_REVISION: &str = "spec-0.11";
+/// Fallback Git revision used when a repository has no configured `revision`.
+pub const DEFAULT_REVISION: &str = "main";
