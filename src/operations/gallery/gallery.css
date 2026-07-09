@@ -204,6 +204,189 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
+/* Live-server only: header badge announcing live mode + the target machine. */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: auto;
+  padding: 4px 11px 4px 9px;
+  border-radius: var(--radius-full);
+  background: color-mix(in oklab, #3fb950 14%, transparent);
+  border: 1px solid color-mix(in oklab, #3fb950 34%, transparent);
+  color: var(--ink-1);
+}
+
+/* The `hidden` attribute must win over the display rules above. A bare class
+   selector setting `display` would otherwise override the attribute's
+   `display: none`, leaving these controls visible when they should be off
+   (the offline panel while connected, the live/apply controls in static). */
+.live-indicator[hidden],
+.apply-button[hidden],
+.offline-banner[hidden] {
+  display: none;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3fb950;
+  box-shadow: 0 0 0 0 color-mix(in oklab, #3fb950 60%, transparent);
+  animation: live-pulse 2.4s ease-out infinite;
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, #3fb950 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px color-mix(in oklab, #3fb950 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, #3fb950 0%, transparent);
+  }
+}
+
+.live-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.live-host {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* Header badge when the live server has stopped responding. */
+.live-indicator.is-offline {
+  background: color-mix(in oklab, #e5484d 12%, transparent);
+  border-color: color-mix(in oklab, #e5484d 34%, transparent);
+}
+
+.live-indicator.is-offline .live-dot {
+  background: #e5484d;
+  box-shadow: none;
+  animation: none;
+}
+
+/* Fallback panel shown when the live server is unreachable. */
+.offline-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 40;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  max-width: min(680px, calc(100vw - 32px));
+  padding: 12px 14px 12px 16px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, #e5484d 14%, var(--surface));
+  border: 1px solid color-mix(in oklab, #e5484d 42%, transparent);
+  box-shadow: var(--shadow-lg);
+  color: var(--ink-1);
+}
+
+.offline-banner .icon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: #e5484d;
+}
+
+.offline-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.offline-text strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.offline-text span {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.offline-cmd {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--ink-1) 6%, transparent);
+  color: var(--ink-1);
+  font: 12px/1 var(--font-mono);
+}
+
+.offline-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: #fff;
+  font: 600 12px/1 var(--font-sans);
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.offline-retry:hover {
+  background: color-mix(in oklab, var(--accent) 88%, #000);
+}
+
+.offline-retry.is-waiting {
+  cursor: progress;
+  opacity: .9;
+}
+
+.offline-spinner {
+  display: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, #fff 45%, transparent);
+  border-top-color: #fff;
+  animation: offline-spin .7s linear infinite;
+}
+
+.offline-retry.is-waiting .offline-spinner {
+  display: inline-block;
+}
+
+@keyframes offline-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.offline-retry:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+@media (max-width: 560px) {
+  .offline-banner {
+    flex-wrap: wrap;
+    width: calc(100vw - 24px);
+  }
+
+  .offline-cmd {
+    order: 1;
+  }
+}
+
 .icon {
   width: 15px;
   height: 15px;
@@ -390,6 +573,30 @@ h1 {
 
 .card.is-sheet-source {
   visibility: hidden;
+}
+
+/* Live-server only: the scheme currently applied on this machine. */
+.card.is-applied {
+  border-color: color-mix(in oklab, var(--accent) 60%, var(--border));
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-md);
+}
+
+.card.is-applied::after {
+  content: "Applied";
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+  pointer-events: none;
 }
 
 .card:hover,
@@ -1120,6 +1327,73 @@ body.sheet-open .sheet-backdrop {
 .toast.open {
   transform: translate(-50%, 0);
   opacity: 1;
+}
+
+/* Live-server only: Apply button in the modal footer. Hidden in static builds. */
+.apply-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: #fff;
+  font: 600 13px/1 var(--font-sans);
+  letter-spacing: .01em;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background 160ms ease, transform 120ms ease, box-shadow 160ms ease;
+}
+
+/* Lay the Apply button and the command row side-by-side, vertically aligned.
+   In the static build the Apply button is hidden, leaving just the command
+   row — identical to the original single-control footer. */
+.footer-actions {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-actions .apply-button {
+  flex: 0 0 auto;
+}
+
+.footer-actions .command-row {
+  flex: 1 1 auto;
+  width: auto;
+  margin: 0;
+}
+
+.apply-button .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.apply-button:hover {
+  background: color-mix(in oklab, var(--accent) 88%, #000);
+  box-shadow: var(--shadow-md);
+}
+
+.apply-button:active {
+  transform: scale(.98);
+}
+
+.apply-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.apply-button[disabled] {
+  opacity: .65;
+  cursor: progress;
+}
+
+.apply-button.is-applied {
+  background: color-mix(in oklab, var(--accent) 16%, var(--surface));
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 45%, transparent);
 }
 
 @media (max-width: 960px) {

@@ -1,10 +1,25 @@
 const SCHEMES = __TINTY_SCHEMES__;
 
+// Remote-control mode flag. Substituted by the Rust generator: `true` only for
+// the default `tinty gallery` (the live server), `false` for the static site
+// produced by `--no-rc` / `--dump`. When false the gallery makes no network
+// requests and the apply controls stay hidden, so the static build is portable.
+const TINTY_SERVE = __TINTY_SERVE__;
+// Live-server only: `user@hostname` of the machine running the server, shown
+// in the header so it's clear which system an Apply affects. `null` in static
+// builds.
+const TINTY_HOST = __TINTY_HOST__;
+const CURRENT_POLL_INTERVAL = 2000;
+
 const state = {
   search: "",
   system: "all",
   appearance: "all",
   pageTheme: "system",
+  // Live-server only: id of the scheme currently applied on this machine, or
+  // null. Tracked so the matching card can be highlighted and the modal's
+  // Apply button can reflect the applied state. Always null in static builds.
+  appliedSchemeId: null,
   // Gallery-card preview language. Can be a code lang or the special
   // PALETTE_LANGUAGE value. Persisted under LANGUAGE_STORAGE_KEY.
   language: "rust",
@@ -604,6 +619,8 @@ function applySheetState(scheme, updateHash) {
     setSheetHash(scheme.id);
   }
 
+  updateApplyButton();
+
   backdrop.hidden = false;
   document.body.classList.add("sheet-open");
   // Force layout flush so the opacity transition plays from the pre-`.open` state
@@ -701,6 +718,10 @@ function createCard(scheme) {
     card.classList.add("is-sheet-source");
   }
 
+  if (TINTY_SERVE && scheme.id === state.appliedSchemeId) {
+    card.classList.add("is-applied");
+  }
+
   return card;
 }
 
@@ -716,12 +737,26 @@ function syncSheetToHash() {
   }
 }
 
+// Live-server only: pin the currently applied scheme to the front of the
+// already-filtered list. Filters/search still decide membership, so a scheme
+// that doesn't match isn't force-shown; it just leads when it is present.
+function pinAppliedFirst(visible) {
+  if (!TINTY_SERVE || !state.appliedSchemeId) return visible;
+
+  const applied = [];
+  const rest = [];
+  visible.forEach((scheme) => {
+    (scheme.id === state.appliedSchemeId ? applied : rest).push(scheme);
+  });
+  return applied.concat(rest);
+}
+
 function render() {
   const gallery = document.getElementById("gallery");
   const empty = document.getElementById("empty");
   const count = document.getElementById("result-count");
   const fragment = document.createDocumentFragment();
-  const visible = SCHEMES.filter(matchesFilters);
+  const visible = pinAppliedFirst(SCHEMES.filter(matchesFilters));
 
   gallery.classList.toggle("is-first-render", isFirstRender);
   gallery.textContent = "";
@@ -839,6 +874,206 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("hashchange", syncSheetToHash);
 
+// ---------------------------------------------------------------------------
+// Live-server mode (TINTY_SERVE only)
+//
+// Everything below is inert in the static build: it is gated on TINTY_SERVE
+// and only wired up by setupLiveServer(), which no-ops when the flag is false.
+// ---------------------------------------------------------------------------
+
+let toastTimeoutId = null;
+// Whether the gallery server is currently reachable. Starts true (the page was
+// just served by it); flipped by the poll / apply requests.
+let serverConnected = true;
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.hidden = false;
+  // Force layout flush so the slide-up transition plays from the hidden state.
+  void toast.offsetWidth;
+  toast.classList.add("open");
+
+  if (toastTimeoutId) {
+    window.clearTimeout(toastTimeoutId);
+  }
+  toastTimeoutId = window.setTimeout(() => {
+    toast.classList.remove("open");
+  }, 2400);
+}
+
+// Toggle the offline fallback UI and the header badge when the server's
+// reachability changes. When the server stops, the page can no longer apply
+// schemes, so we surface a persistent panel prompting a restart; the poll keeps
+// running and clears it automatically once the server is back.
+function setConnected(connected) {
+  if (!TINTY_SERVE) return;
+  if (serverConnected === connected) return;
+  serverConnected = connected;
+
+  const banner = document.getElementById("offline-banner");
+  if (banner) banner.hidden = connected;
+
+  const indicator = document.getElementById("live-indicator");
+  if (indicator) {
+    indicator.classList.toggle("is-offline", !connected);
+    const label = indicator.querySelector(".live-label");
+    if (label) label.textContent = connected ? "Live" : "Offline";
+    if (TINTY_HOST) {
+      indicator.title = connected
+        ? `Live — schemes you apply here change ${TINTY_HOST}`
+        : `Disconnected from the gallery server on ${TINTY_HOST}`;
+    }
+  }
+}
+
+// Reflect the applied scheme onto the card grid and modal. Short-circuits when
+// the value is unchanged; createCard re-applies the marker on re-render.
+function setAppliedScheme(id) {
+  const normalized = id || null;
+  if (state.appliedSchemeId === normalized) {
+    updateApplyButton();
+    return;
+  }
+
+  state.appliedSchemeId = normalized;
+  // Re-render so the applied scheme is re-pinned to the front and the
+  // highlight markers refresh. Animate the reorder when the modal is closed;
+  // re-render plainly while it's open so the view transition doesn't snapshot
+  // the sheet.
+  if (currentSheetId) {
+    render();
+  } else {
+    transitionLayout(render);
+  }
+
+  updateApplyButton();
+}
+
+function updateApplyButton() {
+  const button = document.getElementById("apply-scheme");
+  if (!button || !TINTY_SERVE) return;
+
+  const isApplied = Boolean(currentSheetId) && currentSheetId === state.appliedSchemeId;
+  button.classList.toggle("is-applied", isApplied);
+  const label = button.querySelector(".apply-label");
+  if (label) {
+    label.textContent = isApplied ? "Applied" : "Apply";
+  }
+}
+
+async function fetchCurrentScheme() {
+  if (!TINTY_SERVE) return;
+
+  try {
+    const response = await fetch("api/current", { cache: "no-store" });
+    // Any HTTP response means the server is reachable.
+    setConnected(true);
+    if (!response.ok) return;
+    const data = await response.json();
+    setAppliedScheme(data.scheme || null);
+  } catch (_error) {
+    // Server unreachable (e.g. stopped): show the offline fallback. The last
+    // known applied state is left in place.
+    setConnected(false);
+  }
+}
+
+async function applyCurrentSheet() {
+  const button = document.getElementById("apply-scheme");
+  if (!button || !currentSheetId) return;
+
+  const schemeId = currentSheetId;
+  button.disabled = true;
+  button.classList.add("is-applying");
+
+  try {
+    const response = await fetch("api/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scheme: schemeId }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    setConnected(true);
+    if (response.ok && data.ok) {
+      setAppliedScheme(schemeId);
+      showToast(`Applied ${schemeId}`);
+    } else {
+      showToast(data.error ? `Apply failed: ${data.error}` : "Apply failed");
+    }
+  } catch (_error) {
+    setConnected(false);
+    showToast("Apply failed: server unreachable");
+  } finally {
+    button.disabled = false;
+    button.classList.remove("is-applying");
+    updateApplyButton();
+  }
+}
+
+// Minimum time the Retry button stays in its "waiting" state, so a click
+// always reads as a deliberate attempt even when the check resolves instantly.
+const RETRY_MIN_WAIT = 5000;
+
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+// Retry button handler: enter a waiting state, run a connection check, and hold
+// the waiting state for at least RETRY_MIN_WAIT before restoring the button.
+// If the check reconnects, setConnected() hides the whole banner anyway.
+async function retryConnection() {
+  const retry = document.getElementById("offline-retry");
+  if (!retry || retry.classList.contains("is-waiting")) return;
+
+  const label = retry.querySelector(".offline-retry-label");
+  retry.classList.add("is-waiting");
+  retry.disabled = true;
+  if (label) label.textContent = "Retrying…";
+
+  await Promise.all([fetchCurrentScheme(), delay(RETRY_MIN_WAIT)]);
+
+  retry.classList.remove("is-waiting");
+  retry.disabled = false;
+  if (label) label.textContent = "Retry";
+}
+
+function setupLiveServer() {
+  if (!TINTY_SERVE) return;
+
+  document.body.classList.add("tinty-serve");
+
+  const indicator = document.getElementById("live-indicator");
+  if (indicator) {
+    const host = indicator.querySelector(".live-host");
+    if (host && TINTY_HOST) {
+      host.textContent = TINTY_HOST;
+    }
+    if (TINTY_HOST) {
+      indicator.title = `Live — schemes you apply here change ${TINTY_HOST}`;
+    }
+    indicator.hidden = false;
+  }
+
+  const button = document.getElementById("apply-scheme");
+  if (button) {
+    button.hidden = false;
+    button.addEventListener("click", applyCurrentSheet);
+  }
+
+  const retry = document.getElementById("offline-retry");
+  if (retry) {
+    retry.addEventListener("click", retryConnection);
+  }
+
+  fetchCurrentScheme();
+  window.setInterval(fetchCurrentScheme, CURRENT_POLL_INTERVAL);
+}
+
 loadSavedLanguage();
 loadSavedPageTheme();
 syncSheetToHash();
+setupLiveServer();
