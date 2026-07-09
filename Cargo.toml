@@ -31,9 +31,17 @@ home = "0.5.12"
 rand = "0.8.6"
 regex = "1.12"
 rayon = "1.11"
-tempfile = "=3.6.0"
+tempfile = "3"
 fs2 = "0.4.3"
 dirs = "6.0.0"
+gix = { version = "0.83", default-features = false, features = [
+    "blocking-http-transport-reqwest-rust-tls",
+    "worktree-mutation",
+    "status",
+    "revision",
+    "sha1",
+    "max-performance-safe",
+] }
 
 [lints.rust]
 unsafe_code = "forbid"
