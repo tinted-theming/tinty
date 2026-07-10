@@ -1,5 +1,6 @@
 use crate::config::{ensure_schemes_path_not_circular, Config};
-use crate::constants::{DEFAULT_REVISION, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
+use crate::constants::{DEFAULT_REVISION, REPO_NAME, SCHEMES_REPO_NAME};
+use crate::paths;
 use crate::repo::{self, UpdateStatus};
 use anyhow::{Context, Result};
 use std::path::Path;
@@ -113,10 +114,9 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
     let schemes_allow_dirty = config.schemes.allow_dirty_update;
     let (schemes_source, schemes_revision) = config.schemes_source();
     let items = config.items.unwrap_or_default();
-    let hooks_path = data_path.join(REPO_DIR);
 
     for item in items {
-        let item_path = hooks_path.join(&item.name);
+        let item_path = paths::item_repo_path(data_path, &item.name);
 
         // A local-path item is a symlink into a directory the user owns and
         // edits directly (its own branches, its own `origin`). There is nothing
@@ -136,7 +136,7 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
         }
     }
 
-    let schemes_repo_path = hooks_path.join(SCHEMES_REPO_NAME);
+    let schemes_repo_path = paths::schemes_repo_path(data_path);
 
     ensure_schemes_path_not_circular(&schemes_source, &schemes_repo_path)?;
     update_schemes_repo(

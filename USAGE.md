@@ -9,6 +9,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [How it works](#how-it-works)
 - [Sourcing scripts that set environment variables](#sourcing-scripts-that-set-environment-variables)
 - [Use your own schemes](#use-your-own-schemes)
+- [Building templates](#building-templates)
 - [Scripting](#scripting)
 - [shell](#shell)
 - [Vim or Neovim](#vim-or-neovim)
@@ -149,6 +150,32 @@ cp path/to/your/base16-your-scheme.yaml "$(tinty config --data-dir-path)/custom-
 tinty list --custom-schemes # Should show your scheme
 tinty apply base16-your-scheme
 ```
+
+## Building templates
+
+`tinty build` renders a template repository's theme files from the synced
+schemes. Point it at a single template directory:
+
+```sh
+tinty build path/to/tinted-tmux
+```
+
+If you've edited your schemes (for example, while iterating on a custom
+scheme) and want to regenerate the output for every template you have
+configured, run `tinty build` with no directory:
+
+```sh
+tinty build
+```
+
+This builds each installed `[[items]]` template repository (the ones in
+your `config.toml`, located under
+`$XDG_DATA_HOME/tinted-theming/tinty/repos/<name>`) sequentially, so you
+don't have to `cd` into each one and run `tinty build .` yourself. Every
+item is attempted even if one fails: per-item errors are printed and the
+command exits non-zero if any item failed to build or wasn't installed
+(run `tinty install` first). Add `--quiet` to silence the per-item
+progress output.
 
 ## Terminals
 

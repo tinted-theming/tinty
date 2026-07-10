@@ -33,11 +33,10 @@ pub fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("build")
-                .about("Builds the target theme template")
+                .about("Builds theme templates: a single template directory, or every installed [[items]] repository when no directory is given")
                 .arg(
                     Arg::new("template-dir")
-                        .help("Local path to the theme template you want to build")
-                        .required(true),
+                        .help("Local path to the theme template you want to build. When omitted, every installed [[items]] template repository is built"),
                 )
                 .arg(
                     Arg::new("quiet")

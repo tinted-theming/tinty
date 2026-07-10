@@ -1,5 +1,6 @@
 use crate::config::{ensure_schemes_path_not_circular, Config};
-use crate::constants::{REPO_DIR, SCHEMES_REPO_NAME};
+use crate::constants::SCHEMES_REPO_NAME;
+use crate::paths;
 use crate::repo;
 use anyhow::{anyhow, Context, Result};
 use std::fs::{remove_file as remove_symlink, symlink_metadata};
@@ -181,10 +182,9 @@ pub fn install(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<(
     let config = Config::read(config_path)?;
     let (schemes_source, schemes_revision) = config.schemes_source();
     let items = config.items.unwrap_or_default();
-    let hooks_path = data_path.join(REPO_DIR);
 
     for item in items {
-        let data_item_path = hooks_path.join(&item.name);
+        let data_item_path = paths::item_repo_path(data_path, &item.name);
         let item_path = PathBuf::from(item.path.as_str());
 
         match Url::parse(item.path.as_str()) {
@@ -199,7 +199,7 @@ pub fn install(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<(
         }
     }
 
-    let schemes_repo_path = hooks_path.join(SCHEMES_REPO_NAME);
+    let schemes_repo_path = paths::schemes_repo_path(data_path);
 
     ensure_schemes_path_not_circular(&schemes_source, &schemes_repo_path)?;
     install_schemes_repo(

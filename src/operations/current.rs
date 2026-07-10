@@ -1,7 +1,7 @@
 use crate::constants::{
-    ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME,
-    SCHEMES_REPO_NAME,
+    ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, REPO_NAME,
 };
+use crate::paths;
 use crate::utils::get_all_scheme_file_paths;
 use anyhow::{anyhow, Result};
 use std::fs;
@@ -15,7 +15,7 @@ pub fn get_current_scheme_slug(data_path: &Path) -> String {
 /// Prints out the name of the last scheme applied
 pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
     let current_scheme_slug = get_current_scheme_slug(data_path);
-    let schemes_path = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
+    let schemes_path = paths::schemes_repo_path(data_path);
 
     if current_scheme_slug.is_empty() {
         return Err(anyhow!(

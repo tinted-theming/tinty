@@ -1,8 +1,9 @@
 use crate::config::Config;
 use crate::constants::{
     ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, DEFAULT_SCHEME_SYSTEM,
-    LOCK_FILE, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME,
+    LOCK_FILE, REPO_NAME, REPO_URL,
 };
+use crate::paths;
 use crate::utils::{
     create_theme_filename_without_extension, get_all_scheme_file_paths,
     get_shell_command_from_string, write_to_file,
@@ -76,7 +77,7 @@ pub fn apply(
     // Go through custom schemes
     let scheme_system =
         SchemeSystem::from_str(&scheme_system_option.unwrap_or_else(|| "base16".to_string()))?;
-    let schemes_path = &data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
+    let schemes_path = &paths::schemes_repo_path(data_path);
     let custom_schemes_path = &data_path.join(CUSTOM_SCHEMES_DIR_NAME);
     let builtin_scheme_files = get_all_scheme_file_paths(schemes_path, None)?;
     let custom_scheme_files = get_all_scheme_file_paths(custom_schemes_path, None).ok();
@@ -132,7 +133,7 @@ pub fn apply(
 
     // Run through provided items in config.toml
     for item in system_items {
-        let repo_path = data_path.join(REPO_DIR).join(&item.name);
+        let repo_path = paths::item_repo_path(data_path, &item.name);
         let themes_path = repo_path.join(&item.themes_dir);
 
         if !themes_path.exists() {
@@ -304,7 +305,7 @@ fn build_and_get_custom_scheme_file(
     if let Some(items) = &config.items {
         let item_name_vec: Vec<String> = items.iter().map(|p| p.name.clone()).collect();
         for item_name in item_name_vec {
-            let item_template_path: PathBuf = data_path.join(format!("{REPO_DIR}/{item_name}"));
+            let item_template_path: PathBuf = paths::item_repo_path(data_path, &item_name);
 
             // The `is_quiet` is set to true because errors appear here because custom schemes
             // doesn't necessarily include schemes for all scheme-systems in the

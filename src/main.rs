@@ -16,6 +16,7 @@ mod operations {
     pub mod sync;
     pub mod update;
 }
+mod paths;
 mod repo;
 mod utils;
 
@@ -24,7 +25,7 @@ use anyhow::{anyhow, Context, Result};
 use clap::Command;
 use clap_complete::{generate, Generator, Shell};
 use config::{CONFIG_FILE_NAME, ORG_NAME};
-use constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
+use constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_NAME};
 use operations::generate_scheme;
 use std::path::PathBuf;
 use std::string::String;
@@ -67,7 +68,7 @@ fn main() -> Result<()> {
             return Err(anyhow!("err"));
         }
     };
-    let data_repo_path = data_path.join(REPO_DIR);
+    let data_repo_path = paths::repos_dir(&data_path);
 
     // Ensure config dirs exist
     ensure_directory_exists(&data_path)
@@ -82,11 +83,15 @@ fn main() -> Result<()> {
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
         Some(("build", sub_matches)) => {
+            let is_quiet = sub_matches.get_flag("quiet");
+
             if let Some(template_dir) = sub_matches.get_one::<String>("template-dir") {
-                let schemes_repo_path = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
+                let schemes_repo_path = paths::schemes_repo_path(&data_path);
                 let template_path = PathBuf::from(template_dir);
 
                 operations::build::build(&template_path, &schemes_repo_path)?;
+            } else {
+                operations::build::build_all_items(&config_path, &data_path, is_quiet)?;
             }
         }
         Some(("current", sub_matches)) => {
