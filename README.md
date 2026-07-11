@@ -336,6 +336,12 @@ This option is per-item. The built-in schemes repository has no `[[items]]`
 entry of its own, so its equivalent setting lives under the
 [`[schemes]` table](#schemes-table-configtoml-schema).
 
+`allow-dirty-update` only applies to items whose `path` is a Git URL. An item
+whose `path` points at a local directory is symlinked into place and is a
+directory you manage yourself, so `tinty update` always leaves it untouched —
+it never fetches, checks out, or rewrites its `origin`, regardless of this
+setting.
+
 #### Note on `supported-systems`
 
 The `supported-systems` key within an `[[items]]` table allows for specifying

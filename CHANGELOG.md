@@ -16,7 +16,10 @@
   repo locally. Non-overlapping local changes are carried forward; an update
   that would overwrite uncommitted work (or an untracked file) is refused and
   leaves the working tree untouched. Set it per `[[items]]` entry, or under the
-  `[schemes]` table for the built-in schemes repo.
+  `[schemes]` table for the built-in schemes repo. Local-path items (a `path`
+  pointing at a directory rather than a Git URL) are symlinks into directories
+  you manage yourself, so `tinty update` leaves them as-is and never fetches,
+  checks out, or rewrites their `origin`.
 - Add `[schemes].path` and `[schemes].revision` config options to override the
   source of the built-in schemes repository. `path` accepts an HTTPS Git URL
   (cloned into `repos/schemes`) or a local directory (symlinked as

@@ -59,6 +59,23 @@ fn print_conflict_message(item_name: &str, git_stderr: &str) {
     }
 }
 
+/// Reports the state of a local-path dependency without touching it. A local
+/// path is a live symlink into a directory the user manages themselves, so
+/// there is no remote to fetch and no revision to check out — `update` must
+/// leave it entirely alone (running git against it would reset the user's HEAD
+/// and rewrite their `origin`). We only confirm the symlink is still in place,
+/// exactly what `install` guarantees.
+fn report_local_dir(name: &str, repo_path: &Path, is_quiet: bool) {
+    if is_quiet {
+        return;
+    }
+    if repo_path.exists() {
+        println!("{name} — left as-is (local path, no remote to update)");
+    } else {
+        println!("{name} not installed (run `{REPO_NAME} install`)");
+    }
+}
+
 /// Updates the built-in schemes repository from its configured source.
 ///
 /// A Git URL source is pulled to its revision exactly like an item. A local-path
@@ -81,13 +98,7 @@ fn update_schemes_repo(
             is_quiet,
         )
     } else {
-        if !is_quiet {
-            if schemes_repo_path.exists() {
-                println!("{SCHEMES_REPO_NAME} up to date (local directory)");
-            } else {
-                println!("{SCHEMES_REPO_NAME} not installed (run `{REPO_NAME} install`)");
-            }
-        }
+        report_local_dir(SCHEMES_REPO_NAME, schemes_repo_path, is_quiet);
         Ok(())
     }
 }
@@ -107,14 +118,22 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
     for item in items {
         let item_path = hooks_path.join(&item.name);
 
-        update_item(
-            item.name.as_str(),
-            item.path.as_str(),
-            &item_path,
-            item.revision.as_deref(),
-            item.allow_dirty_update,
-            is_quiet,
-        )?;
+        // A local-path item is a symlink into a directory the user owns and
+        // edits directly (its own branches, its own `origin`). There is nothing
+        // to fetch or check out, so mirror `install`'s URL-vs-path dispatch and
+        // leave it untouched rather than running git against the user's tree.
+        if Url::parse(item.path.as_str()).is_ok() {
+            update_item(
+                item.name.as_str(),
+                item.path.as_str(),
+                &item_path,
+                item.revision.as_deref(),
+                item.allow_dirty_update,
+                is_quiet,
+            )?;
+        } else {
+            report_local_dir(item.name.as_str(), &item_path, is_quiet);
+        }
     }
 
     let schemes_repo_path = hooks_path.join(SCHEMES_REPO_NAME);
