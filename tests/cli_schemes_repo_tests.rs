@@ -288,7 +288,7 @@ fn schemes_local_path_update_is_noop() -> Result<()> {
     let update_vec = build_command_vec("update", &config_path, &data_path)?;
     let (stdout, _) = run_command(&update_vec)?;
     ensure!(
-        stdout.contains("schemes up to date (local directory)"),
+        stdout.contains("schemes — left as-is (local path, no remote to update)"),
         "A local-path schemes source should report a local-directory no-op on update.\nGot: {stdout}"
     );
     ensure!(

@@ -90,9 +90,13 @@ fn fixture(name: &str) -> Result<Fixture> {
 }
 
 /// `[[items]]` config for the fixture, optionally setting the per-item flag.
+///
+/// The remote is addressed as a `file://` URL so tinty treats the item as a Git
+/// remote to fetch (a bare local path would be treated as a symlinked local
+/// directory and left untouched — see `update_leaves_local_path_item_untouched`).
 fn item_config(remote: &Path, item_allow: Option<bool>) -> String {
     let mut config = format!(
-        "[[items]]\npath = \"{}\"\nname = \"{ITEM_NAME}\"\nthemes-dir = \".\"\n",
+        "[[items]]\npath = \"file://{}\"\nname = \"{ITEM_NAME}\"\nthemes-dir = \".\"\n",
         remote.display()
     );
     if let Some(value) = item_allow {
@@ -342,6 +346,75 @@ fn conflict_is_detected_regardless_of_git_locale() -> Result<()> {
     ensure!(
         head(&f.clone)? == before,
         "HEAD must not move when the update is refused."
+    );
+
+    Ok(())
+}
+
+/// A local-path item is a symlink into a directory the user manages directly.
+/// `update` must leave it completely alone — never fetch, check out, or rewrite
+/// its `origin` — even with `allow-dirty-update = true`. (Regression: the flag
+/// used to let `update` run git against the user's working tree, resetting HEAD
+/// and clobbering `origin` to the item's own path.)
+#[test]
+fn update_leaves_local_path_item_untouched() -> Result<()> {
+    let (config_path, data_path, command_vec, temp) =
+        setup("allow_dirty_local_path", "update", false)?;
+
+    // A directory the user owns: its own repo, its own `origin`, its own branch.
+    let live = temp.path().join("live");
+    fs::create_dir_all(&live)?;
+    git(&live, &["init", "-q", "-b", "main"])?;
+    git(&live, &["config", "user.email", "tinty@test.local"])?;
+    git(&live, &["config", "user.name", "tinty test"])?;
+    let sentinel_origin = "https://github.com/tinted-theming/tinted-terminal";
+    git(&live, &["remote", "add", "origin", sentinel_origin])?;
+    fs::write(live.join("theme-a.txt"), "a1\n")?;
+    git(&live, &["add", "-A"])?;
+    git(&live, &["commit", "-q", "-m", "init"])?;
+    let head_before = head(&live)?;
+
+    // `tinty build .` dirties tracked artifacts and drops untracked files.
+    fs::write(live.join("theme-a.txt"), "my local build\n")?;
+    fs::write(live.join("tinted8-new.txt"), "new\n")?;
+
+    // `install` symlinks a local-path item into repos/<name>; emulate that.
+    let repo_slot = data_path.join("repos").join(ITEM_NAME);
+    fs::create_dir_all(repo_slot.parent().unwrap())?;
+    std::os::unix::fs::symlink(&live, &repo_slot)?;
+
+    // A local-path item (NOT a URL) with allow-dirty on, to prove the flag does
+    // not cause git to run against the user's directory.
+    let config = format!(
+        "[[items]]\npath = \"{}\"\nname = \"{ITEM_NAME}\"\nthemes-dir = \".\"\nallow-dirty-update = true\n",
+        live.display()
+    );
+    write_to_file(&config_path, &config)?;
+
+    let (stdout, _) = run_update(&command_vec)?;
+
+    ensure!(
+        stdout.contains(&format!(
+            "{ITEM_NAME} — left as-is (local path, no remote to update)"
+        )),
+        "Expected a local-directory no-op message.\nGot: {stdout}"
+    );
+    // The regression guards: git must not have touched the user's repo.
+    ensure!(
+        git(&live, &["config", "--get", "remote.origin.url"])?.trim() == sentinel_origin,
+        "origin must not be clobbered for a local-path item."
+    );
+    ensure!(
+        head(&live)? == head_before,
+        "HEAD must not move for a local-path item."
+    );
+    ensure!(
+        fs::read_to_string(live.join("theme-a.txt"))? == "my local build\n",
+        "Local uncommitted edits must be preserved."
+    );
+    ensure!(
+        live.join("tinted8-new.txt").exists(),
+        "Untracked files must be preserved."
     );
 
     Ok(())
