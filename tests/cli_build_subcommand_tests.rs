@@ -6,7 +6,7 @@
 
 mod utils;
 
-use crate::utils::{build_command_vec, run_command, write_to_file, REPO_DIR, SCHEMES_REPO_NAME};
+use crate::utils::{build_command_vec, builtin_schemes_repo_path, run_command, write_to_file};
 use anyhow::Result;
 use std::fs;
 
@@ -20,7 +20,7 @@ fn test_cli_build_ignores_non_scheme_files_in_schemes_repo() -> Result<()> {
         .tempdir()?;
     let config_path = temp_dir.path().join("config.toml");
     let data_path = temp_dir.path().join("data");
-    let schemes_repo = data_path.join(REPO_DIR).join(SCHEMES_REPO_NAME);
+    let schemes_repo = builtin_schemes_repo_path(&data_path);
 
     // A real base16 scheme under `base16/`, alongside non-scheme files at the
     // schemes-repo root that previously made `build` fail with E111.

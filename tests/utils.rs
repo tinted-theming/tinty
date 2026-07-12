@@ -39,6 +39,8 @@ pub const CURRENT_SCHEME_FILE_NAME: &str = "current_scheme";
 #[allow(dead_code)]
 pub const REPO_DIR: &str = "repos";
 #[allow(dead_code)]
+pub const SCHEME_REPO_DIR: &str = "scheme-repos";
+#[allow(dead_code)]
 pub const SCHEMES_REPO_NAME: &str = "schemes";
 #[allow(dead_code)]
 pub const CUSTOM_SCHEMES_DIR_NAME: &str = "custom-schemes";
@@ -202,11 +204,24 @@ fn ensure_repos_cache() -> Result<PathBuf> {
     Ok(tmp_repos_dir)
 }
 
+/// On-disk location of the built-in schemes repo under a data dir. Scheme repos
+/// live in `scheme-repos/`, separate from template items in `repos/`.
+#[allow(dead_code)]
+pub fn builtin_schemes_repo_path(data_path: &Path) -> PathBuf {
+    data_path.join(SCHEME_REPO_DIR).join(SCHEMES_REPO_NAME)
+}
+
 pub fn clone_test_repos(data_path: &Path) -> Result<()> {
     let cache_dir = ensure_repos_cache()?;
 
     for repo_name in ["schemes", "tinted-shell", "tinted-vim"] {
-        let repo_path = data_path.join(format!("repos/{repo_name}"));
+        // The schemes repo lives under `scheme-repos/`; template items stay in
+        // `repos/`.
+        let repo_path = if repo_name == "schemes" {
+            builtin_schemes_repo_path(data_path)
+        } else {
+            data_path.join(format!("repos/{repo_name}"))
+        };
         let cached_repo_path = cache_dir.join(repo_name);
 
         if repo_path.exists() {

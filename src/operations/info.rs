@@ -1,5 +1,7 @@
-use crate::constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME};
+use crate::config::Config;
+use crate::constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_NAME, REPO_URL};
 use crate::operations::current::get_current_scheme_slug;
+use crate::scheme_repos::merged_schemes;
 use anyhow::{anyhow, Result};
 use hex_color::HexColor;
 use serde::Deserialize;
@@ -9,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use tinted_builder::{ColorName, ColorVariant, SchemeSystem};
+use tinted_builder_rust::operation_build::utils::SchemeFile;
 
 #[derive(Debug, Deserialize)]
 struct Base16Scheme {
@@ -435,54 +438,55 @@ fn print_all_schemes(files: Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
+/// Walks a single schemes directory (`<dir>/<system>/*.yaml`) and returns every
+/// scheme file path, or `None` when the directory does not exist. Used for the
+/// custom-schemes view, which reads a lone directory rather than the merged
+/// collection.
+fn collect_scheme_yaml_files(dir: &Path) -> Option<Vec<PathBuf>> {
+    if !dir.exists() {
+        return None;
+    }
+
+    let mut files: Vec<PathBuf> = Vec::new();
+    for scheme_system in SchemeSystem::variants() {
+        let system_dir = dir.join(scheme_system.as_str());
+        if let Ok(entries) = fs::read_dir(&system_dir) {
+            files.extend(entries.filter_map(|entry| entry.ok().map(|e| e.path())));
+        }
+    }
+
+    Some(files)
+}
+
 pub fn info(
+    config_path: &Path,
     data_path: &Path,
     scheme_name_option: Option<&String>,
     is_custom: bool,
     exhaustive_list: bool,
 ) -> Result<()> {
-    let schemes_dir_path = if is_custom {
-        data_path.join(CUSTOM_SCHEMES_DIR_NAME)
-    } else {
-        data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"))
-    };
-
-    match (schemes_dir_path.exists(), is_custom) {
-        (false, true) => {
-            return Err(anyhow!(
+    // Non-custom `info` spans the built-in repo plus any extras, deduplicated by
+    // precedence; custom `info` reads only the locally generated schemes.
+    let mut files: Vec<PathBuf> = if is_custom {
+        collect_scheme_yaml_files(&data_path.join(CUSTOM_SCHEMES_DIR_NAME)).ok_or_else(|| {
+            anyhow!(
                 "You don't have any local custom schemes at: {}",
-                schemes_dir_path.display(),
-            ))
-        }
-        (false, false) => {
-            return Err(anyhow!(
-                "Scheme repo path does not exist: {}\nRun `{} install` and try again",
-                schemes_dir_path.display(),
-                REPO_NAME
-            ))
-        }
-        _ => {}
-    }
-
-    let files_entries = fs::read_dir(schemes_dir_path.join(SchemeSystem::default().as_str()))?;
-    let mut files: Vec<PathBuf> = files_entries
-        .filter_map(|entry| entry.ok().map(|e| e.path()))
-        .collect();
-    let scheme_systems_without_default: Vec<&str> = SchemeSystem::variants()
-        .iter()
-        .filter(|s| s.as_str() != SchemeSystem::default().as_str())
-        .map(SchemeSystem::as_str)
-        .collect();
-
-    // Add other scheme_system schemes to vec
-    for scheme_system in scheme_systems_without_default {
-        if schemes_dir_path.join(scheme_system).exists() {
-            files.extend(
-                fs::read_dir(schemes_dir_path.join(scheme_system))?
-                    .filter_map(|entry| entry.ok().map(|e| e.path())),
-            );
-        }
-    }
+                data_path.join(CUSTOM_SCHEMES_DIR_NAME).display(),
+            )
+        })?
+    } else {
+        let config = Config::read(config_path)?;
+        merged_schemes(data_path, &config)
+            .map_err(|_| {
+                anyhow!(
+                    "Scheme repositories do not exist.\nRun `{REPO_NAME} install` and try again"
+                )
+            })?
+            .files
+            .values()
+            .map(SchemeFile::get_path)
+            .collect()
+    };
 
     files.sort();
 

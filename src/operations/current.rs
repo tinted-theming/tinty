@@ -1,7 +1,6 @@
-use crate::constants::{
-    ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME,
-    SCHEMES_REPO_NAME,
-};
+use crate::config::Config;
+use crate::constants::{ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME};
+use crate::scheme_repos::merged_schemes;
 use crate::utils::get_all_scheme_file_paths;
 use anyhow::{anyhow, Result};
 use std::fs;
@@ -13,9 +12,8 @@ pub fn get_current_scheme_slug(data_path: &Path) -> String {
 }
 
 /// Prints out the name of the last scheme applied
-pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
+pub fn current(config_path: &Path, data_path: &Path, property_name: &str) -> Result<()> {
     let current_scheme_slug = get_current_scheme_slug(data_path);
-    let schemes_path = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
 
     if current_scheme_slug.is_empty() {
         return Err(anyhow!(
@@ -29,14 +27,11 @@ pub fn current(data_path: &Path, property_name: &str) -> Result<()> {
         return Ok(());
     }
 
-    if !schemes_path.is_dir() {
-        return Err(anyhow!(
-            "No schemes exist. Run `{REPO_NAME} sync` and try again.",
-        ));
-    }
-
+    // The applied scheme may come from the built-in repo, an extra, or the
+    // locally generated custom schemes, so look across all of them.
+    let config = Config::read(config_path)?;
+    let mut scheme_files = merged_schemes(data_path, &config)?.files;
     let custom_schemes_path = data_path.join(CUSTOM_SCHEMES_DIR_NAME);
-    let mut scheme_files = get_all_scheme_file_paths(&schemes_path, None)?;
     if custom_schemes_path.is_dir() {
         let custom_scheme_files = get_all_scheme_file_paths(&custom_schemes_path, None)?;
         scheme_files.extend(custom_scheme_files);

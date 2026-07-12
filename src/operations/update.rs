@@ -1,6 +1,7 @@
 use crate::config::{ensure_schemes_path_not_circular, Config};
 use crate::constants::{DEFAULT_REVISION, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME};
 use crate::repo::{self, UpdateStatus};
+use crate::scheme_repos::{builtin_schemes_repo_path, extra_repo_path};
 use anyhow::{Context, Result};
 use std::path::Path;
 use url::Url;
@@ -76,29 +77,24 @@ fn report_local_dir(name: &str, repo_path: &Path, is_quiet: bool) {
     }
 }
 
-/// Updates the built-in schemes repository from its configured source.
+/// Updates a scheme repository (the built-in `schemes` repo or a configured
+/// extra) from its source.
 ///
 /// A Git URL source is pulled to its revision exactly like an item. A local-path
 /// source is a live symlink to the user's directory, so there is nothing to
 /// fetch and `revision` is irrelevant — we only confirm the symlink is in place.
-fn update_schemes_repo(
-    schemes_repo_path: &Path,
+fn update_scheme_repo(
+    name: &str,
+    repo_path: &Path,
     source: &str,
     revision: Option<&str>,
     allow_dirty: bool,
     is_quiet: bool,
 ) -> Result<()> {
     if Url::parse(source).is_ok() {
-        update_item(
-            SCHEMES_REPO_NAME,
-            source,
-            schemes_repo_path,
-            revision,
-            allow_dirty,
-            is_quiet,
-        )
+        update_item(name, source, repo_path, revision, allow_dirty, is_quiet)
     } else {
-        report_local_dir(SCHEMES_REPO_NAME, schemes_repo_path, is_quiet);
+        report_local_dir(name, repo_path, is_quiet);
         Ok(())
     }
 }
@@ -136,16 +132,32 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
         }
     }
 
-    let schemes_repo_path = hooks_path.join(SCHEMES_REPO_NAME);
+    let schemes_repo_path = builtin_schemes_repo_path(data_path);
 
     ensure_schemes_path_not_circular(&schemes_source, &schemes_repo_path)?;
-    update_schemes_repo(
+    update_scheme_repo(
+        SCHEMES_REPO_NAME,
         &schemes_repo_path,
         &schemes_source,
         schemes_revision.as_deref(),
         schemes_allow_dirty,
         is_quiet,
     )?;
+
+    // Update each extra scheme repo the same way, honoring its own
+    // `allow-dirty-update`.
+    for extra in &config.schemes.extras {
+        let extra_path = extra_repo_path(data_path, &extra.name);
+        ensure_schemes_path_not_circular(&extra.path, &extra_path)?;
+        update_scheme_repo(
+            &extra.name,
+            &extra_path,
+            &extra.path,
+            extra.revision.as_deref(),
+            extra.allow_dirty_update,
+            is_quiet,
+        )?;
+    }
 
     Ok(())
 }
