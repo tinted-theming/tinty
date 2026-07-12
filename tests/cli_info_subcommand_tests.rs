@@ -184,8 +184,8 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // Assert
     // ------
     ensure!(
-        stderr.contains("Scheme repo path does not exist:"),
-        "Expected stderr to contain 'Scheme repo path does not exist'.\nGot: {stderr}"
+        stderr.contains("Scheme repositories do not exist"),
+        "Expected stderr to contain 'Scheme repositories do not exist'.\nGot: {stderr}"
     );
     ensure!(
         stderr.contains("Run `tinty install` and try again"),

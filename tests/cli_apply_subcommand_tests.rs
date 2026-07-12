@@ -66,7 +66,7 @@ fn test_cli_apply_subcommand_without_setup() -> Result<()> {
         false,
     )?;
     let expected_output =
-        format!("Schemes do not exist, run install and try again: `{REPO_NAME} install`");
+        format!("Schemes are missing, run install and then try again: `{REPO_NAME} install`");
 
     // ---
     // Act

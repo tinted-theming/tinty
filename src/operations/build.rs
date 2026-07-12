@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::constants::REPO_NAME;
 use crate::paths;
+use crate::scheme_repos::builtin_schemes_repo_path;
 use anyhow::{anyhow, Result};
 use std::path::Path;
 use tinted_builder_rust::operation_build;
@@ -21,7 +22,7 @@ pub fn build(template_path: &Path, schemes_repo_path: &Path) -> Result<()> {
 pub fn build_all_items(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()> {
     let config = Config::read(config_path)?;
     let items = config.items.unwrap_or_default();
-    let schemes_repo_path = paths::schemes_repo_path(data_path);
+    let schemes_repo_path = builtin_schemes_repo_path(data_path);
 
     if items.is_empty() {
         return Err(anyhow!(
