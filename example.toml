@@ -48,8 +48,9 @@
 # # `current` and `gallery`. Each follows the same source mechanics as an
 # # `[[items]]` entry: `path` is a Git URL (cloned) or a local directory
 # # (symlinked), with an optional `revision` and `allow-dirty-update`. When
-# # two repos define the same `<system>-<slug>` scheme, the built-in repo
-# # wins over extras and earlier-listed extras win over later ones.
+# # two repos define the same `<system>-<slug>` scheme, the last-listed one
+# # wins: extras override the built-in repo and later extras override earlier
+# # ones, so you can override a scheme by declaring your own copy lower down.
 # [[schemes.extras]]
 # name = "community-schemes"
 # path = "https://github.com/example/community-schemes"
