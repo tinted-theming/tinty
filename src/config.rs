@@ -97,6 +97,45 @@ impl fmt::Display for ConfigRing {
     }
 }
 
+/// An additional scheme repository declared under `[[schemes.extras]]`. Extra
+/// repos are merged with the built-in `schemes` repo into a single scheme
+/// collection. They follow the same source mechanics as `[[items]]`: `path` is
+/// a Git URL (cloned) or a local directory (symlinked), with an optional
+/// `revision`. Unlike an item, an extra is a collection of `<system>/<slug>.yaml`
+/// scheme files, not a template — so it has no `themes-dir`, `hook`, or
+/// `supported-systems`.
+#[derive(Deserialize, Debug, Clone)]
+pub struct SchemeRepoConfig {
+    /// Unique name for the repo; also its directory under `scheme-repos/`.
+    pub name: String,
+    /// Git URL (cloned) or local directory (symlinked). A leading `~/` is
+    /// expanded to the home directory during config read.
+    pub path: String,
+    /// Git revision (branch, tag, or commit SHA) to check out. Ignored for a
+    /// local-directory `path`.
+    pub revision: Option<String>,
+    /// When `true`, `tinty update` may proceed even if this repo's local copy
+    /// has uncommitted changes. Mirrors an item's `allow-dirty-update`.
+    #[serde(default, rename = "allow-dirty-update")]
+    pub allow_dirty_update: bool,
+}
+
+impl fmt::Display for SchemeRepoConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f)?;
+        writeln!(f, "[[schemes.extras]]")?;
+        writeln!(f, "name = \"{}\"", self.name)?;
+        write!(f, "path = \"{}\"", self.path)?;
+        if let Some(revision) = &self.revision {
+            write!(f, "\nrevision = \"{revision}\"")?;
+        }
+        if self.allow_dirty_update {
+            write!(f, "\nallow-dirty-update = true")?;
+        }
+        Ok(())
+    }
+}
+
 /// Settings for the built-in schemes repository, which has no `[[items]]`
 /// entry of its own. Grouped under a `[schemes]` table so more schemes-repo
 /// specific options can be added here in the future.
@@ -120,6 +159,10 @@ pub struct SchemesConfig {
     /// revision is used.
     #[serde(default)]
     pub revision: Option<String>,
+    /// Additional scheme repositories merged with the built-in `schemes` repo.
+    /// Declared as `[[schemes.extras]]` array-of-tables.
+    #[serde(default)]
+    pub extras: Vec<SchemeRepoConfig>,
 }
 
 /// Rejects a `[schemes].path` (a local directory) that resolves to tinty's own
@@ -185,6 +228,32 @@ fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
     Ok(())
 }
 
+/// Validates `[[schemes.extras]]` names: each must be non-empty, unique among
+/// extras, and must not be the reserved `schemes` name (which addresses the
+/// built-in repo). Names double as directory names under `scheme-repos/`, so a
+/// collision would make two repos fight over one slot.
+fn ensure_scheme_extras_are_valid(extras: &[SchemeRepoConfig]) -> Result<()> {
+    let mut names = HashSet::new();
+
+    for extra in extras {
+        if extra.name.trim().is_empty() {
+            return Err(anyhow!(
+                "config.toml schemes.extras.name should not be empty"
+            ));
+        }
+
+        if extra.name == SCHEMES_REPO_NAME {
+            return Err(anyhow!("config.toml schemes.extras.name \"{SCHEMES_REPO_NAME}\" is reserved for the built-in schemes repository. Please rename this extra scheme repo."));
+        }
+
+        if !names.insert(&extra.name) {
+            return Err(anyhow!("config.toml schemes.extras.name should be unique values, but \"{}\" is used for more than 1 extra. Please change this to a unique value.", extra.name));
+        }
+    }
+
+    Ok(())
+}
+
 fn ensure_ring_names_are_valid(rings: &[ConfigRing]) -> Result<()> {
     let mut names = HashSet::new();
 
@@ -229,6 +298,7 @@ impl Config {
         )
     }
 
+    #[allow(clippy::too_many_lines)]
     pub fn read(path: &Path) -> Result<Self> {
         if path.exists() && !path.is_file() {
             return Err(anyhow!(
@@ -337,6 +407,22 @@ impl Config {
             config.schemes.path = Some(expanded);
         }
 
+        // Validate `[[schemes.extras]]` names, then normalize each extra's path
+        // exactly like an item path: expand a leading `~/` and require a valid
+        // URL or an existing local directory.
+        ensure_scheme_extras_are_valid(&config.schemes.extras)?;
+        for extra in &mut config.schemes.extras {
+            let expanded = replace_tilde_slash_with_home(&extra.path)?
+                .to_string_lossy()
+                .into_owned();
+
+            if Url::parse(&expanded).is_err() && !Path::new(&expanded).is_dir() {
+                return Err(anyhow!("config.toml schemes.extras \"{}\" has an invalid `path` value. \"{expanded}\" is not a valid url and is not a path to an existing local directory", extra.name));
+            }
+
+            extra.path = expanded;
+        }
+
         if !shell.contains("{}") {
             let msg = "The configured shell does not contain the required command placeholder '{}'. Check the default file or github for config examples.";
             return Err(anyhow!(msg));
@@ -384,7 +470,9 @@ impl fmt::Display for Config {
         }
 
         // Emitted before the `[[rings]]`/`[[items]]` array-of-tables so its
-        // keys are not mis-parsed as belonging to the last array entry.
+        // keys are not mis-parsed as belonging to the last array entry. The
+        // `[schemes]` scalar keys must precede the `[[schemes.extras]]`
+        // array-of-tables for the same reason.
         if self.schemes.path.is_some()
             || self.schemes.revision.is_some()
             || self.schemes.allow_dirty_update
@@ -399,6 +487,10 @@ impl fmt::Display for Config {
             if self.schemes.allow_dirty_update {
                 writeln!(f, "allow-dirty-update = true")?;
             }
+        }
+
+        for extra in &self.schemes.extras {
+            writeln!(f, "{extra}")?;
         }
 
         if let Some(rings) = &self.rings {
@@ -419,7 +511,7 @@ impl fmt::Display for Config {
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, ConfigItem};
+    use super::{Config, ConfigItem, SchemeRepoConfig};
 
     fn item_with(allow_dirty_update: bool) -> ConfigItem {
         ConfigItem {
@@ -547,6 +639,85 @@ themes-dir = "themes"
         assert!(rendered.contains("[schemes]"));
         assert!(rendered.contains("path = \"https://example.com/schemes\""));
         assert!(rendered.contains("revision = \"dev\""));
+    }
+
+    #[test]
+    fn schemes_extras_parse_as_array_of_tables() {
+        let config: Config = toml::from_str(concat!(
+            "[[schemes.extras]]\nname = \"community\"\npath = \"https://example.com/community\"\nrevision = \"main\"\n\n",
+            "[[schemes.extras]]\nname = \"work\"\npath = \"/some/dir\"\nallow-dirty-update = true\n",
+        ))
+        .unwrap();
+        let extras = &config.schemes.extras;
+        assert_eq!(extras.len(), 2);
+        assert_eq!(extras[0].name, "community");
+        assert_eq!(extras[0].path, "https://example.com/community");
+        assert_eq!(extras[0].revision.as_deref(), Some("main"));
+        assert!(!extras[0].allow_dirty_update);
+        assert_eq!(extras[1].name, "work");
+        assert!(extras[1].allow_dirty_update);
+        assert_eq!(extras[1].revision, None);
+    }
+
+    #[test]
+    fn schemes_extras_absent_defaults_to_empty() {
+        let config: Config = toml::from_str("shell = \"sh -c '{}'\"\n").unwrap();
+        assert!(config.schemes.extras.is_empty());
+    }
+
+    #[test]
+    fn ensure_scheme_extras_rejects_reserved_name() {
+        let extras = vec![SchemeRepoConfig {
+            name: super::SCHEMES_REPO_NAME.to_string(),
+            path: "https://example.com/x".to_string(),
+            revision: None,
+            allow_dirty_update: false,
+        }];
+        let err = super::ensure_scheme_extras_are_valid(&extras).unwrap_err();
+        assert!(err.to_string().contains("reserved"));
+    }
+
+    #[test]
+    fn ensure_scheme_extras_rejects_duplicate_names() {
+        let extra = |name: &str| SchemeRepoConfig {
+            name: name.to_string(),
+            path: "https://example.com/x".to_string(),
+            revision: None,
+            allow_dirty_update: false,
+        };
+        let err = super::ensure_scheme_extras_are_valid(&[extra("dup"), extra("dup")]).unwrap_err();
+        assert!(err.to_string().contains("unique"));
+    }
+
+    #[test]
+    fn ensure_scheme_extras_rejects_empty_name() {
+        let extras = vec![SchemeRepoConfig {
+            name: "   ".to_string(),
+            path: "https://example.com/x".to_string(),
+            revision: None,
+            allow_dirty_update: false,
+        }];
+        let err = super::ensure_scheme_extras_are_valid(&extras).unwrap_err();
+        assert!(err.to_string().contains("empty"));
+    }
+
+    #[test]
+    fn config_display_round_trips_scheme_extras() {
+        let mut config: Config = toml::from_str(concat!(
+            "[[schemes.extras]]\nname = \"community\"\npath = \"https://example.com/community\"\nrevision = \"main\"\n",
+        ))
+        .unwrap();
+        config.shell = Some("sh -c '{}'".to_string());
+        let rendered = config.to_string();
+        assert!(rendered.contains("[[schemes.extras]]"));
+        assert!(rendered.contains("name = \"community\""));
+        assert!(rendered.contains("path = \"https://example.com/community\""));
+        assert!(rendered.contains("revision = \"main\""));
+
+        // The rendered config must itself parse back to the same extras.
+        let reparsed: Config = toml::from_str(&rendered).unwrap();
+        assert_eq!(reparsed.schemes.extras.len(), 1);
+        assert_eq!(reparsed.schemes.extras[0].name, "community");
     }
 
     #[test]
