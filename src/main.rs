@@ -18,6 +18,7 @@ mod operations {
 }
 mod paths;
 mod repo;
+mod scheme_repos;
 mod utils;
 
 use crate::cli::{build_cli, get_matches};
@@ -80,13 +81,20 @@ fn main() -> Result<()> {
         )
     })?;
 
+    // One-time relocation of the built-in schemes repo from `repos/schemes` to
+    // `scheme-repos/schemes`. A no-op once migrated. Announced on stderr so the
+    // move is visible without polluting scriptable stdout (e.g. `list --json`).
+    if let Some(message) = scheme_repos::migrate_legacy_schemes_repo(&data_path)? {
+        eprintln!("{message}");
+    }
+
     // Handle the subcommands passed to the CLI
     match matches.subcommand() {
         Some(("build", sub_matches)) => {
             let is_quiet = sub_matches.get_flag("quiet");
 
             if let Some(template_dir) = sub_matches.get_one::<String>("template-dir") {
-                let schemes_repo_path = paths::schemes_repo_path(&data_path);
+                let schemes_repo_path = scheme_repos::builtin_schemes_repo_path(&data_path);
                 let template_path = PathBuf::from(template_dir);
 
                 operations::build::build(&template_path, &schemes_repo_path)?;
@@ -100,7 +108,7 @@ fn main() -> Result<()> {
                 .map(String::as_str)
                 .unwrap_or_default();
 
-            operations::current::current(&data_path, property_name)?;
+            operations::current::current(&config_path, &data_path, property_name)?;
         }
         Some(("config", sub_matches)) => {
             let data_dir_path_flag = sub_matches.get_flag("data-dir-path");
@@ -139,7 +147,13 @@ fn main() -> Result<()> {
             // the static site to a directory, and `--no-rc` opens the static
             // gallery locally (no server, no system changes).
             if dump_dir.is_some() || is_no_rc {
-                operations::gallery::gallery(&data_path, is_custom, dump_dir, should_open)?;
+                operations::gallery::gallery(
+                    &config_path,
+                    &data_path,
+                    is_custom,
+                    dump_dir,
+                    should_open,
+                )?;
             } else {
                 operations::gallery::serve(&config_path, &data_path, is_custom, port, should_open)?;
             }
@@ -154,6 +168,7 @@ fn main() -> Result<()> {
             let scheme_name_option = sub_matches.get_one::<String>("scheme-name");
 
             operations::info::info(
+                &config_path,
                 &data_path,
                 scheme_name_option,
                 is_custom,
@@ -175,7 +190,7 @@ fn main() -> Result<()> {
                 .get_one::<bool>("json")
                 .is_some_and(ToOwned::to_owned);
 
-            operations::list::list(&data_path, is_custom, is_json)?;
+            operations::list::list(&config_path, &data_path, is_custom, is_json)?;
         }
         Some(("apply", sub_matches)) => {
             if let Some(theme) = sub_matches.get_one::<String>("scheme-name") {

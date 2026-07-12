@@ -17,7 +17,7 @@ use crate::utils::{setup, write_to_file, ARTIFACTS_DIR};
 fn prepare_minimal_repos(data_path: &Path, scheme_name: &str, theme_contents: &str) -> Result<()> {
     // Create a minimal builtin schemes directory with a valid scheme file
     let builtin_scheme_file = data_path
-        .join("repos/schemes/base16")
+        .join("scheme-repos/schemes/base16")
         .join(format!("{}.yaml", scheme_name.replace("base16-", "")));
 
     if let Some(builtin_scheme_dir) = builtin_scheme_file.parent() {
