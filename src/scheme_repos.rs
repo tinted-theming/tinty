@@ -6,8 +6,11 @@
 //! directory of `<system>/<slug>.yaml` scheme files, exactly like
 //! `tinted-theming/schemes`. When more than one repo defines the same
 //! `<system>-<slug>` key, the collection here resolves the conflict
-//! deterministically: the built-in repo wins over extras, and earlier-listed
-//! extras win over later ones (first-listed wins).
+//! deterministically by treating the repos as an ordered overlay stack
+//! `[built-in, extra1, extra2, …]` where the last one wins: extras override the
+//! built-in repo, and later-listed extras override earlier ones. This lets a
+//! user override a built-in (or earlier-extra) scheme by declaring their own
+//! lower in `config.toml`.
 
 use crate::config::Config;
 use crate::constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME, SCHEME_REPO_DIR};
@@ -97,15 +100,17 @@ pub struct MergedSchemes {
 }
 
 /// Collects and merges the schemes from every configured repo that exists on
-/// disk, applying first-listed-wins precedence (built-in over extras, earlier
-/// extras over later ones).
+/// disk, applying last-listed-wins precedence (extras override the built-in,
+/// later extras override earlier ones) — the repos are an overlay stack with
+/// the built-in at the bottom.
 ///
 /// Returns an error only when *no* scheme repository exists on disk yet, keeping
 /// tinty's long-standing "run install" guidance. Configured-but-not-yet-installed
 /// extras are skipped silently; `install`/`update` are what create them.
 pub fn collect_merged_schemes(refs: &[SchemeRepoRef]) -> Result<MergedSchemes> {
     let mut files: HashMap<String, SchemeFile> = HashMap::new();
-    // Which repo contributed each key, so a later duplicate can name its rival.
+    // Which repo currently owns each key, so a later occurrence can name the
+    // repo it overrides.
     let mut key_source: HashMap<String, String> = HashMap::new();
     let mut conflicts: Vec<SchemeConflict> = Vec::new();
     let mut any_repo_present = false;
@@ -120,15 +125,14 @@ pub fn collect_merged_schemes(refs: &[SchemeRepoRef]) -> Result<MergedSchemes> {
             .with_context(|| format!("Failed to read schemes from {}", repo.path.display()))?;
 
         for (key, scheme_file) in repo_files {
-            if let Some(existing_repo) = key_source.get(&key) {
-                // First-listed wins: keep the earlier repo's scheme, record the
-                // shadowing so callers can surface it.
+            if let Some(shadowed_repo) = key_source.get(&key).cloned() {
+                // Last-listed wins: this later repo overrides the one that held
+                // the key. Record the shadowing so callers can surface it.
                 conflicts.push(SchemeConflict {
-                    key,
-                    kept_repo: existing_repo.clone(),
-                    shadowed_repo: repo.name.clone(),
+                    key: key.clone(),
+                    kept_repo: repo.name.clone(),
+                    shadowed_repo,
                 });
-                continue;
             }
             key_source.insert(key.clone(), repo.name.clone());
             files.insert(key, scheme_file);
@@ -140,6 +144,13 @@ pub fn collect_merged_schemes(refs: &[SchemeRepoRef]) -> Result<MergedSchemes> {
             "Schemes are missing, run install and then try again: `{REPO_NAME} install`",
         ));
     }
+
+    // Stable, source-order-independent ordering for the user-facing notice.
+    conflicts.sort_by(|a, b| {
+        a.key
+            .cmp(&b.key)
+            .then_with(|| a.shadowed_repo.cmp(&b.shadowed_repo))
+    });
 
     Ok(MergedSchemes { files, conflicts })
 }
@@ -271,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn merge_prefers_builtin_over_extra_on_duplicate() {
+    fn merge_prefers_extra_over_builtin_on_duplicate() {
         let tmp = tempfile::tempdir().unwrap();
         let builtin = builtin_schemes_repo_path(tmp.path());
         let extra = extra_repo_path(tmp.path(), "extra");
@@ -295,8 +306,9 @@ mod tests {
         let merged = collect_merged_schemes(&refs).unwrap();
         assert!(merged.files.contains_key("base16-dup"));
         assert_eq!(merged.conflicts.len(), 1);
-        assert_eq!(merged.conflicts[0].kept_repo, "schemes");
-        assert_eq!(merged.conflicts[0].shadowed_repo, "extra");
+        // The extra is listed after the built-in, so it wins (last-listed wins).
+        assert_eq!(merged.conflicts[0].kept_repo, "extra");
+        assert_eq!(merged.conflicts[0].shadowed_repo, "schemes");
     }
 
     #[test]

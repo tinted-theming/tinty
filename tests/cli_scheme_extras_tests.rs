@@ -79,12 +79,13 @@ fn extra_repo_schemes_are_listed_with_builtin() -> Result<()> {
 }
 
 #[test]
-fn duplicate_scheme_builtin_wins_over_extra() -> Result<()> {
+fn duplicate_scheme_extra_wins_over_builtin() -> Result<()> {
     let (config_path, data_path, command_vec, temp) =
-        setup("extras_duplicate_builtin_wins", "install", false)?;
+        setup("extras_duplicate_extra_wins", "install", false)?;
 
     // Both the built-in repo and the extra define `base16-dup`, with distinct
-    // names so we can tell which one survived the merge.
+    // names so we can tell which one survived the merge. The extra is listed
+    // after the built-in, so it overrides it (last-listed wins).
     let builtin = temp.path().join("builtin-schemes");
     write_scheme(&builtin, "dup", "BuiltinDup")?;
     let extra = temp.path().join("extra-schemes");
@@ -98,26 +99,26 @@ fn duplicate_scheme_builtin_wins_over_extra() -> Result<()> {
     write_to_file(&config_path, &config)?;
     run_command(&command_vec)?;
 
-    // `list --json` embeds each scheme's name; the built-in copy must win.
+    // `list --json` embeds each scheme's name; the extra copy must win.
     let list_vec = build_command_vec("list --json", &config_path, &data_path)?;
     let (stdout, stderr) = run_command(&list_vec)?;
     ensure!(
-        stdout.contains("BuiltinDup") && !stdout.contains("ExtraDup"),
-        "the built-in scheme must win the duplicate.\nstdout: {stdout}"
+        stdout.contains("ExtraDup") && !stdout.contains("BuiltinDup"),
+        "the extra scheme must override the built-in duplicate.\nstdout: {stdout}"
     );
     // The shadowing is surfaced (not silent) on stderr.
     ensure!(
         stderr.contains("base16-dup") && stderr.contains("community"),
-        "expected a duplicate-scheme note naming the shadowed extra.\nstderr: {stderr}"
+        "expected a duplicate-scheme note naming the override.\nstderr: {stderr}"
     );
 
     Ok(())
 }
 
 #[test]
-fn duplicate_across_two_extras_first_listed_wins() -> Result<()> {
+fn duplicate_across_two_extras_last_listed_wins() -> Result<()> {
     let (config_path, data_path, command_vec, temp) =
-        setup("extras_duplicate_first_wins", "install", false)?;
+        setup("extras_duplicate_last_wins", "install", false)?;
 
     let builtin = temp.path().join("builtin-schemes");
     write_scheme(&builtin, "builtin-only", "Builtin Only")?;
@@ -138,8 +139,8 @@ fn duplicate_across_two_extras_first_listed_wins() -> Result<()> {
     let list_vec = build_command_vec("list --json", &config_path, &data_path)?;
     let (stdout, _) = run_command(&list_vec)?;
     ensure!(
-        stdout.contains("FirstShared") && !stdout.contains("SecondShared"),
-        "the first-listed extra must win the duplicate.\nstdout: {stdout}"
+        stdout.contains("SecondShared") && !stdout.contains("FirstShared"),
+        "the last-listed extra must win the duplicate.\nstdout: {stdout}"
     );
 
     Ok(())
