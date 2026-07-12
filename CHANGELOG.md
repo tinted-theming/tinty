@@ -33,9 +33,11 @@
   used by `list`, `info`, `apply`, `current`, and `gallery`. Each extra follows
   the same source mechanics as `[[items]]` (`name`, `path` as a Git URL or local
   directory, optional `revision` and `allow-dirty-update`) and is installed and
-  updated alongside the built-in repo. When more than one repo defines the same
-  `<system>-<slug>` scheme, precedence is deterministic — the built-in repo wins
-  over extras and earlier-listed extras win over later ones — and the shadowed
+  updated alongside the built-in repo. The repos form an overlay stack with the
+  built-in repo at the bottom, so when more than one defines the same
+  `<system>-<slug>` scheme the last-listed one wins — extras override the
+  built-in repo and later-listed extras override earlier ones — letting you
+  override a scheme by declaring your own copy lower in `config.toml`. Shadowed
   copies are noted on stderr. Applying an extra-repo scheme builds it on the fly
   into your template items, exactly like a generated custom scheme.
 

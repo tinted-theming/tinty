@@ -177,10 +177,12 @@ files under `<scheme_system>/<slug>.yaml` (e.g. `base16/`, `base24/`,
 `tinty list` shows the merged set and `tinty apply <system>-<slug>` applies any
 of them.
 
-When more than one repository defines the same `<system>-<slug>` scheme,
-precedence is deterministic: the built-in `schemes` repo wins over extras, and
-earlier-listed extras win over later ones. Shadowed duplicates are noted on
-stderr so nothing is silently dropped.
+The repositories form an overlay stack with the built-in `schemes` repo at the
+bottom, so when more than one defines the same `<system>-<slug>` scheme the
+last-listed one wins: an extra overrides the built-in repo, and a later-listed
+extra overrides an earlier one. This lets you override a scheme (built-in or
+from another extra) by declaring your own copy lower in `config.toml`. Shadowed
+duplicates are noted on stderr so nothing is silently dropped.
 
 Scheme repositories are stored under `scheme-repos/` in your data directory,
 separate from template `[[items]]` (which stay in `repos/`). If you upgraded
