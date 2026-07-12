@@ -9,6 +9,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [How it works](#how-it-works)
 - [Sourcing scripts that set environment variables](#sourcing-scripts-that-set-environment-variables)
 - [Use your own schemes](#use-your-own-schemes)
+- [Add extra scheme repositories](#add-extra-scheme-repositories)
 - [Scripting](#scripting)
 - [shell](#shell)
 - [Vim or Neovim](#vim-or-neovim)
@@ -149,6 +150,43 @@ cp path/to/your/base16-your-scheme.yaml "$(tinty config --data-dir-path)/custom-
 tinty list --custom-schemes # Should show your scheme
 tinty apply base16-your-scheme
 ```
+
+## Add extra scheme repositories
+
+Beyond the built-in `tinted-theming/schemes` repository, you can pull in
+additional scheme repositories and have their schemes merged into one
+collection. Declare them as `[[schemes.extras]]` in your `config.toml`. Each
+extra follows the same source mechanics as an `[[items]]` entry: `path` may be a
+Git URL (cloned) or a local directory (symlinked), with an optional `revision`
+and `allow-dirty-update`.
+
+```toml
+[[schemes.extras]]
+name = "community-schemes"
+path = "https://github.com/example/community-schemes"
+# revision = "main"           # optional; ignored for local-directory paths
+
+[[schemes.extras]]
+name = "my-schemes"
+path = "~/dev/my-schemes"      # a local directory is symlinked, not cloned
+```
+
+An extra scheme repository has the same layout as the built-in one — scheme
+files under `<scheme_system>/<slug>.yaml` (e.g. `base16/`, `base24/`,
+`tinted8/`). Run `tinty install` (or `tinty sync`) to fetch them, then
+`tinty list` shows the merged set and `tinty apply <system>-<slug>` applies any
+of them.
+
+When more than one repository defines the same `<system>-<slug>` scheme,
+precedence is deterministic: the built-in `schemes` repo wins over extras, and
+earlier-listed extras win over later ones. Shadowed duplicates are noted on
+stderr so nothing is silently dropped.
+
+Scheme repositories are stored under `scheme-repos/` in your data directory,
+separate from template `[[items]]` (which stay in `repos/`). If you upgraded
+from a version that stored the built-in schemes under `repos/schemes`, Tinty
+relocates it to `scheme-repos/schemes` automatically on the next command and
+prints a one-line notice.
 
 ## Terminals
 

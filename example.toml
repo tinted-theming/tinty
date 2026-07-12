@@ -43,6 +43,22 @@
 # # could support multiple scheme systems.
 # supported-systems = ["base16", "base24"]
 
+# # (Optional) Additional scheme repositories, merged with the built-in
+# # `schemes` repo into one collection used by `list`, `apply`, `info`,
+# # `current` and `gallery`. Each follows the same source mechanics as an
+# # `[[items]]` entry: `path` is a Git URL (cloned) or a local directory
+# # (symlinked), with an optional `revision` and `allow-dirty-update`. When
+# # two repos define the same `<system>-<slug>` scheme, the built-in repo
+# # wins over extras and earlier-listed extras win over later ones.
+# [[schemes.extras]]
+# name = "community-schemes"
+# path = "https://github.com/example/community-schemes"
+# # revision = "main"
+#
+# [[schemes.extras]]
+# name = "my-schemes"
+# path = "~/dev/my-schemes"
+
 
 # Example file. For shell, tmux, fzf, waybar and sway. Runs hooks
 # through zsh:
