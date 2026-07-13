@@ -153,42 +153,29 @@ tinty apply base16-your-scheme
 
 ## Add extra scheme repositories
 
-Beyond the built-in `tinted-theming/schemes` repository, you can pull in
-additional scheme repositories and have their schemes merged into one
-collection. Declare them as `[[schemes.extras]]` in your `config.toml`. Each
-extra follows the same source mechanics as an `[[items]]` entry: `path` may be a
-Git URL (cloned) or a local directory (symlinked), with an optional `revision`
-and `allow-dirty-update`.
+Want more schemes than the built-in set? Point Tinty at additional scheme
+repositories with `[[schemes.extras]]` in your `config.toml`, and their schemes
+join the rest:
 
 ```toml
 [[schemes.extras]]
 name = "community-schemes"
 path = "https://github.com/example/community-schemes"
-# revision = "main"           # optional; ignored for local-directory paths
 
 [[schemes.extras]]
 name = "my-schemes"
-path = "~/dev/my-schemes"      # a local directory is symlinked, not cloned
+path = "~/dev/my-schemes"
 ```
 
-An extra scheme repository has the same layout as the built-in one — scheme
-files under `<scheme_system>/<slug>.yaml` (e.g. `base16/`, `base24/`,
-`tinted8/`). Run `tinty install` (or `tinty sync`) to fetch them, then
-`tinty list` shows the merged set and `tinty apply <system>-<slug>` applies any
-of them.
+`path` can be a Git repository URL or a local directory, and each repo lays its
+schemes out just like the built-in one: `<system>/<slug>.yaml` files under
+`base16/`, `base24/`, or `tinted8/`.
 
-The repositories form an overlay stack with the built-in `schemes` repo at the
-bottom, so when more than one defines the same `<system>-<slug>` scheme the
-last-listed one wins: an extra overrides the built-in repo, and a later-listed
-extra overrides an earlier one. This lets you override a scheme (built-in or
-from another extra) by declaring your own copy lower in `config.toml`. Shadowed
-duplicates are noted on stderr so nothing is silently dropped.
-
-Scheme repositories are stored under `scheme-repos/` in your data directory,
-separate from template `[[items]]` (which stay in `repos/`). If you upgraded
-from a version that stored the built-in schemes under `repos/schemes`, Tinty
-relocates it to `scheme-repos/schemes` automatically on the next command and
-prints a one-line notice.
+Run `tinty install` (or `tinty sync`) to fetch them. From then on they behave
+like any other scheme — `tinty list` shows them and `tinty apply <system>-<slug>`
+applies them. If one of your extras defines a scheme with the same name as an
+existing one, your version takes over, so you can tweak a scheme by shipping your
+own copy.
 
 ## Terminals
 
