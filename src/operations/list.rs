@@ -1,6 +1,7 @@
 #![allow(clippy::suboptimal_flops)]
 use crate::{
-    constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME},
+    constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_NAME},
+    paths,
     utils::{get_all_scheme_file_paths, get_all_scheme_names},
 };
 use anyhow::{anyhow, Context, Result};
@@ -47,7 +48,7 @@ pub fn schemes_dir_path(data_path: &Path, is_custom: bool) -> Result<std::path::
     let schemes_dir_path = if is_custom {
         data_path.join(CUSTOM_SCHEMES_DIR_NAME)
     } else {
-        data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"))
+        paths::schemes_repo_path(data_path)
     };
 
     match (schemes_dir_path.exists(), is_custom) {

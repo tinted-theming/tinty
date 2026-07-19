@@ -4,6 +4,12 @@
 
 ### Added
 
+- `tinty build` now builds every installed template repository listed under
+  `[[items]]` in the config when no template directory is given. Items are
+  built sequentially against the synced schemes repo; a failure building one
+  item (or an item that is not installed) does not stop the run — every item
+  is attempted and the command exits non-zero if any failed. Passing a
+  template directory still builds just that one.
 - Add a remote-control mode to `tinty gallery` (`--rc`, on by default): it
   starts a local web server (on `127.0.0.1` only) that highlights and pins
   the currently applied scheme, keeps it in sync as it changes, and applies

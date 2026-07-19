@@ -1,5 +1,6 @@
-use crate::constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME};
+use crate::constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_NAME, REPO_URL};
 use crate::operations::current::get_current_scheme_slug;
+use crate::paths;
 use anyhow::{anyhow, Result};
 use hex_color::HexColor;
 use serde::Deserialize;
@@ -444,7 +445,7 @@ pub fn info(
     let schemes_dir_path = if is_custom {
         data_path.join(CUSTOM_SCHEMES_DIR_NAME)
     } else {
-        data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"))
+        paths::schemes_repo_path(data_path)
     };
 
     match (schemes_dir_path.exists(), is_custom) {
