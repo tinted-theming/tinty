@@ -1,7 +1,9 @@
 #![allow(clippy::suboptimal_flops)]
 use crate::{
-    constants::{CUSTOM_SCHEMES_DIR_NAME, REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME},
-    utils::{get_all_scheme_file_paths, get_all_scheme_names},
+    config::Config,
+    constants::CUSTOM_SCHEMES_DIR_NAME,
+    scheme_repos::{conflict_warning, merged_schemes, SchemeConflict},
+    utils::get_all_scheme_file_paths,
 };
 use anyhow::{anyhow, Context, Result};
 use io::Write;
@@ -19,20 +21,29 @@ use tinted_builder_rust::operation_build::utils::SchemeFile;
 
 /// Lists available color schemes
 ///
-/// Lists colorschemes file which is updated via scripts/install by getting a list of schemes
-/// available in <https://github.com/tinted-theming/schemes>
-pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
-    let schemes_dir_path = schemes_dir_path(data_path, is_custom)?;
+/// Non-custom listing merges the built-in `schemes` repo with any
+/// `[[schemes.extras]]`; `--custom-schemes` lists the locally generated schemes
+/// instead. Duplicate `<system>-<slug>` keys across scheme repos are resolved by
+/// precedence (built-in over extras, earlier extras over later) and the shadowed
+/// copies are noted on stderr.
+pub fn list(config_path: &Path, data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
+    let config = Config::read(config_path)?;
+    let (scheme_files, conflicts) = collect_scheme_files(data_path, &config, is_custom)?;
+
+    if let Some(warning) = conflict_warning(&conflicts) {
+        eprintln!("{warning}");
+    }
 
     let stdout = io::stdout();
     if is_json {
-        let json = scheme_entries_json(&schemes_dir_path)?;
+        let json = scheme_entries_json(&scheme_files)?;
         let mut handle = stdout.lock();
         let _ = writeln!(handle, "{json}");
         return Ok(());
     }
 
-    let scheme_vec = get_all_scheme_names(&schemes_dir_path, None)?;
+    let mut scheme_vec: Vec<String> = scheme_files.into_keys().collect();
+    scheme_vec.sort();
     let mut handle = stdout.lock();
     for scheme in scheme_vec {
         if writeln!(handle, "{scheme}").is_err() {
@@ -43,28 +54,38 @@ pub fn list(data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
     Ok(())
 }
 
-pub fn schemes_dir_path(data_path: &Path, is_custom: bool) -> Result<std::path::PathBuf> {
-    let schemes_dir_path = if is_custom {
-        data_path.join(CUSTOM_SCHEMES_DIR_NAME)
+/// The custom-schemes directory (`<data>/custom-schemes`).
+pub fn custom_schemes_dir_path(data_path: &Path) -> Result<std::path::PathBuf> {
+    let path = data_path.join(CUSTOM_SCHEMES_DIR_NAME);
+    if path.exists() {
+        Ok(path)
     } else {
-        data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"))
-    };
-
-    match (schemes_dir_path.exists(), is_custom) {
-        (false, true) => Err(anyhow!(
+        Err(anyhow!(
             "You don't have any local custom schemes at: {}",
-            schemes_dir_path.display(),
-        )),
-        (false, false) => Err(anyhow!(
-            "Schemes are missing, run install and then try again: `{REPO_NAME} install`",
-        )),
-        _ => Ok(schemes_dir_path),
+            path.display(),
+        ))
     }
 }
 
-pub fn scheme_entries_json(schemes_dir_path: &Path) -> Result<String> {
-    let scheme_files = get_all_scheme_file_paths(schemes_dir_path, None)?;
-    let entries = scheme_entries(scheme_files)?;
+/// Collects the scheme files a listing/gallery/JSON view should show: the
+/// locally generated custom schemes (`is_custom`) or the merged built-in +
+/// extras collection. The returned conflicts are empty for the custom case.
+pub fn collect_scheme_files(
+    data_path: &Path,
+    config: &Config,
+    is_custom: bool,
+) -> Result<(HashMap<String, SchemeFile>, Vec<SchemeConflict>)> {
+    if is_custom {
+        let path = custom_schemes_dir_path(data_path)?;
+        Ok((get_all_scheme_file_paths(&path, None)?, Vec::new()))
+    } else {
+        let merged = merged_schemes(data_path, config)?;
+        Ok((merged.files, merged.conflicts))
+    }
+}
+
+pub fn scheme_entries_json(scheme_files: &HashMap<String, SchemeFile>) -> Result<String> {
+    let entries = scheme_entries(scheme_files.clone())?;
 
     Ok(serde_json::to_string(&entries)?)
 }

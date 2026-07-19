@@ -22,15 +22,32 @@
   checks out, or rewrites their `origin`.
 - Add `[schemes].path` and `[schemes].revision` config options to override the
   source of the built-in schemes repository. `path` accepts an HTTPS Git URL
-  (cloned into `repos/schemes`) or a local directory (symlinked as
-  `repos/schemes`, without requiring it to be a Git repository); `revision`
-  pins a branch, tag, or commit SHA and is ignored for local paths. Either may
-  be set on its own, they follow the same install/update semantics as
+  (cloned into `scheme-repos/schemes`) or a local directory (symlinked as
+  `scheme-repos/schemes`, without requiring it to be a Git repository);
+  `revision` pins a branch, tag, or commit SHA and is ignored for local paths.
+  Either may be set on its own, they follow the same install/update semantics as
   `[[items]]`, and pointing `path` at Tinty's own managed schemes directory is
   rejected as a circular reference.
+- Add `[[schemes.extras]]` config: declare additional scheme repositories that
+  are merged with the built-in `schemes` repo into a single scheme collection
+  used by `list`, `info`, `apply`, `current`, and `gallery`. Each extra follows
+  the same source mechanics as `[[items]]` (`name`, `path` as a Git URL or local
+  directory, optional `revision` and `allow-dirty-update`) and is installed and
+  updated alongside the built-in repo. The repos form an overlay stack with the
+  built-in repo at the bottom, so when more than one defines the same
+  `<system>-<slug>` scheme the last-listed one wins — extras override the
+  built-in repo and later-listed extras override earlier ones — letting you
+  override a scheme by declaring your own copy lower in `config.toml`. Shadowed
+  copies are noted on stderr. Applying an extra-repo scheme builds it on the fly
+  into your template items, exactly like a generated custom scheme.
 
 ### Changed
 
+- Move the built-in schemes repository from `repos/schemes` to
+  `scheme-repos/schemes` within the data directory, so scheme repositories live
+  separately from template `[[items]]` (still in `repos/`). Tinty migrates an
+  existing `repos/schemes` to the new location automatically on the next command
+  and prints a one-line notice; no action is required.
 - **BREAKING**: `tinty gallery` now runs in remote-control mode by default,
   serving the live server instead of opening a static page. Pass `--no-rc`
   to open the previous self-contained static gallery (no server, no system

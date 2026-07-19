@@ -9,6 +9,7 @@ For more general usage, look at the [Usage section] in [README.md].
 - [How it works](#how-it-works)
 - [Sourcing scripts that set environment variables](#sourcing-scripts-that-set-environment-variables)
 - [Use your own schemes](#use-your-own-schemes)
+- [Add extra scheme repositories](#add-extra-scheme-repositories)
 - [Scripting](#scripting)
 - [shell](#shell)
 - [Vim or Neovim](#vim-or-neovim)
@@ -149,6 +150,32 @@ cp path/to/your/base16-your-scheme.yaml "$(tinty config --data-dir-path)/custom-
 tinty list --custom-schemes # Should show your scheme
 tinty apply base16-your-scheme
 ```
+
+## Add extra scheme repositories
+
+Want more schemes than the built-in set? Point Tinty at additional scheme
+repositories with `[[schemes.extras]]` in your `config.toml`, and their schemes
+join the rest:
+
+```toml
+[[schemes.extras]]
+name = "community-schemes"
+path = "https://github.com/example/community-schemes"
+
+[[schemes.extras]]
+name = "my-schemes"
+path = "~/dev/my-schemes"
+```
+
+`path` can be a Git repository URL or a local directory, and each repo lays its
+schemes out just like the built-in one: `<system>/<slug>.yaml` files under
+`base16/`, `base24/`, or `tinted8/`.
+
+Run `tinty install` (or `tinty sync`) to fetch them. From then on they behave
+like any other scheme — `tinty list` shows them and `tinty apply <system>-<slug>`
+applies them. If one of your extras defines a scheme with the same name as an
+existing one, your version takes over, so you can tweak a scheme by shipping your
+own copy.
 
 ## Terminals
 

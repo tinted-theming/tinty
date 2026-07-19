@@ -1,8 +1,9 @@
 use crate::config::Config;
 use crate::constants::{
     ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, CUSTOM_SCHEMES_DIR_NAME, DEFAULT_SCHEME_SYSTEM,
-    LOCK_FILE, REPO_DIR, REPO_NAME, REPO_URL, SCHEMES_REPO_NAME,
+    LOCK_FILE, REPO_DIR, REPO_NAME, REPO_URL,
 };
+use crate::scheme_repos::{builtin_schemes_repo_path, merged_schemes};
 use crate::utils::{
     create_theme_filename_without_extension, get_all_scheme_file_paths,
     get_shell_command_from_string, write_to_file,
@@ -73,22 +74,24 @@ pub fn apply(
         .tempdir_in(data_path)?;
     let staging_data_path = staging_data_dir.path();
 
-    // Go through custom schemes
+    // Resolve the scheme across all sources. `merged` spans the built-in
+    // `schemes` repo plus any `[[schemes.extras]]` (built-in wins duplicates);
+    // custom schemes are the locally generated ones. A name present in both a
+    // scheme repo and the custom directory is ambiguous and rejected.
     let scheme_system =
         SchemeSystem::from_str(&scheme_system_option.unwrap_or_else(|| "base16".to_string()))?;
-    let schemes_path = &data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
     let custom_schemes_path = &data_path.join(CUSTOM_SCHEMES_DIR_NAME);
-    let builtin_scheme_files = get_all_scheme_file_paths(schemes_path, None)?;
-    let custom_scheme_files = get_all_scheme_file_paths(custom_schemes_path, None).ok();
     let config = Config::read(config_path)?;
-    let builtin_scheme = builtin_scheme_files.get(full_scheme_name);
+    let merged = merged_schemes(data_path, &config)?;
+    let custom_scheme_files = get_all_scheme_file_paths(custom_schemes_path, None).ok();
+    let repo_scheme = merged.files.get(full_scheme_name);
     let custom_scheme = custom_scheme_files
         .as_ref()
         .and_then(|m| m.get(full_scheme_name));
 
-    let Some(scheme_file) = builtin_scheme.xor(custom_scheme) else {
-        // We expect the scheme to be a built-in scheme or a custom schemes, not both.
-        if builtin_scheme.is_none() {
+    let Some(scheme_file) = repo_scheme.xor(custom_scheme) else {
+        // We expect the scheme to be in a scheme repo or in custom schemes, not both.
+        if repo_scheme.is_none() {
             return Err(anyhow!("Scheme does not exist: {full_scheme_name}"));
         }
 
@@ -96,18 +99,32 @@ pub fn apply(
             let scheme_partial_name = scheme_partial_arr.join("-");
 
             return Err(anyhow!(
-                "You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it: {}/{scheme_partial_name}.yaml",
+                "You have a Tinty generated scheme named the same as a scheme repo scheme, please rename or remove it: {}/{scheme_partial_name}.yaml",
                  custom_schemes_path.display(),
             ));
         }
 
         return Err(anyhow!(
-            "You have a Tinty generated scheme named the same as an official tinted-theming/schemes name, please rename or remove it",
+            "You have a Tinty generated scheme named the same as a scheme repo scheme, please rename or remove it",
         ));
     };
 
-    if custom_scheme.is_some() {
-        build_and_get_custom_scheme_file(custom_schemes_path, data_path, &config)?;
+    // Built-in schemes ship pre-built theme files inside each item repo, so they
+    // need no build here. Schemes from an extra repo or the custom directory have
+    // no pre-built themes, so build them from their YAML into every item template
+    // before the copy loop picks them up. The scheme's own on-disk directory is
+    // the build source (`<repo>/<system>/<slug>.yaml` → repo root).
+    let builtin_repo = builtin_schemes_repo_path(data_path);
+    let scheme_file_path = scheme_file.get_path();
+    let needs_build = !scheme_file_path.starts_with(&builtin_repo);
+    if needs_build {
+        let source_dir = scheme_file_path
+            .parent()
+            .and_then(Path::parent)
+            .ok_or_else(|| {
+                anyhow!("Could not determine the scheme repository for {full_scheme_name}")
+            })?;
+        build_scheme_into_items(source_dir, data_path, &config)?;
     }
 
     write_to_file(
@@ -296,8 +313,12 @@ pub fn apply(
     Ok(())
 }
 
-fn build_and_get_custom_scheme_file(
-    custom_schemes_path: &Path,
+/// Builds every scheme in `schemes_source_dir` into each item's template so a
+/// scheme without pre-built theme files (an extra-repo scheme or a custom one)
+/// can still be applied. Used for both the custom-schemes directory and an extra
+/// scheme repo's directory.
+fn build_scheme_into_items(
+    schemes_source_dir: &Path,
     data_path: &Path,
     config: &Config,
 ) -> Result<()> {
@@ -306,10 +327,9 @@ fn build_and_get_custom_scheme_file(
         for item_name in item_name_vec {
             let item_template_path: PathBuf = data_path.join(format!("{REPO_DIR}/{item_name}"));
 
-            // The `is_quiet` is set to true because errors appear here because custom schemes
-            // doesn't necessarily include schemes for all scheme-systems in the
-            // template/config.yaml file
-            build(&item_template_path, custom_schemes_path, &[], true)?;
+            // `is_quiet` is true because a scheme source need not include schemes
+            // for every scheme-system a template's config.yaml declares.
+            build(&item_template_path, schemes_source_dir, &[], true)?;
         }
     }
 

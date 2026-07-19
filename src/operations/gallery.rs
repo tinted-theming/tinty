@@ -1,8 +1,9 @@
 mod server;
 
 use crate::{
+    config::Config,
     constants::ARTIFACTS_DIR,
-    operations::list::{scheme_entries_json, schemes_dir_path},
+    operations::list::{collect_scheme_files, scheme_entries_json},
     utils::{ensure_directory_exists, write_to_file},
 };
 use anyhow::{Context, Result};
@@ -116,8 +117,9 @@ pub fn serve(
     port: Option<u16>,
     should_open: bool,
 ) -> Result<()> {
-    let schemes_path = schemes_dir_path(data_path, is_custom)?;
-    let schemes_json = scheme_entries_json(&schemes_path)?;
+    let config = Config::read(config_path)?;
+    let (scheme_files, _conflicts) = collect_scheme_files(data_path, &config, is_custom)?;
+    let schemes_json = scheme_entries_json(&scheme_files)?;
     let host = current_host_label();
 
     let assets = server::Assets {
@@ -142,13 +144,15 @@ pub fn serve(
 }
 
 pub fn gallery(
+    config_path: &Path,
     data_path: &Path,
     is_custom: bool,
     dump_dir: Option<&str>,
     should_open: bool,
 ) -> Result<PathBuf> {
-    let schemes_path = schemes_dir_path(data_path, is_custom)?;
-    let schemes_json = scheme_entries_json(&schemes_path)?;
+    let config = Config::read(config_path)?;
+    let (scheme_files, _conflicts) = collect_scheme_files(data_path, &config, is_custom)?;
+    let schemes_json = scheme_entries_json(&scheme_files)?;
     let output_dir = dump_dir.map_or_else(
         || data_path.join(ARTIFACTS_DIR).join(GALLERY_DIR_NAME),
         PathBuf::from,
