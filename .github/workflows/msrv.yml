@@ -1,0 +1,96 @@
+name: MSRV
+
+permissions:
+  contents: write
+
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      update-msrv:
+        type: boolean
+
+jobs:
+  check-msrv:
+    if: ${{ !inputs.update-msrv }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Repository
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cargo-msrv
+        run: cargo binstall cargo-msrv -y --force
+
+      - name: Get current msrv
+        id: data-msrv
+        run: |
+          current_msrv=$(cargo msrv show --output-format minimal);
+          echo "current msrv: $current_msrv";
+          echo "current=$current_msrv" >> "$GITHUB_OUTPUT";
+
+      - name: Run cargo msrv
+        run: cargo msrv verify --min ${{ steps.data-msrv.outputs.current }}
+
+      - name: echo msrv info
+        if: failure()
+        run: |
+          echo "current msrv: ${{ steps.data-msrv.outputs.current }}";
+          new_msrv=$(cargo msrv find --output-format minimal);
+          echo "new msrv: $new_msrv";
+
+  update-msrv:
+    if: inputs.update-msrv
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Repository
+        uses: actions/checkout@v4
+
+      - run: git pull
+
+      - name: Install stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cargo-msrv
+        run: cargo binstall cargo-msrv -y --force
+
+      - name: Get msrv data
+        id: data-msrv
+        run: |
+          current_msrv=$(cargo msrv show --output-format minimal);
+          echo "current msrv: $current_msrv";
+          echo "current=$current_msrv" >> "$GITHUB_OUTPUT";
+          new_msrv=$(cargo msrv find --output-format minimal --min $current_msrv);
+          echo "new msrv: $new_msrv";
+          echo "new=$new_msrv" >> "$GITHUB_OUTPUT";
+
+      - name: Update cargo msrv
+        run: cargo msrv set ${{ steps.data-msrv.outputs.new }}
+
+      - name: Update rust-toolchain.toml
+        run: sed -i 's/channel = ".*"/channel = "${{ steps.data-msrv.outputs.new }}"/' rust-toolchain.toml
+
+      - name: Update readme msrv
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: ${{ steps.data-msrv.outputs.current }}
+          replace: ${{ steps.data-msrv.outputs.new }}
+          regex: false
+          include: "README.md"
+
+      - run: git pull
+
+      - name: Commit and Push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update MSRV from [${{steps.data-msrv.outputs.current}}] to [${{steps.data-msrv.outputs.new}}]"
+          branch: ${{ github.head_ref }}
+          commit_user_name: tinted-theming-bot
+          commit_user_email: tintedtheming@proton.me
+          commit_author: tinted-theming-bot <tintedtheming@proton.me>

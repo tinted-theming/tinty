@@ -3,6 +3,7 @@ name = "tinty"
 description = "Change the theme of your terminal, text editor and anything else with one command!"
 version = "0.34.1"
 edition = "2021"
+rust-version = "1.88.0"
 license = "GPL-3.0-only"
 readme = "README.md"
 authors = ["Jamy Golden <code@jamygolden.com>", "Tinted Theming <tintedtheming@proton.me>"]
