@@ -413,7 +413,7 @@ fn test_cli_update_schemes_repo_allow_dirty() -> Result<()> {
     write_to_file(&config_path, "[schemes]\nallow-dirty-update = true\n")?;
 
     // Dirty the schemes repo with an untracked file, as custom schemes do.
-    let schemes_repo = data_path.join("repos/schemes");
+    let schemes_repo = data_path.join("scheme-repos/schemes");
     let untracked = schemes_repo.join("custom-schemes-test.yaml");
     write_to_file(&untracked, "system: \"base16\"\n")?;
 

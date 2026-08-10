@@ -1,6 +1,11 @@
 pub const REPO_URL: &str = env!("CARGO_PKG_HOMEPAGE");
 pub const REPO_NAME: &str = env!("CARGO_PKG_NAME");
 pub const REPO_DIR: &str = "repos";
+/// Subdirectory of the data dir that holds scheme repositories: the built-in
+/// `schemes` repo plus any `[[schemes.extras]]` the user configures. Kept
+/// separate from `repos/` (which holds template `[[items]]`) so scheme
+/// collections and item templates never share a namespace.
+pub const SCHEME_REPO_DIR: &str = "scheme-repos";
 pub const ARTIFACTS_DIR: &str = "artifacts";
 pub const LOCK_FILE: &str = ".tinty.lock";
 pub const SCHEMES_REPO_URL: &str = "https://github.com/tinted-theming/schemes";
