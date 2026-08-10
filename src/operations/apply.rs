@@ -374,7 +374,10 @@ impl Hook {
             .args(args)
             .env("TINTY_THEME_FILE_PATH", theme_file_path)
             .env("TINTY_THEME_OPERATION", self.operation.as_str())
-            .env("TINTY_THEME_REPO_ROOT", self.repo_path.display().to_string())
+            .env(
+                "TINTY_THEME_REPO_ROOT",
+                self.repo_path.display().to_string(),
+            )
             .envs(SchemeEntry::from_scheme(&scheme_file.get_scheme()?).to_envs())
             .spawn()
             .with_context(|| {
