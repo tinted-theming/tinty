@@ -76,6 +76,8 @@ base16-classic-dark
 base16-classic-light
 base16-codeschool
 base16-colors
+base16-corduroy-dark
+base16-corduroy
 base16-cupcake
 base16-cupertino
 base16-da-one-black
@@ -341,6 +343,7 @@ base24-3024-night
 base24-adventure-time
 base24-alien-blood
 base24-alucard
+base24-apprentice
 base24-argonaut
 base24-arthur
 base24-atelier-sulphurpool
