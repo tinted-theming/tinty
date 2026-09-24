@@ -31,6 +31,7 @@ base16-ayu-dark
 base16-ayu-light
 base16-ayu-mirage
 base16-aztec
+base16-berlin
 base16-bespin
 base16-black-metal-bathory
 base16-black-metal-burzum
@@ -45,6 +46,7 @@ base16-black-metal-venom
 base16-black-metal
 base16-blueforest
 base16-blueish
+base16-bogota
 base16-boo-shnickle-dark
 base16-boo-shnickle-light
 base16-bosque
@@ -165,6 +167,7 @@ base16-harmonic16-light
 base16-heetch-light
 base16-heetch
 base16-helios
+base16-helsinki
 base16-hopscotch
 base16-horizon-dark
 base16-horizon-light
@@ -185,11 +188,14 @@ base16-katy
 base16-kimber
 base16-kissa-latte
 base16-kissa-macchiato
+base16-lahabana
 base16-lichen-chartreuse-dark
 base16-lichen-chartreuse-light
 base16-lime
 base16-linux-vt
+base16-london
 base16-macintosh
+base16-madrid
 base16-marrakesh
 base16-materia
 base16-material-darker
@@ -202,6 +208,7 @@ base16-measured-light
 base16-mellow-purple
 base16-mexico-light
 base16-mezcal
+base16-miami
 base16-mocha
 base16-monokai
 base16-moonlight
@@ -219,6 +226,7 @@ base16-ocote
 base16-one-light
 base16-onedark-dark
 base16-onedark
+base16-oslo
 base16-outrun-dark
 base16-oxocarbon-dark
 base16-oxocarbon-light
@@ -227,6 +235,7 @@ base16-papel
 base16-papercolor-dark
 base16-papercolor-light
 base16-paraiso
+base16-paris
 base16-pasque
 base16-pastelon-de-amarillos-dark
 base16-pastelon-de-amarillos
@@ -241,6 +250,7 @@ base16-pico
 base16-pinky
 base16-pop
 base16-porple
+base16-praha
 base16-precious-dark-eleven
 base16-precious-dark-fifteen
 base16-precious-light-warm
@@ -296,6 +306,7 @@ base16-tender
 base16-terracotta-dark
 base16-terracotta
 base16-tinta
+base16-tokio
 base16-tokyo-city-dark
 base16-tokyo-city-light
 base16-tokyo-city-terminal-dark
@@ -331,6 +342,7 @@ base16-windows-highcontrast
 base16-windows-nt-light
 base16-windows-nt
 base16-woodland
+base16-x
 base16-xcode-dusk
 base16-yesterday-bright
 base16-yesterday-night
@@ -352,12 +364,14 @@ base24-ayu-light
 base24-ayu-mirage
 base24-banana-blueberry
 base24-batman
+base24-berlin
 base24-birds-of-paradise
 base24-blazer
 base24-blue-berry-pie
 base24-blue-matrix
 base24-bluloco-dark
 base24-bluloco-light
+base24-bogota
 base24-borland
 base24-breeze
 base24-broadcast
@@ -423,6 +437,7 @@ base24-gruvbox-dark
 base24-gruvbox-light
 base24-hacktober
 base24-hardcore
+base24-helsinki
 base24-highway
 base24-hipster-green
 base24-hivacruz
@@ -441,17 +456,21 @@ base24-jet-brains-darcula
 base24-kanagawa-dragon
 base24-kibble
 base24-lab-fox
+base24-lahabana
 base24-laser
 base24-later-this-evening
 base24-lavandula
 base24-lichen-chartreuse-dark
 base24-lichen-chartreuse-light
+base24-london
 base24-lovelace
+base24-madrid
 base24-man-page
 base24-material-dark
 base24-material
 base24-mathias
 base24-medallion
+base24-miami
 base24-mission-brogue
 base24-misterioso
 base24-molokai
@@ -471,9 +490,11 @@ base24-one-dark
 base24-one-half-light
 base24-one-light
 base24-operator-mono-dark
+base24-oslo
 base24-pandora
 base24-papercolor-dark
 base24-papercolor-light
+base24-paris
 base24-pastelon-de-amarillos-dark
 base24-pastelon-de-amarillos
 base24-paul-millr
@@ -481,6 +502,7 @@ base24-pencil-dark
 base24-pencil-light
 base24-piatto-light
 base24-pnevma
+base24-praha
 base24-pro-light
 base24-pro
 base24-purple-rain
@@ -513,6 +535,7 @@ base24-tango-half-adapted
 base24-terminal-basic
 base24-thayer-bright
 base24-the-hulk
+base24-tokio
 base24-tokyo-night-dark
 base24-tokyo-night-light
 base24-tokyo-night-moon
@@ -533,6 +556,7 @@ base24-wez
 base24-wild-cherry
 base24-wombat
 base24-wryan
+base24-x
 base24-zenburn
 tinted8-catppuccin-latte
 tinted8-catppuccin-mocha
