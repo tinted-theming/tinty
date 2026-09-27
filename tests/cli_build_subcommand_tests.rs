@@ -6,7 +6,9 @@
 
 mod utils;
 
-use crate::utils::{build_command_vec, run_command, write_to_file, REPO_DIR, SCHEMES_REPO_NAME};
+use crate::utils::{
+    build_command_vec, builtin_schemes_repo_path, run_command, write_to_file, REPO_DIR,
+};
 use anyhow::Result;
 use std::fs;
 use std::path::Path;
@@ -51,7 +53,7 @@ fn test_cli_build_ignores_non_scheme_files_in_schemes_repo() -> Result<()> {
         .tempdir()?;
     let config_path = temp_dir.path().join("config.toml");
     let data_path = temp_dir.path().join("data");
-    let schemes_repo = data_path.join(REPO_DIR).join(SCHEMES_REPO_NAME);
+    let schemes_repo = builtin_schemes_repo_path(&data_path);
 
     // A real base16 scheme under `base16/`, alongside non-scheme files at the
     // schemes-repo root that previously made `build` fail with E111.
@@ -110,7 +112,7 @@ fn test_cli_build_no_dir_builds_every_installed_item() -> Result<()> {
     let config_path = temp_dir.path().join("config.toml");
     let data_path = temp_dir.path().join("data");
     let repos_path = data_path.join(REPO_DIR);
-    let schemes_repo = repos_path.join(SCHEMES_REPO_NAME);
+    let schemes_repo = builtin_schemes_repo_path(&data_path);
 
     write_schemes_repo(&schemes_repo)?;
 
@@ -166,7 +168,7 @@ fn test_cli_build_no_dir_continues_after_failure() -> Result<()> {
     let config_path = temp_dir.path().join("config.toml");
     let data_path = temp_dir.path().join("data");
     let repos_path = data_path.join(REPO_DIR);
-    let schemes_repo = repos_path.join(SCHEMES_REPO_NAME);
+    let schemes_repo = builtin_schemes_repo_path(&data_path);
 
     write_schemes_repo(&schemes_repo)?;
 

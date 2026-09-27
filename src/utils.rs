@@ -57,17 +57,6 @@ pub fn create_theme_filename_without_extension(item: &ConfigItem) -> String {
     )
 }
 
-pub fn get_all_scheme_names(
-    schemes_path: &Path,
-    scheme_systems_option: Option<SchemeSystem>,
-) -> Result<Vec<String>> {
-    let file_paths = get_all_scheme_file_paths(schemes_path, scheme_systems_option)?;
-    let mut scheme_vec: Vec<String> = file_paths.into_keys().collect();
-    scheme_vec.sort();
-
-    Ok(scheme_vec)
-}
-
 pub fn get_all_scheme_file_paths(
     schemes_path: &Path,
     scheme_systems_option: Option<SchemeSystem>,
