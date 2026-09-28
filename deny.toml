@@ -19,7 +19,9 @@ allow = [
     "Apache-2.0",
     "BSD-2-Clause",
     "BSD-3-Clause",
+    "ISC",          # rustls-webpki, aws-lc-rs
     "MIT",
+    "MIT-0",        # aws-lc-sys
     "MPL-2.0",
     "Unicode-3.0",
     "GPL-3.0-only",
@@ -35,19 +37,25 @@ exceptions = [
 multiple-versions = "deny"
 wildcards = "deny"
 deny = [
+    # Principled bans — keep C TLS / SSH crypto out of the dep tree.
     { name = "openssl" },
     { name = "openssl-sys" },
     { name = "libssh2-sys" },
 
-    # No reason to use these
-    { name = "cmake" },
+    # Keep the binary lean.
     { name = "windows" },
+
+    # `cmake` was banned here previously. `gix 0.83`'s HTTPS feature pulls
+    # `aws-lc-rs` (→ `aws-lc-sys` → `cmake` build-dep); until gitoxide ships a
+    # `-rust-tls-ring` variant, we accept the cmake build-time dependency.
 ]
 skip = [
-    { name = "bitflags" }, # Related to `tempfile` version lock
     { name = "thiserror" },
     { name = "thiserror-impl" },
     { name = "nom" },
+    # Introduced by the gix 0.83 dep tree.
+    { name = "getrandom" },
+    { name = "hashbrown" },
 ]
 
 
