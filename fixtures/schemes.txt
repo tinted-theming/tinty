@@ -352,6 +352,7 @@ base16-zenburn
 base24-0x96f
 base24-3024-day
 base24-3024-night
+base24-abyssal
 base24-adventure-time
 base24-alien-blood
 base24-alucard
