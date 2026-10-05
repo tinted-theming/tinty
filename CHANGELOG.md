@@ -43,9 +43,10 @@
   built-in repo at the bottom, so when more than one defines the same
   `<system>-<slug>` scheme the last-listed one wins — extras override the
   built-in repo and later-listed extras override earlier ones — letting you
-  override a scheme by declaring your own copy lower in `config.toml`. Shadowed
-  copies are noted on stderr. Applying an extra-repo scheme builds it on the fly
-  into your template items, exactly like a generated custom scheme.
+  override a scheme by declaring your own copy lower in `config.toml`.
+  `tinty list` notes overridden copies on stderr. Applying an extra-repo scheme
+  builds it on the fly into your template items, exactly like a generated
+  custom scheme.
 
 ### Changed
 
