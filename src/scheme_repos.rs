@@ -58,9 +58,10 @@ pub fn legacy_schemes_repo_path(data_path: &Path) -> PathBuf {
     data_path.join(REPO_DIR).join(SCHEMES_REPO_NAME)
 }
 
-/// Every scheme repository configured for this invocation, in precedence order:
-/// the built-in `schemes` repo first, then the `[[schemes.extras]]` in config
-/// order. Existence on disk is not checked here — callers that read schemes skip
+/// Every scheme repository configured for this invocation, in overlay order from
+/// lowest to highest precedence: the built-in `schemes` repo first, then the
+/// `[[schemes.extras]]` in config order (so a later entry overrides an earlier
+/// one). Existence on disk is not checked here — callers that read schemes skip
 /// missing directories; callers that install/update create them.
 #[must_use]
 pub fn scheme_repo_refs(data_path: &Path, config: &Config) -> Vec<SchemeRepoRef> {

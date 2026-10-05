@@ -24,8 +24,8 @@ use tinted_builder_rust::operation_build::utils::SchemeFile;
 /// Non-custom listing merges the built-in `schemes` repo with any
 /// `[[schemes.extras]]`; `--custom-schemes` lists the locally generated schemes
 /// instead. Duplicate `<system>-<slug>` keys across scheme repos are resolved by
-/// precedence (built-in over extras, earlier extras over later) and the shadowed
-/// copies are noted on stderr.
+/// precedence (the last-listed repo wins: extras override the built-in, later
+/// extras override earlier ones) and the shadowed copies are noted on stderr.
 pub fn list(config_path: &Path, data_path: &Path, is_custom: bool, is_json: bool) -> Result<()> {
     let config = Config::read(config_path)?;
     let (scheme_files, conflicts) = collect_scheme_files(data_path, &config, is_custom)?;
