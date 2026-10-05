@@ -245,3 +245,43 @@ fn apply_scheme_from_extra_repo_builds_on_the_fly() -> Result<()> {
 
     Ok(())
 }
+
+// -----------------------------------------------------------------------------
+// Error reporting
+// -----------------------------------------------------------------------------
+
+#[test]
+fn info_reports_the_real_error_for_an_unreadable_extra() -> Result<()> {
+    let (config_path, data_path, command_vec, temp) =
+        setup("extras_info_real_error", "install", false)?;
+
+    // The repos are installed, but the extra holds a stray non-scheme file in
+    // a system directory, which makes reading it fail. `info` must surface that
+    // cause rather than claiming the repos are missing (`install` can't fix it).
+    let builtin = temp.path().join("builtin-schemes");
+    write_scheme(&builtin, "builtin-one", "Builtin One")?;
+    let extra = temp.path().join("extra-schemes");
+    write_scheme(&extra, "extra-one", "Extra One")?;
+    write_to_file(extra.join("base16").join("README.md"), "not a scheme\n")?;
+
+    let config = format!(
+        "{}\n{}",
+        local_builtin_block(&builtin),
+        extra_block("community", &extra)
+    );
+    write_to_file(&config_path, &config)?;
+    run_command(&command_vec)?;
+
+    let info_vec = build_command_vec("info base16-builtin-one", &config_path, &data_path)?;
+    let (_, stderr) = run_command(&info_vec)?;
+    ensure!(
+        stderr.contains("README.md"),
+        "expected info to name the unreadable file.\nstderr: {stderr}"
+    );
+    ensure!(
+        !stderr.contains("run install") && !stderr.contains("install` and try again"),
+        "info must not suggest `install` for an unreadable repo.\nstderr: {stderr}"
+    );
+
+    Ok(())
+}

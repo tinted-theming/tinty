@@ -475,13 +475,11 @@ pub fn info(
             )
         })?
     } else {
+        // Propagate the collection error as-is: it already says to run
+        // `install` when no scheme repo exists, and otherwise names the actual
+        // cause (e.g. an unreadable scheme file), which `install` can't fix.
         let config = Config::read(config_path)?;
-        merged_schemes(data_path, &config)
-            .map_err(|_| {
-                anyhow!(
-                    "Scheme repositories do not exist.\nRun `{REPO_NAME} install` and try again"
-                )
-            })?
+        merged_schemes(data_path, &config)?
             .files
             .values()
             .map(SchemeFile::get_path)
