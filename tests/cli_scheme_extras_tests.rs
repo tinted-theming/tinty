@@ -285,3 +285,40 @@ fn info_reports_the_real_error_for_an_unreadable_extra() -> Result<()> {
 
     Ok(())
 }
+
+// -----------------------------------------------------------------------------
+// Self-referential sources
+// -----------------------------------------------------------------------------
+
+#[test]
+fn extra_pointing_inside_managed_scheme_repos_is_rejected() -> Result<()> {
+    let (config_path, data_path, command_vec, temp) =
+        setup("extras_reject_managed_dir", "install", false)?;
+
+    let builtin = temp.path().join("builtin-schemes");
+    write_scheme(&builtin, "builtin-one", "Builtin One")?;
+    let base_config = local_builtin_block(&builtin);
+
+    // A first install populates the managed built-in slot.
+    write_to_file(&config_path, &base_config)?;
+    run_command(&command_vec)?;
+
+    // An extra whose source is Tinty's own managed built-in slot would mirror
+    // the built-in repo into itself, so it must be refused.
+    let managed_builtin = builtin_schemes_repo_path(&data_path);
+    write_to_file(
+        &config_path,
+        &format!("{base_config}\n{}", extra_block("mirror", &managed_builtin)),
+    )?;
+    let (_, stderr) = run_command(&command_vec)?;
+    ensure!(
+        stderr.contains("circular reference"),
+        "an extra inside the managed scheme-repos dir must be rejected.\nstderr: {stderr}"
+    );
+    ensure!(
+        !data_path.join("scheme-repos").join("mirror").exists(),
+        "the rejected extra must not be installed"
+    );
+
+    Ok(())
+}

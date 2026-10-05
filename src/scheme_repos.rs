@@ -12,7 +12,7 @@
 //! user override a built-in (or earlier-extra) scheme by declaring their own
 //! lower in `config.toml`.
 
-use crate::config::Config;
+use crate::config::{ensure_scheme_source_not_circular, Config};
 use crate::constants::{REPO_DIR, REPO_NAME, SCHEMES_REPO_NAME, SCHEME_REPO_DIR};
 use crate::utils::ensure_directory_exists;
 use anyhow::{anyhow, Context, Result};
@@ -154,6 +154,26 @@ pub fn collect_merged_schemes(refs: &[SchemeRepoRef]) -> Result<MergedSchemes> {
     });
 
     Ok(MergedSchemes { files, conflicts })
+}
+
+/// Rejects any local scheme source — the built-in `[schemes].path` or an
+/// extra's `path` — that points inside the managed `scheme-repos/` directory.
+/// Every source is checked before any repo is installed or updated, so a bad
+/// entry fails fast without leaving a partially-updated set of repos.
+pub fn ensure_scheme_sources_not_circular(data_path: &Path, config: &Config) -> Result<()> {
+    let managed = scheme_repos_dir(data_path);
+    let (schemes_source, _) = config.schemes_source();
+    ensure_scheme_source_not_circular("[schemes].path", &schemes_source, &managed)?;
+
+    for extra in &config.schemes.extras {
+        ensure_scheme_source_not_circular(
+            &format!("schemes.extras \"{}\" path", extra.name),
+            &extra.path,
+            &managed,
+        )?;
+    }
+
+    Ok(())
 }
 
 /// Convenience wrapper returning the merged scheme collection for `data_path`

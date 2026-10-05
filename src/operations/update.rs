@@ -1,8 +1,10 @@
-use crate::config::{ensure_schemes_path_not_circular, Config};
+use crate::config::Config;
 use crate::constants::{DEFAULT_REVISION, REPO_NAME, SCHEMES_REPO_NAME};
 use crate::paths;
 use crate::repo::{self, UpdateStatus};
-use crate::scheme_repos::{builtin_schemes_repo_path, extra_repo_path};
+use crate::scheme_repos::{
+    builtin_schemes_repo_path, ensure_scheme_sources_not_circular, extra_repo_path,
+};
 use anyhow::{Context, Result};
 use std::path::Path;
 use url::Url;
@@ -105,6 +107,9 @@ fn update_scheme_repo(
 /// Updates the provided repositories in config file by doing a git pull
 pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()> {
     let config = Config::read(config_path)?;
+    // Validate every scheme source before touching any repo, so a source that
+    // points back into `scheme-repos/` fails fast with nothing half-done.
+    ensure_scheme_sources_not_circular(data_path, &config)?;
     // The built-in schemes repo has no `[[items]]` entry, so its leniency is
     // configured separately under `[schemes]`.
     let schemes_allow_dirty = config.schemes.allow_dirty_update;
@@ -134,7 +139,6 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
 
     let schemes_repo_path = builtin_schemes_repo_path(data_path);
 
-    ensure_schemes_path_not_circular(&schemes_source, &schemes_repo_path)?;
     update_scheme_repo(
         SCHEMES_REPO_NAME,
         &schemes_repo_path,
@@ -148,7 +152,6 @@ pub fn update(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()
     // `allow-dirty-update`.
     for extra in &config.schemes.extras {
         let extra_path = extra_repo_path(data_path, &extra.name);
-        ensure_schemes_path_not_circular(&extra.path, &extra_path)?;
         update_scheme_repo(
             &extra.name,
             &extra_path,

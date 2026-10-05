@@ -165,31 +165,41 @@ pub struct SchemesConfig {
     pub extras: Vec<SchemeRepoConfig>,
 }
 
-/// Rejects a `[schemes].path` (a local directory) that resolves to tinty's own
-/// managed schemes directory (`repos/schemes`). Symlinking that slot to itself,
-/// or cloning it into itself, is a circular reference. Git URL sources can never
-/// name the local slot, so they are always accepted here.
-pub fn ensure_schemes_path_not_circular(source: &str, schemes_repo_path: &Path) -> Result<()> {
+/// Rejects a local scheme source (`[schemes].path` or a `[[schemes.extras]]`
+/// `path`) that points inside tinty's own managed scheme repositories directory
+/// (`scheme-repos/`). Such a source would mirror one managed repo into another
+/// (or into itself), which is a circular reference. Git URL sources can never
+/// name a local slot, so they are always accepted here.
+///
+/// Every ancestor of the source path is resolved, not just the path itself:
+/// a slot may be a symlink to a directory outside `scheme-repos/`, so resolving
+/// `scheme-repos/schemes` directly would follow it out and miss the reference.
+/// A legitimate source that a slot merely symlinks *to* has no ancestor inside
+/// `scheme-repos/`, so repeat runs are not flagged.
+pub fn ensure_scheme_source_not_circular(
+    label: &str,
+    source: &str,
+    scheme_repos_dir: &Path,
+) -> Result<()> {
     if Url::parse(source).is_ok() {
         return Ok(());
     }
 
-    // Identity of the schemes-repo slot itself, computed without dereferencing a
-    // symlink that may already occupy it (canonicalizing the slot directly would
-    // follow such a symlink and produce a false positive on repeat runs).
-    let slot_identity = schemes_repo_path
-        .parent()
-        .and_then(|parent| parent.canonicalize().ok())
-        .zip(schemes_repo_path.file_name())
-        .map(|(parent, name)| parent.join(name));
+    // Nothing is managed yet, so nothing can point into it.
+    let Ok(managed) = scheme_repos_dir.canonicalize() else {
+        return Ok(());
+    };
 
-    if let (Ok(source_canon), Some(slot)) = (Path::new(source).canonicalize(), slot_identity) {
-        if source_canon == slot {
-            return Err(anyhow!(
-                "config.toml [schemes].path points at {REPO_NAME}'s own managed schemes directory ({}). This would create a circular reference; point it at a different directory or a Git URL.",
-                schemes_repo_path.display()
-            ));
-        }
+    let points_inside = Path::new(source)
+        .ancestors()
+        .filter_map(|ancestor| ancestor.canonicalize().ok())
+        .any(|resolved| resolved.starts_with(&managed));
+
+    if points_inside {
+        return Err(anyhow!(
+            "config.toml {label} \"{source}\" points inside {REPO_NAME}'s managed scheme repositories directory ({}). This would create a circular reference; point it at a directory outside it, or at a Git URL.",
+            scheme_repos_dir.display()
+        ));
     }
 
     Ok(())
@@ -720,36 +730,85 @@ themes-dir = "themes"
         assert_eq!(reparsed.schemes.extras[0].name, "community");
     }
 
-    #[test]
-    fn ensure_schemes_path_not_circular_allows_urls_and_other_dirs() {
-        use std::path::Path;
-        // A URL source is never circular.
-        assert!(super::ensure_schemes_path_not_circular(
-            "https://example.com/schemes",
-            Path::new("/does/not/matter/repos/schemes"),
-        )
-        .is_ok());
+    /// A temp data dir with an existing managed `scheme-repos/` and a
+    /// separate user directory outside it.
+    fn managed_layout() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
+        let tmp = tempfile::tempdir().unwrap();
+        let managed = tmp.path().join("data").join("scheme-repos");
+        std::fs::create_dir_all(&managed).unwrap();
+        let outside = tmp.path().join("my-schemes");
+        std::fs::create_dir_all(&outside).unwrap();
+        (tmp, managed, outside)
+    }
 
-        // A local dir that differs from the slot is fine. Use the temp dir,
-        // which exists, as the source and a distinct slot path.
-        let tmp = std::env::temp_dir();
-        assert!(super::ensure_schemes_path_not_circular(
-            tmp.to_str().unwrap(),
-            &tmp.join("some-other-data/repos/schemes"),
-        )
-        .is_ok());
+    fn check(source: &std::path::Path, managed: &std::path::Path) -> anyhow::Result<()> {
+        super::ensure_scheme_source_not_circular("test", source.to_str().unwrap(), managed)
     }
 
     #[test]
-    fn ensure_schemes_path_not_circular_rejects_self_reference() {
-        let tmp = tempfile::tempdir().unwrap();
-        let repos = tmp.path().join("repos");
-        let slot = repos.join("schemes");
-        std::fs::create_dir_all(&slot).unwrap();
+    fn scheme_source_check_allows_urls_and_outside_dirs() {
+        let (_tmp, managed, outside) = managed_layout();
+        assert!(super::ensure_scheme_source_not_circular(
+            "test",
+            "https://example.com/schemes",
+            &managed
+        )
+        .is_ok());
+        assert!(check(&outside, &managed).is_ok());
+    }
 
-        // Pointing `[schemes].path` at the slot itself is circular.
-        let err = super::ensure_schemes_path_not_circular(slot.to_str().unwrap(), &slot)
-            .expect_err("expected a circular-reference error");
-        assert!(err.to_string().contains("circular reference"));
+    #[test]
+    fn scheme_source_check_allows_when_nothing_is_managed_yet() {
+        let tmp = tempfile::tempdir().unwrap();
+        let missing = tmp.path().join("data").join("scheme-repos");
+        assert!(check(tmp.path(), &missing).is_ok());
+    }
+
+    #[test]
+    fn scheme_source_check_rejects_slots_and_paths_inside_managed_dir() {
+        let (_tmp, managed, _outside) = managed_layout();
+        // Its own slot, another repo's slot, a nested dir, and the managed dir
+        // itself are all circular.
+        for inside in [
+            managed.join("schemes"),
+            managed.join("other-extra"),
+            managed.join("schemes").join("base16"),
+            managed.clone(),
+        ] {
+            std::fs::create_dir_all(&inside).unwrap();
+            let err = check(&inside, &managed).expect_err("expected a circular-reference error");
+            assert!(err.to_string().contains("circular reference"), "{err}");
+        }
+    }
+
+    #[test]
+    fn scheme_source_check_rejects_path_through_a_symlinked_slot() {
+        // The built-in slot is a symlink to a user dir outside `scheme-repos/`.
+        // Resolving `scheme-repos/schemes` alone would follow it out; naming the
+        // slot as a source must still be rejected.
+        let (_tmp, managed, outside) = managed_layout();
+        let slot = managed.join("schemes");
+        std::os::unix::fs::symlink(&outside, &slot).unwrap();
+        assert!(check(&slot, &managed).is_err());
+    }
+
+    #[test]
+    fn scheme_source_check_allows_the_target_a_slot_symlinks_to() {
+        // On repeat runs a slot already symlinks to the user's directory; that
+        // directory itself is a legitimate source.
+        let (_tmp, managed, outside) = managed_layout();
+        std::os::unix::fs::symlink(&outside, managed.join("schemes")).unwrap();
+        assert!(check(&outside, &managed).is_ok());
+    }
+
+    #[test]
+    fn scheme_source_check_rejects_outside_symlink_into_managed_dir() {
+        // A symlink living outside that points into `scheme-repos/` is circular.
+        let (tmp, managed, _outside) = managed_layout();
+        let slot = managed.join("schemes");
+        std::fs::create_dir_all(&slot).unwrap();
+        let link = tmp.path().join("sneaky-link");
+        std::os::unix::fs::symlink(&slot, &link).unwrap();
+        assert!(check(&link, &managed).is_err());
     }
 }

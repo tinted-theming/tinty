@@ -46,7 +46,9 @@
   override a scheme by declaring your own copy lower in `config.toml`.
   `tinty list` notes overridden copies on stderr. Applying an extra-repo scheme
   builds it on the fly into your template items, exactly like a generated
-  custom scheme.
+  custom scheme. A local `path` (for an extra or `[schemes].path`) that points
+  inside Tinty's managed `scheme-repos/` directory is rejected as a circular
+  reference.
 
 ### Changed
 
