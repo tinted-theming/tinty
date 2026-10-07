@@ -9,8 +9,8 @@ mod utils;
 
 use anyhow::{ensure, Result};
 use utils::{
-    copy_dir_all, setup, write_to_file, ARTIFACTS_DIR, CURRENT_SCHEME_FILE_NAME, REPO_DIR,
-    SCHEMES_REPO_NAME,
+    builtin_schemes_repo_path, copy_dir_all, setup, write_to_file, ARTIFACTS_DIR,
+    CURRENT_SCHEME_FILE_NAME,
 };
 
 #[test]
@@ -22,7 +22,7 @@ fn test_cli_current_subcommand_with_setup() -> Result<()> {
         setup("test_cli_current_subcommand_with_setup", "current", true)?;
     let scheme_name = "base16-oceanicnext";
     let current_scheme_path = data_path.join(ARTIFACTS_DIR).join(CURRENT_SCHEME_FILE_NAME);
-    let schemes_dir = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
+    let schemes_dir = builtin_schemes_repo_path(&data_path);
 
     write_to_file(&current_scheme_path, scheme_name)?;
     copy_dir_all("./tests/fixtures/schemes", schemes_dir.join("base16"))?;
@@ -111,7 +111,7 @@ where
 
     let scheme_name = "base16-tinty-generated";
     let current_scheme_path = data_path.join(format!("{ARTIFACTS_DIR}/{CURRENT_SCHEME_FILE_NAME}"));
-    let schemes_dir = data_path.join(format!("{REPO_DIR}/{SCHEMES_REPO_NAME}"));
+    let schemes_dir = builtin_schemes_repo_path(&data_path);
 
     write_to_file(&current_scheme_path, scheme_name)?;
     copy_dir_all("./tests/fixtures/schemes", schemes_dir.join("base16"))?;

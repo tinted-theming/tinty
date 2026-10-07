@@ -183,13 +183,10 @@ fn test_cli_info_subcommand_without_setup() -> Result<()> {
     // ------
     // Assert
     // ------
+    let expected_output = "Schemes are missing, run install and then try again: `tinty install`";
     ensure!(
-        stderr.contains("Scheme repo path does not exist:"),
-        "Expected stderr to contain 'Scheme repo path does not exist'.\nGot: {stderr}"
-    );
-    ensure!(
-        stderr.contains("Run `tinty install` and try again"),
-        "Expected stderr to contain 'Run `tinty install` and try again'.\nGot: {stderr}"
+        stderr.contains(expected_output),
+        "Expected stderr to contain: {expected_output}\nGot: {stderr}"
     );
 
     Ok(())

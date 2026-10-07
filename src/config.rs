@@ -97,6 +97,45 @@ impl fmt::Display for ConfigRing {
     }
 }
 
+/// An additional scheme repository declared under `[[schemes.extras]]`. Extra
+/// repos are merged with the built-in `schemes` repo into a single scheme
+/// collection. They follow the same source mechanics as `[[items]]`: `path` is
+/// a Git URL (cloned) or a local directory (symlinked), with an optional
+/// `revision`. Unlike an item, an extra is a collection of `<system>/<slug>.yaml`
+/// scheme files, not a template — so it has no `themes-dir`, `hook`, or
+/// `supported-systems`.
+#[derive(Deserialize, Debug, Clone)]
+pub struct SchemeRepoConfig {
+    /// Unique name for the repo; also its directory under `scheme-repos/`.
+    pub name: String,
+    /// Git URL (cloned) or local directory (symlinked). A leading `~/` is
+    /// expanded to the home directory during config read.
+    pub path: String,
+    /// Git revision (branch, tag, or commit SHA) to check out. Ignored for a
+    /// local-directory `path`.
+    pub revision: Option<String>,
+    /// When `true`, `tinty update` may proceed even if this repo's local copy
+    /// has uncommitted changes. Mirrors an item's `allow-dirty-update`.
+    #[serde(default, rename = "allow-dirty-update")]
+    pub allow_dirty_update: bool,
+}
+
+impl fmt::Display for SchemeRepoConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f)?;
+        writeln!(f, "[[schemes.extras]]")?;
+        writeln!(f, "name = \"{}\"", self.name)?;
+        write!(f, "path = \"{}\"", self.path)?;
+        if let Some(revision) = &self.revision {
+            write!(f, "\nrevision = \"{revision}\"")?;
+        }
+        if self.allow_dirty_update {
+            write!(f, "\nallow-dirty-update = true")?;
+        }
+        Ok(())
+    }
+}
+
 /// Settings for the built-in schemes repository, which has no `[[items]]`
 /// entry of its own. Grouped under a `[schemes]` table so more schemes-repo
 /// specific options can be added here in the future.
@@ -120,33 +159,47 @@ pub struct SchemesConfig {
     /// revision is used.
     #[serde(default)]
     pub revision: Option<String>,
+    /// Additional scheme repositories merged with the built-in `schemes` repo.
+    /// Declared as `[[schemes.extras]]` array-of-tables.
+    #[serde(default)]
+    pub extras: Vec<SchemeRepoConfig>,
 }
 
-/// Rejects a `[schemes].path` (a local directory) that resolves to tinty's own
-/// managed schemes directory (`repos/schemes`). Symlinking that slot to itself,
-/// or cloning it into itself, is a circular reference. Git URL sources can never
-/// name the local slot, so they are always accepted here.
-pub fn ensure_schemes_path_not_circular(source: &str, schemes_repo_path: &Path) -> Result<()> {
+/// Rejects a local scheme source (`[schemes].path` or a `[[schemes.extras]]`
+/// `path`) that points inside tinty's own managed scheme repositories directory
+/// (`scheme-repos/`). Such a source would mirror one managed repo into another
+/// (or into itself), which is a circular reference. Git URL sources can never
+/// name a local slot, so they are always accepted here.
+///
+/// Every ancestor of the source path is resolved, not just the path itself:
+/// a slot may be a symlink to a directory outside `scheme-repos/`, so resolving
+/// `scheme-repos/schemes` directly would follow it out and miss the reference.
+/// A legitimate source that a slot merely symlinks *to* has no ancestor inside
+/// `scheme-repos/`, so repeat runs are not flagged.
+pub fn ensure_scheme_source_not_circular(
+    label: &str,
+    source: &str,
+    scheme_repos_dir: &Path,
+) -> Result<()> {
     if Url::parse(source).is_ok() {
         return Ok(());
     }
 
-    // Identity of the schemes-repo slot itself, computed without dereferencing a
-    // symlink that may already occupy it (canonicalizing the slot directly would
-    // follow such a symlink and produce a false positive on repeat runs).
-    let slot_identity = schemes_repo_path
-        .parent()
-        .and_then(|parent| parent.canonicalize().ok())
-        .zip(schemes_repo_path.file_name())
-        .map(|(parent, name)| parent.join(name));
+    // Nothing is managed yet, so nothing can point into it.
+    let Ok(managed) = scheme_repos_dir.canonicalize() else {
+        return Ok(());
+    };
 
-    if let (Ok(source_canon), Some(slot)) = (Path::new(source).canonicalize(), slot_identity) {
-        if source_canon == slot {
-            return Err(anyhow!(
-                "config.toml [schemes].path points at {REPO_NAME}'s own managed schemes directory ({}). This would create a circular reference; point it at a different directory or a Git URL.",
-                schemes_repo_path.display()
-            ));
-        }
+    let points_inside = Path::new(source)
+        .ancestors()
+        .filter_map(|ancestor| ancestor.canonicalize().ok())
+        .any(|resolved| resolved.starts_with(&managed));
+
+    if points_inside {
+        return Err(anyhow!(
+            "config.toml {label} \"{source}\" points inside {REPO_NAME}'s managed scheme repositories directory ({}). This would create a circular reference; point it at a directory outside it, or at a Git URL.",
+            scheme_repos_dir.display()
+        ));
     }
 
     Ok(())
@@ -179,6 +232,32 @@ fn ensure_item_name_is_unique(items: &[ConfigItem]) -> Result<()> {
 
         if !names.insert(&item.name) {
             return Err(anyhow!("config.toml item.name should be unique values, but \"{}\" is used for more than 1 item.name. Please change this to a unique value.", item.name));
+        }
+    }
+
+    Ok(())
+}
+
+/// Validates `[[schemes.extras]]` names: each must be non-empty, unique among
+/// extras, and must not be the reserved `schemes` name (which addresses the
+/// built-in repo). Names double as directory names under `scheme-repos/`, so a
+/// collision would make two repos fight over one slot.
+fn ensure_scheme_extras_are_valid(extras: &[SchemeRepoConfig]) -> Result<()> {
+    let mut names = HashSet::new();
+
+    for extra in extras {
+        if extra.name.trim().is_empty() {
+            return Err(anyhow!(
+                "config.toml schemes.extras.name should not be empty"
+            ));
+        }
+
+        if extra.name == SCHEMES_REPO_NAME {
+            return Err(anyhow!("config.toml schemes.extras.name \"{SCHEMES_REPO_NAME}\" is reserved for the built-in schemes repository. Please rename this extra scheme repo."));
+        }
+
+        if !names.insert(&extra.name) {
+            return Err(anyhow!("config.toml schemes.extras.name should be unique values, but \"{}\" is used for more than 1 extra. Please change this to a unique value.", extra.name));
         }
     }
 
@@ -229,6 +308,7 @@ impl Config {
         )
     }
 
+    #[allow(clippy::too_many_lines)]
     pub fn read(path: &Path) -> Result<Self> {
         if path.exists() && !path.is_file() {
             return Err(anyhow!(
@@ -337,6 +417,22 @@ impl Config {
             config.schemes.path = Some(expanded);
         }
 
+        // Validate `[[schemes.extras]]` names, then normalize each extra's path
+        // exactly like an item path: expand a leading `~/` and require a valid
+        // URL or an existing local directory.
+        ensure_scheme_extras_are_valid(&config.schemes.extras)?;
+        for extra in &mut config.schemes.extras {
+            let expanded = replace_tilde_slash_with_home(&extra.path)?
+                .to_string_lossy()
+                .into_owned();
+
+            if Url::parse(&expanded).is_err() && !Path::new(&expanded).is_dir() {
+                return Err(anyhow!("config.toml schemes.extras \"{}\" has an invalid `path` value. \"{expanded}\" is not a valid url and is not a path to an existing local directory", extra.name));
+            }
+
+            extra.path = expanded;
+        }
+
         if !shell.contains("{}") {
             let msg = "The configured shell does not contain the required command placeholder '{}'. Check the default file or github for config examples.";
             return Err(anyhow!(msg));
@@ -384,7 +480,9 @@ impl fmt::Display for Config {
         }
 
         // Emitted before the `[[rings]]`/`[[items]]` array-of-tables so its
-        // keys are not mis-parsed as belonging to the last array entry.
+        // keys are not mis-parsed as belonging to the last array entry. The
+        // `[schemes]` scalar keys must precede the `[[schemes.extras]]`
+        // array-of-tables for the same reason.
         if self.schemes.path.is_some()
             || self.schemes.revision.is_some()
             || self.schemes.allow_dirty_update
@@ -399,6 +497,10 @@ impl fmt::Display for Config {
             if self.schemes.allow_dirty_update {
                 writeln!(f, "allow-dirty-update = true")?;
             }
+        }
+
+        for extra in &self.schemes.extras {
+            writeln!(f, "{extra}")?;
         }
 
         if let Some(rings) = &self.rings {
@@ -419,7 +521,7 @@ impl fmt::Display for Config {
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, ConfigItem};
+    use super::{Config, ConfigItem, SchemeRepoConfig};
 
     fn item_with(allow_dirty_update: bool) -> ConfigItem {
         ConfigItem {
@@ -550,35 +652,163 @@ themes-dir = "themes"
     }
 
     #[test]
-    fn ensure_schemes_path_not_circular_allows_urls_and_other_dirs() {
-        use std::path::Path;
-        // A URL source is never circular.
-        assert!(super::ensure_schemes_path_not_circular(
-            "https://example.com/schemes",
-            Path::new("/does/not/matter/repos/schemes"),
-        )
-        .is_ok());
-
-        // A local dir that differs from the slot is fine. Use the temp dir,
-        // which exists, as the source and a distinct slot path.
-        let tmp = std::env::temp_dir();
-        assert!(super::ensure_schemes_path_not_circular(
-            tmp.to_str().unwrap(),
-            &tmp.join("some-other-data/repos/schemes"),
-        )
-        .is_ok());
+    fn schemes_extras_parse_as_array_of_tables() {
+        let config: Config = toml::from_str(concat!(
+            "[[schemes.extras]]\nname = \"community\"\npath = \"https://example.com/community\"\nrevision = \"main\"\n\n",
+            "[[schemes.extras]]\nname = \"work\"\npath = \"/some/dir\"\nallow-dirty-update = true\n",
+        ))
+        .unwrap();
+        let extras = &config.schemes.extras;
+        assert_eq!(extras.len(), 2);
+        assert_eq!(extras[0].name, "community");
+        assert_eq!(extras[0].path, "https://example.com/community");
+        assert_eq!(extras[0].revision.as_deref(), Some("main"));
+        assert!(!extras[0].allow_dirty_update);
+        assert_eq!(extras[1].name, "work");
+        assert!(extras[1].allow_dirty_update);
+        assert_eq!(extras[1].revision, None);
     }
 
     #[test]
-    fn ensure_schemes_path_not_circular_rejects_self_reference() {
-        let tmp = tempfile::tempdir().unwrap();
-        let repos = tmp.path().join("repos");
-        let slot = repos.join("schemes");
-        std::fs::create_dir_all(&slot).unwrap();
+    fn schemes_extras_absent_defaults_to_empty() {
+        let config: Config = toml::from_str("shell = \"sh -c '{}'\"\n").unwrap();
+        assert!(config.schemes.extras.is_empty());
+    }
 
-        // Pointing `[schemes].path` at the slot itself is circular.
-        let err = super::ensure_schemes_path_not_circular(slot.to_str().unwrap(), &slot)
-            .expect_err("expected a circular-reference error");
-        assert!(err.to_string().contains("circular reference"));
+    #[test]
+    fn ensure_scheme_extras_rejects_reserved_name() {
+        let extras = vec![SchemeRepoConfig {
+            name: super::SCHEMES_REPO_NAME.to_string(),
+            path: "https://example.com/x".to_string(),
+            revision: None,
+            allow_dirty_update: false,
+        }];
+        let err = super::ensure_scheme_extras_are_valid(&extras).unwrap_err();
+        assert!(err.to_string().contains("reserved"));
+    }
+
+    #[test]
+    fn ensure_scheme_extras_rejects_duplicate_names() {
+        let extra = |name: &str| SchemeRepoConfig {
+            name: name.to_string(),
+            path: "https://example.com/x".to_string(),
+            revision: None,
+            allow_dirty_update: false,
+        };
+        let err = super::ensure_scheme_extras_are_valid(&[extra("dup"), extra("dup")]).unwrap_err();
+        assert!(err.to_string().contains("unique"));
+    }
+
+    #[test]
+    fn ensure_scheme_extras_rejects_empty_name() {
+        let extras = vec![SchemeRepoConfig {
+            name: "   ".to_string(),
+            path: "https://example.com/x".to_string(),
+            revision: None,
+            allow_dirty_update: false,
+        }];
+        let err = super::ensure_scheme_extras_are_valid(&extras).unwrap_err();
+        assert!(err.to_string().contains("empty"));
+    }
+
+    #[test]
+    fn config_display_round_trips_scheme_extras() {
+        let mut config: Config = toml::from_str(concat!(
+            "[[schemes.extras]]\nname = \"community\"\npath = \"https://example.com/community\"\nrevision = \"main\"\n",
+        ))
+        .unwrap();
+        config.shell = Some("sh -c '{}'".to_string());
+        let rendered = config.to_string();
+        assert!(rendered.contains("[[schemes.extras]]"));
+        assert!(rendered.contains("name = \"community\""));
+        assert!(rendered.contains("path = \"https://example.com/community\""));
+        assert!(rendered.contains("revision = \"main\""));
+
+        // The rendered config must itself parse back to the same extras.
+        let reparsed: Config = toml::from_str(&rendered).unwrap();
+        assert_eq!(reparsed.schemes.extras.len(), 1);
+        assert_eq!(reparsed.schemes.extras[0].name, "community");
+    }
+
+    /// A temp data dir with an existing managed `scheme-repos/` and a
+    /// separate user directory outside it.
+    fn managed_layout() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
+        let tmp = tempfile::tempdir().unwrap();
+        let managed = tmp.path().join("data").join("scheme-repos");
+        std::fs::create_dir_all(&managed).unwrap();
+        let outside = tmp.path().join("my-schemes");
+        std::fs::create_dir_all(&outside).unwrap();
+        (tmp, managed, outside)
+    }
+
+    fn check(source: &std::path::Path, managed: &std::path::Path) -> anyhow::Result<()> {
+        super::ensure_scheme_source_not_circular("test", source.to_str().unwrap(), managed)
+    }
+
+    #[test]
+    fn scheme_source_check_allows_urls_and_outside_dirs() {
+        let (_tmp, managed, outside) = managed_layout();
+        assert!(super::ensure_scheme_source_not_circular(
+            "test",
+            "https://example.com/schemes",
+            &managed
+        )
+        .is_ok());
+        assert!(check(&outside, &managed).is_ok());
+    }
+
+    #[test]
+    fn scheme_source_check_allows_when_nothing_is_managed_yet() {
+        let tmp = tempfile::tempdir().unwrap();
+        let missing = tmp.path().join("data").join("scheme-repos");
+        assert!(check(tmp.path(), &missing).is_ok());
+    }
+
+    #[test]
+    fn scheme_source_check_rejects_slots_and_paths_inside_managed_dir() {
+        let (_tmp, managed, _outside) = managed_layout();
+        // Its own slot, another repo's slot, a nested dir, and the managed dir
+        // itself are all circular.
+        for inside in [
+            managed.join("schemes"),
+            managed.join("other-extra"),
+            managed.join("schemes").join("base16"),
+            managed.clone(),
+        ] {
+            std::fs::create_dir_all(&inside).unwrap();
+            let err = check(&inside, &managed).expect_err("expected a circular-reference error");
+            assert!(err.to_string().contains("circular reference"), "{err}");
+        }
+    }
+
+    #[test]
+    fn scheme_source_check_rejects_path_through_a_symlinked_slot() {
+        // The built-in slot is a symlink to a user dir outside `scheme-repos/`.
+        // Resolving `scheme-repos/schemes` alone would follow it out; naming the
+        // slot as a source must still be rejected.
+        let (_tmp, managed, outside) = managed_layout();
+        let slot = managed.join("schemes");
+        std::os::unix::fs::symlink(&outside, &slot).unwrap();
+        assert!(check(&slot, &managed).is_err());
+    }
+
+    #[test]
+    fn scheme_source_check_allows_the_target_a_slot_symlinks_to() {
+        // On repeat runs a slot already symlinks to the user's directory; that
+        // directory itself is a legitimate source.
+        let (_tmp, managed, outside) = managed_layout();
+        std::os::unix::fs::symlink(&outside, managed.join("schemes")).unwrap();
+        assert!(check(&outside, &managed).is_ok());
+    }
+
+    #[test]
+    fn scheme_source_check_rejects_outside_symlink_into_managed_dir() {
+        // A symlink living outside that points into `scheme-repos/` is circular.
+        let (tmp, managed, _outside) = managed_layout();
+        let slot = managed.join("schemes");
+        std::fs::create_dir_all(&slot).unwrap();
+        let link = tmp.path().join("sneaky-link");
+        std::os::unix::fs::symlink(&slot, &link).unwrap();
+        assert!(check(&link, &managed).is_err());
     }
 }

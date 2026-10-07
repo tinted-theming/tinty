@@ -1,7 +1,12 @@
-use crate::config::{ensure_schemes_path_not_circular, Config};
+use crate::config::Config;
 use crate::constants::SCHEMES_REPO_NAME;
 use crate::paths;
 use crate::repo;
+use crate::scheme_repos::{
+    builtin_schemes_repo_path, ensure_scheme_sources_not_circular, extra_repo_path,
+    scheme_repos_dir,
+};
+use crate::utils::ensure_directory_exists;
 use anyhow::{anyhow, Context, Result};
 use std::fs::{remove_file as remove_symlink, symlink_metadata};
 use std::os::unix::fs::symlink;
@@ -144,33 +149,23 @@ fn prepare_symlink_slot(schemes_repo_path: &Path) -> Result<()> {
     })
 }
 
-/// Installs the built-in schemes repository from its configured source. A Git
-/// URL is cloned into `repos/schemes`; a local directory is symlinked as
-/// `repos/schemes` (with `revision` ignored, exactly like a local-path
-/// `[[items]]` entry).
-fn install_schemes_repo(
-    schemes_repo_path: &Path,
+/// Installs a scheme repository (the built-in `schemes` repo or a configured
+/// extra) from its source. A Git URL is cloned into the repo's slot under
+/// `scheme-repos/`; a local directory is symlinked into that slot (with
+/// `revision` ignored, exactly like a local-path `[[items]]` entry).
+fn install_scheme_repo(
+    repo_path: &Path,
+    name: &str,
     source: &str,
     revision: Option<&str>,
     is_quiet: bool,
 ) -> Result<()> {
     if Url::parse(source).is_ok() {
-        prepare_clone_slot(schemes_repo_path, source)?;
-        install_git_url(
-            schemes_repo_path,
-            SCHEMES_REPO_NAME,
-            source,
-            revision,
-            is_quiet,
-        )
+        prepare_clone_slot(repo_path, source)?;
+        install_git_url(repo_path, name, source, revision, is_quiet)
     } else {
-        prepare_symlink_slot(schemes_repo_path)?;
-        install_dir(
-            schemes_repo_path,
-            SCHEMES_REPO_NAME,
-            Path::new(source),
-            is_quiet,
-        )
+        prepare_symlink_slot(repo_path)?;
+        install_dir(repo_path, name, Path::new(source), is_quiet)
     }
 }
 
@@ -180,6 +175,9 @@ fn install_schemes_repo(
 /// any other command
 pub fn install(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<()> {
     let config = Config::read(config_path)?;
+    // Validate every scheme source before touching any repo, so a source that
+    // points back into `scheme-repos/` fails fast with nothing half-done.
+    ensure_scheme_sources_not_circular(data_path, &config)?;
     let (schemes_source, schemes_revision) = config.schemes_source();
     let items = config.items.unwrap_or_default();
 
@@ -199,15 +197,31 @@ pub fn install(config_path: &Path, data_path: &Path, is_quiet: bool) -> Result<(
         }
     }
 
-    let schemes_repo_path = paths::schemes_repo_path(data_path);
+    // Scheme repositories live under `scheme-repos/`, separate from the template
+    // items in `repos/`. Ensure the directory exists before populating it.
+    ensure_directory_exists(scheme_repos_dir(data_path))?;
 
-    ensure_schemes_path_not_circular(&schemes_source, &schemes_repo_path)?;
-    install_schemes_repo(
+    let schemes_repo_path = builtin_schemes_repo_path(data_path);
+    install_scheme_repo(
         &schemes_repo_path,
+        SCHEMES_REPO_NAME,
         &schemes_source,
         schemes_revision.as_deref(),
         is_quiet,
     )?;
+
+    // Extra scheme repos are merged with the built-in repo at collection time;
+    // here we just fetch each one into its own slot under `scheme-repos/`.
+    for extra in &config.schemes.extras {
+        let extra_path = extra_repo_path(data_path, &extra.name);
+        install_scheme_repo(
+            &extra_path,
+            &extra.name,
+            &extra.path,
+            extra.revision.as_deref(),
+            is_quiet,
+        )?;
+    }
 
     Ok(())
 }

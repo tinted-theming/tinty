@@ -99,7 +99,7 @@ fn local_item_config(temp: &Path) -> Result<String> {
 }
 
 fn schemes_repo_path(data_path: &Path) -> PathBuf {
-    data_path.join("repos").join("schemes")
+    data_path.join("scheme-repos").join("schemes")
 }
 
 fn is_symlink(path: &Path) -> Result<bool> {
