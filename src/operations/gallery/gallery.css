@@ -426,7 +426,7 @@ h1 {
 
 .controls {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto auto;
+  grid-template-columns: minmax(260px, 1fr) auto auto auto;
   gap: 10px;
   align-items: center;
   margin: 20px 0 4px;
@@ -437,6 +437,21 @@ h1 {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--shadow-sm);
+}
+
+/* Search gets its own row; the filters stay left and sort stays right. */
+@media (max-width: 1160px) {
+  .controls {
+    grid-template-columns: auto auto 1fr;
+  }
+
+  .controls .search {
+    grid-column: 1 / -1;
+  }
+
+  .sort-select-wrapper {
+    justify-self: end;
+  }
 }
 
 .search {
@@ -487,6 +502,7 @@ h1 {
 }
 
 .filter-group,
+.sort-select-wrapper,
 .theme-switcher,
 .preview-toolbar,
 .variables-toggle {
@@ -545,6 +561,50 @@ h1 {
   background: var(--surface);
   color: var(--ink-1);
   box-shadow: var(--shadow-sm), var(--ring);
+}
+
+/* Sort select drawn as an active chip in a filter-group pill. */
+.sort-select-wrapper {
+  position: relative;
+  align-items: center;
+}
+
+.sort-select-wrapper .icon {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  flex-basis: 14px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.sort-icon {
+  left: 15px;
+}
+
+.sort-chevron {
+  right: 13px;
+}
+
+.sort-select {
+  min-height: 32px;
+  padding: 4px 32px 4px 34px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm), var(--ring);
+  color: var(--ink-1);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.sort-select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .chip:focus-visible,
@@ -1448,7 +1508,7 @@ body.sheet-open .sheet-backdrop {
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 880px) {
   .topbar,
   main {
     width: min(100% - 20px, 720px);
@@ -1468,7 +1528,16 @@ body.sheet-open .sheet-backdrop {
     grid-template-columns: 1fr;
   }
 
+  .sort-select-wrapper {
+    justify-self: stretch;
+  }
+
+  .sort-select {
+    width: 100%;
+  }
+
   .filter-group,
+  .sort-select-wrapper,
   .theme-switcher,
   .preview-toolbar {
     width: 100%;

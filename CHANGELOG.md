@@ -49,6 +49,15 @@
   custom scheme. A local `path` (for an extra or `[schemes].path`) that points
   inside Tinty's managed `scheme-repos/` directory is rejected as a circular
   reference.
+- Add a sort control to the `tinty gallery` view. Schemes can be ordered by
+  ID, by background lightness (darkest or lightest first), or by the contrast
+  of their code preview (most or least first). Lightness is the scheme's
+  CIELAB L*, shown as "Bg L*" and "Fg L*" in the detail view, and schemes with
+  the same background lightness are ordered by foreground lightness. Contrast
+  ranks schemes by the L* difference between the preview's text, syntax, and
+  comment colors and its background, weighted by how much of the preview each
+  color occupies (not a WCAG contrast ratio). The selected order is remembered
+  across visits.
 
 ### Changed
 
