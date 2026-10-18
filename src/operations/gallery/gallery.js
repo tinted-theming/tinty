@@ -40,6 +40,25 @@ const LANGUAGE_STORAGE_KEY = "tinty-gallery-preview-language";
 const MODAL_LANGUAGE_STORAGE_KEY = "tinty-gallery-modal-language";
 const SORT_STORAGE_KEY = "tinty-gallery-sort";
 
+// Saved preferences are a convenience: when storage is blocked or full (site
+// data disabled, private browsing), reads come back empty and writes are
+// dropped instead of throwing and halting the page.
+function readSetting(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function saveSetting(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (_error) {
+    // Not persisted; the setting still applies for this visit.
+  }
+}
+
 const fallbackPalette = {
   base00: "#101418",
   base03: "#5f6b76",
@@ -333,7 +352,7 @@ function renderModalPreview() {
 // the modal. Public callers should go through onGalleryLanguageChange.
 function applyGalleryLanguage(lang) {
   state.language = lang;
-  window.localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+  saveSetting(LANGUAGE_STORAGE_KEY, lang);
   document.getElementById("language-select").value = lang;
   document.querySelectorAll(".card").forEach((card) => {
     const scheme = schemeForCard(card);
@@ -346,7 +365,7 @@ function applyGalleryLanguage(lang) {
 // the gallery. Public callers should go through onModalLanguageChange.
 function applyModalLanguage(lang) {
   state.modalLanguage = lang;
-  window.localStorage.setItem(MODAL_LANGUAGE_STORAGE_KEY, lang);
+  saveSetting(MODAL_LANGUAGE_STORAGE_KEY, lang);
   renderModalPreview();
 }
 
@@ -377,12 +396,12 @@ function isValidGalleryLanguage(lang) {
 }
 
 function loadSavedLanguage() {
-  const savedGallery = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  const savedGallery = readSetting(LANGUAGE_STORAGE_KEY);
   if (savedGallery && isValidGalleryLanguage(savedGallery)) {
     state.language = savedGallery;
     document.getElementById("language-select").value = savedGallery;
   }
-  const savedModal = window.localStorage.getItem(MODAL_LANGUAGE_STORAGE_KEY);
+  const savedModal = readSetting(MODAL_LANGUAGE_STORAGE_KEY);
   if (savedModal && hasSnippet(savedModal)) {
     state.modalLanguage = savedModal;
   } else if (state.language !== PALETTE_LANGUAGE) {
@@ -858,7 +877,7 @@ function setFilter(group, value) {
 
 function setPageTheme(theme) {
   state.pageTheme = theme;
-  window.localStorage.setItem(PAGE_THEME_STORAGE_KEY, theme);
+  saveSetting(PAGE_THEME_STORAGE_KEY, theme);
   if (theme === "system") {
     document.documentElement.removeAttribute("data-theme");
   } else {
@@ -873,7 +892,7 @@ function setPageTheme(theme) {
 }
 
 function loadSavedPageTheme() {
-  const savedTheme = window.localStorage.getItem(PAGE_THEME_STORAGE_KEY);
+  const savedTheme = readSetting(PAGE_THEME_STORAGE_KEY);
   const validThemes = new Set(["system", "dark", "light"]);
 
   if (savedTheme && validThemes.has(savedTheme)) {
@@ -886,13 +905,13 @@ function loadSavedPageTheme() {
 
 function setSort(sort) {
   state.sort = sort;
-  window.localStorage.setItem(SORT_STORAGE_KEY, sort);
+  saveSetting(SORT_STORAGE_KEY, sort);
   render();
 }
 
 // Always sets the select, since browsers can restore a stale value on reload.
 function loadSavedSort() {
-  const savedSort = window.localStorage.getItem(SORT_STORAGE_KEY);
+  const savedSort = readSetting(SORT_STORAGE_KEY);
   if (savedSort && Object.hasOwn(SORT_ORDERS, savedSort)) {
     state.sort = savedSort;
   }
