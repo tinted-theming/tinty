@@ -73,6 +73,9 @@
 
 ### Fixed
 
+- Fix `tinty gallery` showing no schemes when the browser blocks site storage
+  (e.g. cookies or site data disabled). Saved preferences such as the preview
+  language, page theme and sort order now just aren't remembered instead.
 - Reject a config `[[items]]` entry named `schemes`, which is reserved for the
   built-in schemes repository. Previously such an item silently collided with
   the built-in repo on disk and was reverted to the official schemes repo on
