@@ -453,7 +453,7 @@ function renderColorMap(container, map) {
 function relativeLuminance(rgb) {
   const channels = rgb.map((c) => {
     const norm = c / 255;
-    return norm <= 0.03928 ? norm / 12.92 : Math.pow((norm + 0.055) / 1.055, 2.4);
+    return norm <= 0.04045 ? norm / 12.92 : Math.pow((norm + 0.055) / 1.055, 2.4);
   });
   return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
 }
@@ -747,7 +747,7 @@ function foregroundLightness(scheme) {
   return scheme.lightness?.foreground;
 }
 
-// CIELAB L* of a "#rrggbb" color, as in the scheme's `lightness` values.
+// CIELAB L* of a "#rrggbb" color. Mirrors `Lightness` in list.rs.
 function colorLightness(hex) {
   const rgb = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
   const luminance = relativeLuminance(rgb);

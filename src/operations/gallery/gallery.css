@@ -440,7 +440,7 @@ h1 {
 }
 
 /* Search gets its own row; the filters stay left and sort stays right. */
-@media (max-width: 1100px) {
+@media (max-width: 1160px) {
   .controls {
     grid-template-columns: auto auto 1fr;
   }
@@ -1508,7 +1508,7 @@ body.sheet-open .sheet-backdrop {
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 880px) {
   .topbar,
   main {
     width: min(100% - 20px, 720px);
