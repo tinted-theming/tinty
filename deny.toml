@@ -64,4 +64,9 @@ ignore = [
     # once that lands.
     "RUSTSEC-2026-0194", # quick-xml: quadratic run time on duplicate attribute names
     "RUSTSEC-2026-0195", # quick-xml: unbounded namespace-declaration allocation
+    # unsafe-libyaml is unmaintained, with no safe upgrade. It comes in through
+    # serde_yaml, which tinty, tinted-builder, tinted-builder-rust and
+    # ribboncurls all depend on. Remove this once the stack moves off
+    # serde_yaml.
+    "RUSTSEC-2024-0449", # unsafe-libyaml is unmaintained
 ]
