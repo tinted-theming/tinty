@@ -15,6 +15,7 @@ const state = {
   search: "",
   system: "all",
   appearance: "all",
+  sort: "id",
   pageTheme: "system",
   // Live-server only: id of the scheme currently applied on this machine, or
   // null. Tracked so the matching card can be highlighted and the modal's
@@ -37,6 +38,7 @@ let isFirstRender = true;
 const PAGE_THEME_STORAGE_KEY = "tinty-gallery-page-theme";
 const LANGUAGE_STORAGE_KEY = "tinty-gallery-preview-language";
 const MODAL_LANGUAGE_STORAGE_KEY = "tinty-gallery-modal-language";
+const SORT_STORAGE_KEY = "tinty-gallery-sort";
 
 const fallbackPalette = {
   base00: "#101418",
@@ -737,6 +739,71 @@ function syncSheetToHash() {
   }
 }
 
+function backgroundLightness(scheme) {
+  return scheme.lightness?.background;
+}
+
+function foregroundLightness(scheme) {
+  return scheme.lightness?.foreground;
+}
+
+// CIELAB L* of a "#rrggbb" color, as in the scheme's `lightness` values.
+function colorLightness(hex) {
+  const rgb = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const luminance = relativeLuminance(rgb);
+  return luminance <= 216 / 24389 ? luminance * (24389 / 27) : 116 * Math.cbrt(luminance) - 16;
+}
+
+// One role per accent color, base08–base0E.
+const ACCENT_ROLES = ["macro", "number", "type", "string", "escape", "function", "keyword"];
+const previewContrastCache = new Map();
+
+// How far the code preview's colors are from its background in L*, weighted by
+// roughly how much of the preview each covers. Cached, since sorting asks for
+// it on every comparison.
+function previewContrast(scheme) {
+  let contrast = previewContrastCache.get(scheme.id);
+  if (contrast === undefined) {
+    const background = colorLightness(previewColor(scheme, "bg"));
+    const distance = (role) => Math.abs(colorLightness(previewColor(scheme, role)) - background);
+    const accents = ACCENT_ROLES.reduce((sum, role) => sum + distance(role), 0) / ACCENT_ROLES.length;
+    contrast = 0.3 * distance("fg") + 0.6 * accents + 0.1 * distance("comment");
+    previewContrastCache.set(scheme.id, contrast);
+  }
+  return contrast;
+}
+
+// Later keys break ties. Many schemes share a pure black or white background,
+// so darkest/lightest fall back to foreground lightness.
+const SORT_ORDERS = {
+  id: null,
+  darkest: { keys: [backgroundLightness, foregroundLightness], direction: 1 },
+  lightest: { keys: [backgroundLightness, foregroundLightness], direction: -1 },
+  "most-contrast": { keys: [previewContrast], direction: -1 },
+  "least-contrast": { keys: [previewContrast], direction: 1 },
+};
+
+// Sorts in place. Schemes missing a value go last; ties keep ID order.
+function sortSchemes(schemes) {
+  const order = SORT_ORDERS[state.sort];
+  if (!order) return schemes;
+
+  return schemes.sort((a, b) => {
+    for (const key of order.keys) {
+      const aValue = key(a);
+      const bValue = key(b);
+      const aMissing = typeof aValue !== "number";
+      const bMissing = typeof bValue !== "number";
+      if (aMissing || bMissing) {
+        if (aMissing !== bMissing) return aMissing - bMissing;
+        continue;
+      }
+      if (aValue !== bValue) return (aValue - bValue) * order.direction;
+    }
+    return 0;
+  });
+}
+
 // Live-server only: pin the currently applied scheme to the front of the
 // already-filtered list. Filters/search still decide membership, so a scheme
 // that doesn't match isn't force-shown; it just leads when it is present.
@@ -756,7 +823,7 @@ function render() {
   const empty = document.getElementById("empty");
   const count = document.getElementById("result-count");
   const fragment = document.createDocumentFragment();
-  const visible = pinAppliedFirst(SCHEMES.filter(matchesFilters));
+  const visible = pinAppliedFirst(sortSchemes(SCHEMES.filter(matchesFilters)));
 
   gallery.classList.toggle("is-first-render", isFirstRender);
   gallery.textContent = "";
@@ -817,6 +884,21 @@ function loadSavedPageTheme() {
   setPageTheme("system");
 }
 
+function setSort(sort) {
+  state.sort = sort;
+  window.localStorage.setItem(SORT_STORAGE_KEY, sort);
+  render();
+}
+
+// Always sets the select, since browsers can restore a stale value on reload.
+function loadSavedSort() {
+  const savedSort = window.localStorage.getItem(SORT_STORAGE_KEY);
+  if (savedSort && Object.hasOwn(SORT_ORDERS, savedSort)) {
+    state.sort = savedSort;
+  }
+  document.getElementById("sort-select").value = state.sort;
+}
+
 document.getElementById("search").addEventListener("input", (event) => {
   state.search = event.target.value.trim().toLowerCase();
   render();
@@ -839,6 +921,10 @@ document.querySelectorAll("[data-page-theme]").forEach((button) => {
 
 document.getElementById("language-select").addEventListener("change", (event) => {
   onGalleryLanguageChange(event.target.value);
+});
+
+document.getElementById("sort-select").addEventListener("change", (event) => {
+  transitionLayout(() => setSort(event.target.value));
 });
 
 document.querySelectorAll("[data-preview-language]").forEach((button) => {
@@ -1074,6 +1160,7 @@ function setupLiveServer() {
 }
 
 loadSavedLanguage();
+loadSavedSort();
 loadSavedPageTheme();
 syncSheetToHash();
 setupLiveServer();
