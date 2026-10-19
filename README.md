@@ -315,7 +315,7 @@ themes across different applications seamlessly.
 | `hook`                 | `string` | Optional | A command to be executed after the theme is applied. Useful for reloading configurations. | None    | `hook = "source ~/.vimrc"` |
 | `theme-file-extension` | `string` | Optional | Define a custom theme file extension that isn't `/\.*$/`. Tinty looks for themes named `base16-uwunicorn.*` (for example), but when the theme file isn't structured that way, this option can help specify the pattern. | - | `theme-file-extension = ".module.css"` |
 | `supported-systems`    | `array<"base16" or "base24" or "tinted8">` | Optional | Defines which theming systems ("base16" and or "base24") are supported by the item. | `["base16"]` | `supported-systems = ["base16", "base24"]` |
-| `write-to-file`        | `array<"target_filename", "optional_start_marker", "optional_end_marker">` | Optional | A feature where Tinty writes the theme content directly into an existing file. | None    | `write-to-file = ["~/.config/alacritty/config.toml", "# Tinty Start", "# Tinty End"]` |
+| `write-to-file`        | `array<"target_filename", "optional_start_marker", "optional_end_marker">` | Optional | A feature where Tinty writes the theme content directly into an existing file. When only a target filename is given, the whole file is overwritten and it (along with any missing parent directories) is created if it doesn't exist. | None    | `write-to-file = ["~/.config/alacritty/config.toml", "# Tinty Start", "# Tinty End"]` |
 | `allow-dirty-update`   | `boolean` | Optional | Allow `tinty update` to run even when this item's local copy has uncommitted changes. | `false` | `allow-dirty-update = true` |
 
 #### Note on `allow-dirty-update`

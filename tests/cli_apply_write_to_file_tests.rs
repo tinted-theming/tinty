@@ -1,7 +1,8 @@
 //! Integration tests for the `write-to-file` config option used with `apply`.
 //!
 //! Covers: marker-based content insertion (start+end markers, start-only
-//! marker), and full file overwrite mode.
+//! marker), and full file overwrite mode (including creating missing parent
+//! directories).
 //!
 //! Uses local fixture repos to avoid network dependency.
 
@@ -216,6 +217,56 @@ write-to-file = ["{}"]
     ensure!(
         new_target == theme_contents,
         "file contents not overwritten"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_cli_apply_write_to_file_creates_missing_parent_directories() -> Result<()> {
+    // -------
+    // Arrange
+    // -------
+    let scheme_name = "base16-tinty-generated";
+    let (config_path, data_path, command_vec, _temp_dir) = setup(
+        "test_cli_apply_write_to_file_creates_missing_parent_directories",
+        format!("apply {scheme_name}").as_str(),
+        false,
+    )?;
+    let theme_contents = "THEME-CONTENT-DIR";
+    let target_path = data_path.join("missing/nested/dir/tinty.sh");
+
+    prepare_minimal_repos(&data_path, scheme_name, theme_contents)?;
+    ensure!(
+        !data_path.join("missing").exists(),
+        "target parent directory should not exist before apply"
+    );
+    {
+        let config_content = format!(
+            r#"[[items]]
+path = "https://github.com/tinted-theming/tinted-shell"
+name = "tinted-shell"
+themes-dir = "scripts"
+write-to-file = ["{}"]
+"#,
+            target_path.display()
+        );
+        write_to_file(&config_path, &config_content)?;
+    };
+
+    // ---
+    // Act
+    // ---
+    let (_stdout, stderr) = utils::run_command(&command_vec)?;
+
+    // ------
+    // Assert
+    // ------
+    ensure!(stderr.is_empty(), "stderr is not empty: {stderr}");
+    let new_target = fs::read_to_string(&target_path)?;
+    ensure!(
+        new_target == theme_contents,
+        "file contents not written to target in newly created directory"
     );
 
     Ok(())
