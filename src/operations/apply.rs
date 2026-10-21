@@ -6,7 +6,7 @@ use crate::constants::{
 use crate::paths;
 use crate::scheme_repos::{builtin_schemes_repo_path, merged_schemes};
 use crate::utils::{
-    create_theme_filename_without_extension, get_all_scheme_file_paths,
+    create_theme_filename_without_extension, ensure_directory_exists, get_all_scheme_file_paths,
     get_shell_command_from_string, write_to_file,
 };
 use anyhow::{anyhow, Context, Error, Result};
@@ -242,6 +242,9 @@ pub fn apply(
                         [target_filepath] => {
                             let expanded_filepath = expand_tilde(target_filepath);
 
+                            if let Some(parent_dir) = expanded_filepath.parent() {
+                                ensure_directory_exists(parent_dir)?;
+                            }
                             write_to_file(&expanded_filepath, &theme_content)?;
 
                             Ok(())

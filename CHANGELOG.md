@@ -73,6 +73,9 @@
 
 ### Fixed
 
+- Fix `write-to-file` failing with "No such file or directory" when the
+  target's directory doesn't exist yet. When given only a target file (no
+  markers), Tinty now creates any missing parent directories before writing.
 - Fix `tinty gallery` showing no schemes when the browser blocks site storage
   (e.g. cookies or site data disabled). Saved preferences such as the preview
   language, page theme and sort order now just aren't remembered instead.
