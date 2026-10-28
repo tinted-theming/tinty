@@ -498,12 +498,14 @@ base24-lumina-oxblood-dark
 base24-lumina-oxblood-light
 base24-lumina-parchment-dark
 base24-lumina-parchment-light
-base24-lumina-quartz-dark-contrast
+base24-lumina-polaire-dark
+base24-lumina-polaire-light
 base24-lumina-quartz-dark
-base24-lumina-quartz-light-contrast
 base24-lumina-quartz-light
 base24-lumina-rayleigh-dark
 base24-lumina-rayleigh-light
+base24-lumina-vitrail-dark
+base24-lumina-vitrail-light
 base24-madrid
 base24-man-page
 base24-material-dark
