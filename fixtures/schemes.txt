@@ -6,6 +6,7 @@ base16-arroz-con-dulce-dark
 base16-arroz-con-dulce
 base16-ascendancy
 base16-ashes
+base16-ataerm
 base16-atelier-cave-light
 base16-atelier-cave
 base16-atelier-dune-light
@@ -368,6 +369,7 @@ base24-alucard
 base24-apprentice
 base24-argonaut
 base24-arthur
+base24-ataerm
 base24-atelier-sulphurpool
 base24-ayu-dark
 base24-ayu-light
