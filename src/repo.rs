@@ -2,6 +2,7 @@ use anyhow::Result;
 use std::path::Path;
 
 pub mod git_shell;
+pub mod gix;
 
 /// Outcome of an `update` that was allowed to run against a dirty working tree.
 #[derive(Debug, PartialEq, Eq)]
@@ -44,13 +45,27 @@ pub trait RepositoryBackend {
     fn origin_url(&self, target: &Path) -> Result<Option<String>>;
 }
 
+/// Environment variable for opting in to the gix backend at runtime.
+///
+/// Truthy values: `1`, `true`, `TRUE`, `yes`. Anything else (including unset)
+/// keeps the default git-shell-out backend.
+const USE_GIX_ENV: &str = "TINTY_USE_GIX";
+
+fn use_gix() -> bool {
+    std::env::var(USE_GIX_ENV).is_ok_and(|v| matches!(v.as_str(), "1" | "true" | "TRUE" | "yes"))
+}
+
 /// Returns the active repository backend for this invocation.
 ///
-/// Phase 1 always returns the git-shell-out backend. Phase 2 introduces the
-/// gix backend and runtime dispatch via `TINTY_USE_GIX`.
+/// Defaults to the git-shell-out backend. Set `TINTY_USE_GIX=1` to opt in to
+/// the gix backend (currently a stub — Phase 2 of the migration).
 #[must_use]
 pub fn backend() -> Box<dyn RepositoryBackend> {
-    Box::new(git_shell::GitShellBackend)
+    if use_gix() {
+        Box::new(gix::GixBackend)
+    } else {
+        Box::new(git_shell::GitShellBackend)
+    }
 }
 
 pub fn install(url: &str, target: &Path, revision: Option<&str>) -> Result<()> {
